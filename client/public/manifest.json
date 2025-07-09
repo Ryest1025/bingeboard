@@ -1,0 +1,65 @@
+{
+  "name": "BingeBoard - TV Show Tracker",
+  "short_name": "BingeBoard",
+  "description": "Track your favorite TV shows and discover new content with friends",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#1a1b23",
+  "theme_color": "#8b5cf6",
+  "orientation": "portrait-primary",
+  "categories": ["entertainment", "lifestyle", "social"],
+  "icons": [
+    {
+      "src": "icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "screenshot-mobile.png",
+      "sizes": "390x844",
+      "type": "image/png",
+      "form_factor": "narrow"
+    },
+    {
+      "src": "screenshot-desktop.png", 
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Discover Shows",
+      "short_name": "Discover",
+      "description": "Find new shows to watch",
+      "url": "/discover",
+      "icons": [
+        {
+          "src": "icon-192x192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "My Watchlist",
+      "short_name": "Watchlist",
+      "description": "View your saved shows",
+      "url": "/",
+      "icons": [
+        {
+          "src": "icon-192x192.png", 
+          "sizes": "192x192"
+        }
+      ]
+    }
+  ]
+}

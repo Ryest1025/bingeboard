@@ -1,0 +1,69 @@
+Since the fetch to /api/auth/user keeps failing with a timeout/abort after 5 seconds, and you’ve added the proxy config as suggested, here’s what to do next:
+
+1. Verify Backend is Running and Listening
+Make sure your backend server is actually running on the expected port (http://localhost:4000 or whichever you set in the proxy).
+
+Can you open http://localhost:4000/api/auth/user in your browser or curl it?
+
+If you get no response, the backend might not be running or the route is missing.
+
+2. Confirm Proxy is Active
+Restart your Vite dev server after updating vite.config.js to add the proxy.
+
+Check the terminal logs for any proxy-related errors.
+
+3. Temporarily Remove Timeout
+To rule out the abort timer interfering, try removing or increasing the timeout temporarily:
+
+ts
+Copy
+Edit
+// Comment out or increase timeout duration
+// const timeoutId = setTimeout(() => controller.abort(), 5000);
+4. Add More Logging
+Add console logs before and after fetch to see where it hangs:
+
+ts
+Copy
+Edit
+console.log('Starting fetch to /api/auth/user');
+try {
+  const response = await fetch('/api/auth/user', {
+    method: 'GET',
+    credentials: 'include',
+    signal: controller.signal,
+  });
+  console.log('Fetch response received:', response);
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+  const data = await response.json();
+  return data;
+} catch (err) {
+  console.error('Fetch failed:', err);
+  throw err;
+}
+5. Check Network Tab in Browser DevTools
+Open your browser’s dev tools → Network tab.
+
+Reload the page and look for the request to /api/auth/user.
+
+See if it is sent, what status it returns, or if it gets blocked or stalled.
+
+6. Check CORS and Cookies
+Since you use credentials: 'include', your backend must:
+
+Respond with CORS headers including Access-Control-Allow-Credentials: true
+
+Include Access-Control-Allow-Origin with the exact origin of your frontend (not *).
+
+7. Check if the backend route /api/auth/user is implemented and does not hang
+Make sure the backend API handler returns a response promptly.
+
+If after all this you still get "Failed to fetch" or timeout, share:
+
+Your backend server startup code
+
+The /api/auth/user route handler
+
+Any relevant logs/errors from backend

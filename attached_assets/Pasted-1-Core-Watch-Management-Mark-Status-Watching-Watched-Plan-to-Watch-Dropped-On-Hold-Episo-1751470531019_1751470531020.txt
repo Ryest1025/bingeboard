@@ -1,0 +1,69 @@
+1. Core Watch Management
+✅ Mark Status: Watching, Watched, Plan to Watch, Dropped, On Hold
+
+📆 Episode Tracker: Auto-progress tracking + manual adjustment
+
+🔔 Airing Calendar: New episodes/seasons reminders (customizable)
+
+🔄 Multi-platform Sync: Track across Netflix, Hulu, Max, Disney+, etc.
+
+2. Smart Recommendations
+🔍 AI-Driven Suggestions: Based on genre, mood, time of day, past ratings
+
+🎭 Mood Selector: Filters like “light & funny,” “mind-blowing,” “background noise”
+
+📈 Trending Now for You: Not just global trends, but tailored to your taste
+
+3. Social Sharing & Discovery
+🧑‍🤝‍🧑 Friend Feed: See what your friends are watching, rating, commenting on
+
+💬 Comment Threads: Episode-specific or show-level chats (spoiler-safe mode)
+
+💝 Recommend to a Friend: Tag a friend + optional message or emoji
+
+👀 Anonymous Viewing Option: If you want to hide your K-drama binge from friends
+
+4. Custom Lists & Collaboration
+🗂️ Public & Private Lists: “Best Comedies”, “Couples Shows”, “My Watch 2025”
+
+🤝 Co-Create Lists: Collaborate on lists with friends
+
+🔗 Shareable URLs or QR Codes: Let others access or follow your list easily
+
+5. Watch Parties & Social Sync
+📅 Schedule Watch Parties: Built-in calendar invites, time zone auto-detection
+
+🗳️ Group Polls: Vote on what to watch next
+
+🎥 Live Chat or Reactions: Optional real-time chat or emoji reactions during shared viewing (sync with services like Teleparty)
+
+6. Profile & Stats
+📊 Viewing Stats: Hours watched, genres, longest binge streak, year in review
+
+🧬 TV DNA: Your viewing “personality” (e.g. “Sci-Fi Explorer”, “Reality Show Survivor”)
+
+🏆 Achievements & Badges: Fun badges for binge streaks, finishing all of a director's work, etc.
+
+7. Reminders & Notifications
+📱 Custom Alerts: “New season drops tomorrow!” or “Finale is live now”
+
+⏰ Time-Based Nudges: “It’s Thursday night – ready to watch [show]?”
+
+🧠 Smart Nudges: If you haven’t watched in a while, “pick up where you left off?”
+
+8. Monetization Features (If You’re Building It)
+🆓 Free Tier: Ads + basic tracking
+
+💳 Premium Tier: No ads, early features, advanced stats, exclusive recs
+
+💸 Affiliate Links: Earn when people sign up for streaming platforms
+
+🛍️ Merch & Add-ons: Partner with creators for show merch, printable list posters, etc.
+
+9. Community & Creator Tools
+📝 Mini Blogs & Reviews: Users can write longform reviews or “Top 10s”
+
+📸 Visual List Exports: Share your list as a graphic on Instagram or TikTok
+
+🧑‍🎨 Influencer/Creator Mode: Verified creators can build curated collections for followers
+

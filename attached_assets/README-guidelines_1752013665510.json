@@ -1,0 +1,88 @@
+[
+  {
+    "rule": "useDesignSystem",
+    "description": "Always use the defined design system for colors, spacing, typography, and components.",
+    "enforce": {
+      "colors": "Import from /styles/colors.js",
+      "spacing": "Use spacing tokens from /styles/spacing.js",
+      "typography": "Import font styles from /styles/typography.js",
+      "components": "Use only components in /components/ui/"
+    }
+  },
+  {
+    "rule": "componentStructure",
+    "description": "Use PascalCase for components. Place each in its own folder with related styles.",
+    "enforce": {
+      "namingConvention": "PascalCase",
+      "location": "/components/ComponentName/index.jsx",
+      "styles": "/components/ComponentName/styles.module.css",
+      "testFile": "/components/ComponentName/ComponentName.test.jsx"
+    }
+  },
+  {
+    "rule": "responsiveDesign",
+    "description": "All layout and UI components must be mobile-first and responsive.",
+    "enforce": {
+      "approach": "mobile-first",
+      "methods": [
+        "Flexbox",
+        "CSS Grid"
+      ],
+      "mediaQueries": "Use breakpoints from /styles/breakpoints.js"
+    }
+  },
+  {
+    "rule": "aiPromptingGuidelines",
+    "description": "When prompting AI, always reference the design system and require modular, responsive code.",
+    "examplePrompt": "Create a {ComponentType} using our design system (tokens, UI components). Ensure the layout is responsive and uses mobile-first Flexbox/Grid. Add comments and modularize the code."
+  },
+  {
+    "rule": "fileStructure",
+    "description": "Follow the app-wide folder structure to improve developer efficiency and scalability.",
+    "structure": {
+      "/components": "Reusable UI components",
+      "/pages": "Top-level app screens",
+      "/styles": "Global design tokens and utility styles",
+      "/lib": "Utilities like i18n, API helpers, etc.",
+      "/hooks": "Custom React hooks",
+      "/context": "React context providers",
+      "/assets": "Static images and fonts"
+    }
+  },
+  {
+    "rule": "requireTests",
+    "description": "Each component must include a unit test file using Vitest or Jest.",
+    "enforce": {
+      "framework": "Vitest or Jest",
+      "fileNameConvention": "ComponentName.test.jsx",
+      "location": "Same directory as the component"
+    }
+  },
+  {
+    "rule": "useI18n",
+    "description": "All user-facing strings must use the i18n translation function.",
+    "enforce": {
+      "function": "t()",
+      "source": "/lib/i18n.js",
+      "strings": "Do not hard-code any UI-facing string; wrap all text in t()"
+    }
+  },
+  {
+    "rule": "globalStylingConventions",
+    "description": "Use BEM-like class naming, CSS modules for scoping, and avoid inline styles.",
+    "enforce": {
+      "classNaming": "block__element--modifier",
+      "useCSSModules": true,
+      "avoidInlineStyles": true
+    }
+  },
+  {
+    "rule": "replitAIAssistanceComments",
+    "description": "Use starter comments in files to guide AI behavior when generating or editing code.",
+    "examples": [
+      "// DESIGN: Use components from /components/ui, follow responsive layout with spacing tokens",
+      "// STYLE: Reference colors from /styles/colors.js, avoid hardcoded values",
+      "// TEST: Create matching test file with Vitest"
+    ]
+  }
+]
