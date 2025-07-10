@@ -45,6 +45,7 @@ import NotificationCenter from "@/pages/notification-center";
 import ImportHistory from "@/pages/import-history";
 import ResetPassword from "@/pages/reset-password";
 import OAuthRedirect from "@/pages/oauth-redirect";
+import UITestPage from "@/pages/ui-test";
 
 
 function Router() {
@@ -159,6 +160,7 @@ function Router() {
               <Route path="/notifications-demo" component={NotificationsDemo} />
               <Route path="/notifications" component={NotificationCenter} />
               <Route path="/import-history" component={ImportHistory} />
+              <Route path="/ui-test" component={UITestPage} />
               <Route path="/show/:id" component={ShowDetails} />
             </>
           ) : (
