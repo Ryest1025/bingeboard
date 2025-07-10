@@ -49,28 +49,26 @@ export async function setupAuth(app: Express) {
   app.set("trust proxy", 1);
   app.use(getSession());
   
-  // Add bulletproof authentication middleware
-  const { BulletproofAuth } = await import('./bulletproof-auth');
-  
-  // Add session recovery middleware for all requests
-  app.use(BulletproofAuth.createSessionRecoveryMiddleware());
-  
-  // Add emergency fallback for complete failures
-  app.use(BulletproofAuth.createEmergencyFallback());
-  
-  // Validate system stability on startup
-  const isStable = await BulletproofAuth.validateReplicationStability();
-  if (!isStable) {
-    console.error('🚨 System stability check failed - authentication may be unreliable');
-  }
-  
-  console.log('✅ Firebase authentication system initialized with bulletproof protection');
-  console.log('✅ All OAuth authentication handled by Firebase with fallback systems');
+  console.log('✅ Firebase authentication system initialized');
+  console.log('✅ All OAuth authentication handled by Firebase client-side');
 }
 
 export const isAuthenticated: RequestHandler = async (req, res, next) => {
-  const { BulletproofAuth } = await import('./bulletproof-auth');
-  return BulletproofAuth.createRobustAuthMiddleware()(req, res, next);
+  const sessionUser = (req as any).session?.user;
+  
+  if (!sessionUser) {
+    return res.status(401).json({ message: 'Authentication required' });
+  }
+  
+  // Check if session is expired
+  const isExpired = sessionUser.claims?.exp && sessionUser.claims.exp < Math.floor(Date.now() / 1000);
+  if (isExpired) {
+    return res.status(401).json({ message: 'Session expired' });
+  }
+  
+  // Attach user to request
+  (req as any).user = sessionUser;
+  next();
 };
 
 // Export utility functions for password handling
