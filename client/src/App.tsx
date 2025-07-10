@@ -64,15 +64,22 @@ function Router() {
   useEffect(() => {
     const handleFirebaseRedirect = async () => {
       try {
+        console.log('Checking for Firebase redirect result...');
         const { getRedirectResult } = await import('firebase/auth');
         const { auth } = await import('@/firebase/config-simple');
         
         const result = await getRedirectResult(auth);
         if (result) {
-          console.log('Firebase redirect result:', result.user.email);
+          console.log('Firebase redirect result found:', {
+            email: result.user.email,
+            displayName: result.user.displayName,
+            uid: result.user.uid
+          });
           
           // Create backend session
           const idToken = await result.user.getIdToken();
+          console.log('Creating backend session...');
+          
           const response = await fetch('/api/auth/firebase-session', {
             method: 'POST',
             headers: {
@@ -90,6 +97,8 @@ function Router() {
             })
           });
           
+          console.log('Backend session response:', response.status);
+          
           if (response.ok) {
             toast({
               title: "Login successful",
@@ -97,19 +106,23 @@ function Router() {
             });
             window.location.href = '/';
           } else {
+            const errorData = await response.text();
+            console.error('Backend session error:', errorData);
             toast({
               title: "Authentication Error",
               description: "Failed to create session. Please try again.",
               variant: "destructive",
             });
           }
+        } else {
+          console.log('No Firebase redirect result found');
         }
       } catch (error: any) {
         console.error('Firebase redirect error:', error);
         if (error.code !== 'auth/no-auth-event') {
           toast({
             title: "Authentication Error",
-            description: "Authentication failed. Please try again.",
+            description: `Authentication failed: ${error.message}`,
             variant: "destructive",
           });
         }

@@ -4,17 +4,25 @@ import { getAuth, GoogleAuthProvider, FacebookAuthProvider } from 'firebase/auth
 
 // Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyB45zr8b2HjIx1fzXOuQsHxeQK9wl_wC88",
-  authDomain: "bingeboard-73c5f.firebaseapp.com",
-  projectId: "bingeboard-73c5f",
-  storageBucket: "bingeboard-73c5f.firebasestorage.app",
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: `${import.meta.env.VITE_FIREBASE_PROJECT_ID}.firebaseapp.com`,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: `${import.meta.env.VITE_FIREBASE_PROJECT_ID}.firebasestorage.app`,
   messagingSenderId: "145846820194",
-  appId: "1:145846820194:web:047efd7a8e59b36944a03b"
+  appId: import.meta.env.VITE_FIREBASE_APP_ID
 };
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
+
+// Add debug logging
+console.log('Firebase config:', {
+  apiKey: firebaseConfig.apiKey ? 'Set' : 'Missing',
+  authDomain: firebaseConfig.authDomain,
+  projectId: firebaseConfig.projectId,
+  appId: firebaseConfig.appId ? 'Set' : 'Missing'
+});
 
 // Configure providers
 const googleProvider = new GoogleAuthProvider();

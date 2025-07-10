@@ -115,6 +115,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json({ message: 'API is working', timestamp: Date.now() });
   });
 
+  // Firebase configuration test endpoint
+  app.get('/api/test-firebase', (req, res) => {
+    const firebaseConfig = {
+      apiKey: process.env.VITE_FIREBASE_API_KEY ? 'Set' : 'Missing',
+      authDomain: `${process.env.VITE_FIREBASE_PROJECT_ID}.firebaseapp.com`,
+      projectId: process.env.VITE_FIREBASE_PROJECT_ID,
+      appId: process.env.VITE_FIREBASE_APP_ID ? 'Set' : 'Missing',
+      currentDomain: req.get('host')
+    };
+    
+    res.json({ 
+      message: 'Firebase configuration check',
+      config: firebaseConfig,
+      timestamp: Date.now() 
+    });
+  });
+
   // Auth routes
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
     try {
