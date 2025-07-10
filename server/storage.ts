@@ -274,37 +274,15 @@ export class DatabaseStorage implements IStorage {
     console.log('Storage: Upserting user with data:', JSON.stringify(user, null, 2));
     
     try {
-      // First check if user exists by email (for Firebase auth migration)
-      const existingUserByEmail = await this.getUserByEmail(user.email || '');
-      
-      if (existingUserByEmail) {
-        console.log('Storage: User exists by email, updating existing user:', existingUserByEmail.id);
-        // Update existing user with new Firebase ID and data
-        const [updatedUser] = await db
-          .update(users)
-          .set({
-            id: user.id, // Update to Firebase UID
-            firstName: user.firstName,
-            lastName: user.lastName,
-            profileImageUrl: user.profileImageUrl,
-            authProvider: user.authProvider,
-            updatedAt: new Date(),
-          })
-          .where(eq(users.email, user.email || ''))
-          .returning();
-        
-        console.log('Storage: User updated successfully:', updatedUser.id, updatedUser.email);
-        return updatedUser;
-      }
-      
-      // Use PostgreSQL's ON CONFLICT DO UPDATE for true upsert by ID
+      // Use PostgreSQL's ON CONFLICT DO UPDATE with email as the conflict target
+      // This handles both new users and existing users with the same email
       const [upsertedUser] = await db
         .insert(users)
         .values(user)
         .onConflictDoUpdate({
-          target: users.id,
+          target: users.email,
           set: {
-            email: user.email,
+            // Don't update ID for existing users to avoid foreign key constraint issues
             firstName: user.firstName,
             lastName: user.lastName,
             profileImageUrl: user.profileImageUrl,
