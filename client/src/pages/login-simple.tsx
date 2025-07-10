@@ -209,9 +209,6 @@ export default function LoginSimple() {
             </div>
           </div>
           
-          {/* Title */}
-          <CardTitle className="text-center mb-2">
-          
           {/* Subtitle */}
           <p className="text-gray-400 text-sm">
             {showForgotPassword ? "Reset your password" : (isLogin ? "Welcome back to your entertainment hub" : "Join the ultimate entertainment hub")}
