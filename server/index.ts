@@ -49,12 +49,13 @@ app.use((req, res, next) => {
   const host = req.get('host');
   const customDomain = 'www.joinbingeboard.com';
   
+  // Temporarily disable custom domain redirect to allow app to load
   // Only redirect if accessing via Replit domain and not already on custom domain
   if (host && host.includes('replit.dev') && !host.includes(customDomain)) {
-    // Redirect authentication pages to custom domain for Firebase compatibility
-    if ((req.path.startsWith('/login') || req.path === '/' || req.path.startsWith('/auth')) && !req.path.startsWith('/api/')) {
+    // Redirect only login pages to custom domain for Firebase compatibility
+    if ((req.path.startsWith('/login') || req.path.startsWith('/auth')) && !req.path.startsWith('/api/')) {
       const redirectUrl = `https://${customDomain}${req.originalUrl}`;
-      console.log(`🔄 Redirecting to custom domain for Firebase auth: ${redirectUrl}`);
+      console.log(`🔄 Redirecting auth pages to custom domain: ${redirectUrl}`);
       return res.redirect(301, redirectUrl);
     }
   }
