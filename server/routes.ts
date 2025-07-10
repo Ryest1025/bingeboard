@@ -57,17 +57,114 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Firebase authentication routes only
 
-  // OAuth redirect endpoints for Google and Facebook
+  // Simplified OAuth redirect endpoints that bypass Firebase session storage issues
   app.get('/api/auth/google', (req, res) => {
-    const redirectUrl = 'https://bingeboard-73c5f.firebaseapp.com/__/auth/handler?providerId=google.com&continueUrl=' + 
-                       encodeURIComponent(`${req.protocol}://${req.get('host')}/`);
-    res.redirect(redirectUrl);
+    // Create a direct Google OAuth URL that bypasses Firebase session storage
+    const googleOAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
+      `client_id=${process.env.GOOGLE_CLIENT_ID}&` +
+      `redirect_uri=${encodeURIComponent(`${req.protocol}://${req.get('host')}/auth/callback`)}&` +
+      `response_type=code&` +
+      `scope=email profile&` +
+      `state=google`;
+    
+    console.log('Google OAuth redirect URL:', googleOAuthUrl);
+    res.redirect(googleOAuthUrl);
   });
 
   app.get('/api/auth/facebook', (req, res) => {
-    const redirectUrl = 'https://bingeboard-73c5f.firebaseapp.com/__/auth/handler?providerId=facebook.com&continueUrl=' + 
-                       encodeURIComponent(`${req.protocol}://${req.get('host')}/`);
-    res.redirect(redirectUrl);
+    // Create a direct Facebook OAuth URL that bypasses Firebase session storage
+    const facebookOAuthUrl = `https://www.facebook.com/v18.0/dialog/oauth?` +
+      `client_id=${process.env.FACEBOOK_APP_ID}&` +
+      `redirect_uri=${encodeURIComponent(`${req.protocol}://${req.get('host')}/auth/callback`)}&` +
+      `response_type=code&` +
+      `scope=email&` +
+      `state=facebook`;
+    
+    console.log('Facebook OAuth redirect URL:', facebookOAuthUrl);
+    res.redirect(facebookOAuthUrl);
+  });
+
+  // OAuth callback handler for direct OAuth (bypasses Firebase session storage)
+  app.get('/auth/callback', async (req, res) => {
+    try {
+      console.log('OAuth callback received:', req.query);
+      
+      const { code, state, error } = req.query;
+      
+      if (error) {
+        console.error('OAuth error:', error);
+        return res.redirect('/login?error=oauth_failed');
+      }
+      
+      if (code && state) {
+        // Exchange code for access token
+        let accessToken;
+        let userInfo;
+        
+        if (state === 'google') {
+          // Exchange Google code for token
+          const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams({
+              client_id: process.env.GOOGLE_CLIENT_ID!,
+              client_secret: process.env.GOOGLE_CLIENT_SECRET!,
+              code: code as string,
+              grant_type: 'authorization_code',
+              redirect_uri: `${req.protocol}://${req.get('host')}/auth/callback`
+            })
+          });
+          
+          const tokenData = await tokenResponse.json();
+          accessToken = tokenData.access_token;
+          
+          // Get user info
+          const userResponse = await fetch(`https://www.googleapis.com/oauth2/v2/userinfo?access_token=${accessToken}`);
+          userInfo = await userResponse.json();
+        } else if (state === 'facebook') {
+          // Exchange Facebook code for token
+          const tokenResponse = await fetch(`https://graph.facebook.com/v18.0/oauth/access_token?` +
+            `client_id=${process.env.FACEBOOK_APP_ID}&` +
+            `client_secret=${process.env.FACEBOOK_APP_SECRET}&` +
+            `code=${code}&` +
+            `redirect_uri=${encodeURIComponent(`${req.protocol}://${req.get('host')}/auth/callback`)}`);
+          
+          const tokenData = await tokenResponse.json();
+          accessToken = tokenData.access_token;
+          
+          // Get user info
+          const userResponse = await fetch(`https://graph.facebook.com/me?fields=id,name,email,picture&access_token=${accessToken}`);
+          userInfo = await userResponse.json();
+        }
+        
+        if (userInfo) {
+          // Create user session
+          const sessionUser = {
+            claims: {
+              sub: `${state}_${userInfo.id}`,
+              email: userInfo.email,
+              first_name: userInfo.name?.split(' ')[0] || userInfo.given_name || 'User',
+              last_name: userInfo.name?.split(' ').slice(1).join(' ') || userInfo.family_name || '',
+              profile_image_url: userInfo.picture?.data?.url || userInfo.picture || null,
+              exp: Math.floor(Date.now() / 1000) + (7 * 24 * 60 * 60) // 7 days
+            }
+          };
+
+          // Store user in session
+          (req as any).session.user = sessionUser;
+          (req as any).user = sessionUser;
+          
+          // Redirect to home
+          return res.redirect('/?auth=success');
+        }
+      }
+      
+      // If no code or failed, redirect to login
+      res.redirect('/login?error=no_token');
+    } catch (error) {
+      console.error('OAuth callback error:', error);
+      res.redirect('/login?error=callback_failed');
+    }
   });
 
   // Email/password authentication endpoints

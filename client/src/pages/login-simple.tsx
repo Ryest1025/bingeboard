@@ -144,7 +144,13 @@ export default function LoginSimple() {
       console.log('Starting Google authentication...');
       setIsLoading(true);
       
-      // For now, use server-side OAuth endpoints instead of Firebase client-side
+      toast({
+        title: "Redirecting to Google",
+        description: "Please complete authentication with Google...",
+        variant: "default",
+      });
+      
+      // Use direct OAuth endpoints that bypass Firebase session storage issues
       window.location.href = '/api/auth/google';
     } catch (error: any) {
       console.error('Google authentication error:', error);
@@ -162,7 +168,13 @@ export default function LoginSimple() {
       console.log('Starting Facebook authentication...');
       setIsLoading(true);
       
-      // For now, use server-side OAuth endpoints instead of Firebase client-side
+      toast({
+        title: "Redirecting to Facebook",
+        description: "Please complete authentication with Facebook...",
+        variant: "default",
+      });
+      
+      // Use direct OAuth endpoints that bypass Firebase session storage issues
       window.location.href = '/api/auth/facebook';
     } catch (error: any) {
       console.error('Facebook authentication error:', error);

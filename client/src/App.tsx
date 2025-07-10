@@ -44,6 +44,7 @@ import NotificationsDemo from "@/pages/notifications-demo";
 import NotificationCenter from "@/pages/notification-center";
 import ImportHistory from "@/pages/import-history";
 import ResetPassword from "@/pages/reset-password";
+import OAuthRedirect from "@/pages/oauth-redirect";
 
 
 function Router() {
@@ -181,6 +182,7 @@ function Router() {
           <Route path="/data-deletion" component={DataDeletion} />
           <Route path="/landing" component={Landing} />
           <Route path="/reset-password" component={ResetPassword} />
+          <Route path="/auth/callback" component={OAuthRedirect} />
           
           {/* Protected routes - require authentication */}
           {isAuthenticated ? (
