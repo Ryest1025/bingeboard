@@ -1,72 +1,72 @@
-# Firebase OAuth Setup Guide
+# Firebase OAuth Configuration
 
-## Quick Setup Links
-- **Firebase Console**: https://console.firebase.google.com/project/bingeboard-73c5f/authentication/providers
-- **Google Cloud Console**: https://console.cloud.google.com/apis/credentials/oauthclient
-- **Facebook Developer Console**: https://developers.facebook.com/apps/
+## Current Firebase Setup
+- **Project ID**: `bingeboard-73c5f`
+- **Auth Domain**: `bingeboard-73c5f.firebaseapp.com`
+- **Current Replit Domain**: `80d1bb7f-86b2-4c58-a8e0-62a1673122a3-00-2vv88inpi4v1.riker.replit.dev`
 
-## Step 1: Enable OAuth Providers in Firebase Console
+## Required Firebase Console Updates
 
-### Google Authentication
-1. Go to [Firebase Console Authentication](https://console.firebase.google.com/project/bingeboard-73c5f/authentication/providers)
-2. Click "Sign-in method" tab
-3. Find "Google" and click to enable
-4. Click "Enable" toggle
-5. Add your support email (required)
-6. Click "Save"
+### 1. Firebase Console - Authorized Domains
+**URL**: https://console.firebase.google.com/project/bingeboard-73c5f/authentication/settings
 
-### Facebook Authentication
-1. In the same Firebase Console page
-2. Find "Facebook" and click to enable
-3. Click "Enable" toggle
-4. You'll need Facebook App ID and App Secret from Facebook Developer Console
-5. Click "Save"
+**Add to Authorized Domains:**
+```
+80d1bb7f-86b2-4c58-a8e0-62a1673122a3-00-2vv88inpi4v1.riker.replit.dev
+```
 
-## Step 2: Configure OAuth Credentials
+### 2. Enable Google Authentication
+**In Firebase Console:**
+1. Go to Authentication → Sign-in method
+2. Enable Google provider
+3. Use existing Google Cloud Console credentials
 
-### Google OAuth Setup
-1. Go to [Google Cloud Console](https://console.cloud.google.com/apis/credentials/oauthclient)
-2. Select your project: `bingeboard-73c5f`
-3. Find your OAuth 2.0 Client ID
-4. Add authorized redirect URIs:
-   - `https://bingeboard-73c5f.firebaseapp.com/__/auth/handler`
-   - `https://auth.bingeboard-73c5f.firebaseapp.com/__/auth/handler`
-5. Click "Save"
+### 3. Enable Facebook Authentication  
+**In Firebase Console:**
+1. Go to Authentication → Sign-in method
+2. Enable Facebook provider
+3. Add Facebook App ID: `1407155243762479`
+4. Add Facebook App Secret (from environment variables)
 
-### Facebook OAuth Setup
-1. Go to [Facebook Developer Console](https://developers.facebook.com/apps/)
-2. Select your BingeBoard app
-3. Go to "Facebook Login" > "Settings"
-4. Add Valid OAuth Redirect URIs:
-   - `https://bingeboard-73c5f.firebaseapp.com/__/auth/handler`
-5. Click "Save Changes"
+## OAuth Provider Console Setup
 
-## Step 3: Test Authentication
+### Google Cloud Console
+**URL**: https://console.cloud.google.com/apis/credentials
+- OAuth callback URL: `https://bingeboard-73c5f.firebaseapp.com/__/auth/handler`
 
-After enabling both providers:
-1. Refresh your BingeBoard app
-2. Try clicking "Google" or "Facebook" login buttons
-3. You should see the provider's login popup/redirect
+### Facebook Developer Console
+**URL**: https://developers.facebook.com/apps/
+- OAuth callback URL: `https://bingeboard-73c5f.firebaseapp.com/__/auth/handler`
 
-## Troubleshooting
+## Current Configuration Status
 
-### If Google login fails:
-- Check that Google provider is enabled in Firebase Console
-- Verify redirect URIs are added in Google Cloud Console
-- Ensure the OAuth client is active
+### Firebase Config (client/src/firebase/config.ts)
+```javascript
+const firebaseConfig = {
+  apiKey: "AIzaSyB45zr8b2HjIx1fzXOuQsHxeQK9wl_wC88",
+  authDomain: "bingeboard-73c5f.firebaseapp.com",
+  projectId: "bingeboard-73c5f",
+  storageBucket: "bingeboard-73c5f.firebasestorage.app",
+  messagingSenderId: "145846820194",
+  appId: "1:145846820194:web:047efd7a8e59b36944a03b"
+};
+```
 
-### If Facebook login fails:
-- Check that Facebook provider is enabled in Firebase Console
-- Verify redirect URIs are added in Facebook Developer Console
-- Ensure your Facebook app is not in development mode restrictions
+### Authentication Flow
+1. User clicks Google/Facebook login button
+2. Firebase redirects to provider authentication
+3. Provider redirects back to Firebase callback URL
+4. Firebase processes authentication and returns to app
+5. App creates backend session and redirects to dashboard
 
-## Current Configuration
-- **Firebase Project**: bingeboard-73c5f
-- **Auth Domain**: bingeboard-73c5f.firebaseapp.com
-- **Callback URL**: `https://bingeboard-73c5f.firebaseapp.com/__/auth/handler`
+## Key Points
+- **Firebase handles OAuth flow**: No custom server-side OAuth needed
+- **Callback URLs use Firebase domain**: `bingeboard-73c5f.firebaseapp.com`
+- **Current domain authorization**: Must be added to Firebase console
+- **Mobile compatible**: Firebase handles mobile/web differences automatically
 
-## Security Notes
-- Never share your Firebase private key
-- Keep OAuth client secrets secure
-- Regularly review authorized domains
-- Monitor authentication logs for suspicious activity
+## Next Steps
+1. Add current Replit domain to Firebase authorized domains
+2. Verify Google/Facebook OAuth providers are enabled in Firebase
+3. Test authentication flow with current domain
+4. Switch to custom domain later for permanent solution

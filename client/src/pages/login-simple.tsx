@@ -7,6 +7,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { Eye, EyeOff, Mail, Lock } from "lucide-react";
 import { SiGoogle, SiFacebook } from "react-icons/si";
+import { signInWithPopup, signInWithRedirect } from 'firebase/auth';
+import { auth, googleProvider, facebookProvider } from '@/firebase/config-simple';
 
 export default function LoginSimple() {
   const [, setLocation] = useLocation();
@@ -144,22 +146,21 @@ export default function LoginSimple() {
       console.log('Starting Google authentication...');
       setIsLoading(true);
       
-      toast({
-        title: "Redirecting to Google",
-        description: "Please complete authentication with Google...",
-        variant: "default",
-      });
+      // Always use redirect for both mobile and desktop to avoid popup issues
+      await signInWithRedirect(auth, googleProvider);
       
-      // Use direct OAuth endpoints that bypass Firebase session storage issues
-      window.location.href = '/api/auth/google';
+      // The redirect will handle the authentication, so we don't need to do anything else here
+      // The result will be handled in the App component's redirect result handler
+      
     } catch (error: any) {
       console.error('Google authentication error:', error);
+      setIsLoading(false);
+      
       toast({
-        title: "Google Authentication Error",
-        description: error.message || "Please try again or use email/password login.",
+        title: "Login failed",
+        description: error.message || "Failed to login with Google",
         variant: "destructive",
       });
-      setIsLoading(false);
     }
   };
 
@@ -168,22 +169,21 @@ export default function LoginSimple() {
       console.log('Starting Facebook authentication...');
       setIsLoading(true);
       
-      toast({
-        title: "Redirecting to Facebook",
-        description: "Please complete authentication with Facebook...",
-        variant: "default",
-      });
+      // Always use redirect for both mobile and desktop to avoid popup issues
+      await signInWithRedirect(auth, facebookProvider);
       
-      // Use direct OAuth endpoints that bypass Firebase session storage issues
-      window.location.href = '/api/auth/facebook';
+      // The redirect will handle the authentication, so we don't need to do anything else here
+      // The result will be handled in the App component's redirect result handler
+      
     } catch (error: any) {
       console.error('Facebook authentication error:', error);
+      setIsLoading(false);
+      
       toast({
-        title: "Facebook Authentication Error", 
-        description: error.message || "Please try again or use email/password login.",
+        title: "Login failed",
+        description: error.message || "Failed to login with Facebook",
         variant: "destructive",
       });
-      setIsLoading(false);
     }
   };
 

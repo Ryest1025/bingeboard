@@ -55,133 +55,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
   await setupAuth(app);
 
-  // Firebase authentication routes only
+  // Firebase authentication routes only - all OAuth handled client-side
 
-  // Simplified OAuth redirect endpoints that bypass Firebase session storage issues
-  app.get('/api/auth/google', (req, res) => {
-    // Use current Replit domain for immediate testing
-    const callbackUrl = `${req.protocol}://${req.get('host')}/auth/callback`;
-    const googleOAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
-      `client_id=${process.env.GOOGLE_CLIENT_ID}&` +
-      `redirect_uri=${encodeURIComponent(callbackUrl)}&` +
-      `response_type=code&` +
-      `scope=email profile&` +
-      `state=google`;
-    
-    console.log('Google OAuth redirect URL:', googleOAuthUrl);
-    res.redirect(googleOAuthUrl);
-  });
-
-  app.get('/api/auth/facebook', (req, res) => {
-    // Use current Replit domain for immediate testing
-    const callbackUrl = `${req.protocol}://${req.get('host')}/auth/callback`;
-    const facebookOAuthUrl = `https://www.facebook.com/v18.0/dialog/oauth?` +
-      `client_id=${process.env.FACEBOOK_APP_ID}&` +
-      `redirect_uri=${encodeURIComponent(callbackUrl)}&` +
-      `response_type=code&` +
-      `scope=email&` +
-      `state=facebook`;
-    
-    console.log('Facebook OAuth redirect URL:', facebookOAuthUrl);
-    res.redirect(facebookOAuthUrl);
-  });
-
-  // OAuth callback handler for direct OAuth (bypasses Firebase session storage)
-  app.get('/auth/callback', async (req, res) => {
+  // Firebase authentication endpoint to establish backend sessions
+  app.post('/api/auth/firebase-session', async (req: any, res) => {
     try {
-      console.log('OAuth callback received:', req.query);
+      const { firebaseToken } = req.body;
       
-      const { code, state, error } = req.query;
-      
-      if (error) {
-        console.error('OAuth error:', error);
-        return res.redirect('/login?error=oauth_failed');
+      if (!firebaseToken) {
+        return res.status(400).json({ message: 'Firebase token required' });
       }
       
-      if (code && state) {
-        // Exchange code for access token
-        let accessToken;
-        let userInfo;
-        
-        if (state === 'google') {
-          // Exchange Google code for token
-          const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: new URLSearchParams({
-              client_id: process.env.GOOGLE_CLIENT_ID!,
-              client_secret: process.env.GOOGLE_CLIENT_SECRET!,
-              code: code as string,
-              grant_type: 'authorization_code',
-              redirect_uri: `${req.protocol}://${req.get('host')}/auth/callback`
-            })
-          });
-          
-          const tokenData = await tokenResponse.json();
-          accessToken = tokenData.access_token;
-          
-          // Get user info
-          const userResponse = await fetch(`https://www.googleapis.com/oauth2/v2/userinfo?access_token=${accessToken}`);
-          userInfo = await userResponse.json();
-        } else if (state === 'facebook') {
-          // Exchange Facebook code for token
-          const tokenResponse = await fetch(`https://graph.facebook.com/v18.0/oauth/access_token?` +
-            `client_id=${process.env.FACEBOOK_APP_ID}&` +
-            `client_secret=${process.env.FACEBOOK_APP_SECRET}&` +
-            `code=${code}&` +
-            `redirect_uri=${encodeURIComponent(`${req.protocol}://${req.get('host')}/auth/callback`)}`);
-          
-          const tokenData = await tokenResponse.json();
-          accessToken = tokenData.access_token;
-          
-          // Get user info
-          const userResponse = await fetch(`https://graph.facebook.com/me?fields=id,name,email,picture&access_token=${accessToken}`);
-          userInfo = await userResponse.json();
-        }
-        
-        if (userInfo) {
-          // Create user session
-          const sessionUser = {
-            claims: {
-              sub: `${state}_${userInfo.id}`,
-              email: userInfo.email,
-              first_name: userInfo.name?.split(' ')[0] || userInfo.given_name || 'User',
-              last_name: userInfo.name?.split(' ').slice(1).join(' ') || userInfo.family_name || '',
-              profile_image_url: userInfo.picture?.data?.url || userInfo.picture || null,
-              exp: Math.floor(Date.now() / 1000) + (7 * 24 * 60 * 60) // 7 days
-            }
-          };
-
-          // Store user in session
-          (req as any).session.user = sessionUser;
-          (req as any).user = sessionUser;
-          
-          // Redirect to home
-          return res.redirect('/?auth=success');
-        }
-      }
-      
-      // If no code or failed, redirect to login
-      res.redirect('/login?error=no_token');
-    } catch (error) {
-      console.error('OAuth callback error:', error);
-      res.redirect('/login?error=callback_failed');
-    }
-  });
-
-  // Email/password authentication endpoints
-  app.post('/api/auth/login', async (req: any, res) => {
-    try {
-      const { email, password } = req.body;
-      
-      // For now, create a simple session for testing
+      // Create session from Firebase token
       const sessionUser = {
         claims: {
-          sub: `email_${email}`,
-          email: email,
-          first_name: email.split('@')[0],
-          last_name: '',
-          profile_image_url: null,
+          sub: firebaseToken.uid,
+          email: firebaseToken.email,
+          first_name: firebaseToken.displayName?.split(' ')[0] || 'User',
+          last_name: firebaseToken.displayName?.split(' ').slice(1).join(' ') || '',
+          profile_image_url: firebaseToken.photoURL || null,
           exp: Math.floor(Date.now() / 1000) + (7 * 24 * 60 * 60) // 7 days
         }
       };
@@ -190,168 +82,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       req.session.user = sessionUser;
       req.user = sessionUser;
       
-      res.json({ success: true, message: 'Login successful' });
+      res.json({ success: true, message: 'Session established' });
     } catch (error) {
-      console.error('Login error:', error);
-      res.status(401).json({ message: 'Invalid credentials' });
+      console.error('Firebase session error:', error);
+      res.status(400).json({ message: 'Failed to establish session' });
     }
   });
 
-  app.post('/api/auth/register', async (req: any, res) => {
-    try {
-      const { email, password, firstName, lastName } = req.body;
-      
-      // Create user session
-      const sessionUser = {
-        claims: {
-          sub: `email_${email}`,
-          email: email,
-          first_name: firstName,
-          last_name: lastName,
-          profile_image_url: null,
-          exp: Math.floor(Date.now() / 1000) + (7 * 24 * 60 * 60) // 7 days
-        }
-      };
-
-      // Store user in session
-      req.session.user = sessionUser;
-      req.user = sessionUser;
-      
-      res.json({ success: true, message: 'Registration successful' });
-    } catch (error) {
-      console.error('Registration error:', error);
-      res.status(400).json({ message: 'Registration failed' });
-    }
-  });
-
-  app.post('/api/auth/forgot-password', async (req: any, res) => {
-    try {
-      const { email } = req.body;
-      
-      // For now, just return success
-      res.json({ success: true, message: 'Password reset email sent' });
-    } catch (error) {
-      console.error('Forgot password error:', error);
-      res.status(400).json({ message: 'Failed to send reset email' });
-    }
-  });
-
-  app.get('/api/auth/instagram', (req, res) => {
-    const instagramAuthUrl = `https://api.instagram.com/oauth/authorize?client_id=${process.env.INSTAGRAM_CLIENT_ID}&redirect_uri=${encodeURIComponent(`${req.protocol}://${req.get('host')}/api/auth/instagram/callback`)}&scope=user_profile,user_media&response_type=code`;
-    res.redirect(instagramAuthUrl);
-  });
-
-  app.get('/api/auth/instagram/callback', isAuthenticated, async (req: any, res) => {
-    const { code } = req.query;
-    if (!code) {
-      return res.redirect('/?error=instagram_auth_failed');
-    }
-
-    try {
-      const userId = req.user.claims?.sub || req.user.id;
-      
-      // Exchange code for access token
-      const tokenResponse = await fetch('https://api.instagram.com/oauth/access_token', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams({
-          client_id: process.env.INSTAGRAM_CLIENT_ID!,
-          client_secret: process.env.INSTAGRAM_CLIENT_SECRET!,
-          grant_type: 'authorization_code',
-          redirect_uri: `${req.protocol}://${req.get('host')}/api/auth/instagram/callback`,
-          code: code as string,
-        }),
-      });
-
-      const tokenData = await tokenResponse.json();
-      
-      if (tokenData.access_token) {
-        // Process Instagram connection
-        await SocialOAuthService.processInstagramConnections(tokenData.access_token, userId);
-        res.redirect('/?social_connected=instagram');
-      } else {
-        res.redirect('/?error=instagram_token_failed');
-      }
-    } catch (error) {
-      console.error('Instagram OAuth error:', error);
-      res.redirect('/?error=instagram_auth_error');
-    }
-  });
-
-  app.get('/api/auth/snapchat', (req, res) => {
-    const snapchatAuthUrl = `https://accounts.snapchat.com/login/oauth2/authorize?client_id=${process.env.SNAPCHAT_CLIENT_ID}&redirect_uri=${encodeURIComponent(`${req.protocol}://${req.get('host')}/api/auth/snapchat/callback`)}&response_type=code&scope=user.display_name`;
-    res.redirect(snapchatAuthUrl);
-  });
-
-  app.get('/api/auth/snapchat/callback', async (req, res) => {
-    const { code } = req.query;
-    if (!code) {
-      return res.redirect('/?error=snapchat_auth_failed');
-    }
-
-    try {
-      // Exchange code for access token
-      const tokenResponse = await fetch('https://accounts.snapchat.com/login/oauth2/access_token', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams({
-          client_id: process.env.SNAPCHAT_CLIENT_ID!,
-          client_secret: process.env.SNAPCHAT_CLIENT_SECRET!,
-          grant_type: 'authorization_code',
-          redirect_uri: `${req.protocol}://${req.get('host')}/api/auth/snapchat/callback`,
-          code: code as string,
-        }),
-      });
-
-      const tokenData = await tokenResponse.json();
-      
-      if (tokenData.access_token) {
-        res.redirect('/?social_connected=snapchat');
-      } else {
-        res.redirect('/?error=snapchat_token_failed');
-      }
-    } catch (error) {
-      console.error('Snapchat OAuth error:', error);
-      res.redirect('/?error=snapchat_auth_error');
-    }
-  });
-
-  app.get('/api/auth/tiktok', (req, res) => {
-    const tiktokAuthUrl = `https://www.tiktok.com/auth/authorize/?client_key=${process.env.TIKTOK_CLIENT_KEY}&scope=user.info.basic&response_type=code&redirect_uri=${encodeURIComponent(`${req.protocol}://${req.get('host')}/api/auth/tiktok/callback`)}&state=state`;
-    res.redirect(tiktokAuthUrl);
-  });
-
-  app.get('/api/auth/tiktok/callback', async (req, res) => {
-    const { code } = req.query;
-    if (!code) {
-      return res.redirect('/?error=tiktok_auth_failed');
-    }
-
-    try {
-      // Exchange code for access token
-      const tokenResponse = await fetch('https://open-api.tiktok.com/oauth/access_token/', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams({
-          client_key: process.env.TIKTOK_CLIENT_KEY!,
-          client_secret: process.env.TIKTOK_CLIENT_SECRET!,
-          code: code as string,
-          grant_type: 'authorization_code',
-        }),
-      });
-
-      const tokenData = await tokenResponse.json();
-      
-      if (tokenData.data?.access_token) {
-        res.redirect('/?social_connected=tiktok');
-      } else {
-        res.redirect('/?error=tiktok_token_failed');
-      }
-    } catch (error) {
-      console.error('TikTok OAuth error:', error);
-      res.redirect('/?error=tiktok_auth_error');
-    }
-  });
+  // All OAuth authentication handled by Firebase client-side
 
   const tmdbService = new TMDBService();
 
