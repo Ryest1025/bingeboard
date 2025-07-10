@@ -56,6 +56,8 @@ export async function setupAuth(app: Express) {
 export const isAuthenticated: RequestHandler = async (req, res, next) => {
   const sessionUser = (req as any).session?.user;
   
+  console.log('🔐 Authentication middleware - Session user:', JSON.stringify(sessionUser, null, 2));
+  
   if (!sessionUser) {
     return res.status(401).json({ message: 'Authentication required' });
   }
@@ -63,11 +65,13 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
   // Check if session is expired
   const isExpired = sessionUser.claims?.exp && sessionUser.claims.exp < Math.floor(Date.now() / 1000);
   if (isExpired) {
+    console.log('🔐 Session expired for user:', sessionUser.email);
     return res.status(401).json({ message: 'Session expired' });
   }
   
   // Attach user to request
   (req as any).user = sessionUser;
+  console.log('🔐 User attached to request:', sessionUser.email);
   next();
 };
 
