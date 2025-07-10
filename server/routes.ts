@@ -55,13 +55,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
   await setupAuth(app);
 
-  // Firebase authentication routes (working implementation)
-  // Google and Facebook authentication handled by Passport.js in auth.ts
-
-  // Social Media OAuth Routes
-  // Facebook OAuth routes are handled in auth.ts via Passport.js
-
-  // Facebook OAuth callback is handled in auth.ts via Passport.js
+  // Firebase authentication routes only
 
   app.get('/api/auth/instagram', (req, res) => {
     const instagramAuthUrl = `https://api.instagram.com/oauth/authorize?client_id=${process.env.INSTAGRAM_CLIENT_ID}&redirect_uri=${encodeURIComponent(`${req.protocol}://${req.get('host')}/api/auth/instagram/callback`)}&scope=user_profile,user_media&response_type=code`;
@@ -236,13 +230,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const user = await storage.upsertUser({
         id: decodedToken.uid,
         email: decodedToken.email,
-        firstName: decodedToken.name?.split(' ')[0] || decodedToken.email.split('@')[0],
+        firstName: decodedToken.name?.split(' ')[0] || decodedToken.email?.split('@')[0] || 'User',
         lastName: decodedToken.name?.split(' ').slice(1).join(' ') || '',
         profileImageUrl: decodedToken.picture || null,
         authProvider: 'firebase'
       });
 
-      // Create session
+      // Create session manually
       const sessionUser = {
         claims: {
           sub: user.id,
@@ -254,13 +248,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       };
 
-      req.login(sessionUser, (err) => {
-        if (err) {
-          console.error('Session creation error:', err);
-          return res.status(500).json({ message: 'Failed to create session' });
-        }
-        res.json({ success: true, user: user });
-      });
+      // Store user in session
+      req.session.user = sessionUser;
+      req.user = sessionUser;
+      
+      res.json({ success: true, user: user });
     } catch (error) {
       console.error('Firebase session error:', error);
       res.status(401).json({ message: 'Invalid token' });
