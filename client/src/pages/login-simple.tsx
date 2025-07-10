@@ -373,10 +373,6 @@ export default function LoginSimple() {
                     Facebook
                   </Button>
                 </div>
-                
-                <div className="mt-3 text-xs text-gray-500 text-center">
-                  {isMobile() ? "📱 Mobile: Will redirect to provider" : "🖥️ Desktop: Will redirect to provider"}
-                </div>
               </div>
               
               <div className="mt-4 text-center">
