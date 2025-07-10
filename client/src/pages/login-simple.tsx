@@ -363,14 +363,15 @@ export default function LoginSimple() {
               const methods = await fetchSignInMethodsForEmail(auth, email);
               console.log("🧠 Existing sign-in methods:", methods);
 
-              if (methods.includes("google.com")) {
-                // Step 2: Ask user to sign in with Google first
-                toast({
-                  title: "Account Linking Required",
-                  description: "This email is already linked to your Google account. Please sign in with Google first, then we'll link your Facebook account.",
-                  variant: "default",
-                });
-                
+              // Since we know this is a Google/Facebook conflict, assume Google exists
+              // Step 2: Ask user to sign in with Google first
+              toast({
+                title: "Account Linking Required",
+                description: "This email is already linked to your Google account. Please sign in with Google first, then we'll link your Facebook account.",
+                variant: "default",
+              });
+              
+              try {
                 const googleResult = await signInWithPopup(auth, googleProvider);
                 if (googleResult && googleResult.user) {
                   // Step 3: Link Facebook credential to the existing Google user
@@ -405,12 +406,41 @@ export default function LoginSimple() {
                     return;
                   }
                 }
-              } else {
-                toast({
-                  title: "Account Linking Error",
-                  description: `Please sign in with your original provider: ${methods[0]}`,
-                  variant: "destructive",
-                });
+              } catch (googleLinkError: any) {
+                if (googleLinkError.code === "auth/popup-closed-by-user") {
+                  console.warn("⚠️ User closed the Google popup before completing login.");
+                  toast({
+                    title: "Popup Closed",
+                    description: "You closed the popup. Please try again to link your Facebook account to your Google account.",
+                    variant: "default",
+                  });
+                  setIsLoading(false);
+                  return;
+                } else {
+                  console.error("❌ Failed to complete Google sign-in for linking:", googleLinkError);
+                  
+                  // Try fallback to redirect if popup fails
+                  toast({
+                    title: "Popup Failed - Trying Redirect",
+                    description: "Popup blocked. Redirecting to Google for account linking...",
+                    variant: "default",
+                  });
+                  
+                  try {
+                    await signInWithRedirect(auth, googleProvider);
+                    // This will redirect the user away and they'll come back to the redirect handler
+                    return;
+                  } catch (redirectError: any) {
+                    console.error("❌ Redirect also failed:", redirectError);
+                    toast({
+                      title: "Account Linking Failed",
+                      description: "Unable to link accounts. Please try signing in with Google instead.",
+                      variant: "destructive",
+                    });
+                    setIsLoading(false);
+                    return;
+                  }
+                }
               }
             } catch (linkError: any) {
               console.error('Account linking failed:', linkError);
