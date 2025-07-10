@@ -15,7 +15,6 @@ import NotFound from "@/pages/not-found";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import Landing from "@/pages/landing";
 import LoginSimple from "@/pages/login-simple";
-import LoginDirect from "@/pages/login-direct";
 import Home from "@/pages/modern-home";
 import ModernDiscover from "@/pages/modern-discover";
 import Activity from "@/pages/activity";
@@ -124,7 +123,6 @@ function Router() {
         <Switch>
           {/* Public routes - always accessible */}
           <Route path="/login" component={LoginSimple} />
-          <Route path="/login-direct" component={LoginDirect} />
 
           <Route path="/privacy-policy" component={PrivacyPolicy} />
           <Route path="/terms-of-service" component={TermsOfService} />

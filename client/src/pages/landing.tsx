@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useLocation } from "wouter";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -141,6 +142,8 @@ function ShowCard({ show }: { show: Show }) {
 }
 
 export default function Landing() {
+  const [, setLocation] = useLocation();
+  
   // State for trending shows
   const [trendingShows, setTrendingShows] = useState<{ results: Show[] } | null>(null);
   
@@ -197,7 +200,7 @@ export default function Landing() {
                 className="text-gray-300 hover:text-white text-sm px-2 sm:px-4 py-2"
                 onClick={() => {
                   console.log('Navigating to login page...');
-                  window.location.replace('/login');
+                  setLocation('/login');
                 }}
               >
                 Log In
@@ -206,7 +209,7 @@ export default function Landing() {
                 className="bg-gradient-to-r from-teal-600 via-cyan-600 to-blue-600 hover:from-teal-700 hover:via-cyan-700 hover:to-blue-700 text-white text-sm px-3 sm:px-4 py-2"
                 onClick={() => {
                   console.log('Navigating to signup page...');
-                  window.location.replace('/login');
+                  setLocation('/login');
                 }}
               >
                 Sign Up
@@ -257,20 +260,7 @@ export default function Landing() {
                 Join Now with Google
               </Button>
               
-              <Button 
-                size="lg" 
-                variant="outline" 
-                className="border-teal-400/30 text-teal-300 hover:bg-teal-500/10 px-8 py-4 text-lg w-full"
-                onClick={() => {
-                  console.log('Direct login page navigation');
-                  window.location.href = '/login-direct';
-                }}
-              >
-                <svg className="w-5 h-5 mr-3" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
-                </svg>
-                Direct Login (Working)
-              </Button>
+
               
               <Button 
                 size="lg" 
@@ -298,7 +288,7 @@ export default function Landing() {
                 className="border-teal-400/30 text-teal-300 hover:bg-teal-500/10 px-8 py-4 text-lg w-full"
                 onClick={() => {
                   console.log('Email signup clicked');
-                  window.location.replace('/login');
+                  setLocation('/login');
                 }}
               >
                 <svg className="w-5 h-5 mr-3" viewBox="0 0 24 24" fill="currentColor">
@@ -316,7 +306,7 @@ export default function Landing() {
                     className="text-teal-400 hover:text-teal-300 p-0 h-auto font-medium underline"
                     onClick={() => {
                       console.log('Login link clicked - forcing navigation to login page');
-                      window.location.replace('/login');
+                      setLocation('/login');
                     }}
                   >
                     Sign In
