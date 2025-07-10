@@ -43,23 +43,10 @@ app.use(cors({
 app.use(express.json({ limit: '50mb' })); // Increase limit for large CSV uploads
 app.use(express.urlencoded({ extended: false, limit: '50mb' }));
 
-// Custom domain redirect disabled for API calls to prevent fetch errors
-// Only redirect frontend pages, not API endpoints
+// Custom domain redirect temporarily disabled to allow app to load
+// This can be re-enabled once DNS propagation is complete
 app.use((req, res, next) => {
-  const host = req.get('host');
-  const customDomain = 'www.joinbingeboard.com';
-  
-  // Temporarily disable custom domain redirect to allow app to load
-  // Only redirect if accessing via Replit domain and not already on custom domain
-  if (host && host.includes('replit.dev') && !host.includes(customDomain)) {
-    // Redirect only login pages to custom domain for Firebase compatibility
-    if ((req.path.startsWith('/login') || req.path.startsWith('/auth')) && !req.path.startsWith('/api/')) {
-      const redirectUrl = `https://${customDomain}${req.originalUrl}`;
-      console.log(`🔄 Redirecting auth pages to custom domain: ${redirectUrl}`);
-      return res.redirect(301, redirectUrl);
-    }
-  }
-  
+  // Skip all redirects for now - let the app load normally
   next();
 });
 
