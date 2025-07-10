@@ -1,0 +1,74 @@
+Your SocialMediaConnections.tsx component is still using **server-side OAuth routes** (e.g., `/api/auth/facebook`, `/api/auth/instagram`) for social logins.  
+Since you want to use **Firebase-only authentication**, these should be replaced with Firebase’s client-side social login methods.
+
+---
+
+## **How to Fix Social Logins for Mobile (and Web)**
+
+### 1. **Remove Server-Side Redirects**
+- Delete all `window.location.href = '/api/auth/facebook'` and similar lines.
+
+### 2. **Use Firebase Client SDK for Social Logins**
+
+**Example for Google and Facebook:**
+````tsx
+import { getAuth, GoogleAuthProvider, FacebookAuthProvider, signInWithPopup } from "firebase/auth";
+
+const auth = getAuth();
+
+function handleGoogleLogin() {
+  const provider = new GoogleAuthProvider();
+  signInWithPopup(auth, provider)
+    .then(result => {
+      // Handle success (e.g., show toast, update state)
+    })
+    .catch(error => {
+      // Handle error
+    });
+}
+
+function handleFacebookLogin() {
+  const provider = new FacebookAuthProvider();
+  signInWithPopup(auth, provider)
+    .then(result => {
+      // Handle success
+    })
+    .catch(error => {
+      // Handle error
+    });
+}
+````
+
+### 3. **Update Your Component’s Buttons**
+
+Replace the mutation logic for Facebook/Instagram with direct calls to the Firebase login functions:
+
+````tsx
+<Button 
+  onClick={handleFacebookLogin}
+  className="w-full"
+>
+  Connect with Facebook
+</Button>
+<Button 
+  onClick={handleGoogleLogin}
+  className="w-full"
+>
+  Connect with Google
+</Button>
+````
+
+### 4. **Instagram, Snapchat, TikTok**
+- Firebase does not natively support Instagram, Snapchat, or TikTok login.
+- You may need to remove these or provide alternate flows (e.g., username linking, not OAuth).
+
+---
+
+## **Summary**
+
+- Remove all server-side OAuth redirects from your social login buttons.
+- Use Firebase’s client SDK for Google and Facebook login.
+- Remove or update unsupported providers (Instagram, Snapchat, TikTok).
+- This will ensure social logins work on both mobile and web.
+
+Let me know if you want a full code rewrite for your SocialMediaConnections.tsx!

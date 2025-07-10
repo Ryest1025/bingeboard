@@ -21,16 +21,25 @@ console.log('Firebase config:', {
   apiKey: firebaseConfig.apiKey ? 'Set' : 'Missing',
   authDomain: firebaseConfig.authDomain,
   projectId: firebaseConfig.projectId,
-  appId: firebaseConfig.appId ? 'Set' : 'Missing'
+  appId: firebaseConfig.appId ? 'Set' : 'Missing',
+  currentDomain: window.location.hostname
 });
 
-// Configure providers
+// Configure providers with custom parameters for domain compatibility
 const googleProvider = new GoogleAuthProvider();
 const facebookProvider = new FacebookAuthProvider();
 
-// Configure scopes
+// Configure scopes and custom parameters
 googleProvider.addScope('profile');
 googleProvider.addScope('email');
+googleProvider.setCustomParameters({
+  prompt: 'select_account',
+  hd: '' // Allow any hosted domain
+});
+
 facebookProvider.addScope('email');
+facebookProvider.setCustomParameters({
+  display: 'popup'
+});
 
 export { auth, googleProvider, facebookProvider };

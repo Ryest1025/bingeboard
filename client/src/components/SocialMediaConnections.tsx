@@ -8,6 +8,8 @@ import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { Facebook, Instagram, Twitter, MessageCircle, UserPlus, Users, X } from "lucide-react";
+import { auth, googleProvider, facebookProvider } from '@/firebase/config-simple';
+import { signInWithPopup, signInWithRedirect } from 'firebase/auth';
 
 interface SocialConnection {
   id: number;
@@ -54,19 +56,68 @@ export default function SocialMediaConnections() {
     staleTime: 30000,
   });
 
+  // Firebase authentication helpers
+  const handleGoogleConnect = async () => {
+    try {
+      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+      
+      if (isMobile) {
+        // Use redirect for mobile devices
+        await signInWithRedirect(auth, googleProvider);
+      } else {
+        // Use popup for desktop
+        const result = await signInWithPopup(auth, googleProvider);
+        
+        toast({
+          title: "Google Connected",
+          description: "Successfully connected your Google account",
+        });
+        
+        // Refresh connections data
+        queryClient.invalidateQueries({ queryKey: ['/api/social/connections'] });
+      }
+    } catch (error: any) {
+      console.error('Google connection error:', error);
+      toast({
+        title: "Google Connection Failed",
+        description: error.message || "Failed to connect Google account",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleFacebookConnect = async () => {
+    try {
+      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+      
+      if (isMobile) {
+        // Use redirect for mobile devices
+        await signInWithRedirect(auth, facebookProvider);
+      } else {
+        // Use popup for desktop
+        const result = await signInWithPopup(auth, facebookProvider);
+        
+        toast({
+          title: "Facebook Connected",
+          description: "Successfully connected your Facebook account",
+        });
+        
+        // Refresh connections data
+        queryClient.invalidateQueries({ queryKey: ['/api/social/connections'] });
+      }
+    } catch (error: any) {
+      console.error('Facebook connection error:', error);
+      toast({
+        title: "Facebook Connection Failed",
+        description: error.message || "Failed to connect Facebook account",
+        variant: "destructive",
+      });
+    }
+  };
+
   // Connection mutations
   const facebookMutation = useMutation({
-    mutationFn: () => {
-      // Firebase authentication only - no server-side OAuth
-      toast({
-        title: "Coming Soon",
-        description: "Facebook social media connections will be available soon",
-      });
-      return Promise.resolve();
-    },
-    onSuccess: () => {
-      // No-op for now
-    },
+    mutationFn: handleFacebookConnect,
     onError: (error) => {
       toast({
         title: "Facebook Connection Failed",
@@ -97,17 +148,26 @@ export default function SocialMediaConnections() {
     }
   });
 
+  // Google mutation
+  const googleMutation = useMutation({
+    mutationFn: handleGoogleConnect,
+    onError: (error) => {
+      toast({
+        title: "Google Connection Failed",
+        description: error.message || "Failed to connect Google",
+        variant: "destructive",
+      });
+    }
+  });
+
   const snapchatMutation = useMutation({
     mutationFn: () => {
-      // Note: Snapchat OAuth not available via Supabase - redirect to login
-      window.location.href = '/login';
-      return Promise.resolve();
-    },
-    onSuccess: () => {
+      // Note: Snapchat OAuth not supported by Firebase - show coming soon message
       toast({
-        title: "Redirecting to Snapchat",
-        description: "You'll be redirected to Snapchat to connect your account",
+        title: "Coming Soon",
+        description: "Snapchat connections will be available soon",
       });
+      return Promise.resolve();
     },
     onError: (error) => {
       toast({
@@ -120,15 +180,12 @@ export default function SocialMediaConnections() {
 
   const tiktokMutation = useMutation({
     mutationFn: () => {
-      // Note: TikTok OAuth not available via Supabase - redirect to login
-      window.location.href = '/login';
-      return Promise.resolve();
-    },
-    onSuccess: () => {
+      // Note: TikTok OAuth not supported by Firebase - show coming soon message
       toast({
-        title: "Redirecting to TikTok",
-        description: "You'll be redirected to TikTok to connect your account",
+        title: "Coming Soon",
+        description: "TikTok connections will be available soon",
       });
+      return Promise.resolve();
     },
     onError: (error) => {
       toast({
@@ -225,6 +282,23 @@ export default function SocialMediaConnections() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
+          {/* Google */}
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <Users className="h-4 w-4 text-red-600" />
+              <span className="font-medium">Google</span>
+            </div>
+            <Button 
+              onClick={() => googleMutation.mutate()}
+              disabled={googleMutation.isPending}
+              className="w-full"
+            >
+              {googleMutation.isPending ? "Connecting..." : "Connect with Google"}
+            </Button>
+          </div>
+
+          <Separator />
+
           {/* Facebook */}
           <div className="space-y-2">
             <div className="flex items-center gap-2">
@@ -236,7 +310,7 @@ export default function SocialMediaConnections() {
               disabled={facebookMutation.isPending}
               className="w-full"
             >
-              {facebookMutation.isPending ? "Redirecting..." : "Connect with Facebook"}
+              {facebookMutation.isPending ? "Connecting..." : "Connect with Facebook"}
             </Button>
           </div>
 
@@ -247,13 +321,15 @@ export default function SocialMediaConnections() {
             <div className="flex items-center gap-2">
               <Instagram className="h-4 w-4 text-pink-600" />
               <span className="font-medium">Instagram</span>
+              <Badge variant="secondary" className="text-xs">Coming Soon</Badge>
             </div>
             <Button 
               onClick={() => instagramMutation.mutate()}
               disabled={instagramMutation.isPending}
               className="w-full"
+              variant="outline"
             >
-              {instagramMutation.isPending ? "Redirecting..." : "Connect with Instagram"}
+              {instagramMutation.isPending ? "Connecting..." : "Connect with Instagram"}
             </Button>
           </div>
 
@@ -264,13 +340,15 @@ export default function SocialMediaConnections() {
             <div className="flex items-center gap-2">
               <MessageCircle className="h-4 w-4 text-yellow-600" />
               <span className="font-medium">Snapchat</span>
+              <Badge variant="secondary" className="text-xs">Coming Soon</Badge>
             </div>
             <Button 
               onClick={() => snapchatMutation.mutate()}
               disabled={snapchatMutation.isPending}
               className="w-full"
+              variant="outline"
             >
-              {snapchatMutation.isPending ? "Redirecting..." : "Connect with Snapchat"}
+              {snapchatMutation.isPending ? "Connecting..." : "Connect with Snapchat"}
             </Button>
           </div>
 
@@ -281,13 +359,15 @@ export default function SocialMediaConnections() {
             <div className="flex items-center gap-2">
               <Twitter className="h-4 w-4 text-black" />
               <span className="font-medium">TikTok</span>
+              <Badge variant="secondary" className="text-xs">Coming Soon</Badge>
             </div>
             <Button 
               onClick={() => tiktokMutation.mutate()}
               disabled={tiktokMutation.isPending}
               className="w-full"
+              variant="outline"
             >
-              {tiktokMutation.isPending ? "Redirecting..." : "Connect with TikTok"}
+              {tiktokMutation.isPending ? "Connecting..." : "Connect with TikTok"}
             </Button>
           </div>
         </CardContent>
