@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 // import authRoutes from './routes/auth';
 import { storage } from "./storage";
-import { setupAuth, isAuthenticated } from "./auth";
+import { setupAuth, isAuthenticated, verifyPassword } from "./auth";
 import { db } from "./db";
 import { 
   insertWatchlistSchema, insertActivitySchema, insertFriendshipSchema, 
@@ -344,7 +344,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Hash password
-      const bcrypt = require('bcryptjs');
+      const bcrypt = await import('bcryptjs');
       const hashedPassword = await bcrypt.hash(password, 12);
 
       // Create user
@@ -358,8 +358,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         authProvider: 'email',
       });
 
-      // Automatically log in the user after registration
-      (req as any).login({ id: newUser.id, email: newUser.email }, (err: any) => {
+      // Create session for new user
+      const sessionUser = {
+        claims: {
+          sub: newUser.id,
+          email: newUser.email,
+          first_name: newUser.firstName,
+          last_name: newUser.lastName,
+          profile_image_url: newUser.profileImageUrl,
+          exp: Math.floor(Date.now() / 1000) + (7 * 24 * 60 * 60) // 7 days
+        },
+        id: newUser.id,
+        email: newUser.email
+      };
+
+      req.session.user = sessionUser;
+      
+      req.session.save((err: any) => {
         if (err) {
           console.error('Auto-login after registration error:', err);
           return res.status(201).json({ 
@@ -405,14 +420,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Verify password
-      const bcrypt = require('bcryptjs');
-      const isValidPassword = await bcrypt.compare(password, user.passwordHash);
+      const isValidPassword = await verifyPassword(password, user.passwordHash);
       if (!isValidPassword) {
         return res.status(401).json({ message: "Invalid email or password" });
       }
 
-      // Create session
-      (req as any).login({ id: user.id, email: user.email }, (err: any) => {
+      // Create session manually (not using Passport.js)
+      const sessionUser = {
+        claims: {
+          sub: user.id,
+          email: user.email,
+          first_name: user.firstName,
+          last_name: user.lastName,
+          profile_image_url: user.profileImageUrl,
+          exp: Math.floor(Date.now() / 1000) + (7 * 24 * 60 * 60) // 7 days
+        },
+        id: user.id,
+        email: user.email
+      };
+
+      req.session.user = sessionUser;
+      
+      req.session.save((err: any) => {
         if (err) {
           console.error('Login session error:', err);
           return res.status(500).json({ message: "Failed to create session" });
@@ -435,11 +464,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Test endpoint to check session status
-  app.get('/api/test-session', (req, res) => {
+  app.get('/api/test-session', (req: any, res) => {
     res.setHeader('Content-Type', 'application/json');
     res.json({
-      isAuthenticated: req.isAuthenticated(),
-      user: req.user,
+      isAuthenticated: !!(req.session?.user),
+      user: req.session?.user,
       sessionID: req.sessionID,
       hasSession: !!req.session
     });
@@ -468,7 +497,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         email: user.email
       };
 
-      (req as any).login(sessionUser, (err: any) => {
+      req.session.user = sessionUser;
+      
+      req.session.save((err: any) => {
         if (err) {
           console.error('Test login error:', err);
           return res.status(500).json({ message: "Failed to create session" });
@@ -587,7 +618,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         email: user.email
       };
 
-      (req as any).login(sessionUser, (err: any) => {
+      req.session.user = sessionUser;
+      
+      req.session.save((err: any) => {
         if (err) {
           console.error('Firebase session creation error:', err);
           return res.status(500).json({ message: "Failed to create session" });
@@ -598,7 +631,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log('Session ID:', req.sessionID);
         console.log('Session data:', JSON.stringify(req.session, null, 2));
         console.log('Request user after login:', JSON.stringify(req.user, null, 2));
-        console.log('Is authenticated:', req.isAuthenticated());
         
         res.json({
           message: "Firebase authentication successful",
@@ -1305,8 +1337,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         emailVerified: false,
       });
 
-      // Automatically log the user in after registration
-      req.login({ id: user.id, email: user.email, firstName: user.firstName, lastName: user.lastName }, (err) => {
+      // Create session for registered user
+      const sessionUser = {
+        claims: {
+          sub: user.id,
+          email: user.email,
+          first_name: user.firstName,
+          last_name: user.lastName,
+          profile_image_url: user.profileImageUrl,
+          exp: Math.floor(Date.now() / 1000) + (7 * 24 * 60 * 60) // 7 days
+        },
+        id: user.id,
+        email: user.email
+      };
+
+      (req as any).session.user = sessionUser;
+      
+      (req as any).session.save((err: any) => {
         if (err) {
           console.error("Auto-login after registration failed:", err);
           return res.status(500).json({ message: "Registration successful but login failed" });
@@ -1334,8 +1381,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Invalid credentials" });
       }
 
-      // Create session manually for email auth
-      req.login({ id: user.id, email: user.email }, (err) => {
+      // Create session for authenticated user
+      const sessionUser = {
+        claims: {
+          sub: user.id,
+          email: user.email,
+          first_name: user.firstName,
+          last_name: user.lastName,
+          profile_image_url: user.profileImageUrl,
+          exp: Math.floor(Date.now() / 1000) + (7 * 24 * 60 * 60) // 7 days
+        },
+        id: user.id,
+        email: user.email
+      };
+
+      (req as any).session.user = sessionUser;
+      
+      (req as any).session.save((err: any) => {
         if (err) {
           return res.status(500).json({ message: "Session creation failed" });
         }
@@ -1948,7 +2010,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Send email invitation using SendGrid
       try {
-        const sgMail = require('@sendgrid/mail');
+        const sgMail = await import('@sendgrid/mail');
         if (process.env.SENDGRID_API_KEY) {
           sgMail.setApiKey(process.env.SENDGRID_API_KEY);
           
