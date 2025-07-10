@@ -197,7 +197,7 @@ export default function Landing() {
                 className="text-gray-300 hover:text-white text-sm px-2 sm:px-4 py-2"
                 onClick={() => {
                   console.log('Navigating to login page...');
-                  window.location.href = '/login';
+                  window.location.replace('/login');
                 }}
               >
                 Log In
@@ -206,7 +206,7 @@ export default function Landing() {
                 className="bg-gradient-to-r from-teal-600 via-cyan-600 to-blue-600 hover:from-teal-700 hover:via-cyan-700 hover:to-blue-700 text-white text-sm px-3 sm:px-4 py-2"
                 onClick={() => {
                   console.log('Navigating to signup page...');
-                  window.location.href = '/login';
+                  window.location.replace('/login');
                 }}
               >
                 Sign Up
@@ -298,7 +298,7 @@ export default function Landing() {
                 className="border-teal-400/30 text-teal-300 hover:bg-teal-500/10 px-8 py-4 text-lg w-full"
                 onClick={() => {
                   console.log('Email signup clicked');
-                  window.location.href = '/login';
+                  window.location.replace('/login');
                 }}
               >
                 <svg className="w-5 h-5 mr-3" viewBox="0 0 24 24" fill="currentColor">
@@ -315,8 +315,8 @@ export default function Landing() {
                     variant="link"
                     className="text-teal-400 hover:text-teal-300 p-0 h-auto font-medium underline"
                     onClick={() => {
-                      console.log('Login link clicked');
-                      window.location.href = '/login';
+                      console.log('Login link clicked - forcing navigation to login page');
+                      window.location.replace('/login');
                     }}
                   >
                     Sign In
