@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import { Search, Play, Calendar, Bell, Plus, TrendingUp, Star, Clock } from "lucide-react";
 
 // UI Test - Dark theme matching the provided image
 export default function UITestPage() {
@@ -84,8 +85,62 @@ export default function UITestPage() {
 
   return (
     <div className="min-h-screen" style={{ background: '#111827' }}>
+      {/* Top Navigation Bar */}
+      <div className="max-w-6xl mx-auto p-4 pb-0">
+        <div 
+          className="rounded-2xl p-4 mb-6"
+          style={{ 
+            background: '#18181b',
+            boxShadow: '0 4px 24px rgba(0,0,0,0.18)'
+          }}
+        >
+          <div className="flex items-center justify-between">
+            {/* BingeBoard Logo */}
+            <div className="flex items-center space-x-3">
+              <div className="relative">
+                <div className="w-8 h-7 bg-gradient-to-br from-slate-700 to-slate-900 rounded-lg shadow-lg border border-slate-600 relative">
+                  <div className="absolute inset-1 bg-gradient-to-br from-teal-500 via-cyan-500 to-blue-500 rounded-md flex items-center justify-center">
+                    <div className="text-xs font-bold text-white">B</div>
+                  </div>
+                  <div className="absolute -bottom-0.5 left-1/2 transform -translate-x-1/2 w-2 h-0.5 bg-slate-700 rounded-sm"></div>
+                  <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-3 h-0.5 bg-slate-600 rounded-sm"></div>
+                </div>
+              </div>
+              <div>
+                <span className="text-lg font-black" style={{ color: '#0e7490' }}>
+                  Binge
+                </span>
+                <span className="text-lg font-light text-white ml-1">Board</span>
+              </div>
+            </div>
+            
+            {/* Navigation Items */}
+            <div className="flex items-center space-x-6">
+              <button className="flex items-center space-x-2 hover:opacity-80 transition-opacity">
+                <Search className="h-4 w-4" style={{ color: '#0e7490' }} />
+                <span className="text-sm font-medium" style={{ color: '#f3f4f6' }}>Search</span>
+              </button>
+              <button className="flex items-center space-x-2 hover:opacity-80 transition-opacity">
+                <Bell className="h-4 w-4" style={{ color: '#0e7490' }} />
+                <span className="text-sm font-medium" style={{ color: '#f3f4f6' }}>Notifications</span>
+              </button>
+              <div className="flex items-center space-x-2">
+                <div className="w-8 h-8 rounded-full bg-gradient-to-r from-teal-500 to-blue-500 flex items-center justify-center">
+                  <span className="text-sm font-semibold text-white">
+                    {user?.firstName?.charAt(0) || "R"}
+                  </span>
+                </div>
+                <span className="text-sm font-medium" style={{ color: '#f3f4f6' }}>
+                  {user?.firstName || "Rachel"}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Main container with your exact design specs */}
-      <div className="max-w-6xl mx-auto p-6">
+      <div className="max-w-6xl mx-auto px-6 pb-6">
         {/* Header section */}
         <div 
           className="rounded-3xl p-8 mb-8 shadow-2xl"
