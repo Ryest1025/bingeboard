@@ -207,7 +207,7 @@ export default function LoginSimple() {
       console.log('Starting Google authentication...');
       setIsLoading(true);
       
-      // Firebase handles OAuth flow internally - no domain configuration needed
+      // Use Firebase client-side authentication with redirect
       await signInWithRedirect(auth, googleProvider);
       
     } catch (error: any) {
@@ -215,8 +215,8 @@ export default function LoginSimple() {
       setIsLoading(false);
       
       toast({
-        title: "Login failed",
-        description: error.message || "Please try again or contact support if the issue persists.",
+        title: "Authentication Error",
+        description: "Failed to start Google authentication",
         variant: "destructive",
       });
     }
@@ -227,7 +227,7 @@ export default function LoginSimple() {
       console.log('Starting Facebook authentication...');
       setIsLoading(true);
       
-      // Firebase handles OAuth flow internally - no domain configuration needed
+      // Use Firebase client-side authentication with redirect
       await signInWithRedirect(auth, facebookProvider);
       
     } catch (error: any) {
@@ -235,8 +235,8 @@ export default function LoginSimple() {
       setIsLoading(false);
       
       toast({
-        title: "Login failed",
-        description: "Please try again or contact support if the issue persists.",
+        title: "Authentication Error",
+        description: "Failed to start Facebook authentication",
         variant: "destructive",
       });
     }
