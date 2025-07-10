@@ -143,11 +143,12 @@ export default function LoginSimple() {
   const handleGoogleAuth = async () => {
     try {
       console.log('Starting Google authentication...');
-      console.log('Device type:', isMobile() ? 'Mobile' : 'Desktop');
-      
-      // For OAuth, we need to use window.location for proper redirect flow
-      // This is different from internal navigation - OAuth requires full page redirect
-      window.location.href = '/api/auth/google';
+      // For now, show user that this feature is coming soon
+      toast({
+        title: "Feature Coming Soon",
+        description: "Google authentication will be available soon. Please use email/password for now.",
+        variant: "default",
+      });
     } catch (error) {
       console.error('Google auth error:', error);
       toast({
@@ -161,11 +162,12 @@ export default function LoginSimple() {
   const handleFacebookAuth = async () => {
     try {
       console.log('Starting Facebook authentication...');
-      console.log('Device type:', isMobile() ? 'Mobile' : 'Desktop');
-      
-      // For OAuth, we need to use window.location for proper redirect flow
-      // This is different from internal navigation - OAuth requires full page redirect
-      window.location.href = '/api/auth/facebook';
+      // For now, show user that this feature is coming soon
+      toast({
+        title: "Feature Coming Soon",
+        description: "Facebook authentication will be available soon. Please use email/password for now.",
+        variant: "default",
+      });
     } catch (error) {
       console.error('Facebook auth error:', error);
       toast({

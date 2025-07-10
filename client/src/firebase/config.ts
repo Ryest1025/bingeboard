@@ -1,8 +1,8 @@
 // Firebase configuration for BingeBoard
-// Temporarily disabling Firebase imports to resolve dependency issues
-// This will allow the app to start properly
+// Currently using simplified authentication system
+// Social auth will be added later when needed
 
-// Firebase configuration
+// Firebase configuration (for future social auth)
 const firebaseConfig = {
   apiKey: "AIzaSyB45zr8b2HjIx1fzXOuQsHxeQK9wl_wC88",
   authDomain: "bingeboard-73c5f.firebaseapp.com",
@@ -13,7 +13,7 @@ const firebaseConfig = {
   measurementId: "G-TB1ZXQ79LB"
 };
 
-// Mock Firebase objects for now to allow app to start
+// Simplified exports for current system
 const app = { name: "bingeboard-app" };
 const auth = { currentUser: null };
 
