@@ -68,11 +68,133 @@ export async function registerRoutes(app: Express): Promise<Server> {
     next();
   });
 
-  // Firebase authentication routes only - all OAuth handled client-side
+  // Server-side OAuth routes for mobile compatibility
+  app.get('/api/auth/google', (req, res) => {
+    console.log('Google OAuth requested - redirecting to Firebase Auth');
+    const googleAuthUrl = `https://accounts.google.com/oauth/authorize?` +
+      `client_id=${process.env.GOOGLE_CLIENT_ID}&` +
+      `redirect_uri=${encodeURIComponent('https://bingeboard-73c5f.firebaseapp.com/__/auth/handler')}&` +
+      `response_type=code&` +
+      `scope=openid%20email%20profile&` +
+      `state=${req.sessionID}`;
+    
+    res.redirect(googleAuthUrl);
+  });
 
+  app.get('/api/auth/facebook', (req, res) => {
+    console.log('Facebook OAuth requested - redirecting to Firebase Auth');
+    const facebookAuthUrl = `https://www.facebook.com/v18.0/dialog/oauth?` +
+      `client_id=${process.env.FACEBOOK_APP_ID}&` +
+      `redirect_uri=${encodeURIComponent('https://bingeboard-73c5f.firebaseapp.com/__/auth/handler')}&` +
+      `response_type=code&` +
+      `scope=email&` +
+      `state=${req.sessionID}`;
+    
+    res.redirect(facebookAuthUrl);
+  });
 
+  // Firebase session creation endpoint
+  app.post('/api/auth/firebase-session', async (req, res) => {
+    try {
+      console.log('Firebase session endpoint called');
+      const authHeader = req.headers.authorization;
+      const { firebaseToken } = req.body;
+      
+      if (!authHeader?.startsWith('Bearer ') && !firebaseToken) {
+        return res.status(401).json({ message: 'Authorization token required' });
+      }
 
-  // All OAuth authentication handled by Firebase client-side
+      let user;
+      if (authHeader?.startsWith('Bearer ')) {
+        // Verify Firebase ID token
+        const idToken = authHeader.substring(7);
+        console.log('Firebase token extracted, attempting verification...');
+        
+        try {
+          const decodedToken = await admin.auth().verifyIdToken(idToken);
+          console.log(`Firebase token verified successfully for user: ${decodedToken.uid} ${decodedToken.email}`);
+          
+          user = {
+            id: decodedToken.uid,
+            email: decodedToken.email!,
+            firstName: decodedToken.name?.split(' ')[0] || '',
+            lastName: decodedToken.name?.split(' ').slice(1).join(' ') || '',
+            profileImageUrl: decodedToken.picture || '',
+            authProvider: 'firebase'
+          };
+        } catch (error) {
+          console.error('Firebase token verification failed:', error);
+          return res.status(401).json({ message: 'Invalid Firebase token' });
+        }
+      } else if (firebaseToken) {
+        // Use provided Firebase token data
+        user = {
+          id: firebaseToken.uid,
+          email: firebaseToken.email!,
+          firstName: firebaseToken.displayName?.split(' ')[0] || '',
+          lastName: firebaseToken.displayName?.split(' ').slice(1).join(' ') || '',
+          profileImageUrl: firebaseToken.photoURL || '',
+          authProvider: 'firebase'
+        };
+      }
+
+      if (!user) {
+        return res.status(401).json({ message: 'No valid user data found' });
+      }
+
+      // Store user in database
+      console.log('Storage: Upserting user with data:', user);
+      const dbUser = await storage.upsertUser(user);
+      console.log('Storage: User upserted successfully:', dbUser.id, dbUser.email);
+      
+      console.log('User created/updated in database:', dbUser.id, dbUser.email);
+
+      // Create session structure
+      const sessionUser = {
+        claims: {
+          sub: dbUser.id,
+          email: dbUser.email,
+          first_name: dbUser.firstName,
+          last_name: dbUser.lastName,
+          profile_image_url: dbUser.profileImageUrl,
+          exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60) // 24 hours from now
+        },
+        id: dbUser.id,
+        email: dbUser.email
+      };
+
+      console.log('Session created with structure:', sessionUser);
+
+      // Save session
+      (req as any).session.user = sessionUser;
+      
+      console.log('Session ID:', (req as any).sessionID);
+      (req as any).session.save((err: any) => {
+        if (err) {
+          console.error('Session save error:', err);
+          return res.status(500).json({ message: 'Session creation failed' });
+        }
+        
+        console.log('Session saved successfully');
+        console.log('Session data after save:', JSON.stringify((req as any).session, null, 2));
+        
+        res.json({ 
+          success: true, 
+          user: { 
+            id: dbUser.id, 
+            email: dbUser.email,
+            firstName: dbUser.firstName,
+            lastName: dbUser.lastName,
+            profileImageUrl: dbUser.profileImageUrl
+          } 
+        });
+      });
+
+    } catch (error: any) {
+      console.error('Firebase session creation error:', error);
+      res.status(500).json({ message: 'Session creation failed', error: error.message });
+    }
+  });
 
   const tmdbService = new TMDBService();
 
@@ -203,101 +325,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('❌ Logout error:', error);
       res.redirect('/?logout=error');
-    }
-  });
-
-  // Firebase session creation endpoint
-  app.post('/api/auth/firebase-session', async (req: any, res) => {
-    try {
-      console.log('Firebase session endpoint called');
-      const authHeader = req.headers.authorization;
-      if (!authHeader || !authHeader.startsWith('Bearer ')) {
-        console.log('No authorization header found');
-        return res.status(401).json({ message: 'No token provided' });
-      }
-
-      const idToken = authHeader.substring(7);
-      console.log('Firebase token extracted, attempting verification...');
-      
-      // Check if Firebase Admin is available
-      const serviceAccountKey = process.env.FIREBASE_ADMIN_KEY;
-      if (!serviceAccountKey) {
-        console.warn('Firebase Admin SDK not configured, skipping token verification');
-        
-        // For development, create session without verification
-        const sessionUser = {
-          claims: {
-            sub: 'dev_user',
-            email: 'dev@example.com',
-            first_name: 'Dev',
-            last_name: 'User',
-            profile_image_url: null,
-            exp: Math.floor(Date.now() / 1000) + (7 * 24 * 60 * 60) // 7 days
-          }
-        };
-
-        req.session.user = sessionUser;
-        req.user = sessionUser;
-        
-        return res.json({ success: true, message: 'Development session created' });
-      }
-      
-      // Verify Firebase token using Firebase Admin SDK
-      const decodedToken = await admin.auth().verifyIdToken(idToken);
-      
-      console.log('Firebase token verified successfully for user:', decodedToken.uid, decodedToken.email);
-      
-      // Create or update user in database
-      const user = await storage.upsertUser({
-        id: decodedToken.uid,
-        email: decodedToken.email || '',
-        firstName: decodedToken.name?.split(' ')[0] || decodedToken.email?.split('@')[0] || 'User',
-        lastName: decodedToken.name?.split(' ').slice(1).join(' ') || '',
-        profileImageUrl: decodedToken.picture || null,
-        authProvider: 'firebase'
-      });
-      
-      console.log('User created/updated in database:', user.id, user.email);
-
-      // Create session with proper structure that matches isAuthenticated middleware expectations
-      const sessionUser = {
-        claims: {
-          sub: user.id,
-          email: user.email,
-          first_name: user.firstName,
-          last_name: user.lastName,
-          profile_image_url: user.profileImageUrl,
-          exp: Math.floor(Date.now() / 1000) + (7 * 24 * 60 * 60) // 7 days
-        },
-        id: user.id,
-        email: user.email
-      };
-
-      // Store user in session and force save
-      req.session.user = sessionUser;
-      req.user = sessionUser;
-      
-      console.log('Session created with structure:', JSON.stringify(sessionUser, null, 2));
-      console.log('Session ID:', req.sessionID);
-      
-      // Force session save
-      req.session.save((err) => {
-        if (err) {
-          console.error('Session save error:', err);
-          return res.status(500).json({ message: 'Failed to save session' });
-        }
-        
-        console.log('Session saved successfully');
-        console.log('Session data after save:', JSON.stringify(req.session, null, 2));
-        res.json({ 
-          success: true, 
-          user: user,
-          sessionId: req.sessionID 
-        });
-      });
-    } catch (error) {
-      console.error('Firebase session error:', error);
-      res.status(401).json({ message: 'Invalid token' });
     }
   });
 
