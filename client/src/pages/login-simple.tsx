@@ -143,38 +143,40 @@ export default function LoginSimple() {
   const handleGoogleAuth = async () => {
     try {
       console.log('Starting Google authentication...');
-      // For now, show user that this feature is coming soon
-      toast({
-        title: "Feature Coming Soon",
-        description: "Google authentication will be available soon. Please use email/password for now.",
-        variant: "default",
-      });
+      setIsLoading(true);
+      
+      // For now, redirect to server OAuth until Firebase is properly configured
+      window.location.href = '/api/auth/google';
+      
     } catch (error) {
       console.error('Google auth error:', error);
       toast({
         title: "Authentication Error",
-        description: "Failed to start Google authentication",
+        description: "Failed to authenticate with Google. Please try again.",
         variant: "destructive",
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const handleFacebookAuth = async () => {
     try {
       console.log('Starting Facebook authentication...');
-      // For now, show user that this feature is coming soon
-      toast({
-        title: "Feature Coming Soon",
-        description: "Facebook authentication will be available soon. Please use email/password for now.",
-        variant: "default",
-      });
+      setIsLoading(true);
+      
+      // For now, redirect to server OAuth until Firebase is properly configured
+      window.location.href = '/api/auth/facebook';
+      
     } catch (error) {
       console.error('Facebook auth error:', error);
       toast({
         title: "Authentication Error",
-        description: "Failed to start Facebook authentication",
+        description: "Failed to authenticate with Facebook. Please try again.",
         variant: "destructive",
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 

@@ -59,6 +59,57 @@ function Router() {
   // Show app immediately to prevent delays
   const [showApp, setShowApp] = useState(true);
 
+  // Handle Firebase redirect results - temporarily disabled
+  // useEffect(() => {
+  //   const handleFirebaseRedirect = async () => {
+  //     try {
+  //       const { getRedirectResult } = await import('firebase/auth');
+  //       const { auth } = await import('@/firebase/config');
+  //       
+  //       const result = await getRedirectResult(auth);
+  //       if (result) {
+  //         console.log('Firebase redirect result:', result.user.email);
+  //         
+  //         // Create backend session
+  //         const idToken = await result.user.getIdToken();
+  //         const response = await fetch('/api/auth/firebase-session', {
+  //           method: 'POST',
+  //           headers: {
+  //             'Content-Type': 'application/json',
+  //             'Authorization': `Bearer ${idToken}`
+  //           },
+  //           credentials: 'include'
+  //         });
+  //         
+  //         if (response.ok) {
+  //           toast({
+  //             title: "Login successful",
+  //             description: "Welcome to BingeBoard!",
+  //           });
+  //           window.location.href = '/';
+  //         } else {
+  //           toast({
+  //             title: "Authentication Error",
+  //             description: "Failed to create session. Please try again.",
+  //             variant: "destructive",
+  //           });
+  //         }
+  //       }
+  //     } catch (error) {
+  //       console.error('Firebase redirect error:', error);
+  //       if (error.code !== 'auth/no-auth-event') {
+  //         toast({
+  //           title: "Authentication Error",
+  //           description: "Authentication failed. Please try again.",
+  //           variant: "destructive",
+  //         });
+  //       }
+  //     }
+  //   };
+
+  //   handleFirebaseRedirect();
+  // }, [toast]);
+
   // Add comprehensive global error handlers that completely prevent unhandled promise rejections
   useEffect(() => {
     const handleUnhandledRejection = (event: PromiseRejectionEvent) => {

@@ -218,6 +218,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Firebase session creation endpoint
+  app.post('/api/auth/firebase-session', async (req: any, res) => {
+    try {
+      const authHeader = req.headers.authorization;
+      if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return res.status(401).json({ message: 'No token provided' });
+      }
+
+      const idToken = authHeader.substring(7);
+      
+      // Verify Firebase token
+      const admin = require('firebase-admin');
+      const decodedToken = await admin.auth().verifyIdToken(idToken);
+      
+      // Create or update user in database
+      const user = await storage.upsertUser({
+        id: decodedToken.uid,
+        email: decodedToken.email,
+        firstName: decodedToken.name?.split(' ')[0] || decodedToken.email.split('@')[0],
+        lastName: decodedToken.name?.split(' ').slice(1).join(' ') || '',
+        profileImageUrl: decodedToken.picture || null,
+        authProvider: 'firebase'
+      });
+
+      // Create session
+      const sessionUser = {
+        claims: {
+          sub: user.id,
+          email: user.email,
+          first_name: user.firstName,
+          last_name: user.lastName,
+          profile_image_url: user.profileImageUrl,
+          exp: Math.floor(Date.now() / 1000) + (7 * 24 * 60 * 60) // 7 days
+        }
+      };
+
+      req.login(sessionUser, (err) => {
+        if (err) {
+          console.error('Session creation error:', err);
+          return res.status(500).json({ message: 'Failed to create session' });
+        }
+        res.json({ success: true, user: user });
+      });
+    } catch (error) {
+      console.error('Firebase session error:', error);
+      res.status(401).json({ message: 'Invalid token' });
+    }
+  });
+
   // User Profile routes
   app.put('/api/user/profile', isAuthenticated, async (req: any, res) => {
     try {
