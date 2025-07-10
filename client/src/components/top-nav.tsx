@@ -190,19 +190,40 @@ export function TopNav() {
                 <DropdownMenuItem 
                   className="text-gray-300 hover:text-white hover:bg-slate-700 cursor-pointer"
                   onClick={async () => {
+                    console.log('🔐 Starting logout process...');
+                    
                     try {
-                      // Sign out from Firebase first
-                      // Firebase logout disabled temporarily
-                      // const { signOut } = await import('firebase/auth');
-                      // const { auth } = await import('@/firebase/config');
-                      // await signOut(auth);
-                      console.log('Firebase signout successful');
+                      // Step 1: Sign out from Firebase client
+                      const { signOut } = await import('firebase/auth');
+                      const { auth } = await import('@/firebase/config-simple');
+                      await signOut(auth);
+                      console.log('✅ Firebase client signout successful');
                     } catch (error) {
-                      console.error('Firebase signout error:', error);
+                      console.error('❌ Firebase signout error:', error);
                     }
                     
-                    // Then logout from backend
-                    window.location.href = "/api/logout";
+                    try {
+                      // Step 2: Clear backend session
+                      const response = await fetch('/api/auth/logout', {
+                        method: 'POST',
+                        credentials: 'include',
+                        headers: {
+                          'Content-Type': 'application/json',
+                        },
+                      });
+                      
+                      if (response.ok) {
+                        console.log('✅ Backend session cleared successfully');
+                      } else {
+                        console.error('❌ Backend logout failed:', response.status);
+                      }
+                    } catch (error) {
+                      console.error('❌ Backend logout error:', error);
+                    }
+                    
+                    // Step 3: Force page reload to reset authentication state
+                    console.log('🔄 Redirecting to home page...');
+                    window.location.href = "/";
                   }}
                 >
                   <LogOut className="mr-2 h-4 w-4" />

@@ -142,6 +142,70 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Firebase-only logout endpoint
+  app.post('/api/auth/logout', (req: any, res) => {
+    try {
+      console.log('🔐 Firebase logout endpoint called');
+      console.log('📋 Session ID before logout:', req.sessionID);
+      console.log('📋 Session data:', JSON.stringify(req.session, null, 2));
+      
+      // Clear the session
+      req.session.destroy((err) => {
+        if (err) {
+          console.error('❌ Session destroy error:', err);
+          return res.status(500).json({ message: 'Failed to logout' });
+        }
+        
+        console.log('✅ Session destroyed successfully');
+        // Clear the custom session cookie (bingeboard.session)
+        res.clearCookie('bingeboard.session', {
+          path: '/',
+          domain: undefined,
+          secure: false,
+          httpOnly: true,
+          sameSite: 'lax'
+        });
+        
+        console.log('✅ Session cookie cleared');
+        res.json({ success: true, message: 'Logged out successfully' });
+      });
+    } catch (error) {
+      console.error('❌ Logout error:', error);
+      res.status(500).json({ message: 'Failed to logout' });
+    }
+  });
+
+  // GET logout endpoint for compatibility (redirects)
+  app.get('/api/logout', (req: any, res) => {
+    try {
+      console.log('🔐 GET Logout endpoint called (redirect method)');
+      
+      // Clear the session
+      req.session.destroy((err) => {
+        if (err) {
+          console.error('❌ Session destroy error:', err);
+          return res.redirect('/?logout=error');
+        }
+        
+        console.log('✅ Session destroyed successfully');
+        // Clear the custom session cookie (bingeboard.session)
+        res.clearCookie('bingeboard.session', {
+          path: '/',
+          domain: undefined,
+          secure: false,
+          httpOnly: true,
+          sameSite: 'lax'
+        });
+        
+        console.log('✅ Session cookie cleared, redirecting to home');
+        res.redirect('/?logout=success');
+      });
+    } catch (error) {
+      console.error('❌ Logout error:', error);
+      res.redirect('/?logout=error');
+    }
+  });
+
   // Firebase session creation endpoint
   app.post('/api/auth/firebase-session', async (req: any, res) => {
     try {
