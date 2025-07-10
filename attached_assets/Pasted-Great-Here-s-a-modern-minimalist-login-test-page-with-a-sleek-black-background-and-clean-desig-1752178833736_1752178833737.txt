@@ -1,0 +1,104 @@
+Great! Here’s a **modern, minimalist login test page** with a sleek black background and clean design:
+
+````html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BingeBoard Login Test</title>
+  <style>
+    body {
+      background: #111827;
+      color: #f3f4f6;
+      font-family: 'Inter', Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 400px;
+      margin: 60px auto;
+      background: #18181b;
+      border-radius: 12px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.18);
+      padding: 32px 24px;
+      text-align: center;
+    }
+    h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      margin-bottom: 12px;
+      color: #0e7490;
+    }
+    p {
+      font-size: 1rem;
+      color: #a1a1aa;
+      margin-bottom: 18px;
+    }
+    .button {
+      background: #0e7490;
+      color: #fff;
+      padding: 12px 0;
+      border: none;
+      border-radius: 8px;
+      width: 100%;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      margin-bottom: 20px;
+      transition: background 0.2s;
+      box-shadow: 0 2px 8px rgba(14,116,144,0.12);
+      text-decoration: none;
+      display: block;
+    }
+    .button:hover {
+      background: #0891b2;
+    }
+    ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      text-align: left;
+      color: #d1d5db;
+      font-size: 0.97rem;
+    }
+    ul li {
+      margin-bottom: 10px;
+      padding-left: 18px;
+      position: relative;
+    }
+    ul li:before {
+      content: "•";
+      color: #0e7490;
+      position: absolute;
+      left: 0;
+      font-size: 1.2em;
+      top: 0;
+    }
+    @media (max-width: 500px) {
+      .container {
+        padding: 18px 8px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>BingeBoard Login Test</h1>
+    <p>Test the modern login page with toggle functionality:</p>
+    <a href="/login-working" class="button">Open Login Page</a>
+    <ul>
+      <li>Toggle between Login and Register forms</li>
+      <li>Registration form with validation</li>
+      <li>Password visibility toggles</li>
+      <li>Inline error handling</li>
+      <li>Accessibility features</li>
+      <li>Clean BingeBoard branding</li>
+    </ul>
+  </div>
+</body>
+</html>
+````
+
+**This keeps the black background and adds a modern, minimalist feel.  
+You can further tweak colors and spacing to match your brand!**
