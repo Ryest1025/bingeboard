@@ -34,6 +34,19 @@ export function initializeFirebaseAdmin() {
   }
 }
 
+// Get Firebase Admin instance
+export function getFirebaseAdmin() {
+  if (!app) {
+    app = initializeFirebaseAdmin();
+  }
+  
+  if (!app) {
+    throw new Error('Firebase Admin SDK not initialized');
+  }
+  
+  return admin;
+}
+
 // Send a push notification (overloaded function for different parameter types)
 export async function sendPushNotification(
   tokenOrOptions: string | { title: string; body: string; userId: string; data?: Record<string, any> },
