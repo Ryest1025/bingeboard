@@ -28,6 +28,7 @@ export default function LoginSimple() {
     setIsLoading(true);
 
     try {
+      // For now, use server-side authentication endpoints
       const endpoint = isLogin ? "/api/auth/login" : "/api/auth/register";
       const payload = isLogin 
         ? { 
@@ -47,6 +48,7 @@ export default function LoginSimple() {
         headers: {
           "Content-Type": "application/json",
         },
+        credentials: 'include',
         body: JSON.stringify(payload),
       });
 
@@ -68,11 +70,12 @@ export default function LoginSimple() {
       } else {
         toast({
           title: "Error",
-          description: data.message || "Something went wrong",
+          description: data.message || "Authentication failed. Please try again.",
           variant: "destructive",
         });
       }
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Authentication error:', error);
       toast({
         title: "Error",
         description: "Network error. Please try again.",
@@ -136,27 +139,21 @@ export default function LoginSimple() {
     });
   };
 
-  const isMobile = () => {
-    return /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-  };
-
   const handleGoogleAuth = async () => {
     try {
       console.log('Starting Google authentication...');
       setIsLoading(true);
       
-      // For now, show informative message about OAuth setup
       toast({
         title: "OAuth Setup Required",
-        description: "Please update Firebase OAuth callback URLs in your Google Console.",
+        description: "Firebase OAuth providers need to be enabled in Firebase Console.",
         variant: "default",
       });
-      
-    } catch (error) {
-      console.error('Google auth error:', error);
+    } catch (error: any) {
+      console.error('Google authentication error:', error);
       toast({
-        title: "Authentication Error",
-        description: "Failed to authenticate with Google. Please try again.",
+        title: "Google Authentication Error",
+        description: "Authentication temporarily disabled. Please use email/password login.",
         variant: "destructive",
       });
     } finally {
@@ -169,18 +166,16 @@ export default function LoginSimple() {
       console.log('Starting Facebook authentication...');
       setIsLoading(true);
       
-      // For now, show informative message about OAuth setup
       toast({
         title: "OAuth Setup Required",
-        description: "Please update Firebase OAuth callback URLs in your Facebook Console.",
+        description: "Firebase OAuth providers need to be enabled in Firebase Console.",
         variant: "default",
       });
-      
-    } catch (error) {
-      console.error('Facebook auth error:', error);
+    } catch (error: any) {
+      console.error('Facebook authentication error:', error);
       toast({
-        title: "Authentication Error",
-        description: "Failed to authenticate with Facebook. Please try again.",
+        title: "Facebook Authentication Error",
+        description: "Authentication temporarily disabled. Please use email/password login.",
         variant: "destructive",
       });
     } finally {
@@ -262,142 +257,152 @@ export default function LoginSimple() {
               </Button>
             </div>
           ) : (
-            <>
-              <form onSubmit={handleSubmit} className="space-y-4">
-                {!isLogin && (
-                  <>
-                    <Input
-                      type="text"
-                      name="firstName"
-                      placeholder="First Name"
-                      value={formData.firstName}
-                      onChange={handleInputChange}
-                      className="bg-gray-800/50 border-slate-600/50 text-white focus:border-teal-500/50 focus:ring-teal-500/20"
-                      required
-                    />
-                    <Input
-                      type="text"
-                      name="lastName"
-                      placeholder="Last Name"
-                      value={formData.lastName}
-                      onChange={handleInputChange}
-                      className="bg-gray-800/50 border-slate-600/50 text-white focus:border-teal-500/50 focus:ring-teal-500/20"
-                      required
-                    />
-                  </>
-                )}
-                
-                <div className="relative">
-                  <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                  <Input
-                    type="email"
-                    name="email"
-                    placeholder="Email address"
-                    value={formData.email}
-                    onChange={handleInputChange}
-                    className="bg-gray-800/50 border-slate-600/50 text-white pl-10 focus:border-teal-500/50 focus:ring-teal-500/20"
-                    required
-                  />
-                </div>
-
-                <div className="relative">
-                  <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                  <Input
-                    type={showPassword ? "text" : "password"}
-                    name="password"
-                    placeholder="Password"
-                    value={formData.password}
-                    onChange={handleInputChange}
-                    className="bg-gray-800/50 border-slate-600/50 text-white pl-10 pr-10 focus:border-teal-500/50 focus:ring-teal-500/20"
-                    required
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-3 text-gray-400 hover:text-gray-300"
-                  >
-                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </button>
-                </div>
-
-                {isLogin && (
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
-                        id="remember-me"
-                        checked={rememberMe}
-                        onCheckedChange={setRememberMe}
-                        className="border-slate-600/50 data-[state=checked]:bg-teal-600 data-[state=checked]:border-teal-600"
-                      />
-                      <label htmlFor="remember-me" className="text-sm text-gray-400">
-                        Remember me
-                      </label>
-                    </div>
-                    <Button
-                      type="button"
-                      variant="link"
-                      onClick={() => setShowForgotPassword(true)}
-                      className="text-sm text-teal-400 hover:text-teal-300 p-0"
-                    >
-                      Forgot password?
-                    </Button>
-                  </div>
-                )}
-
-                <Button
-                  type="submit"
-                  disabled={isLoading}
-                  className="w-full bg-gradient-to-r from-teal-600 to-blue-600 hover:from-teal-700 hover:to-blue-700 text-white font-semibold"
-                >
-                  {isLoading ? "Loading..." : (isLogin ? "Sign In" : "Create Account")}
-                </Button>
-              </form>
-
-              {/* Social Login Section */}
-              <div className="mt-6">
-                <div className="relative">
-                  <div className="absolute inset-0 flex items-center">
-                    <div className="w-full border-t border-gray-600"></div>
-                  </div>
-                  <div className="relative flex justify-center text-sm">
-                    <span className="bg-black px-2 text-gray-400">Or continue with</span>
-                  </div>
-                </div>
-
-                <div className="mt-6 grid grid-cols-2 gap-3">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={handleGoogleAuth}
-                    className="bg-gray-800/50 border-slate-600/50 text-white hover:bg-gray-700/50 hover:border-teal-500/50"
-                    disabled={isLoading}
-                  >
-                    <SiGoogle className="w-4 h-4 mr-2" />
-                    Google
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={handleFacebookAuth}
-                    className="bg-gray-800/50 border-slate-600/50 text-white hover:bg-gray-700/50 hover:border-teal-500/50"
-                    disabled={isLoading}
-                  >
-                    <SiFacebook className="w-4 h-4 mr-2 text-blue-500" />
-                    Facebook
-                  </Button>
-                </div>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {/* Email Input */}
+              <div className="relative">
+                <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                <Input
+                  type="email"
+                  name="email"
+                  placeholder="Email address"
+                  value={formData.email}
+                  onChange={handleInputChange}
+                  className="bg-gray-800/50 border-slate-600/50 text-white pl-10 focus:border-teal-500/50 focus:ring-teal-500/20"
+                  required
+                />
               </div>
-              
-              <div className="mt-4 text-center">
+
+              {/* Password Input */}
+              <div className="relative">
+                <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                <Input
+                  type={showPassword ? "text" : "password"}
+                  name="password"
+                  placeholder="Password"
+                  value={formData.password}
+                  onChange={handleInputChange}
+                  className="bg-gray-800/50 border-slate-600/50 text-white pl-10 pr-10 focus:border-teal-500/50 focus:ring-teal-500/20"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-3 text-gray-400 hover:text-gray-300"
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+
+              {/* First Name Input (Registration only) */}
+              {!isLogin && (
+                <div className="relative">
+                  <Input
+                    type="text"
+                    name="firstName"
+                    placeholder="First Name"
+                    value={formData.firstName}
+                    onChange={handleInputChange}
+                    className="bg-gray-800/50 border-slate-600/50 text-white focus:border-teal-500/50 focus:ring-teal-500/20"
+                    required
+                  />
+                </div>
+              )}
+
+              {/* Last Name Input (Registration only) */}
+              {!isLogin && (
+                <div className="relative">
+                  <Input
+                    type="text"
+                    name="lastName"
+                    placeholder="Last Name"
+                    value={formData.lastName}
+                    onChange={handleInputChange}
+                    className="bg-gray-800/50 border-slate-600/50 text-white focus:border-teal-500/50 focus:ring-teal-500/20"
+                    required
+                  />
+                </div>
+              )}
+
+              {/* Remember Me & Forgot Password */}
+              {isLogin && (
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="remember"
+                      checked={rememberMe}
+                      onCheckedChange={setRememberMe}
+                      className="border-slate-600/50 data-[state=checked]:bg-teal-600 data-[state=checked]:border-teal-600"
+                    />
+                    <label htmlFor="remember" className="text-sm text-gray-300">
+                      Remember me
+                    </label>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="link"
+                    onClick={() => setShowForgotPassword(true)}
+                    className="text-teal-400 hover:text-teal-300 p-0 h-auto"
+                  >
+                    Forgot password?
+                  </Button>
+                </div>
+              )}
+
+              {/* Submit Button */}
+              <Button
+                type="submit"
+                disabled={isLoading}
+                className="w-full bg-gradient-to-r from-teal-600 to-blue-600 hover:from-teal-700 hover:to-blue-700 text-white font-semibold"
+              >
+                {isLoading ? "Please wait..." : (isLogin ? "Log In" : "Create Account")}
+              </Button>
+
+              {/* Toggle Login/Register */}
+              <div className="text-center">
                 <Button
+                  type="button"
                   variant="link"
                   onClick={() => setIsLogin(!isLogin)}
                   className="text-teal-400 hover:text-teal-300"
                 >
-                  {isLogin ? "Need an account? Sign up" : "Already have an account? Sign in"}
+                  {isLogin ? "Need an account? Sign up" : "Already have an account? Log in"}
                 </Button>
               </div>
-            </>
+
+              {/* Divider */}
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t border-slate-600/50" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-black px-2 text-gray-400">Or continue with</span>
+                </div>
+              </div>
+
+              {/* Social Login Buttons */}
+              <div className="grid grid-cols-2 gap-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleGoogleAuth}
+                  disabled={isLoading}
+                  className="bg-gray-800/50 border-slate-600/50 text-white hover:bg-gray-700/50"
+                >
+                  <SiGoogle className="h-4 w-4 mr-2" />
+                  Google
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleFacebookAuth}
+                  disabled={isLoading}
+                  className="bg-gray-800/50 border-slate-600/50 text-white hover:bg-gray-700/50"
+                >
+                  <SiFacebook className="h-4 w-4 mr-2" />
+                  Facebook
+                </Button>
+              </div>
+            </form>
           )}
         </CardContent>
       </Card>

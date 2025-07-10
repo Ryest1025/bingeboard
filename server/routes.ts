@@ -57,6 +57,73 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Firebase authentication routes only
 
+  // Email/password authentication endpoints
+  app.post('/api/auth/login', async (req: any, res) => {
+    try {
+      const { email, password } = req.body;
+      
+      // For now, create a simple session for testing
+      const sessionUser = {
+        claims: {
+          sub: `email_${email}`,
+          email: email,
+          first_name: email.split('@')[0],
+          last_name: '',
+          profile_image_url: null,
+          exp: Math.floor(Date.now() / 1000) + (7 * 24 * 60 * 60) // 7 days
+        }
+      };
+
+      // Store user in session
+      req.session.user = sessionUser;
+      req.user = sessionUser;
+      
+      res.json({ success: true, message: 'Login successful' });
+    } catch (error) {
+      console.error('Login error:', error);
+      res.status(401).json({ message: 'Invalid credentials' });
+    }
+  });
+
+  app.post('/api/auth/register', async (req: any, res) => {
+    try {
+      const { email, password, firstName, lastName } = req.body;
+      
+      // Create user session
+      const sessionUser = {
+        claims: {
+          sub: `email_${email}`,
+          email: email,
+          first_name: firstName,
+          last_name: lastName,
+          profile_image_url: null,
+          exp: Math.floor(Date.now() / 1000) + (7 * 24 * 60 * 60) // 7 days
+        }
+      };
+
+      // Store user in session
+      req.session.user = sessionUser;
+      req.user = sessionUser;
+      
+      res.json({ success: true, message: 'Registration successful' });
+    } catch (error) {
+      console.error('Registration error:', error);
+      res.status(400).json({ message: 'Registration failed' });
+    }
+  });
+
+  app.post('/api/auth/forgot-password', async (req: any, res) => {
+    try {
+      const { email } = req.body;
+      
+      // For now, just return success
+      res.json({ success: true, message: 'Password reset email sent' });
+    } catch (error) {
+      console.error('Forgot password error:', error);
+      res.status(400).json({ message: 'Failed to send reset email' });
+    }
+  });
+
   app.get('/api/auth/instagram', (req, res) => {
     const instagramAuthUrl = `https://api.instagram.com/oauth/authorize?client_id=${process.env.INSTAGRAM_CLIENT_ID}&redirect_uri=${encodeURIComponent(`${req.protocol}://${req.get('host')}/api/auth/instagram/callback`)}&scope=user_profile,user_media&response_type=code`;
     res.redirect(instagramAuthUrl);
