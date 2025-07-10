@@ -70,27 +70,231 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Server-side OAuth routes for mobile compatibility
   app.get('/api/auth/google', (req, res) => {
-    console.log('Google OAuth requested - redirecting to Firebase Auth');
-    const googleAuthUrl = `https://accounts.google.com/oauth/authorize?` +
-      `client_id=${process.env.GOOGLE_CLIENT_ID}&` +
-      `redirect_uri=${encodeURIComponent('https://bingeboard-73c5f.firebaseapp.com/__/auth/handler')}&` +
-      `response_type=code&` +
-      `scope=openid%20email%20profile&` +
-      `state=${req.sessionID}`;
-    
-    res.redirect(googleAuthUrl);
+    console.log('Google OAuth requested - redirecting to Google directly');
+    // Store original session ID for callback
+    (req as any).session.oauthState = req.sessionID;
+    (req as any).session.save(() => {
+      const currentDomain = req.get('host');
+      const protocol = req.secure || req.get('x-forwarded-proto') === 'https' ? 'https' : 'http';
+      const redirectUri = `${protocol}://${currentDomain}/api/auth/google/callback`;
+      
+      const googleAuthUrl = `https://accounts.google.com/oauth/authorize?` +
+        `client_id=${process.env.GOOGLE_CLIENT_ID}&` +
+        `redirect_uri=${encodeURIComponent(redirectUri)}&` +
+        `response_type=code&` +
+        `scope=openid%20email%20profile&` +
+        `state=${req.sessionID}`;
+      
+      console.log('Redirecting to Google OAuth with callback:', redirectUri);
+      res.redirect(googleAuthUrl);
+    });
   });
 
   app.get('/api/auth/facebook', (req, res) => {
-    console.log('Facebook OAuth requested - redirecting to Firebase Auth');
-    const facebookAuthUrl = `https://www.facebook.com/v18.0/dialog/oauth?` +
-      `client_id=${process.env.FACEBOOK_APP_ID}&` +
-      `redirect_uri=${encodeURIComponent('https://bingeboard-73c5f.firebaseapp.com/__/auth/handler')}&` +
-      `response_type=code&` +
-      `scope=email&` +
-      `state=${req.sessionID}`;
-    
-    res.redirect(facebookAuthUrl);
+    console.log('Facebook OAuth requested - redirecting to Facebook directly');
+    // Store original session ID for callback
+    (req as any).session.oauthState = req.sessionID;
+    (req as any).session.save(() => {
+      const currentDomain = req.get('host');
+      const protocol = req.secure || req.get('x-forwarded-proto') === 'https' ? 'https' : 'http';
+      const redirectUri = `${protocol}://${currentDomain}/api/auth/facebook/callback`;
+      
+      const facebookAuthUrl = `https://www.facebook.com/v18.0/dialog/oauth?` +
+        `client_id=${process.env.FACEBOOK_APP_ID}&` +
+        `redirect_uri=${encodeURIComponent(redirectUri)}&` +
+        `response_type=code&` +
+        `scope=email&` +
+        `state=${req.sessionID}`;
+      
+      console.log('Redirecting to Facebook OAuth with callback:', redirectUri);
+      res.redirect(facebookAuthUrl);
+    });
+  });
+
+  // OAuth callback handlers
+  app.get('/api/auth/google/callback', async (req, res) => {
+    try {
+      const { code, state, error } = req.query;
+      
+      if (error) {
+        console.error('Google OAuth error:', error);
+        return res.redirect('/?error=oauth_failed');
+      }
+      
+      if (!code) {
+        console.error('No authorization code received from Google');
+        return res.redirect('/?error=oauth_failed');
+      }
+      
+      console.log('Google OAuth callback received, exchanging code for token...');
+      
+      // Exchange code for access token
+      const currentDomain = req.get('host');
+      const protocol = req.secure || req.get('x-forwarded-proto') === 'https' ? 'https' : 'http';
+      const redirectUri = `${protocol}://${currentDomain}/api/auth/google/callback`;
+      
+      const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({
+          client_id: process.env.GOOGLE_CLIENT_ID!,
+          client_secret: process.env.GOOGLE_CLIENT_SECRET!,
+          code: code as string,
+          grant_type: 'authorization_code',
+          redirect_uri: redirectUri,
+        }),
+      });
+      
+      const tokenData = await tokenResponse.json();
+      
+      if (!tokenData.access_token) {
+        console.error('Failed to get access token from Google:', tokenData);
+        return res.redirect('/?error=oauth_failed');
+      }
+      
+      // Get user info from Google
+      const userResponse = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
+        headers: {
+          'Authorization': `Bearer ${tokenData.access_token}`,
+        },
+      });
+      
+      const userData = await userResponse.json();
+      console.log('Google user data received:', userData.email);
+      
+      // Create user in database
+      const user = await storage.upsertUser({
+        id: userData.id,
+        email: userData.email,
+        firstName: userData.given_name || userData.name?.split(' ')[0] || '',
+        lastName: userData.family_name || userData.name?.split(' ').slice(1).join(' ') || '',
+        profileImageUrl: userData.picture || '',
+        authProvider: 'google'
+      });
+      
+      // Create session
+      const sessionUser = {
+        claims: {
+          sub: user.id,
+          email: user.email,
+          first_name: user.firstName,
+          last_name: user.lastName,
+          profile_image_url: user.profileImageUrl,
+          exp: Math.floor(Date.now() / 1000) + (7 * 24 * 60 * 60) // 7 days
+        },
+        id: user.id,
+        email: user.email
+      };
+      
+      (req as any).session.user = sessionUser;
+      (req as any).session.save((err: any) => {
+        if (err) {
+          console.error('Session save error:', err);
+          return res.redirect('/?error=session_failed');
+        }
+        
+        console.log('Google OAuth success, redirecting to home');
+        res.redirect('/?oauth=success');
+      });
+      
+    } catch (error) {
+      console.error('Google OAuth callback error:', error);
+      res.redirect('/?error=oauth_failed');
+    }
+  });
+
+  app.get('/api/auth/facebook/callback', async (req, res) => {
+    try {
+      const { code, state, error } = req.query;
+      
+      if (error) {
+        console.error('Facebook OAuth error:', error);
+        return res.redirect('/?error=oauth_failed');
+      }
+      
+      if (!code) {
+        console.error('No authorization code received from Facebook');
+        return res.redirect('/?error=oauth_failed');
+      }
+      
+      console.log('Facebook OAuth callback received, exchanging code for token...');
+      
+      // Exchange code for access token
+      const currentDomain = req.get('host');
+      const protocol = req.secure || req.get('x-forwarded-proto') === 'https' ? 'https' : 'http';
+      const redirectUri = `${protocol}://${currentDomain}/api/auth/facebook/callback`;
+      
+      const tokenResponse = await fetch('https://graph.facebook.com/v18.0/oauth/access_token', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({
+          client_id: process.env.FACEBOOK_APP_ID!,
+          client_secret: process.env.FACEBOOK_APP_SECRET!,
+          code: code as string,
+          redirect_uri: redirectUri,
+        }),
+      });
+      
+      const tokenData = await tokenResponse.json();
+      
+      if (!tokenData.access_token) {
+        console.error('Failed to get access token from Facebook:', tokenData);
+        return res.redirect('/?error=oauth_failed');
+      }
+      
+      // Get user info from Facebook
+      const userResponse = await fetch('https://graph.facebook.com/me?fields=id,name,email,picture', {
+        headers: {
+          'Authorization': `Bearer ${tokenData.access_token}`,
+        },
+      });
+      
+      const userData = await userResponse.json();
+      console.log('Facebook user data received:', userData.email);
+      
+      // Create user in database
+      const user = await storage.upsertUser({
+        id: userData.id,
+        email: userData.email,
+        firstName: userData.name?.split(' ')[0] || '',
+        lastName: userData.name?.split(' ').slice(1).join(' ') || '',
+        profileImageUrl: userData.picture?.data?.url || '',
+        authProvider: 'facebook'
+      });
+      
+      // Create session
+      const sessionUser = {
+        claims: {
+          sub: user.id,
+          email: user.email,
+          first_name: user.firstName,
+          last_name: user.lastName,
+          profile_image_url: user.profileImageUrl,
+          exp: Math.floor(Date.now() / 1000) + (7 * 24 * 60 * 60) // 7 days
+        },
+        id: user.id,
+        email: user.email
+      };
+      
+      (req as any).session.user = sessionUser;
+      (req as any).session.save((err: any) => {
+        if (err) {
+          console.error('Session save error:', err);
+          return res.redirect('/?error=session_failed');
+        }
+        
+        console.log('Facebook OAuth success, redirecting to home');
+        res.redirect('/?oauth=success');
+      });
+      
+    } catch (error) {
+      console.error('Facebook OAuth callback error:', error);
+      res.redirect('/?error=oauth_failed');
+    }
   });
 
   // Firebase session creation endpoint
