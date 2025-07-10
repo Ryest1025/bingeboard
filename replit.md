@@ -157,6 +157,7 @@ BingeBoard is a comprehensive entertainment tracking platform that combines TV s
 - **Redirect Handler**: Located in login-simple.tsx useEffect, handles OAuth return
 - **Flow**: OAuth click → Provider auth → Return to login page → getRedirectResult() → Session creation → Home redirect
 - **Critical**: getRedirectResult() must be called on login page to complete OAuth flow
+- **Account Linking**: Automatic handling of Facebook/Google email conflicts with linkWithCredential()
 
 ## Changelog
 

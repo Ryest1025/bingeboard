@@ -7,7 +7,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { Eye, EyeOff, Mail, Lock } from "lucide-react";
 import { SiGoogle, SiFacebook } from "react-icons/si";
-import { signInWithPopup, signInWithRedirect, getRedirectResult } from 'firebase/auth';
+import { signInWithPopup, signInWithRedirect, getRedirectResult, linkWithCredential } from 'firebase/auth';
 import { auth, googleProvider, facebookProvider } from '@/firebase/config-simple';
 
 export default function LoginSimple() {
@@ -339,8 +339,71 @@ export default function LoginSimple() {
           }
         } catch (popupError: any) {
           console.log('Popup failed, falling back to redirect:', popupError.message);
-          // Fallback to redirect for desktop
-          await signInWithRedirect(auth, facebookProvider);
+          
+          // Handle account linking for Facebook
+          if (popupError.code === 'auth/account-exists-with-different-credential') {
+            console.log('Account exists with different credential, attempting account linking...');
+            
+            // Get the email from the error
+            const email = popupError.customData?.email;
+            if (email) {
+              toast({
+                title: "Account Linking Required",
+                description: "This email is already linked to your Google account. Please sign in with Google first, then we'll link your Facebook account.",
+                variant: "default",
+              });
+              
+              try {
+                // Sign in with Google first
+                const googleResult = await signInWithPopup(auth, googleProvider);
+                if (googleResult && googleResult.user) {
+                  // Link Facebook account
+                  const credential = popupError.credential;
+                  if (credential) {
+                    await googleResult.user.linkWithCredential(credential);
+                    
+                    // Create backend session
+                    const idToken = await googleResult.user.getIdToken();
+                    const response = await fetch('/api/auth/firebase-session', {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${idToken}`
+                      },
+                      credentials: 'include',
+                      body: JSON.stringify({ 
+                        firebaseToken: {
+                          uid: googleResult.user.uid,
+                          email: googleResult.user.email,
+                          displayName: googleResult.user.displayName,
+                          photoURL: googleResult.user.photoURL
+                        }
+                      })
+                    });
+                    
+                    if (response.ok) {
+                      toast({
+                        title: "Accounts Linked Successfully",
+                        description: "Your Facebook account has been linked to your Google account!",
+                      });
+                      window.location.href = '/';
+                      return;
+                    }
+                  }
+                }
+              } catch (linkError: any) {
+                console.error('Account linking failed:', linkError);
+                toast({
+                  title: "Account Linking Failed",
+                  description: "Please try signing in with Google instead.",
+                  variant: "destructive",
+                });
+              }
+            }
+          } else {
+            // Fallback to redirect for other popup errors
+            await signInWithRedirect(auth, facebookProvider);
+          }
         }
       }
       
