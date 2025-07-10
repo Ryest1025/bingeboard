@@ -14,23 +14,8 @@ import React, { useState, useEffect } from "react";
 import NotFound from "@/pages/not-found";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import Landing from "@/pages/landing";
-import DebugTest from "@/pages/debug-test";
-import Login from "@/pages/login";
-import LoginTest from "@/pages/login-test";
 import LoginSimple from "@/pages/login-simple";
 import LoginDirect from "@/pages/login-direct";
-import LoginMinimal from "@/pages/login-minimal";
-import LoginWorking from "@/pages/login-working";
-import LoginSimpleToggle from "@/pages/login-simple-toggle";
-import LoginWorkingSimple from "@/pages/login-working-simple";
-import SimpleLogin from "@/pages/simple-login";
-import AuthTest from "@/pages/auth-test";
-import AuthSimple from "@/pages/auth-simple";
-import OAuthDebug from "@/pages/oauth-debug";
-import AuthDebug from "@/pages/auth-debug";
-import MobileAuthDebug from "@/pages/mobile-auth-debug";
-import SimpleAuth from "@/pages/simple-auth";
-import TestAuth from "@/pages/test-auth";
 import Home from "@/pages/modern-home";
 import ModernDiscover from "@/pages/modern-discover";
 import Activity from "@/pages/activity";
@@ -39,8 +24,7 @@ import Friends from "@/pages/social";
 import { useToast } from "@/hooks/use-toast";
 import { isMobileDevice } from "@/lib/deviceUtils";
 import FriendsDiscovery from "@/pages/friends-discovery";
-import FindFriends from "@/pages/find-friends-minimal";
-import UpcomingSimple from "@/pages/upcoming-simple";
+import FindFriends from "@/pages/find-friends";
 import ShowDetails from "@/pages/show-details";
 import Subscription from "@/pages/subscription";
 import SubscriptionPricing from "@/pages/subscription-pricing";
@@ -49,7 +33,6 @@ import PrivacyPolicy from "@/pages/privacy-policy";
 import TermsOfService from "@/pages/terms-of-service";
 import EULA from "@/pages/eula";
 import DataDeletion from "@/pages/data-deletion";
-import Upcoming from "@/pages/upcoming";
 import UpcomingEnhanced from "@/pages/upcoming-enhanced";
 import Lists from "@/pages/modern-lists";
 import Profile from "@/pages/modern-profile";
@@ -150,27 +133,13 @@ function Router() {
           {/* Public routes - always accessible */}
           <Route path="/login" component={LoginSimple} />
           <Route path="/login-direct" component={LoginDirect} />
-          <Route path="/login-test" component={LoginTest} />
-          <Route path="/login-simple" component={LoginSimple} />
-          <Route path="/login-minimal" component={LoginMinimal} />
-          <Route path="/login-working" component={LoginWorking} />
-          <Route path="/login-working-simple" component={LoginWorkingSimple} />
-          <Route path="/simple-login" component={SimpleLogin} />
-          <Route path="/auth-simple" component={AuthSimple} />
-          <Route path="/auth-test" component={AuthTest} />
-          <Route path="/oauth-debug" component={OAuthDebug} />
-          <Route path="/auth-debug" component={AuthDebug} />
-          <Route path="/mobile-auth-debug" component={MobileAuthDebug} />
           <Route path="/mobile-login-test" component={MobileLoginTest} />
-          <Route path="/simple-auth" component={SimpleAuth} />
-          <Route path="/test-auth" component={TestAuth} />
           <Route path="/privacy-policy" component={PrivacyPolicy} />
           <Route path="/terms-of-service" component={TermsOfService} />
           <Route path="/eula" component={EULA} />
           <Route path="/data-deletion" component={DataDeletion} />
           <Route path="/landing" component={Landing} />
           <Route path="/reset-password" component={ResetPassword} />
-          <Route path="/debug" component={DebugTest} />
           
           {/* Protected routes - require authentication */}
           {isAuthenticated ? (

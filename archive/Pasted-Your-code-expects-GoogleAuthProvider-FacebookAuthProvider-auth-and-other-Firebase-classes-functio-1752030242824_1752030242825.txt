@@ -1,0 +1,87 @@
+Your code expects GoogleAuthProvider, FacebookAuthProvider, auth, and other Firebase classes/functions to be imported and initialized.
+
+But since these imports are commented out, those variables are null or undefined.
+
+When your code tries to create instances like new GoogleAuthProvider(), or call signInWithRedirect(auth, googleProvider), it fails.
+
+How to fix this?
+You have two options depending on your goal:
+
+1. Enable Firebase properly (recommended if you want full auth functionality)
+Uncomment and fix the imports at the top of your file, e.g.:
+
+ts
+Copy
+Edit
+import {
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
+  GoogleAuthProvider,
+  FacebookAuthProvider,
+  OAuthProvider,
+  signOut,
+  onAuthStateChanged,
+  User,
+  updateProfile,
+  sendEmailVerification,
+  fetchSignInMethodsForEmail,
+  linkWithCredential,
+  linkWithPopup,
+  unlink,
+  EmailAuthProvider,
+  updatePassword,
+  reauthenticateWithCredential,
+  type UserCredential
+} from "firebase/auth";
+import { auth } from "./config"; // make sure this points to your Firebase app config
+Make sure you have firebase installed in your project dependencies:
+
+bash
+Copy
+Edit
+npm install firebase
+# or
+yarn add firebase
+Ensure your Firebase config file (config.ts) correctly initializes Firebase with your API keys.
+
+2. Keep the mocks if Firebase is temporarily disabled (but be aware this disables all auth functionality)
+If you want to keep Firebase disabled temporarily (e.g., for build or testing reasons), then all functions that rely on Firebase auth will not work.
+
+You’ll need to guard or mock all auth usage in your app accordingly.
+
+You should never call new GoogleAuthProvider() or any Firebase API when mocks are in place, since they are null here.
+
+This approach is only useful if you want the app to compile and run without Firebase, but no login/auth will actually work.
+
+What to do now?
+If you want your app to have working social login, email/password login, and account linking, you must enable Firebase imports and initialize it correctly.
+
+If you want to temporarily disable Firebase to get the app building/running, you have to stub out or disable all auth-related logic in the app UI and logic — which is complex and not recommended for long-term.
+
+Quick checklist for enabling Firebase:
+Run npm install firebase (or yarn) in your client folder (where your React app lives).
+
+Uncomment Firebase imports at the top of your firebaseAuth.ts.
+
+Verify your Firebase config file exports a properly initialized auth instance (like this):
+
+ts
+Copy
+Edit
+import { initializeApp } from "firebase/app";
+import { getAuth } from "firebase/auth";
+
+const firebaseConfig = {
+  apiKey: "...",
+  authDomain: "...",
+  // ...other config keys
+};
+
+const app = initializeApp(firebaseConfig);
+export const auth = getAuth(app);
+Restart your dev server.
+
+Test that social login buttons work.

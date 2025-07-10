@@ -1,0 +1,44 @@
+1. Core Watch Management
+•	Mark the status of shows and movies: Watching, Watched, Plan to Watch, Dropped, or On Hold.
+•	Track episode progress automatically or manually adjust if needed.
+•	View a personalized airing calendar for upcoming episodes and new seasons.
+•	Sync your watch activity across platforms like Netflix, Hulu, Max, Disney+, and more.
+2. Smart Recommendations
+•	Get personalized suggestions based on your viewing history, genre preferences, and ratings.
+•	Use mood-based filters to find shows that match your energy (e.g., light and funny, intense, background noise).
+•	See what’s trending, but tailored to your individual tastes and habits.
+3. Social Sharing & Discovery
+•	See what your friends are watching, rating, or commenting on through a friend activity feed.
+•	Join episode- or show-specific conversations, with spoiler-safe modes.
+•	Recommend shows directly to friends with a custom note.
+•	Use anonymous viewing when you want to keep certain shows private.
+4. Custom Lists & Collaboration
+•	Create both public and private lists, such as “Best Comedies,” “Favorites of 2025,” or “Weekend Binges.”
+•	Invite friends to collaborate on shared lists.
+•	Share your lists via unique URLs or QR codes for easy access.
+5. Watch Parties & Group Features
+•	Schedule group watch events with calendar invites and time zone syncing.
+•	Create polls to vote on what the group should watch next.
+•	Enable live chat or reactions during viewing sessions, optionally integrated with Teleparty or similar tools.
+6. Profile & Viewing Stats
+•	Track detailed viewing stats like total hours watched, most-watched genres, and binge streaks.
+•	Get a TV "personality profile" (e.g., Sci-Fi Explorer, Reality Show Superfan).
+•	Earn badges or achievements for milestones like watching every episode of a long-running series.
+7. Notifications & Reminders
+•	Receive alerts when new episodes or seasons of your saved shows drop.
+•	Get time-based reminders based on your usual viewing habits.
+•	Smart reminders prompt you to continue shows you’ve paused or forgotten.
+8. Monetization Options (if you’re building this app)
+•	Free version with ads and essential features.
+•	Premium tier with no ads, deeper stats, priority access to new features, and exclusive recommendations.
+•	Affiliate revenue via links to streaming platforms.
+•	Optional merchandise partnerships, printable lists, or fan bundles.
+9. Community & Creator Tools
+•	Allow users to write long-form reviews or blog-style “Top 10” lists.
+•	Enable exporting of personal or curated lists as visual graphics for social sharing.
+•	Support influencer or creator profiles with verified status and curated show collections for followers.
+10. Extra Touches for User Experience
+•	Offer both light and dark mode for comfort.
+•	Provide multilingual support for international users.
+•	Include strong privacy settings to control what’s visible to friends or the public.
+•	Let users export their full watch history as a PDF, CSV, or graphic.

@@ -2,7 +2,10 @@
 
 /**
  * Permanent Domain Configuration Script
- * Automatically configures Firebase for stable domain authentication
+ * PURPOSE: Automatically configures Firebase for stable domain authentication
+ * USAGE: node scripts/configure-permanent-domain.js
+ * DESCRIPTION: Sets up www.joinbingeboard.com as the permanent domain to eliminate
+ *              daily OAuth callback URL breakage caused by changing Replit domains
  */
 
 import fs from 'fs';

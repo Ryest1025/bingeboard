@@ -1,0 +1,95 @@
+ Firebase Auth Social Login (Google + Facebook)
+📁 firebase.ts
+ts
+Copy
+Edit
+import { initializeApp } from "firebase/app";
+import { getAuth, GoogleAuthProvider, FacebookAuthProvider } from "firebase/auth";
+
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_PROJECT.appspot.com",
+  messagingSenderId: "YOUR_MSG_ID",
+  appId: "YOUR_APP_ID"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+
+const googleProvider = new GoogleAuthProvider();
+const facebookProvider = new FacebookAuthProvider();
+
+export { auth, googleProvider, facebookProvider };
+📁 SignIn.tsx
+tsx
+Copy
+Edit
+import { useEffect } from "react";
+import {
+  signInWithRedirect,
+  signInWithPopup,
+  getRedirectResult,
+  AuthProvider
+} from "firebase/auth";
+import { auth, googleProvider, facebookProvider } from "./firebase";
+
+function isMobile() {
+  return /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+}
+
+export default function SignIn() {
+  useEffect(() => {
+    getRedirectResult(auth)
+      .then((result) => {
+        if (result?.user) {
+          console.log("✅ Redirect login successful", result.user);
+          // TODO: Update UI / global auth state here
+        }
+      })
+      .catch((error) => {
+        console.error("❌ Redirect login failed", error);
+      });
+  }, []);
+
+  const loginWithProvider = (provider: AuthProvider) => {
+    if (isMobile()) {
+      signInWithRedirect(auth, provider);
+    } else {
+      signInWithPopup(auth, provider)
+        .then((result) => {
+          console.log("✅ Popup login successful", result.user);
+          // TODO: Update UI / global auth state here
+        })
+        .catch((error) => {
+          console.error("❌ Popup login failed", error);
+        });
+    }
+  };
+
+  return (
+    <div>
+      <button onClick={() => loginWithProvider(googleProvider)}>
+        Sign in with Google
+      </button>
+
+      <button onClick={() => loginWithProvider(facebookProvider)}>
+        Sign in with Facebook
+      </button>
+    </div>
+  );
+}
+✅ Firebase Console Checklist
+Auth → Sign-in method:
+
+Enable Google
+
+Enable Facebook (set App ID & Secret from Facebook Developer Console)
+
+Auth → Authorized domains:
+
+Add your Replit domains (*.replit.dev, localhost, etc.)
+
+This code uses signInWithPopup on desktop and fallbacks to signInWithRedirect on mobile — which fixes the most common mobile popup blocking issues.
+

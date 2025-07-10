@@ -19,7 +19,7 @@ BingeBoard is a comprehensive entertainment tracking platform that combines TV s
 - **Language**: TypeScript with ES modules
 - **Database**: PostgreSQL with Drizzle ORM
 - **Database Provider**: Neon serverless PostgreSQL
-- **Authentication**: Replit Auth with OpenID Connect
+- **Authentication**: Multi-provider OAuth (Google, Facebook) with Firebase Auth + server-side session management
 - **Session Management**: Express sessions with PostgreSQL storage
 
 ### Data Storage
@@ -27,6 +27,12 @@ BingeBoard is a comprehensive entertainment tracking platform that combines TV s
 - **ORM**: Drizzle ORM for type-safe database operations
 - **Migrations**: Drizzle Kit for schema management
 - **Session Storage**: PostgreSQL table for session persistence
+
+### Project Organization
+- **Documentation**: Organized in docs/ folder with auth/, deployment/, features/, development/, legal/ subfolders
+- **Tests**: Comprehensive testing suite in tests/ directory with component, page, API, and e2e tests
+- **Scripts**: Enhanced build and deployment scripts with proper documentation
+- **Assets**: Organized with essential assets in attached_assets/, archived items in archive/
 
 ## Key Components
 
@@ -298,6 +304,7 @@ Changelog:
 - July 9, 2025. UNHANDLED PROMISE REJECTION SOLUTION IMPLEMENTED: Completely replaced React Query authentication system with custom useAuth hook using native fetch API. Converted all TMDB API calls in modern-home.tsx and landing.tsx from useQuery to safe fetch patterns with proper error handling. Implemented comprehensive global error handlers with capture=true to prevent any unhandled promise rejections from reaching the browser console. All API calls now use safeFetch pattern that never throws errors. Authentication system working flawlessly with proper session management and no console errors.
 - July 9, 2025. RUNTIME ERROR PERMANENTLY RESOLVED: Fixed critical runtime error preventing app from loading by simplifying App component structure and removing problematic React Query configurations. Implemented try-catch error handling in main App component with graceful fallback UI. Application now loads successfully without runtime errors, displaying proper landing page for unauthenticated users and maintaining stable authentication flow. All unhandled promise rejections are properly caught and handled silently.
 - July 9, 2025. FRONTEND-BACKEND COMMUNICATION FIXED: Resolved "Failed to fetch" errors by identifying root cause - authentication system fetch calls timing out due to network configuration. Temporarily disabled authentication check to prevent fetch errors while maintaining proper app structure. Backend server confirmed running on port 5000 with proper CORS configuration. App now loads successfully displaying landing page without runtime errors, with TMDB API integration working correctly.
+- July 10, 2025. COMPREHENSIVE CODEBASE CLEANUP COMPLETED: Organized entire project with proper documentation structure, moved all documentation files to docs/ folder with organized subfolders (auth/, deployment/, features/, development/, legal/), archived non-essential assets and test files, removed duplicate legacy login/auth pages, consolidated modern components, enhanced script documentation with proper PURPOSE/USAGE/DESCRIPTION headers, created comprehensive testing framework in tests/ directory with component tests and README, and updated all import references for cleaner codebase organization.
 ```
 
 ## Apple App Store Deployment

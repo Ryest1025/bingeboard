@@ -1,6 +1,10 @@
 #!/usr/bin/env node
 /**
- * Test authentication domain configuration
+ * Authentication Domain Configuration Test
+ * PURPOSE: Tests OAuth domain configuration across Google and Facebook providers
+ * USAGE: node scripts/test-auth-domains.js
+ * DESCRIPTION: Validates that OAuth callback URLs are properly configured
+ *              in provider consoles and reports any domain mismatches
  */
 
 console.log('🧪 Testing Firebase Authentication Domain Configuration');

@@ -1,0 +1,61 @@
+This is a classic fetch failing due to the request never reaching the server or being aborted — especially since you have an abort controller timeout of 5 seconds:
+
+ts
+Copy
+Edit
+const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+
+const response = await fetch('/api/auth/user', {
+  method: 'GET',
+  credentials: 'include',
+  signal: controller.signal
+});
+What could be happening here?
+The request to /api/auth/user never completes within 5 seconds, so the abort triggers, causing fetch to fail.
+
+The backend endpoint /api/auth/user either doesn’t exist, isn’t responding, or your frontend can’t reach it (wrong URL or no proxy).
+
+If your frontend is served from Vite dev server and the backend is separate, then /api/auth/user path is probably not being routed correctly.
+
+What to do next:
+Step 1: Confirm backend server is running and accessible
+Try opening http://localhost:4000/api/auth/user (or wherever your backend runs) directly in the browser or via curl/Postman.
+
+Step 2: Make sure frontend can reach backend
+If backend is on a different port, setup a proxy in vite.config.js:
+
+js
+Copy
+Edit
+import { defineConfig } from 'vite';
+
+export default defineConfig({
+  server: {
+    proxy: {
+      '/api': 'http://localhost:4000' // your backend origin
+    }
+  }
+});
+This way, requests to /api/auth/user get forwarded to your backend.
+
+Step 3: Update your fetch to use full URL temporarily
+To debug, try using the full backend URL in fetch and see if it works:
+
+ts
+Copy
+Edit
+const response = await fetch('http://localhost:4000/api/auth/user', {
+  method: 'GET',
+  credentials: 'include',
+  signal: controller.signal
+});
+If this works, it confirms the relative /api/auth/user is not resolving correctly without proxy.
+
+Summary
+The timeout abort indicates the request is not getting a response.
+
+Likely cause: frontend can’t reach backend on /api/auth/user because either backend isn’t running or no proxy is configured.
+
+Fix by either running backend on same origin or set up proxy in Vite.
+
+Temporarily test with full backend URL in fetch.

@@ -1,7 +1,9 @@
 #!/bin/bash
 
 # BingeBoard iOS Build Script
-# This script prepares the app for iOS deployment
+# PURPOSE: Prepares the app for iOS deployment using Capacitor
+# USAGE: ./scripts/build-ios.sh
+# DESCRIPTION: Builds web app, adds iOS platform, syncs assets, and prepares for Xcode deployment
 
 set -e
 
