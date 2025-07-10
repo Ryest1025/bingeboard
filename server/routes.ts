@@ -59,8 +59,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Simplified OAuth redirect endpoints that bypass Firebase session storage issues
   app.get('/api/auth/google', (req, res) => {
-    // Use permanent custom domain for stable callback URL
-    const callbackUrl = 'https://www.joinbingeboard.com/auth/callback';
+    // Use current Replit domain for immediate testing
+    const callbackUrl = `${req.protocol}://${req.get('host')}/auth/callback`;
     const googleOAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
       `client_id=${process.env.GOOGLE_CLIENT_ID}&` +
       `redirect_uri=${encodeURIComponent(callbackUrl)}&` +
@@ -73,8 +73,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   app.get('/api/auth/facebook', (req, res) => {
-    // Use permanent custom domain for stable callback URL
-    const callbackUrl = 'https://www.joinbingeboard.com/auth/callback';
+    // Use current Replit domain for immediate testing
+    const callbackUrl = `${req.protocol}://${req.get('host')}/auth/callback`;
     const facebookOAuthUrl = `https://www.facebook.com/v18.0/dialog/oauth?` +
       `client_id=${process.env.FACEBOOK_APP_ID}&` +
       `redirect_uri=${encodeURIComponent(callbackUrl)}&` +
@@ -113,7 +113,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               client_secret: process.env.GOOGLE_CLIENT_SECRET!,
               code: code as string,
               grant_type: 'authorization_code',
-              redirect_uri: 'https://www.joinbingeboard.com/auth/callback'
+              redirect_uri: `${req.protocol}://${req.get('host')}/auth/callback`
             })
           });
           
@@ -129,7 +129,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             `client_id=${process.env.FACEBOOK_APP_ID}&` +
             `client_secret=${process.env.FACEBOOK_APP_SECRET}&` +
             `code=${code}&` +
-            `redirect_uri=${encodeURIComponent('https://www.joinbingeboard.com/auth/callback')}`);
+            `redirect_uri=${encodeURIComponent(`${req.protocol}://${req.get('host')}/auth/callback`)}`);
           
           const tokenData = await tokenResponse.json();
           accessToken = tokenData.access_token;

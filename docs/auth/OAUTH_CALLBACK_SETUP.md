@@ -1,11 +1,11 @@
 # OAuth Callback URL Setup Guide
 
-## Permanent Domain Setup
-**Custom Domain:** `www.joinbingeboard.com`
+## Current Domain Setup (For Testing)
+**Current Replit Domain:** `80d1bb7f-86b2-4c58-a8e0-62a1673122a3-00-2vv88inpi4v1.riker.replit.dev`
 
-**Required Callback URL:** `https://www.joinbingeboard.com/auth/callback`
+**Required Callback URL:** `https://80d1bb7f-86b2-4c58-a8e0-62a1673122a3-00-2vv88inpi4v1.riker.replit.dev/auth/callback`
 
-**Status:** This URL never changes, eliminating daily OAuth configuration updates!
+**Status:** Use this URL for immediate OAuth testing!
 
 ## Google Cloud Console Setup
 
@@ -18,7 +18,7 @@
    - Click "Edit" on the OAuth client
    - In "Authorized redirect URIs", add:
      ```
-     https://www.joinbingeboard.com/auth/callback
+     https://80d1bb7f-86b2-4c58-a8e0-62a1673122a3-00-2vv88inpi4v1.riker.replit.dev/auth/callback
      ```
    - Click "Save"
 
@@ -32,7 +32,7 @@
    - Go to "Facebook Login" → "Settings"
    - In "Valid OAuth Redirect URIs", add:
      ```
-     https://www.joinbingeboard.com/auth/callback
+     https://80d1bb7f-86b2-4c58-a8e0-62a1673122a3-00-2vv88inpi4v1.riker.replit.dev/auth/callback
      ```
    - Click "Save Changes"
 
