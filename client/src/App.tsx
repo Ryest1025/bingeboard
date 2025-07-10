@@ -59,7 +59,7 @@ function Router() {
   // Show app immediately to prevent delays
   const [showApp, setShowApp] = useState(true);
 
-  // Handle Firebase redirect results - temporarily disabled
+  // Handle Firebase redirect results for mobile authentication - temporarily disabled until Firebase is fully configured
   // useEffect(() => {
   //   const handleFirebaseRedirect = async () => {
   //     try {

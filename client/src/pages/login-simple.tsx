@@ -145,8 +145,12 @@ export default function LoginSimple() {
       console.log('Starting Google authentication...');
       setIsLoading(true);
       
-      // For now, redirect to server OAuth until Firebase is properly configured
-      window.location.href = '/api/auth/google';
+      // For now, show informative message about OAuth setup
+      toast({
+        title: "OAuth Setup Required",
+        description: "Please update Firebase OAuth callback URLs in your Google Console.",
+        variant: "default",
+      });
       
     } catch (error) {
       console.error('Google auth error:', error);
@@ -165,8 +169,12 @@ export default function LoginSimple() {
       console.log('Starting Facebook authentication...');
       setIsLoading(true);
       
-      // For now, redirect to server OAuth until Firebase is properly configured
-      window.location.href = '/api/auth/facebook';
+      // For now, show informative message about OAuth setup
+      toast({
+        title: "OAuth Setup Required",
+        description: "Please update Firebase OAuth callback URLs in your Facebook Console.",
+        variant: "default",
+      });
       
     } catch (error) {
       console.error('Facebook auth error:', error);
