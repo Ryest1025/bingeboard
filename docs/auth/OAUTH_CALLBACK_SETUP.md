@@ -1,36 +1,46 @@
 # OAuth Callback URL Configuration
 
-## Required Action: Update Supabase Dashboard
+## CRITICAL: Provider Console Setup Required
 
-The OAuth authentication is working but needs the correct callback URL configured in the Supabase Dashboard.
+The OAuth authentication endpoints are working but need callback URLs configured in the provider consoles.
 
 ### Current Issue
-- OAuth providers are enabled ✅
-- Credentials are configured ✅  
-- **Callback URL points to localhost** ❌
+- OAuth strategies are configured ✅
+- Credentials are set ✅  
+- **Provider consoles need callback URLs** ❌
+
+### Root Cause
+Both Google and Facebook callbacks are not receiving authorization codes because the callback URLs aren't registered in the provider consoles.
 
 ### Fix Required
 
-**Go to Supabase Dashboard:**
-1. Visit: https://supabase.com/dashboard/project/uqpjzzdmhfybqjtaygwf/auth/providers
-2. Find the **"Site URL"** configuration
-3. Change from: `http://localhost:3000`
-4. Change to: `https://80d1bb7f-86b2-4c58-a8e0-62a1673122a3-00-2vv88inpi4v1.riker.replit.dev`
+**Google Cloud Console:**
+1. Visit: https://console.cloud.google.com/apis/credentials
+2. Find OAuth 2.0 Client: `874663258237-lem9602ckq4b1a6fsnqnaek96vgu7vfr.apps.googleusercontent.com`
+3. Add to "Authorized redirect URIs":
+   ```
+   https://80d1bb7f-86b2-4c58-a8e0-62a1673122a3-00-2vv88inpi4v1.riker.replit.dev/api/auth/google/callback
+   ```
 
-### Alternative: Use Environment Variable
-If the dashboard allows environment variables, set:
-- Site URL: `{{ VITE_APP_URL }}`
-- Add environment variable: `VITE_APP_URL=https://80d1bb7f-86b2-4c58-a8e0-62a1673122a3-00-2vv88inpi4v1.riker.replit.dev`
+**Facebook Developer Console:**
+1. Visit: https://developers.facebook.com/apps/1407155243762479/fb-login/settings/
+2. Add to "Valid OAuth Redirect URIs":
+   ```
+   https://80d1bb7f-86b2-4c58-a8e0-62a1673122a3-00-2vv88inpi4v1.riker.replit.dev/api/auth/facebook/callback
+   ```
+
+### Current Domain
+**Active Domain:** `80d1bb7f-86b2-4c58-a8e0-62a1673122a3-00-2vv88inpi4v1.riker.replit.dev`
 
 ### Verification
-After updating the Site URL:
+After updating provider consoles:
 1. Clear browser cache/cookies
 2. Try Google/Facebook login from `/login`
-3. Should redirect properly to your app instead of localhost
+3. Should complete OAuth flow successfully
 
 ### OAuth Provider Status
-- **Google**: Configured (Client ID: 874663258237-lem9602ckq4b1a6fsnqnaek96vgu7vfr.apps.googleusercontent.com)
-- **Facebook**: Configured (App ID: 1407155243762479)
-- **Callback URL**: `https://uqpjzzdmhfybqjtaygwf.supabase.co/auth/v1/callback` (automatic)
+- **Google**: Client ID configured, callback URL needs registration
+- **Facebook**: App ID configured, callback URL needs registration
+- **Server endpoints**: Both `/api/auth/google` and `/api/auth/facebook` working (302 redirects)
 
-The OAuth flow will work perfectly once the Site URL is updated in the Supabase Dashboard.
+The OAuth flow will work perfectly once the callback URLs are added to the provider consoles.

@@ -145,7 +145,8 @@ export default function LoginSimple() {
       console.log('Starting Google authentication...');
       console.log('Device type:', isMobile() ? 'Mobile' : 'Desktop');
       
-      // Use backend OAuth for all devices - this works universally
+      // For OAuth, we need to use window.location for proper redirect flow
+      // This is different from internal navigation - OAuth requires full page redirect
       window.location.href = '/api/auth/google';
     } catch (error) {
       console.error('Google auth error:', error);
@@ -162,7 +163,8 @@ export default function LoginSimple() {
       console.log('Starting Facebook authentication...');
       console.log('Device type:', isMobile() ? 'Mobile' : 'Desktop');
       
-      // Use backend OAuth for all devices - this works universally
+      // For OAuth, we need to use window.location for proper redirect flow
+      // This is different from internal navigation - OAuth requires full page redirect
       window.location.href = '/api/auth/facebook';
     } catch (error) {
       console.error('Facebook auth error:', error);
