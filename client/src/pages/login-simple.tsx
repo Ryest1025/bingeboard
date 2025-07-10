@@ -213,64 +213,10 @@ export default function LoginSimple() {
       console.log('Starting Google authentication...');
       setIsLoading(true);
       
-      // Check for domain authorization issues and use server-side OAuth as fallback
-      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-      console.log('Device detected as:', isMobile ? 'mobile' : 'desktop');
-      
-      // For mobile or when Firebase domain issues occur, use server-side OAuth
-      if (isMobile) {
-        console.log('Using server-side Google OAuth for mobile compatibility...');
-        window.location.href = '/api/auth/google';
-        return;
-      }
-      
-      // Desktop: Try Firebase popup first
-      try {
-        // Check if Firebase is properly configured
-        if (!import.meta.env.VITE_FIREBASE_API_KEY || !import.meta.env.VITE_FIREBASE_PROJECT_ID) {
-          throw new Error('Firebase configuration missing');
-        }
-        
-        console.log('Firebase config check passed, initiating Google sign-in...');
-        const result = await signInWithPopup(auth, googleProvider);
-        
-        if (result && result.user) {
-          console.log('✅ Desktop popup authentication successful');
-          
-          // Create backend session immediately
-          const idToken = await result.user.getIdToken();
-          const response = await fetch('/api/auth/firebase-session', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${idToken}`
-            },
-            credentials: 'include',
-            body: JSON.stringify({ 
-              firebaseToken: {
-                uid: result.user.uid,
-                email: result.user.email,
-                displayName: result.user.displayName,
-                photoURL: result.user.photoURL
-              }
-            })
-          });
-          
-          if (response.ok) {
-            toast({
-              title: "Login successful",
-              description: "Welcome to BingeBoard!",
-            });
-            window.location.href = '/';
-            return;
-          }
-        }
-      } catch (firebaseError: any) {
-        console.log('Firebase authentication failed, using server-side fallback:', firebaseError.message);
-        // Fallback to server-side OAuth for any Firebase issues
-        window.location.href = '/api/auth/google';
-        return;
-      }
+      // FIREBASE AUTHENTICATION ONLY - NO SERVER-SIDE OAUTH
+      // Use Firebase redirect authentication for all devices
+      console.log('Using Firebase redirect authentication for Google...');
+      await signInWithRedirect(auth, googleProvider);
       
     } catch (error: any) {
       console.error('Google authentication error:', error);
@@ -278,7 +224,7 @@ export default function LoginSimple() {
       
       toast({
         title: "Login failed",
-        description: "Please try again or contact support if the issue persists.",
+        description: error.message || "Please try again or contact support if the issue persists.",
         variant: "destructive",
       });
     }
@@ -289,64 +235,10 @@ export default function LoginSimple() {
       console.log('Starting Facebook authentication...');
       setIsLoading(true);
       
-      // Check for domain authorization issues and use server-side OAuth as fallback
-      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-      console.log('Device detected as:', isMobile ? 'mobile' : 'desktop');
-      
-      // For mobile or when Firebase domain issues occur, use server-side OAuth
-      if (isMobile) {
-        console.log('Using server-side Facebook OAuth for mobile compatibility...');
-        window.location.href = '/api/auth/facebook';
-        return;
-      }
-      
-      // Desktop: Try Firebase popup first
-      try {
-        // Check if Firebase is properly configured
-        if (!import.meta.env.VITE_FIREBASE_API_KEY || !import.meta.env.VITE_FIREBASE_PROJECT_ID) {
-          throw new Error('Firebase configuration missing');
-        }
-        
-        console.log('Firebase config check passed, initiating Facebook sign-in...');
-        const result = await signInWithPopup(auth, facebookProvider);
-        
-        if (result && result.user) {
-          console.log('✅ Desktop popup authentication successful');
-          
-          // Create backend session immediately
-          const idToken = await result.user.getIdToken();
-          const response = await fetch('/api/auth/firebase-session', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${idToken}`
-            },
-            credentials: 'include',
-            body: JSON.stringify({ 
-              firebaseToken: {
-                uid: result.user.uid,
-                email: result.user.email,
-                displayName: result.user.displayName,
-                photoURL: result.user.photoURL
-              }
-            })
-          });
-          
-          if (response.ok) {
-            toast({
-              title: "Login successful",
-              description: "Welcome to BingeBoard!",
-            });
-            window.location.href = '/';
-            return;
-          }
-        }
-      } catch (firebaseError: any) {
-        console.log('Facebook authentication failed, using server-side fallback:', firebaseError.message);
-        // Fallback to server-side OAuth for any Firebase issues
-        window.location.href = '/api/auth/facebook';
-        return;
-      }
+      // FIREBASE AUTHENTICATION ONLY - NO SERVER-SIDE OAUTH
+      // Use Firebase redirect authentication for all devices
+      console.log('Using Firebase redirect authentication for Facebook...');
+      await signInWithRedirect(auth, facebookProvider);
       
     } catch (error: any) {
       console.error('Facebook authentication error:', error);

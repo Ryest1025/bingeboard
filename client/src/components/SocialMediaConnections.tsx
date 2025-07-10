@@ -57,15 +57,15 @@ export default function SocialMediaConnections() {
   // Connection mutations
   const facebookMutation = useMutation({
     mutationFn: () => {
-      // Redirect to Facebook OAuth flow
-      window.location.href = '/api/auth/facebook';
+      // Firebase authentication only - no server-side OAuth
+      toast({
+        title: "Coming Soon",
+        description: "Facebook social media connections will be available soon",
+      });
       return Promise.resolve();
     },
     onSuccess: () => {
-      toast({
-        title: "Redirecting to Facebook",
-        description: "You'll be redirected to Facebook to connect your account",
-      });
+      // No-op for now
     },
     onError: (error) => {
       toast({
@@ -78,15 +78,15 @@ export default function SocialMediaConnections() {
 
   const instagramMutation = useMutation({
     mutationFn: () => {
-      // Redirect to Instagram OAuth flow
-      window.location.href = '/api/auth/instagram';
+      // Firebase authentication only - no server-side OAuth
+      toast({
+        title: "Coming Soon",
+        description: "Instagram social media connections will be available soon",
+      });
       return Promise.resolve();
     },
     onSuccess: () => {
-      toast({
-        title: "Redirecting to Instagram",
-        description: "You'll be redirected to Instagram to connect your account",
-      });
+      // No-op for now
     },
     onError: (error) => {
       toast({
