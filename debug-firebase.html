@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Firebase OAuth Debug</title>
+    <script src="https://www.gstatic.com/firebasejs/9.17.2/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.17.2/firebase-auth.js"></script>
+</head>
+<body>
+    <h1>Firebase OAuth Debug</h1>
+    <p>Current domain: <span id="current-domain"></span></p>
+    <p>Firebase project: <span id="firebase-project"></span></p>
+    <button onclick="testGoogleAuth()">Test Google OAuth</button>
+    <button onclick="testFacebookAuth()">Test Facebook OAuth</button>
+    <div id="result"></div>
+
+    <script>
+        // Firebase config
+        const firebaseConfig = {
+            apiKey: "AIzaSyDqDRqRvPkv6rJAP7sJGlIJQ6-bBwLZfFo",
+            authDomain: "bingeboard-73c5f.firebaseapp.com", 
+            projectId: "bingeboard-73c5f",
+            storageBucket: "bingeboard-73c5f.firebasestorage.app",
+            messagingSenderId: "145846820194",
+            appId: "1:145846820194:web:2c7f4f5b8e2d3f4f5b8e2d"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+
+        // Display current domain
+        document.getElementById('current-domain').textContent = window.location.hostname;
+        document.getElementById('firebase-project').textContent = firebaseConfig.projectId;
+
+        // Test Google OAuth
+        async function testGoogleAuth() {
+            try {
+                const provider = new firebase.auth.GoogleAuthProvider();
+                await auth.signInWithRedirect(provider);
+                document.getElementById('result').innerHTML = '<p style="color:green">Google OAuth initiated successfully</p>';
+            } catch (error) {
+                document.getElementById('result').innerHTML = '<p style="color:red">Google OAuth Error: ' + error.message + '</p>';
+            }
+        }
+
+        // Test Facebook OAuth
+        async function testFacebookAuth() {
+            try {
+                const provider = new firebase.auth.FacebookAuthProvider();
+                await auth.signInWithRedirect(provider);
+                document.getElementById('result').innerHTML = '<p style="color:green">Facebook OAuth initiated successfully</p>';
+            } catch (error) {
+                document.getElementById('result').innerHTML = '<p style="color:red">Facebook OAuth Error: ' + error.message + '</p>';
+            }
+        }
+
+        // Handle redirect results
+        auth.getRedirectResult().then((result) => {
+            if (result.user) {
+                document.getElementById('result').innerHTML = '<p style="color:green">OAuth Success! User: ' + result.user.email + '</p>';
+            }
+        }).catch((error) => {
+            document.getElementById('result').innerHTML = '<p style="color:red">OAuth Redirect Error: ' + error.message + '</p>';
+        });
+    </script>
+</body>
+</html>

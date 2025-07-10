@@ -131,6 +131,26 @@ BingeBoard is a comprehensive entertainment tracking platform that combines TV s
 - **Auth**: `REPLIT_DOMAINS` and `SESSION_SECRET` for authentication
 - **Deployment**: `REPL_ID` for Replit-specific features
 
+## Critical Authentication Rules - DO NOT MODIFY
+
+### FIREBASE AUTHENTICATION ONLY - LOCKED CONFIGURATION
+- **CRITICAL**: Project uses Firebase authentication exclusively - all Replit Auth code removed
+- **CRITICAL**: Session cookie name is `bingeboard.session` - never change this
+- **CRITICAL**: Logout requires both Firebase client signout AND backend session destruction
+- **CRITICAL**: No dual authentication systems allowed - causes infinite refresh loops
+- **CRITICAL**: replitAuth.ts permanently archived - do not restore or reference
+
+### Authentication Flow - PERMANENT IMPLEMENTATION
+1. Firebase client authentication (Google/Facebook OAuth)
+2. Backend session creation via `/api/auth/firebase-session`
+3. Session stored as `bingeboard.session` cookie with proper security options
+4. Logout clears both Firebase auth AND backend session via `/api/auth/logout`
+
+### Logout System - LOCKED IMPLEMENTATION
+- **Client**: Firebase signOut() + fetch to `/api/auth/logout` + redirect to "/"
+- **Server**: Session destroy + clearCookie('bingeboard.session') with exact options
+- **Required**: Both Firebase and backend logout for complete session cleanup
+
 ## Changelog
 
 ```
