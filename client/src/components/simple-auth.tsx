@@ -14,13 +14,10 @@ export function useSimpleAuth(): AuthState {
   });
 
   useEffect(() => {
-    // Test connectivity first, then check authentication
-    const testAndCheckAuth = async () => {
-      console.log('Testing API connectivity...');
-      
+    let isMounted = true;
+    
+    const checkAuth = async () => {
       try {
-        // Direct authentication check (401 is expected for unauthenticated users)
-        console.log('Starting fetch to /api/auth/user');
         const authResponse = await fetch('/api/auth/user', {
           method: 'GET',
           credentials: 'include',
@@ -31,27 +28,16 @@ export function useSimpleAuth(): AuthState {
           cache: 'no-cache',
         });
         
-        console.log('Auth response received:', authResponse);
-        console.log('Auth response status:', authResponse.status);
+        if (!isMounted) return;
         
         if (authResponse.ok) {
           const userData = await authResponse.json();
-          console.log('User data:', userData);
           setAuthState({
             isAuthenticated: true,
             user: userData,
             loading: false
           });
-        } else if (authResponse.status === 401) {
-          // 401 is expected for unauthenticated users
-          console.log('User not authenticated (expected for logout state)');
-          setAuthState({
-            isAuthenticated: false,
-            user: null,
-            loading: false
-          });
         } else {
-          console.error('Unexpected auth response:', authResponse.status);
           setAuthState({
             isAuthenticated: false,
             user: null,
@@ -59,8 +45,7 @@ export function useSimpleAuth(): AuthState {
           });
         }
       } catch (err) {
-        console.error('Network error during auth check:', err);
-        // For now, default to unauthenticated state
+        if (!isMounted) return;
         setAuthState({
           isAuthenticated: false,
           user: null,
@@ -69,8 +54,11 @@ export function useSimpleAuth(): AuthState {
       }
     };
 
-    // Immediate check, no delay to prevent breaking
-    testAndCheckAuth();
+    checkAuth();
+    
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   return authState;

@@ -56,6 +56,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
   await setupAuth(app);
 
+  // Debug middleware to log all requests and cookies
+  app.use((req, res, next) => {
+    if (req.path.startsWith('/api/auth')) {
+      console.log(`📋 ${req.method} ${req.path}`);
+      console.log('📋 Session ID:', (req as any).sessionID);
+      console.log('📋 Session exists:', !!(req as any).session);
+      console.log('📋 Session data:', JSON.stringify((req as any).session, null, 2));
+      console.log('📋 req.user in debug middleware:', JSON.stringify((req as any).user, null, 2));
+    }
+    next();
+  });
+
   // Firebase authentication routes only - all OAuth handled client-side
 
 
@@ -106,9 +118,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Auth routes
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims?.sub || req.user.id;
+      console.log('User object in request:', JSON.stringify(req.user, null, 2));
+      const userId = req.user?.claims?.sub || req.user?.id;
+      
+      if (!userId) {
+        console.error('No user ID found in session');
+        return res.status(401).json({ message: "No user ID in session" });
+      }
+      
       console.log('Fetching user data for userId:', userId);
       const user = await storage.getUser(userId);
+      
+      if (!user) {
+        console.error('User not found in database:', userId);
+        return res.status(404).json({ message: "User not found" });
+      }
+      
       console.log('User data from database:', JSON.stringify(user, null, 2));
       res.json(user);
     } catch (error) {
@@ -170,7 +195,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log('User created/updated in database:', user.id, user.email);
 
-      // Create session manually
+      // Create session with proper structure that matches isAuthenticated middleware expectations
       const sessionUser = {
         claims: {
           sub: user.id,
@@ -179,14 +204,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
           last_name: user.lastName,
           profile_image_url: user.profileImageUrl,
           exp: Math.floor(Date.now() / 1000) + (7 * 24 * 60 * 60) // 7 days
-        }
+        },
+        id: user.id,
+        email: user.email
       };
 
-      // Store user in session
+      // Store user in session and force save
       req.session.user = sessionUser;
       req.user = sessionUser;
       
-      res.json({ success: true, user: user });
+      console.log('Session created with structure:', JSON.stringify(sessionUser, null, 2));
+      console.log('Session ID:', req.sessionID);
+      
+      // Force session save
+      req.session.save((err) => {
+        if (err) {
+          console.error('Session save error:', err);
+          return res.status(500).json({ message: 'Failed to save session' });
+        }
+        
+        console.log('Session saved successfully');
+        console.log('Session data after save:', JSON.stringify(req.session, null, 2));
+        res.json({ 
+          success: true, 
+          user: user,
+          sessionId: req.sessionID 
+        });
+      });
     } catch (error) {
       console.error('Firebase session error:', error);
       res.status(401).json({ message: 'Invalid token' });

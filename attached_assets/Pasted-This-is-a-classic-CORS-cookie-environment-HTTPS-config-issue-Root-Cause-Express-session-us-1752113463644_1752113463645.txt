@@ -1,0 +1,94 @@
+This is a classic CORS + cookie + environment (HTTPS) config issue.
+
+✅ Root Cause
+Express-session uses cookies to track user sessions. If cookies aren't sent:
+
+The backend creates a new session for every request.
+
+req.session.user is never retained.
+
+It looks like sessions "fail" even though they were created.
+
+✅ How to Fix It (Across Frontend + Backend)
+🔧 1. Frontend: Always Use credentials: "include" in Fetch/React Query
+In your API requests (you are already doing this — just confirming):
+
+ts
+Copy
+Edit
+fetch("/api/auth/user", {
+  credentials: "include",
+});
+Also confirmed in your getQueryFn, so ✅ you're good here.
+
+🔧 2. Backend CORS: Explicitly Allow Frontend Origin + Credentials
+In your Express server:
+
+ts
+Copy
+Edit
+import cors from "cors";
+
+app.use(cors({
+  origin: "https://your-frontend-domain.com", // or true in dev
+  credentials: true, // VERY IMPORTANT for cookies
+}));
+If origin: true, it reflects the Origin header dynamically — fine for dev but avoid in production unless needed.
+
+🔧 3. express-session: Use the Right cookie Settings
+Here's a correct setup for development and production:
+
+ts
+Copy
+Edit
+import session from "express-session";
+import MemoryStore from "memorystore";
+
+app.use(session({
+  name: "bingeboard.sid",
+  secret: process.env.SESSION_SECRET || "supersecret", // use env in prod
+  resave: false,
+  saveUninitialized: false,
+  store: new (MemoryStore(session))({
+    checkPeriod: 86400000, // prune expired entries every 24h
+  }),
+  cookie: {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production", // only over HTTPS in prod
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // NONE for cross-site cookies in prod
+    maxAge: 7 * 24 * 60 * 60 * 1000, // 1 week
+  },
+}));
+✅ secure: true requires HTTPS
+✅ sameSite: "none" allows cross-site cookies (needed if frontend & backend on different domains)
+
+🔧 4. Run Your Site Over HTTPS (For secure: true to work)
+In production, cookies will only be sent if:
+
+You're on https://
+
+secure: true
+
+sameSite: "none"
+
+If you're on Replit, make sure you're testing over the HTTPS URL Replit provides (https://your-app.replit.app), not HTTP.
+
+If you're on a custom domain (like Wix), make sure SSL is enabled.
+
+🧪 To Debug in Browser (Optional)
+In Chrome DevTools → Network tab:
+
+Click on your /api/auth/user request.
+
+Check "Request Headers" → Cookie → is your session ID there?
+
+If not: it's a CORS/cookie config issue (as we're fixing above)
+
+✅ Summary: To Make Cookies Work
+What	Fix
+Frontend	credentials: "include" in all fetch/queries ✅
+Backend CORS	origin: [your-frontend], credentials: true ✅
+express-session	cookie: { secure, sameSite, httpOnly, maxAge }
+Use HTTPS	Required in production (secure: true)
+Confirm Cookies Sent	Use browser DevTools, check Cookie in requests
+

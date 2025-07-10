@@ -29,7 +29,11 @@ export function getSession() {
       secure: false, // Set to false for development (HTTP)
       sameSite: 'lax', // Allow cross-site cookies for OAuth
       maxAge: sessionTtl,
+      path: '/', // Ensure cookie is available for all paths
+      domain: undefined, // Let browser determine domain
     },
+    name: 'bingeboard.session', // Custom session name
+    rolling: true, // Reset expiration on each request
   });
 }
 
@@ -50,19 +54,40 @@ export async function setupAuth(app: Express) {
 }
 
 export const isAuthenticated: RequestHandler = async (req, res, next) => {
-  const user = (req as any).session?.user || (req as any).user;
+  console.log("🔍 isAuthenticated middleware triggered");
 
-  if (!req.session || !user || !user.claims) {
-    return res.status(401).json({ message: "Unauthorized" });
+  // Check if session exists
+  if (!req.session) {
+    console.warn("⚠️ req.session is missing");
+    return res.status(401).json({ message: "Unauthorized - no session" });
   }
 
+  // Check if user is set on session
+  if (!req.session.user) {
+    console.warn("⚠️ req.session.user is undefined");
+    console.log("🔎 req.session:", JSON.stringify(req.session, null, 2));
+    return res.status(401).json({ message: "Unauthorized - no user" });
+  }
+
+  // Check if user has claims
+  if (!req.session.user.claims) {
+    console.warn("⚠️ req.session.user.claims is undefined");
+    return res.status(401).json({ message: "Unauthorized - no claims" });
+  }
+
+  // Check if token is expired
   const now = Math.floor(Date.now() / 1000);
-  if (user.claims.exp && now <= user.claims.exp) {
-    return next();
+  if (req.session.user.claims.exp && now > req.session.user.claims.exp) {
+    console.warn("⚠️ Token expired");
+    return res.status(401).json({ message: "Unauthorized - token expired" });
   }
 
-  // Session expired
-  res.status(401).json({ message: "Unauthorized" });
+  // Set req.user for route handlers
+  (req as any).user = req.session.user;
+  console.log("✅ Authenticated user:", req.session.user.email || req.session.user.id);
+  console.log("✅ Set req.user:", JSON.stringify((req as any).user, null, 2));
+  
+  next();
 };
 
 // Export utility functions for password handling
