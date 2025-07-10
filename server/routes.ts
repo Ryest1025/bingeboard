@@ -57,37 +57,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Firebase authentication routes only - all OAuth handled client-side
 
-  // Firebase authentication endpoint to establish backend sessions
-  app.post('/api/auth/firebase-session', async (req: any, res) => {
-    try {
-      const { firebaseToken } = req.body;
-      
-      if (!firebaseToken) {
-        return res.status(400).json({ message: 'Firebase token required' });
-      }
-      
-      // Create session from Firebase token
-      const sessionUser = {
-        claims: {
-          sub: firebaseToken.uid,
-          email: firebaseToken.email,
-          first_name: firebaseToken.displayName?.split(' ')[0] || 'User',
-          last_name: firebaseToken.displayName?.split(' ').slice(1).join(' ') || '',
-          profile_image_url: firebaseToken.photoURL || null,
-          exp: Math.floor(Date.now() / 1000) + (7 * 24 * 60 * 60) // 7 days
-        }
-      };
 
-      // Store user in session
-      req.session.user = sessionUser;
-      req.user = sessionUser;
-      
-      res.json({ success: true, message: 'Session established' });
-    } catch (error) {
-      console.error('Firebase session error:', error);
-      res.status(400).json({ message: 'Failed to establish session' });
-    }
-  });
 
   // All OAuth authentication handled by Firebase client-side
 
