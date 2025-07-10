@@ -1,44 +1,37 @@
-// Firebase imports disabled temporarily to fix build issues
-// import {
-//   signInWithEmailAndPassword,
-//   createUserWithEmailAndPassword,
-//   signInWithPopup,
-//   signInWithRedirect,
-//   getRedirectResult,
-//   GoogleAuthProvider,
-//   FacebookAuthProvider,
-//   OAuthProvider,
-//   signOut,
-//   onAuthStateChanged,
-//   User,
-//   updateProfile,
-//   sendEmailVerification,
-//   fetchSignInMethodsForEmail,
-//   linkWithCredential,
-//   linkWithPopup,
-//   unlink,
-//   EmailAuthProvider,
-//   updatePassword,
-//   reauthenticateWithCredential,
-//   type UserCredential
-// } from "firebase/auth";
-// import { auth } from "./config";
+// PERMANENT FIREBASE AUTHENTICATION - DO NOT DISABLE
+import {
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
+  GoogleAuthProvider,
+  FacebookAuthProvider,
+  signOut,
+  onAuthStateChanged,
+  User,
+  updateProfile,
+  sendEmailVerification,
+  fetchSignInMethodsForEmail,
+  linkWithCredential,
+  linkWithPopup,
+  unlink,
+  EmailAuthProvider,
+  type UserCredential
+} from "firebase/auth";
+import { auth } from "./config-simple";
 
-// Mock Firebase auth for compatibility
-const auth = null;
+// PERMANENT PROVIDERS - LOCKED CONFIGURATION
+const googleProvider = new GoogleAuthProvider();
+const facebookProvider = new FacebookAuthProvider();
 
-// Mock providers for compatibility
-const googleProvider = null;
-const facebookProvider = null;
-const appleProvider = null;
+// Required scopes
+googleProvider.addScope('profile');
+googleProvider.addScope('email');
+facebookProvider.addScope('email');
+facebookProvider.addScope('public_profile');
 
-// Mock configurations for compatibility
-// googleProvider.addScope('profile');
-// googleProvider.addScope('email');
-// facebookProvider.addScope('email');
-// facebookProvider.addScope('public_profile');
-// appleProvider.addScope('email');
-// appleProvider.addScope('name');
+// FIREBASE AUTHENTICATION PROVIDERS CONFIGURED
 
 export interface AuthUser {
   uid: string;
@@ -96,16 +89,7 @@ export const signInWithFacebook = async (): Promise<void> => {
   }
 };
 
-// Apple Authentication
-export const signInWithApple = async (): Promise<UserCredential> => {
-  try {
-    const result = await signInWithPopup(auth, appleProvider);
-    return result;
-  } catch (error: any) {
-    console.error("Apple sign-in error:", error);
-    throw new Error(error.message || "Failed to sign in with Apple");
-  }
-};
+// Apple Authentication removed - not implemented
 
 // Sign out
 export const logOut = async (): Promise<void> => {
