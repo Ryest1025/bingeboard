@@ -57,16 +57,8 @@ function Router() {
     console.log('Current route:', location, 'Auth status:', isAuthenticated);
   }, [location, isAuthenticated]);
 
-  // Add timeout to prevent infinite loading
-  const [showApp, setShowApp] = useState(false);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setShowApp(true);
-    }, 1000); // Show app after 1 second regardless of auth status
-
-    return () => clearTimeout(timer);
-  }, []);
+  // Show app immediately to prevent delays
+  const [showApp, setShowApp] = useState(true);
 
   // Add comprehensive global error handlers that completely prevent unhandled promise rejections
   useEffect(() => {

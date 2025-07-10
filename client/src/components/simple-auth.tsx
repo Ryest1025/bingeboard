@@ -69,8 +69,8 @@ export function useSimpleAuth(): AuthState {
       }
     };
 
-    // Small delay to ensure server is ready
-    setTimeout(testAndCheckAuth, 1000);
+    // Immediate check, no delay to prevent breaking
+    testAndCheckAuth();
   }, []);
 
   return authState;
