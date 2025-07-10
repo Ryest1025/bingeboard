@@ -266,9 +266,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         res.clearCookie('bingeboard.session', {
           path: '/',
           domain: undefined,
-          secure: false,
+          secure: true,
           httpOnly: true,
-          sameSite: 'lax'
+          sameSite: 'none'
         });
         
         console.log('✅ Session cookie cleared');
@@ -297,9 +297,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         res.clearCookie('bingeboard.session', {
           path: '/',
           domain: undefined,
-          secure: false,
+          secure: true,
           httpOnly: true,
-          sameSite: 'lax'
+          sameSite: 'none'
         });
         
         console.log('✅ Session cookie cleared, redirecting to home');
@@ -547,7 +547,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Firebase authentication endpoint
-  app.post('/api/auth/firebase', async (req, res) => {
+  app.post('/api/auth/firebase-session', async (req, res) => {
     try {
       const { idToken } = req.body;
 

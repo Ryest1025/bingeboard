@@ -26,8 +26,8 @@ export function getSession() {
     saveUninitialized: false,
     cookie: {
       httpOnly: true,
-      secure: false, // Set to false for development (HTTP)
-      sameSite: 'lax', // Allow cross-site cookies for OAuth
+      secure: true, // Set to true for mobile compatibility
+      sameSite: 'none', // Required for mobile browsers and cross-origin
       maxAge: sessionTtl,
       path: '/', // Ensure cookie is available for all paths
       domain: undefined, // Let browser determine domain

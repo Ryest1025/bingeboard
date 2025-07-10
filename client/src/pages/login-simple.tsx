@@ -145,22 +145,16 @@ export default function LoginSimple() {
           console.log('✅ OAuth redirect result found:', result.user.email);
           setIsLoading(true);
           
-          // Create backend session
+          // Create backend session with Firebase ID token
           const idToken = await result.user.getIdToken();
           const response = await fetch('/api/auth/firebase-session', {
             method: 'POST',
             headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${idToken}`
+              'Content-Type': 'application/json'
             },
             credentials: 'include',
             body: JSON.stringify({ 
-              firebaseToken: {
-                uid: result.user.uid,
-                email: result.user.email,
-                displayName: result.user.displayName,
-                photoURL: result.user.photoURL
-              }
+              idToken: idToken
             })
           });
           
