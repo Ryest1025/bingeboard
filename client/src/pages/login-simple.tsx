@@ -180,35 +180,37 @@ export default function LoginSimple() {
         <CardHeader className="text-center pb-8">
           {/* BingeBoard Logo */}
           <div className="flex items-center justify-center mb-6">
-            <div className="relative">
-              {/* TV Main Body */}
-              <div className="w-20 h-14 bg-gradient-to-b from-gray-300 to-gray-500 rounded-lg shadow-xl relative border-2 border-gray-400">
-                {/* TV Screen */}
-                <div className="absolute inset-3 bg-black rounded-sm flex items-center justify-center border border-gray-600">
-                  <span className="text-white text-2xl font-black">B</span>
+            <div className="flex items-center space-x-3">
+              <div className="relative">
+                {/* TV Frame */}
+                <div className="w-12 h-10 bg-gradient-to-br from-slate-700 to-slate-900 rounded-lg shadow-xl border-2 border-slate-600 relative">
+                  {/* TV Screen */}
+                  <div className="absolute inset-1 bg-gradient-to-br from-teal-500 via-cyan-500 to-blue-500 rounded-md flex items-center justify-center">
+                    <div className="text-sm font-bold text-white drop-shadow-lg" style={{ textShadow: '0 0 6px rgba(0,0,0,0.8), 0 0 2px rgba(255,255,255,0.3)' }}>B</div>
+                  </div>
+                  {/* TV Base */}
+                  <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-3 h-1 bg-slate-700 rounded-sm"></div>
+                  <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-5 h-1 bg-slate-600 rounded-sm"></div>
                 </div>
-                {/* TV Control Panel */}
-                <div className="absolute bottom-1 right-1 w-2 h-2 bg-gray-600 rounded-full"></div>
-                {/* TV Brand Label */}
-                <div className="absolute bottom-0.5 left-1 w-6 h-1 bg-gray-600 rounded-full"></div>
               </div>
               
-              {/* TV Stand Base */}
-              <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-10 h-2 bg-gradient-to-b from-gray-400 to-gray-600 rounded-b-lg shadow-md"></div>
-              
-              {/* TV Stand Legs */}
-              <div className="absolute -bottom-3 left-2 w-4 h-1.5 bg-gradient-to-b from-gray-400 to-gray-600 rounded-b-md shadow-sm"></div>
-              <div className="absolute -bottom-3 right-2 w-4 h-1.5 bg-gradient-to-b from-gray-400 to-gray-600 rounded-b-md shadow-sm"></div>
+              {/* Brand Name */}
+              <div className="block">
+                <span className="text-xl sm:text-2xl select-none">
+                  <span className="font-black bg-gradient-to-r from-teal-400 via-cyan-400 to-blue-400 bg-clip-text text-transparent">
+                    Binge
+                  </span>
+                  <span className="font-light text-white ml-1">Board</span>
+                </span>
+                <div className="text-xs text-teal-400 font-medium tracking-widest uppercase opacity-75 hidden sm:block">
+                  Entertainment Hub
+                </div>
+              </div>
             </div>
           </div>
           
           {/* Title */}
           <CardTitle className="text-center mb-2">
-            <h1 className="text-xl sm:text-2xl font-black text-white">
-              <span className="text-white">Binge</span>
-              <span className="bg-gradient-to-r from-teal-500 to-blue-600 bg-clip-text text-transparent">Board</span>
-            </h1>
-          </CardTitle>
           
           {/* Subtitle */}
           <p className="text-gray-400 text-sm">
