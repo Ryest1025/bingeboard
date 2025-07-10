@@ -7,7 +7,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { Eye, EyeOff, Mail, Lock } from "lucide-react";
 import { SiGoogle, SiFacebook } from "react-icons/si";
-import { signInWithPopup, signInWithRedirect, getRedirectResult, linkWithCredential } from 'firebase/auth';
+import { signInWithPopup, signInWithRedirect, getRedirectResult, linkWithCredential, fetchSignInMethodsForEmail, FacebookAuthProvider } from 'firebase/auth';
 import { auth, googleProvider, facebookProvider } from '@/firebase/config-simple';
 
 export default function LoginSimple() {
@@ -344,61 +344,81 @@ export default function LoginSimple() {
           if (popupError.code === 'auth/account-exists-with-different-credential') {
             console.log('Account exists with different credential, attempting account linking...');
             
-            // Get the email from the error
+            const pendingCred = FacebookAuthProvider.credentialFromError(popupError);
             const email = popupError.customData?.email;
-            if (email) {
+
+            if (!email || !pendingCred) {
+              console.error("❌ Missing email or pending credential.");
               toast({
-                title: "Account Linking Required",
-                description: "This email is already linked to your Google account. Please sign in with Google first, then we'll link your Facebook account.",
-                variant: "default",
+                title: "Account Linking Error",
+                description: "Unable to link accounts. Please try signing in with Google instead.",
+                variant: "destructive",
               });
-              
-              try {
-                // Sign in with Google first
+              setIsLoading(false);
+              return;
+            }
+
+            try {
+              // Step 1: Lookup what provider already exists
+              const methods = await fetchSignInMethodsForEmail(auth, email);
+              console.log("🧠 Existing sign-in methods:", methods);
+
+              if (methods.includes("google.com")) {
+                // Step 2: Ask user to sign in with Google first
+                toast({
+                  title: "Account Linking Required",
+                  description: "This email is already linked to your Google account. Please sign in with Google first, then we'll link your Facebook account.",
+                  variant: "default",
+                });
+                
                 const googleResult = await signInWithPopup(auth, googleProvider);
                 if (googleResult && googleResult.user) {
-                  // Link Facebook account
-                  const credential = popupError.credential;
-                  if (credential) {
-                    await googleResult.user.linkWithCredential(credential);
-                    
-                    // Create backend session
-                    const idToken = await googleResult.user.getIdToken();
-                    const response = await fetch('/api/auth/firebase-session', {
-                      method: 'POST',
-                      headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${idToken}`
-                      },
-                      credentials: 'include',
-                      body: JSON.stringify({ 
-                        firebaseToken: {
-                          uid: googleResult.user.uid,
-                          email: googleResult.user.email,
-                          displayName: googleResult.user.displayName,
-                          photoURL: googleResult.user.photoURL
-                        }
-                      })
+                  // Step 3: Link Facebook credential to the existing Google user
+                  await linkWithCredential(googleResult.user, pendingCred);
+                  console.log("🔗 Successfully linked Facebook to Google account.");
+                  
+                  // Create backend session
+                  const idToken = await googleResult.user.getIdToken();
+                  const response = await fetch('/api/auth/firebase-session', {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json',
+                      'Authorization': `Bearer ${idToken}`
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({ 
+                      firebaseToken: {
+                        uid: googleResult.user.uid,
+                        email: googleResult.user.email,
+                        displayName: googleResult.user.displayName,
+                        photoURL: googleResult.user.photoURL
+                      }
+                    })
+                  });
+                  
+                  if (response.ok) {
+                    toast({
+                      title: "Accounts Linked Successfully",
+                      description: "Your Facebook account has been linked to your Google account!",
                     });
-                    
-                    if (response.ok) {
-                      toast({
-                        title: "Accounts Linked Successfully",
-                        description: "Your Facebook account has been linked to your Google account!",
-                      });
-                      window.location.href = '/';
-                      return;
-                    }
+                    window.location.href = '/';
+                    return;
                   }
                 }
-              } catch (linkError: any) {
-                console.error('Account linking failed:', linkError);
+              } else {
                 toast({
-                  title: "Account Linking Failed",
-                  description: "Please try signing in with Google instead.",
+                  title: "Account Linking Error",
+                  description: `Please sign in with your original provider: ${methods[0]}`,
                   variant: "destructive",
                 });
               }
+            } catch (linkError: any) {
+              console.error('Account linking failed:', linkError);
+              toast({
+                title: "Account Linking Failed",
+                description: "Please try signing in with Google instead.",
+                variant: "destructive",
+              });
             }
           } else {
             // Fallback to redirect for other popup errors

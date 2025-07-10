@@ -157,7 +157,7 @@ BingeBoard is a comprehensive entertainment tracking platform that combines TV s
 - **Redirect Handler**: Located in login-simple.tsx useEffect, handles OAuth return
 - **Flow**: OAuth click → Provider auth → Return to login page → getRedirectResult() → Session creation → Home redirect
 - **Critical**: getRedirectResult() must be called on login page to complete OAuth flow
-- **Account Linking**: Automatic handling of Facebook/Google email conflicts with linkWithCredential()
+- **Account Linking**: Comprehensive handling of Facebook/Google email conflicts using fetchSignInMethodsForEmail() and FacebookAuthProvider.credentialFromError() with proper user consent workflow
 
 ## Changelog
 
@@ -344,6 +344,7 @@ Changelog:
 - July 10, 2025. FIREBASE AUTHENTICATION DETECTION FIXED: Fixed authentication issue where Firebase already had authenticated user but backend session wasn't created. System now automatically detects existing Firebase users and creates backend sessions without requiring additional login steps. Enhanced App.tsx with comprehensive Firebase auth state detection and automatic session creation for both new and existing authenticated users.
 - July 10, 2025. FIREBASE ADMIN SDK ES MODULE IMPORT FIXED: Resolved "require is not defined" error by updating Firebase Admin SDK to use proper ES module import syntax (import admin from "firebase-admin"). Fixed authentication token verification and backend session creation endpoints.
 - July 10, 2025. DATABASE IDENTITY MAPPING ISSUE RESOLVED: Fixed critical upsert conflict where existing users (with old ID format) couldn't be updated due to foreign key constraints. Updated upsert logic to use email as conflict target instead of ID, preventing database constraint violations while maintaining data integrity across related tables (activities, watchlists, etc.).
+- July 10, 2025. FIREBASE OAUTH REDIRECT HANDLING FIXED: Moved getRedirectResult() from App.tsx to login-simple.tsx for proper OAuth completion flow. Implemented smart device detection with popup authentication for desktop (with redirect fallback) and redirect authentication for mobile devices. Added comprehensive account linking system using fetchSignInMethodsForEmail() and FacebookAuthProvider.credentialFromError() to handle Google/Facebook email conflicts with proper user consent workflow. Google authentication confirmed working perfectly, Facebook authentication works through account linking process.
 ```
 
 ## Apple App Store Deployment
