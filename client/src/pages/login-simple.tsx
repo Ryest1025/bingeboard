@@ -146,9 +146,12 @@ export default function LoginSimple() {
       
       toast({
         title: "OAuth Setup Required",
-        description: "Firebase OAuth providers need to be enabled in Firebase Console.",
+        description: "Please enable Google provider in Firebase Console first. Check the setup guide for details.",
         variant: "default",
       });
+      
+      // Open Firebase Console in new tab
+      window.open('https://console.firebase.google.com/project/bingeboard-73c5f/authentication/providers', '_blank');
     } catch (error: any) {
       console.error('Google authentication error:', error);
       toast({
@@ -167,10 +170,13 @@ export default function LoginSimple() {
       setIsLoading(true);
       
       toast({
-        title: "OAuth Setup Required",
-        description: "Firebase OAuth providers need to be enabled in Firebase Console.",
+        title: "OAuth Setup Required", 
+        description: "Please enable Facebook provider in Firebase Console first. Check the setup guide for details.",
         variant: "default",
       });
+      
+      // Open Firebase Console in new tab
+      window.open('https://console.firebase.google.com/project/bingeboard-73c5f/authentication/providers', '_blank');
     } catch (error: any) {
       console.error('Facebook authentication error:', error);
       toast({
