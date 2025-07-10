@@ -13,7 +13,8 @@ import bcrypt from "bcryptjs";
 import { storage } from "./storage";
 
 if (!process.env.REPLIT_DOMAINS) {
-  throw new Error("Environment variable REPLIT_DOMAINS not provided");
+  console.warn("Environment variable REPLIT_DOMAINS not provided, using default");
+  process.env.REPLIT_DOMAINS = "80d1bb7f-86b2-4c58-a8e0-62a1673122a3-00-2vv88inpi4v1.riker.replit.dev";
 }
 
 const getOidcConfig = memoize(
