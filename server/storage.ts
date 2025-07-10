@@ -274,26 +274,48 @@ export class DatabaseStorage implements IStorage {
     console.log('Storage: Upserting user with data:', JSON.stringify(user, null, 2));
     
     try {
-      const [existingUser] = await db
-        .select()
-        .from(users)
-        .where(eq(users.id, user.id));
-
-      if (existingUser) {
-        console.log('Storage: User exists, updating:', existingUser.id);
+      // First check if user exists by email (for Firebase auth migration)
+      const existingUserByEmail = await this.getUserByEmail(user.email || '');
+      
+      if (existingUserByEmail) {
+        console.log('Storage: User exists by email, updating existing user:', existingUserByEmail.id);
+        // Update existing user with new Firebase ID and data
         const [updatedUser] = await db
           .update(users)
-          .set(user)
-          .where(eq(users.id, user.id))
+          .set({
+            id: user.id, // Update to Firebase UID
+            firstName: user.firstName,
+            lastName: user.lastName,
+            profileImageUrl: user.profileImageUrl,
+            authProvider: user.authProvider,
+            updatedAt: new Date(),
+          })
+          .where(eq(users.email, user.email || ''))
           .returning();
+        
         console.log('Storage: User updated successfully:', updatedUser.id, updatedUser.email);
         return updatedUser;
-      } else {
-        console.log('Storage: User does not exist, creating new user');
-        const newUser = await this.createUser(user);
-        console.log('Storage: User created successfully:', newUser.id, newUser.email);
-        return newUser;
       }
+      
+      // Use PostgreSQL's ON CONFLICT DO UPDATE for true upsert by ID
+      const [upsertedUser] = await db
+        .insert(users)
+        .values(user)
+        .onConflictDoUpdate({
+          target: users.id,
+          set: {
+            email: user.email,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            profileImageUrl: user.profileImageUrl,
+            authProvider: user.authProvider,
+            updatedAt: new Date(),
+          },
+        })
+        .returning();
+      
+      console.log('Storage: User upserted successfully:', upsertedUser.id, upsertedUser.email);
+      return upsertedUser;
     } catch (error) {
       console.error('Storage: Error upserting user:', error);
       throw error;
