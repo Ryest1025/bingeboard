@@ -1,0 +1,101 @@
+Here’s how to **update your SocialMediaConnections.tsx** for Firebase-only social login (Google & Facebook), with mobile support:
+
+---
+
+### 1. **Remove Server-Side Redirects**
+
+Delete all `window.location.href = '/api/auth/facebook'` and similar logic.
+
+---
+
+### 2. **Add Firebase Social Login Functions**
+
+````tsx
+import { getAuth, GoogleAuthProvider, FacebookAuthProvider, signInWithRedirect } from "firebase/auth";
+
+// ...inside your component...
+const auth = getAuth();
+
+function handleGoogleLogin() {
+  const provider = new GoogleAuthProvider();
+  signInWithRedirect(auth, provider);
+}
+
+function handleFacebookLogin() {
+  const provider = new FacebookAuthProvider();
+  signInWithRedirect(auth, provider);
+}
+````
+
+---
+
+### 3. **Update Social Login Buttons**
+
+Replace your Facebook and Google button logic:
+
+````tsx
+<Button 
+  onClick={handleFacebookLogin}
+  className="w-full"
+>
+  Connect with Facebook
+</Button>
+<Button 
+  onClick={handleGoogleLogin}
+  className="w-full"
+>
+  Connect with Google
+</Button>
+````
+
+---
+
+### 4. **Remove Instagram, Snapchat, TikTok**
+
+Firebase does not support these for login.  
+You can remove or disable those sections/buttons.
+
+---
+
+### 5. **Final Example for Social Section**
+
+````tsx
+<CardContent className="space-y-6">
+  {/* Facebook */}
+  <div className="space-y-2">
+    <div className="flex items-center gap-2">
+      <Facebook className="h-4 w-4 text-blue-600" />
+      <span className="font-medium">Facebook</span>
+    </div>
+    <Button 
+      onClick={handleFacebookLogin}
+      className="w-full"
+    >
+      Connect with Facebook
+    </Button>
+  </div>
+
+  {/* Google */}
+  <div className="space-y-2">
+    <div className="flex items-center gap-2">
+      {/* Add your Google icon here */}
+      <span className="font-medium">Google</span>
+    </div>
+    <Button 
+      onClick={handleGoogleLogin}
+      className="w-full"
+    >
+      Connect with Google
+    </Button>
+  </div>
+</CardContent>
+````
+
+---
+
+**Summary:**  
+- Use only Firebase’s client SDK for Google and Facebook login.
+- Remove all server-side OAuth redirects and unsupported providers.
+- This will work on both mobile and web, and you won’t need to update URLs daily.
+
+Let me know if you want the full updated file or help with any other section!
