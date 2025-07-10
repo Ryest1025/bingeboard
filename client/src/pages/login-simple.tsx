@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,7 +7,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { Eye, EyeOff, Mail, Lock } from "lucide-react";
 import { SiGoogle, SiFacebook } from "react-icons/si";
-import { signInWithPopup, signInWithRedirect } from 'firebase/auth';
+import { signInWithPopup, signInWithRedirect, getRedirectResult } from 'firebase/auth';
 import { auth, googleProvider, facebookProvider } from '@/firebase/config-simple';
 
 export default function LoginSimple() {
@@ -134,6 +134,73 @@ export default function LoginSimple() {
     }
   };
 
+  // Handle Firebase redirect result when user returns from OAuth
+  useEffect(() => {
+    const handleRedirectResult = async () => {
+      try {
+        console.log('🔍 Checking for OAuth redirect result on login page...');
+        const result = await getRedirectResult(auth);
+        
+        if (result && result.user) {
+          console.log('✅ OAuth redirect result found:', result.user.email);
+          setIsLoading(true);
+          
+          // Create backend session
+          const idToken = await result.user.getIdToken();
+          const response = await fetch('/api/auth/firebase-session', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${idToken}`
+            },
+            credentials: 'include',
+            body: JSON.stringify({ 
+              firebaseToken: {
+                uid: result.user.uid,
+                email: result.user.email,
+                displayName: result.user.displayName,
+                photoURL: result.user.photoURL
+              }
+            })
+          });
+          
+          if (response.ok) {
+            console.log('✅ Backend session created successfully');
+            toast({
+              title: "Login successful",
+              description: "Welcome to BingeBoard!",
+            });
+            
+            // Redirect to home page
+            window.location.href = '/';
+          } else {
+            console.error('❌ Failed to create backend session');
+            toast({
+              title: "Login failed",
+              description: "Failed to complete authentication. Please try again.",
+              variant: "destructive",
+            });
+            setIsLoading(false);
+          }
+        } else {
+          console.log('ℹ️ No OAuth redirect result found');
+        }
+      } catch (error: any) {
+        console.error('❌ OAuth redirect error:', error);
+        if (!error.message.includes('popup-closed-by-user')) {
+          toast({
+            title: "Authentication error",
+            description: error.message || "Failed to complete authentication",
+            variant: "destructive",
+          });
+        }
+        setIsLoading(false);
+      }
+    };
+    
+    handleRedirectResult();
+  }, [toast]);
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
       ...formData,
@@ -151,45 +218,57 @@ export default function LoginSimple() {
         throw new Error('Firebase configuration missing');
       }
       
-      // Check if user is already authenticated
-      if (auth.currentUser) {
-        console.log('User already authenticated, creating backend session...');
-        
-        const idToken = await auth.currentUser.getIdToken();
-        const response = await fetch('/api/auth/firebase-session', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${idToken}`
-          },
-          credentials: 'include',
-          body: JSON.stringify({ 
-            firebaseToken: {
-              uid: auth.currentUser.uid,
-              email: auth.currentUser.email,
-              displayName: auth.currentUser.displayName,
-              photoURL: auth.currentUser.photoURL
-            }
-          })
-        });
-        
-        if (response.ok) {
-          toast({
-            title: "Login successful",
-            description: "Welcome back to BingeBoard!",
-            variant: "default",
-          });
-          window.location.href = '/';
-          return;
-        }
-      }
-      
       console.log('Firebase config check passed, initiating Google sign-in...');
       
-      // Always use redirect for both mobile and desktop to avoid popup issues
-      await signInWithRedirect(auth, googleProvider);
+      // Detect if mobile device
+      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+      console.log('Device detected as:', isMobile ? 'mobile' : 'desktop');
       
-      console.log('SignInWithRedirect called successfully');
+      if (isMobile) {
+        // Mobile: Use redirect to avoid popup blocking
+        await signInWithRedirect(auth, googleProvider);
+        console.log('Mobile redirect initiated');
+      } else {
+        // Desktop: Try popup first, fallback to redirect
+        try {
+          const result = await signInWithPopup(auth, googleProvider);
+          if (result && result.user) {
+            console.log('✅ Desktop popup authentication successful');
+            
+            // Create backend session immediately
+            const idToken = await result.user.getIdToken();
+            const response = await fetch('/api/auth/firebase-session', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${idToken}`
+              },
+              credentials: 'include',
+              body: JSON.stringify({ 
+                firebaseToken: {
+                  uid: result.user.uid,
+                  email: result.user.email,
+                  displayName: result.user.displayName,
+                  photoURL: result.user.photoURL
+                }
+              })
+            });
+            
+            if (response.ok) {
+              toast({
+                title: "Login successful",
+                description: "Welcome to BingeBoard!",
+              });
+              window.location.href = '/';
+              return;
+            }
+          }
+        } catch (popupError: any) {
+          console.log('Popup failed, falling back to redirect:', popupError.message);
+          // Fallback to redirect for desktop
+          await signInWithRedirect(auth, googleProvider);
+        }
+      }
       
     } catch (error: any) {
       console.error('Google authentication error:', error);
@@ -215,11 +294,55 @@ export default function LoginSimple() {
       
       console.log('Firebase config check passed, initiating Facebook sign-in...');
       
-      // Always use redirect for both mobile and desktop to avoid popup issues
-      await signInWithRedirect(auth, facebookProvider);
+      // Detect if mobile device
+      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+      console.log('Device detected as:', isMobile ? 'mobile' : 'desktop');
       
-      // The redirect will handle the authentication, so we don't need to do anything else here
-      // The result will be handled in the App component's redirect result handler
+      if (isMobile) {
+        // Mobile: Use redirect to avoid popup blocking
+        await signInWithRedirect(auth, facebookProvider);
+        console.log('Mobile redirect initiated');
+      } else {
+        // Desktop: Try popup first, fallback to redirect
+        try {
+          const result = await signInWithPopup(auth, facebookProvider);
+          if (result && result.user) {
+            console.log('✅ Desktop popup authentication successful');
+            
+            // Create backend session immediately
+            const idToken = await result.user.getIdToken();
+            const response = await fetch('/api/auth/firebase-session', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${idToken}`
+              },
+              credentials: 'include',
+              body: JSON.stringify({ 
+                firebaseToken: {
+                  uid: result.user.uid,
+                  email: result.user.email,
+                  displayName: result.user.displayName,
+                  photoURL: result.user.photoURL
+                }
+              })
+            });
+            
+            if (response.ok) {
+              toast({
+                title: "Login successful",
+                description: "Welcome to BingeBoard!",
+              });
+              window.location.href = '/';
+              return;
+            }
+          }
+        } catch (popupError: any) {
+          console.log('Popup failed, falling back to redirect:', popupError.message);
+          // Fallback to redirect for desktop
+          await signInWithRedirect(auth, facebookProvider);
+        }
+      }
       
     } catch (error: any) {
       console.error('Facebook authentication error:', error);

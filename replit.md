@@ -151,6 +151,13 @@ BingeBoard is a comprehensive entertainment tracking platform that combines TV s
 - **Server**: Session destroy + clearCookie('bingeboard.session') with exact options
 - **Required**: Both Firebase and backend logout for complete session cleanup
 
+### OAuth Login System - LOCKED IMPLEMENTATION
+- **Desktop**: Popup authentication with redirect fallback for failed popups
+- **Mobile**: Always use redirect authentication to avoid popup blocking
+- **Redirect Handler**: Located in login-simple.tsx useEffect, handles OAuth return
+- **Flow**: OAuth click → Provider auth → Return to login page → getRedirectResult() → Session creation → Home redirect
+- **Critical**: getRedirectResult() must be called on login page to complete OAuth flow
+
 ## Changelog
 
 ```

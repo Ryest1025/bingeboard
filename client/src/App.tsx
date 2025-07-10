@@ -60,75 +60,7 @@ function Router() {
   // Show app immediately to prevent delays
   const [showApp, setShowApp] = useState(true);
 
-  // Firebase redirect result handler for OAuth authentication
-  useEffect(() => {
-    const handleRedirectResult = async () => {
-      try {
-        const { getRedirectResult } = await import('firebase/auth');
-        const { auth } = await import('@/firebase/config-simple');
-        
-        console.log('🔍 Checking for OAuth redirect result...');
-        const result = await getRedirectResult(auth);
-        
-        if (result && result.user) {
-          console.log('✅ OAuth redirect result found:', result.user.email);
-          
-          // Create backend session
-          const idToken = await result.user.getIdToken();
-          const response = await fetch('/api/auth/firebase-session', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${idToken}`
-            },
-            credentials: 'include',
-            body: JSON.stringify({ 
-              firebaseToken: {
-                uid: result.user.uid,
-                email: result.user.email,
-                displayName: result.user.displayName,
-                photoURL: result.user.photoURL
-              }
-            })
-          });
-          
-          if (response.ok) {
-            console.log('✅ Backend session created successfully');
-            toast({
-              title: "Login successful",
-              description: "Welcome to BingeBoard!",
-            });
-            
-            // Redirect to home page
-            window.location.href = '/';
-          } else {
-            console.error('❌ Failed to create backend session');
-            toast({
-              title: "Login failed",
-              description: "Failed to complete authentication. Please try again.",
-              variant: "destructive",
-            });
-          }
-        } else {
-          console.log('ℹ️ No OAuth redirect result found');
-        }
-      } catch (error: any) {
-        console.error('❌ OAuth redirect error:', error);
-        if (error.message.includes('popup-closed-by-user')) {
-          // User cancelled - no need to show error
-          console.log('ℹ️ User cancelled OAuth authentication');
-        } else {
-          toast({
-            title: "Authentication error",
-            description: error.message || "Failed to complete authentication",
-            variant: "destructive",
-          });
-        }
-      }
-    };
-    
-    handleRedirectResult();
-  }, [toast]);
+  // OAuth redirect handling is now done in login-simple.tsx
 
   // Add comprehensive global error handlers that completely prevent unhandled promise rejections
   useEffect(() => {
