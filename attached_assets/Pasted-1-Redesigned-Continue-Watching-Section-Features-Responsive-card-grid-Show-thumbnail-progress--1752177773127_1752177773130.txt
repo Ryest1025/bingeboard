@@ -1,0 +1,93 @@
+1. Redesigned “Continue Watching” Section
+Features:
+
+Responsive card grid
+
+Show thumbnail, progress bar, and time watched
+
+Mobile swipeable (optional Embla integration)
+
+tsx
+Copy
+Edit
+<h2 className="text-white text-xl font-bold mb-4">Continue Watching</h2>
+<div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+  {continueWatching.map((item) => (
+    <div key={item.id} className="relative bg-gray-900 rounded-lg overflow-hidden shadow-md">
+      <img src={item.thumbnail} alt={item.title} className="w-full h-40 object-cover" />
+      <div className="p-3">
+        <h3 className="text-white text-sm font-semibold">{item.title}</h3>
+        <p className="text-gray-400 text-xs">{item.episode}</p>
+        <div className="mt-1 h-2 bg-gray-700 rounded-full overflow-hidden">
+          <div
+            className="h-full bg-teal-400"
+            style={{ width: `${item.progress}%` }}
+          ></div>
+        </div>
+        <p className="text-xs text-gray-500 mt-1">{item.timeWatched} watched</p>
+      </div>
+    </div>
+  ))}
+</div>
+🔥 2. Swipeable “Trending” Carousel (Embla + Hover Actions)
+Features:
+
+Embla carousel for horizontal scroll
+
+Hover effects with trailer/play buttons
+
+Responsive with snap
+
+tsx
+Copy
+Edit
+import useEmblaCarousel from 'embla-carousel-react';
+
+const [emblaRef] = useEmblaCarousel({ align: 'start' });
+
+<h2 className="text-white text-xl font-bold mb-4">Trending Now</h2>
+<div className="overflow-hidden" ref={emblaRef}>
+  <div className="flex space-x-4">
+    {trendingShows.map((show) => (
+      <div key={show.id} className="min-w-[160px] sm:min-w-[200px] bg-gray-800 rounded-lg relative group">
+        <img src={show.thumbnail} alt={show.title} className="rounded-lg w-full h-40 object-cover" />
+        <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition">
+          <button className="bg-teal-500 text-white px-3 py-1 rounded-md text-sm mr-2">Trailer</button>
+          <button className="bg-white text-black px-3 py-1 rounded-md text-sm">Watch</button>
+        </div>
+        <div className="p-2">
+          <h3 className="text-white text-sm font-medium truncate">{show.title}</h3>
+          <p className="text-xs text-gray-400">{show.platform}</p>
+        </div>
+      </div>
+    ))}
+  </div>
+</div>
+ℹ️ You’ll need to install embla-carousel-react and hook this to real data.
+
+👋 3. Personalized Header with Greeting + Weekly Stats
+Features:
+
+Greeting (based on time of day or name)
+
+Weekly watch count
+
+Beautiful gradient background
+
+tsx
+Copy
+Edit
+<div className="bg-gradient-to-r from-teal-500 via-cyan-500 to-blue-500 p-6 rounded-2xl shadow-lg mb-6 text-white">
+  <h1 className="text-2xl font-black">
+    Good evening, Rachel 👋
+  </h1>
+  <p className="text-sm text-cyan-100 mt-1">You’ve watched <span className="font-bold text-white">5 shows</span> this week</p>
+  <div className="mt-3 flex space-x-4">
+    <div className="bg-black bg-opacity-30 px-3 py-1 rounded-full text-sm">
+      🎯 85% match accuracy
+    </div>
+    <div className="bg-black bg-opacity-30 px-3 py-1 rounded-full text-sm">
+      📺 3 new episodes dropped
+    </div>
+  </div>
+</div>
