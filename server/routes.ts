@@ -57,6 +57,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Firebase authentication routes only
 
+  // OAuth redirect endpoints for Google and Facebook
+  app.get('/api/auth/google', (req, res) => {
+    const redirectUrl = 'https://bingeboard-73c5f.firebaseapp.com/__/auth/handler?providerId=google.com&continueUrl=' + 
+                       encodeURIComponent(`${req.protocol}://${req.get('host')}/`);
+    res.redirect(redirectUrl);
+  });
+
+  app.get('/api/auth/facebook', (req, res) => {
+    const redirectUrl = 'https://bingeboard-73c5f.firebaseapp.com/__/auth/handler?providerId=facebook.com&continueUrl=' + 
+                       encodeURIComponent(`${req.protocol}://${req.get('host')}/`);
+    res.redirect(redirectUrl);
+  });
+
   // Email/password authentication endpoints
   app.post('/api/auth/login', async (req: any, res) => {
     try {

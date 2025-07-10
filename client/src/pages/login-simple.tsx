@@ -144,22 +144,15 @@ export default function LoginSimple() {
       console.log('Starting Google authentication...');
       setIsLoading(true);
       
-      toast({
-        title: "OAuth Setup Required",
-        description: "Please enable Google provider in Firebase Console first. Check the setup guide for details.",
-        variant: "default",
-      });
-      
-      // Open Firebase Console in new tab
-      window.open('https://console.firebase.google.com/project/bingeboard-73c5f/authentication/providers', '_blank');
+      // For now, use server-side OAuth endpoints instead of Firebase client-side
+      window.location.href = '/api/auth/google';
     } catch (error: any) {
       console.error('Google authentication error:', error);
       toast({
         title: "Google Authentication Error",
-        description: "Authentication temporarily disabled. Please use email/password login.",
+        description: error.message || "Please try again or use email/password login.",
         variant: "destructive",
       });
-    } finally {
       setIsLoading(false);
     }
   };
@@ -169,22 +162,15 @@ export default function LoginSimple() {
       console.log('Starting Facebook authentication...');
       setIsLoading(true);
       
-      toast({
-        title: "OAuth Setup Required", 
-        description: "Please enable Facebook provider in Firebase Console first. Check the setup guide for details.",
-        variant: "default",
-      });
-      
-      // Open Firebase Console in new tab
-      window.open('https://console.firebase.google.com/project/bingeboard-73c5f/authentication/providers', '_blank');
+      // For now, use server-side OAuth endpoints instead of Firebase client-side
+      window.location.href = '/api/auth/facebook';
     } catch (error: any) {
       console.error('Facebook authentication error:', error);
       toast({
-        title: "Facebook Authentication Error",
-        description: "Authentication temporarily disabled. Please use email/password login.",
+        title: "Facebook Authentication Error", 
+        description: error.message || "Please try again or use email/password login.",
         variant: "destructive",
       });
-    } finally {
       setIsLoading(false);
     }
   };
