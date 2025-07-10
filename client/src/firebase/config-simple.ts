@@ -39,7 +39,7 @@ googleProvider.setCustomParameters({
 
 facebookProvider.addScope('email');
 facebookProvider.setCustomParameters({
-  display: 'popup'
+  display: 'redirect' // Use redirect for better mobile compatibility
 });
 
 export { auth, googleProvider, facebookProvider };

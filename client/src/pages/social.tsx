@@ -723,7 +723,12 @@ export default function Social() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {/* Facebook */}
                     <Button
-                      onClick={() => window.location.href = '/api/auth/facebook'}
+                      onClick={() => {
+                        toast({
+                          title: "Firebase Authentication",
+                          description: "Use the main login page to connect with Facebook through secure Firebase authentication.",
+                        });
+                      }}
                       className="flex items-center gap-3 bg-blue-600 hover:bg-blue-700 text-white h-12"
                     >
                       <div className="w-6 h-6 bg-white rounded flex items-center justify-center">
@@ -734,7 +739,12 @@ export default function Social() {
 
                     {/* Google */}
                     <Button
-                      onClick={() => window.location.href = '/api/auth/google'}
+                      onClick={() => {
+                        toast({
+                          title: "Firebase Authentication",
+                          description: "Use the main login page to connect with Google through secure Firebase authentication.",
+                        });
+                      }}
                       className="flex items-center gap-3 bg-red-600 hover:bg-red-700 text-white h-12"
                     >
                       <div className="w-6 h-6 bg-white rounded flex items-center justify-center">

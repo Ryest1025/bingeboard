@@ -72,18 +72,20 @@ export default function FriendsDiscovery() {
     },
   });
 
-  // Connect social network
+  // Connect social network - Firebase authentication only
   const connectSocialMutation = useMutation({
     mutationFn: async (platform: string) => {
-      if (platform === 'facebook') {
-        window.location.href = '/api/auth/facebook';
-      }
+      // Firebase authentication only - no server-side OAuth
+      toast({
+        title: "Social Media Integration",
+        description: "Connect through your profile's social media settings for the best experience.",
+      });
       return { platform };
     },
     onSuccess: (data) => {
       toast({
-        title: "Connecting...",
-        description: `Redirecting to ${data.platform} to find your friends.`,
+        title: "Integration Info",
+        description: `Visit your profile to connect ${data.platform} through Firebase authentication.`,
       });
     },
   });
