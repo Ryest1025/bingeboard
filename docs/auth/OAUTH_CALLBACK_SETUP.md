@@ -1,46 +1,64 @@
-# OAuth Callback URL Configuration
+# OAuth Callback URL Setup Guide
 
-## CRITICAL: Provider Console Setup Required
+## Permanent Domain Setup
+**Custom Domain:** `www.joinbingeboard.com`
 
-The OAuth authentication endpoints are working but need callback URLs configured in the provider consoles.
+**Required Callback URL:** `https://www.joinbingeboard.com/auth/callback`
 
-### Current Issue
-- OAuth strategies are configured ✅
-- Credentials are set ✅  
-- **Provider consoles need callback URLs** ❌
+**Status:** This URL never changes, eliminating daily OAuth configuration updates!
 
-### Root Cause
-Both Google and Facebook callbacks are not receiving authorization codes because the callback URLs aren't registered in the provider consoles.
+## Google Cloud Console Setup
 
-### Fix Required
+1. **Go to Google Cloud Console:**
+   - Visit: https://console.cloud.google.com/apis/credentials
+   - Select your project (or create one if needed)
 
-**Google Cloud Console:**
-1. Visit: https://console.cloud.google.com/apis/credentials
-2. Find OAuth 2.0 Client: `874663258237-lem9602ckq4b1a6fsnqnaek96vgu7vfr.apps.googleusercontent.com`
-3. Add to "Authorized redirect URIs":
-   ```
-   https://80d1bb7f-86b2-4c58-a8e0-62a1673122a3-00-2vv88inpi4v1.riker.replit.dev/api/auth/google/callback
-   ```
+2. **Configure OAuth Client:**
+   - Find your OAuth 2.0 Client ID: `874663258237-lem9602ckq4b1a6fsnqnaek96vgu7vfr.apps.googleusercontent.com`
+   - Click "Edit" on the OAuth client
+   - In "Authorized redirect URIs", add:
+     ```
+     https://www.joinbingeboard.com/auth/callback
+     ```
+   - Click "Save"
 
-**Facebook Developer Console:**
-1. Visit: https://developers.facebook.com/apps/1407155243762479/fb-login/settings/
-2. Add to "Valid OAuth Redirect URIs":
-   ```
-   https://80d1bb7f-86b2-4c58-a8e0-62a1673122a3-00-2vv88inpi4v1.riker.replit.dev/api/auth/facebook/callback
-   ```
+## Facebook Developer Console Setup
 
-### Current Domain
-**Active Domain:** `80d1bb7f-86b2-4c58-a8e0-62a1673122a3-00-2vv88inpi4v1.riker.replit.dev`
+1. **Go to Facebook Developer Console:**
+   - Visit: https://developers.facebook.com/apps/
+   - Select your app ID: `1407155243762479`
 
-### Verification
-After updating provider consoles:
-1. Clear browser cache/cookies
-2. Try Google/Facebook login from `/login`
-3. Should complete OAuth flow successfully
+2. **Configure OAuth Settings:**
+   - Go to "Facebook Login" → "Settings"
+   - In "Valid OAuth Redirect URIs", add:
+     ```
+     https://www.joinbingeboard.com/auth/callback
+     ```
+   - Click "Save Changes"
 
-### OAuth Provider Status
-- **Google**: Client ID configured, callback URL needs registration
-- **Facebook**: App ID configured, callback URL needs registration
-- **Server endpoints**: Both `/api/auth/google` and `/api/auth/facebook` working (302 redirects)
+## Testing After Setup
 
-The OAuth flow will work perfectly once the callback URLs are added to the provider consoles.
+1. **Test Google Login:**
+   - Go to `/login` page
+   - Click "Log in with Google"
+   - Should redirect to Google authentication
+   - After approval, redirects back to your app
+
+2. **Test Facebook Login:**
+   - Go to `/login` page
+   - Click "Log in with Facebook"
+   - Should redirect to Facebook authentication
+   - After approval, redirects back to your app
+
+## Troubleshooting
+
+- **403 Error:** Callback URL not configured in provider console
+- **Invalid Redirect URI:** URL doesn't match exactly (check https/http)
+- **App Not Approved:** Facebook apps need review for public use
+
+## Notes
+
+- **PERMANENT SOLUTION:** Using custom domain eliminates daily OAuth breakage
+- **One-time Setup:** Configure callback URL once, works forever
+- **Mobile Compatible:** Works identically on all devices
+- Both OAuth providers are already enabled in Firebase Console
