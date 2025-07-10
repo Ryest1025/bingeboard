@@ -60,14 +60,15 @@ function Router() {
   // Show app immediately to prevent delays
   const [showApp, setShowApp] = useState(true);
 
-  // Handle Firebase redirect results for mobile authentication
+  // Handle Firebase authentication and create backend sessions
   useEffect(() => {
-    const handleFirebaseRedirect = async () => {
+    const handleFirebaseAuth = async () => {
       try {
-        console.log('Checking for Firebase redirect result...');
-        const { getRedirectResult } = await import('firebase/auth');
+        console.log('Checking Firebase authentication status...');
+        const { getRedirectResult, onAuthStateChanged } = await import('firebase/auth');
         const { auth } = await import('@/firebase/config-simple');
         
+        // First check for redirect result
         const result = await getRedirectResult(auth);
         if (result) {
           console.log('Firebase redirect result found:', {
@@ -76,60 +77,81 @@ function Router() {
             uid: result.user.uid
           });
           
-          // Create backend session
-          const idToken = await result.user.getIdToken();
-          console.log('Creating backend session...');
-          
-          const response = await fetch('/api/auth/firebase-session', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${idToken}`
-            },
-            credentials: 'include',
-            body: JSON.stringify({ 
-              firebaseToken: {
-                uid: result.user.uid,
-                email: result.user.email,
-                displayName: result.user.displayName,
-                photoURL: result.user.photoURL
-              }
-            })
+          await createBackendSession(result.user);
+          return;
+        }
+        
+        // Check if user is already authenticated
+        if (auth.currentUser) {
+          console.log('Existing Firebase user found:', {
+            email: auth.currentUser.email,
+            displayName: auth.currentUser.displayName,
+            uid: auth.currentUser.uid
           });
           
-          console.log('Backend session response:', response.status);
-          
-          if (response.ok) {
-            toast({
-              title: "Login successful",
-              description: "Welcome to BingeBoard!",
-            });
-            window.location.href = '/';
+          await createBackendSession(auth.currentUser);
+          return;
+        }
+        
+        // Set up auth state listener for future changes
+        onAuthStateChanged(auth, async (user) => {
+          if (user) {
+            console.log('Firebase auth state changed - user logged in:', user.email);
+            await createBackendSession(user);
           } else {
-            const errorData = await response.text();
-            console.error('Backend session error:', errorData);
-            toast({
-              title: "Authentication Error",
-              description: "Failed to create session. Please try again.",
-              variant: "destructive",
-            });
+            console.log('Firebase auth state changed - user logged out');
           }
-        } else {
-          console.log('No Firebase redirect result found');
-        }
+        });
+        
       } catch (error: any) {
-        console.error('Firebase redirect error:', error);
-        if (error.code !== 'auth/no-auth-event') {
-          toast({
-            title: "Authentication Error",
-            description: `Authentication failed: ${error.message}`,
-            variant: "destructive",
-          });
-        }
+        console.error('Firebase auth error:', error);
       }
     };
 
-    handleFirebaseRedirect();
+    const createBackendSession = async (user: any) => {
+      try {
+        console.log('Creating backend session for user:', user.email);
+        const idToken = await user.getIdToken();
+        
+        const response = await fetch('/api/auth/firebase-session', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${idToken}`
+          },
+          credentials: 'include',
+          body: JSON.stringify({ 
+            firebaseToken: {
+              uid: user.uid,
+              email: user.email,
+              displayName: user.displayName,
+              photoURL: user.photoURL
+            }
+          })
+        });
+        
+        console.log('Backend session response:', response.status);
+        
+        if (response.ok) {
+          console.log('Backend session created successfully');
+          toast({
+            title: "Login successful",
+            description: "Welcome to BingeBoard!",
+            variant: "default",
+          });
+          
+          // Refresh the page to update authentication state
+          window.location.href = '/';
+        } else {
+          const errorData = await response.text();
+          console.error('Backend session error:', errorData);
+        }
+      } catch (error: any) {
+        console.error('Backend session creation error:', error);
+      }
+    };
+
+    handleFirebaseAuth();
   }, [toast]);
 
   // Add comprehensive global error handlers that completely prevent unhandled promise rejections

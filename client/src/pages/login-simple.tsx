@@ -151,31 +151,45 @@ export default function LoginSimple() {
         throw new Error('Firebase configuration missing');
       }
       
-      console.log('Firebase config check passed, initiating Google sign-in...');
-      
-      // Add detailed logging for debugging
-      console.log('Auth object:', auth);
-      console.log('Google provider:', googleProvider);
-      console.log('Current domain:', window.location.hostname);
-      
-      // Test Firebase authentication availability
-      console.log('Testing Firebase auth availability...');
-      
-      // Check if we can reach Google's OAuth endpoint
-      try {
-        const testUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${import.meta.env.VITE_GOOGLE_CLIENT_ID || 'test'}&redirect_uri=${encodeURIComponent(window.location.origin)}&response_type=code&scope=email profile`;
-        console.log('Google OAuth test URL:', testUrl);
-      } catch (e) {
-        console.log('URL test failed:', e);
+      // Check if user is already authenticated
+      if (auth.currentUser) {
+        console.log('User already authenticated, creating backend session...');
+        
+        const idToken = await auth.currentUser.getIdToken();
+        const response = await fetch('/api/auth/firebase-session', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${idToken}`
+          },
+          credentials: 'include',
+          body: JSON.stringify({ 
+            firebaseToken: {
+              uid: auth.currentUser.uid,
+              email: auth.currentUser.email,
+              displayName: auth.currentUser.displayName,
+              photoURL: auth.currentUser.photoURL
+            }
+          })
+        });
+        
+        if (response.ok) {
+          toast({
+            title: "Login successful",
+            description: "Welcome back to BingeBoard!",
+            variant: "default",
+          });
+          window.location.href = '/';
+          return;
+        }
       }
+      
+      console.log('Firebase config check passed, initiating Google sign-in...');
       
       // Always use redirect for both mobile and desktop to avoid popup issues
       await signInWithRedirect(auth, googleProvider);
       
       console.log('SignInWithRedirect called successfully');
-      
-      // The redirect will handle the authentication, so we don't need to do anything else here
-      // The result will be handled in the App component's redirect result handler
       
     } catch (error: any) {
       console.error('Google authentication error:', error);
