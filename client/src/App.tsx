@@ -45,7 +45,7 @@ import NotificationsDemo from "@/pages/notifications-demo";
 import NotificationCenter from "@/pages/notification-center";
 import ImportHistory from "@/pages/import-history";
 import ResetPassword from "@/pages/reset-password";
-import MobileLoginTest from "@/pages/mobile-login-test";
+
 
 function Router() {
   const { isAuthenticated, loading: isLoading } = useSimpleAuth();
@@ -133,7 +133,7 @@ function Router() {
           {/* Public routes - always accessible */}
           <Route path="/login" component={LoginSimple} />
           <Route path="/login-direct" component={LoginDirect} />
-          <Route path="/mobile-login-test" component={MobileLoginTest} />
+
           <Route path="/privacy-policy" component={PrivacyPolicy} />
           <Route path="/terms-of-service" component={TermsOfService} />
           <Route path="/eula" component={EULA} />

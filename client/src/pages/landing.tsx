@@ -276,26 +276,9 @@ export default function Landing() {
                 size="lg" 
                 variant="outline" 
                 className="border-teal-400/30 text-teal-300 hover:bg-teal-500/10 px-8 py-4 text-lg w-full"
-                onClick={async () => {
+                onClick={() => {
                   console.log('Google login clicked');
-                  const { supabase } = await import('@/lib/supabase');
-                  try {
-                    const { data, error } = await supabase.auth.signInWithOAuth({
-                      provider: 'google',
-                      options: {
-                        redirectTo: window.location.origin + '/auth/callback'
-                      }
-                    });
-                    
-                    if (error) {
-                      console.log(`OAuth error: ${error.message}`);
-                    } else {
-                      console.log(`OAuth URL generated: ${data.url}`);
-                      window.location.href = data.url;
-                    }
-                  } catch (err) {
-                    console.log(`OAuth exception: ${err.message}`);
-                  }
+                  window.location.href = '/api/auth/google';
                 }}
               >
                 <svg className="w-5 h-5 mr-3" viewBox="0 0 24 24" fill="currentColor">

@@ -734,26 +734,7 @@ export default function Social() {
 
                     {/* Google */}
                     <Button
-                      onClick={async () => {
-                        const { supabase } = await import('@/lib/supabase');
-                        try {
-                          const { data, error } = await supabase.auth.signInWithOAuth({
-                            provider: 'google',
-                            options: {
-                              redirectTo: window.location.origin + '/auth/callback'
-                            }
-                          });
-                          
-                          if (error) {
-                            console.log(`OAuth error: ${error.message}`);
-                          } else {
-                            console.log(`OAuth URL generated: ${data.url}`);
-                            window.location.href = data.url;
-                          }
-                        } catch (err) {
-                          console.log(`OAuth exception: ${err.message}`);
-                        }
-                      }}
+                      onClick={() => window.location.href = '/api/auth/google'}
                       className="flex items-center gap-3 bg-red-600 hover:bg-red-700 text-white h-12"
                     >
                       <div className="w-6 h-6 bg-white rounded flex items-center justify-center">
