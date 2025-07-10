@@ -12,12 +12,14 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID
 };
 
-// Initialize Firebase
+// Initialize Firebase app
 const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
+
+// Initialize Firebase Auth and export it
+export const auth = getAuth(app);
 
 // Add debug logging
-console.log('Firebase config:', {
+console.log('Firebase initialized:', {
   apiKey: firebaseConfig.apiKey ? 'Set' : 'Missing',
   authDomain: firebaseConfig.authDomain,
   projectId: firebaseConfig.projectId,
@@ -26,8 +28,8 @@ console.log('Firebase config:', {
 });
 
 // Configure providers with custom parameters for domain compatibility
-const googleProvider = new GoogleAuthProvider();
-const facebookProvider = new FacebookAuthProvider();
+export const googleProvider = new GoogleAuthProvider();
+export const facebookProvider = new FacebookAuthProvider();
 
 // Configure scopes and custom parameters
 googleProvider.addScope('profile');
@@ -41,5 +43,3 @@ facebookProvider.addScope('email');
 facebookProvider.setCustomParameters({
   display: 'redirect' // Use redirect for better mobile compatibility
 });
-
-export { auth, googleProvider, facebookProvider };

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { getAuth, onAuthStateChanged, User as FirebaseUser } from "firebase/auth";
+import { onAuthStateChanged, User as FirebaseUser } from "firebase/auth";
+import { auth } from "@/firebase/config-simple";
 
 interface AuthState {
   user: any;
@@ -16,7 +17,6 @@ export function useAuth(): AuthState {
 
   useEffect(() => {
     let isMounted = true;
-    const auth = getAuth();
 
     // Set up Firebase auth state listener for real-time updates
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser: FirebaseUser | null) => {
