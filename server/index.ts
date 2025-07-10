@@ -51,12 +51,12 @@ app.use((req, res, next) => {
   
   // Only redirect if accessing via Replit domain and not already on custom domain
   if (host && host.includes('replit.dev') && !host.includes(customDomain)) {
-    // Temporarily disabled redirect for login pages to fix loading issues
-    // if ((req.path.startsWith('/login') || req.path.startsWith('/auth')) && !req.path.startsWith('/api/')) {
-    //   const redirectUrl = `https://${customDomain}${req.originalUrl}`;
-    //   console.log(`🔄 Redirecting auth request to custom domain: ${redirectUrl}`);
-    //   return res.redirect(301, redirectUrl);
-    // }
+    // Redirect authentication pages to custom domain for Firebase compatibility
+    if ((req.path.startsWith('/login') || req.path === '/' || req.path.startsWith('/auth')) && !req.path.startsWith('/api/')) {
+      const redirectUrl = `https://${customDomain}${req.originalUrl}`;
+      console.log(`🔄 Redirecting to custom domain for Firebase auth: ${redirectUrl}`);
+      return res.redirect(301, redirectUrl);
+    }
   }
   
   next();
