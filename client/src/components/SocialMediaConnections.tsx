@@ -9,7 +9,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { Facebook, Instagram, Twitter, MessageCircle, UserPlus, Users, X } from "lucide-react";
 import { auth, googleProvider, facebookProvider } from '@/firebase/config-simple';
-import { signInWithPopup, signInWithRedirect } from 'firebase/auth';
+import { signInWithRedirect, getRedirectResult } from 'firebase/auth';
 
 interface SocialConnection {
   id: number;
@@ -56,26 +56,11 @@ export default function SocialMediaConnections() {
     staleTime: 30000,
   });
 
-  // Firebase authentication helpers
+  // Firebase authentication helpers - using redirect for all devices
   const handleGoogleConnect = async () => {
     try {
-      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-      
-      if (isMobile) {
-        // Use redirect for mobile devices
-        await signInWithRedirect(auth, googleProvider);
-      } else {
-        // Use popup for desktop
-        const result = await signInWithPopup(auth, googleProvider);
-        
-        toast({
-          title: "Google Connected",
-          description: "Successfully connected your Google account",
-        });
-        
-        // Refresh connections data
-        queryClient.invalidateQueries({ queryKey: ['/api/social/connections'] });
-      }
+      // Use redirect for all devices to avoid popup blocking issues
+      await signInWithRedirect(auth, googleProvider);
     } catch (error: any) {
       console.error('Google connection error:', error);
       toast({
@@ -88,23 +73,8 @@ export default function SocialMediaConnections() {
 
   const handleFacebookConnect = async () => {
     try {
-      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-      
-      if (isMobile) {
-        // Use redirect for mobile devices
-        await signInWithRedirect(auth, facebookProvider);
-      } else {
-        // Use popup for desktop
-        const result = await signInWithPopup(auth, facebookProvider);
-        
-        toast({
-          title: "Facebook Connected",
-          description: "Successfully connected your Facebook account",
-        });
-        
-        // Refresh connections data
-        queryClient.invalidateQueries({ queryKey: ['/api/social/connections'] });
-      }
+      // Use redirect for all devices to avoid popup blocking issues
+      await signInWithRedirect(auth, facebookProvider);
     } catch (error: any) {
       console.error('Facebook connection error:', error);
       toast({

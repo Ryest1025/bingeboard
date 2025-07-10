@@ -7,7 +7,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { Eye, EyeOff, Mail, Lock } from "lucide-react";
 import { SiGoogle, SiFacebook } from "react-icons/si";
-import { signInWithPopup, signInWithRedirect, getRedirectResult, linkWithCredential, fetchSignInMethodsForEmail, FacebookAuthProvider } from 'firebase/auth';
+import { signInWithRedirect, getRedirectResult, linkWithCredential, fetchSignInMethodsForEmail, FacebookAuthProvider } from 'firebase/auth';
 import { auth, googleProvider, facebookProvider } from '@/firebase/config-simple';
 
 export default function LoginSimple() {
@@ -213,43 +213,18 @@ export default function LoginSimple() {
       console.log('Starting Google authentication...');
       setIsLoading(true);
       
-      // Check if domain is authorized - if not, show helpful message
-      const currentDomain = window.location.hostname;
-      console.log('Current domain:', currentDomain);
-      
-      // For Replit domains that might not be authorized, provide fallback
-      if (currentDomain.includes('replit.dev')) {
-        toast({
-          title: "Domain Authorization Required",
-          description: "Please add this Replit domain to Firebase Console authorized domains for social login to work.",
-          variant: "destructive",
-        });
-        setIsLoading(false);
-        return;
-      }
-      
-      // FIREBASE AUTHENTICATION ONLY - NO SERVER-SIDE OAUTH
-      // Use Firebase redirect authentication for all devices
-      console.log('Using Firebase redirect authentication for Google...');
+      // Firebase handles OAuth flow internally - no domain configuration needed
       await signInWithRedirect(auth, googleProvider);
       
     } catch (error: any) {
       console.error('Google authentication error:', error);
       setIsLoading(false);
       
-      if (error.message?.includes('domain') || error.message?.includes('authorized')) {
-        toast({
-          title: "Domain Authorization Error",
-          description: "This domain needs to be added to Firebase Console. Please use email/password login instead.",
-          variant: "destructive",
-        });
-      } else {
-        toast({
-          title: "Login failed",
-          description: error.message || "Please try again or contact support if the issue persists.",
-          variant: "destructive",
-        });
-      }
+      toast({
+        title: "Login failed",
+        description: error.message || "Please try again or contact support if the issue persists.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -258,24 +233,7 @@ export default function LoginSimple() {
       console.log('Starting Facebook authentication...');
       setIsLoading(true);
       
-      // Check if domain is authorized - if not, show helpful message
-      const currentDomain = window.location.hostname;
-      console.log('Current domain:', currentDomain);
-      
-      // For Replit domains that might not be authorized, provide fallback
-      if (currentDomain.includes('replit.dev')) {
-        toast({
-          title: "Domain Authorization Required",
-          description: "Please add this Replit domain to Firebase Console authorized domains for social login to work.",
-          variant: "destructive",
-        });
-        setIsLoading(false);
-        return;
-      }
-      
-      // FIREBASE AUTHENTICATION ONLY - NO SERVER-SIDE OAUTH
-      // Use Firebase redirect authentication for all devices
-      console.log('Using Firebase redirect authentication for Facebook...');
+      // Firebase handles OAuth flow internally - no domain configuration needed
       await signInWithRedirect(auth, facebookProvider);
       
     } catch (error: any) {
