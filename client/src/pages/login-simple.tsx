@@ -176,14 +176,44 @@ export default function LoginSimple() {
 
   return (
     <div className="min-h-screen bg-black flex items-center justify-center p-4">
-      <Card className="w-full max-w-md bg-gray-900 border-gray-700">
-        <CardHeader>
-          <CardTitle className="text-center text-white flex items-center justify-center space-x-2">
-            <div className="w-8 h-6 bg-gradient-to-br from-teal-500 to-blue-600 rounded flex items-center justify-center">
-              <div className="text-xs font-bold text-white">B</div>
+      <Card className="w-full max-w-md glass-effect border-slate-700/50">
+        <CardHeader className="text-center pb-8">
+          {/* BingeBoard Logo */}
+          <div className="flex items-center justify-center mb-6">
+            <div className="relative">
+              {/* TV Main Body */}
+              <div className="w-20 h-14 bg-gradient-to-b from-gray-300 to-gray-500 rounded-lg shadow-xl relative border-2 border-gray-400">
+                {/* TV Screen */}
+                <div className="absolute inset-3 bg-black rounded-sm flex items-center justify-center border border-gray-600">
+                  <span className="text-white text-2xl font-black">B</span>
+                </div>
+                {/* TV Control Panel */}
+                <div className="absolute bottom-1 right-1 w-2 h-2 bg-gray-600 rounded-full"></div>
+                {/* TV Brand Label */}
+                <div className="absolute bottom-0.5 left-1 w-6 h-1 bg-gray-600 rounded-full"></div>
+              </div>
+              
+              {/* TV Stand Base */}
+              <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-10 h-2 bg-gradient-to-b from-gray-400 to-gray-600 rounded-b-lg shadow-md"></div>
+              
+              {/* TV Stand Legs */}
+              <div className="absolute -bottom-3 left-2 w-4 h-1.5 bg-gradient-to-b from-gray-400 to-gray-600 rounded-b-md shadow-sm"></div>
+              <div className="absolute -bottom-3 right-2 w-4 h-1.5 bg-gradient-to-b from-gray-400 to-gray-600 rounded-b-md shadow-sm"></div>
             </div>
-            <span>{showForgotPassword ? "Reset Password" : (isLogin ? "Login to BingeBoard" : "Create Account")}</span>
+          </div>
+          
+          {/* Title */}
+          <CardTitle className="text-center mb-2">
+            <h1 className="text-xl sm:text-2xl font-black text-white">
+              <span className="text-white">Binge</span>
+              <span className="bg-gradient-to-r from-teal-500 to-blue-600 bg-clip-text text-transparent">Board</span>
+            </h1>
           </CardTitle>
+          
+          {/* Subtitle */}
+          <p className="text-gray-400 text-sm">
+            {showForgotPassword ? "Reset your password" : (isLogin ? "Welcome back to your entertainment hub" : "Join the ultimate entertainment hub")}
+          </p>
         </CardHeader>
         <CardContent>
           {showForgotPassword ? (
@@ -199,21 +229,21 @@ export default function LoginSimple() {
                   placeholder="Email address"
                   value={formData.email}
                   onChange={handleInputChange}
-                  className="bg-gray-800 border-gray-600 text-white pl-10"
+                  className="bg-gray-800/50 border-slate-600/50 text-white pl-10 focus:border-teal-500/50 focus:ring-teal-500/20"
                   required
                 />
               </div>
               <Button
                 onClick={handleForgotPassword}
                 disabled={isLoading}
-                className="w-full bg-teal-600 hover:bg-teal-700"
+                className="w-full bg-gradient-to-r from-teal-600 to-blue-600 hover:from-teal-700 hover:to-blue-700 text-white font-semibold"
               >
                 {isLoading ? "Sending..." : "Send Reset Link"}
               </Button>
               <Button
                 variant="link"
                 onClick={() => setShowForgotPassword(false)}
-                className="w-full text-gray-400 hover:text-gray-300"
+                className="w-full text-teal-400 hover:text-teal-300"
               >
                 Back to Login
               </Button>
@@ -229,7 +259,7 @@ export default function LoginSimple() {
                       placeholder="First Name"
                       value={formData.firstName}
                       onChange={handleInputChange}
-                      className="bg-gray-800 border-gray-600 text-white"
+                      className="bg-gray-800/50 border-slate-600/50 text-white focus:border-teal-500/50 focus:ring-teal-500/20"
                       required
                     />
                     <Input
@@ -238,7 +268,7 @@ export default function LoginSimple() {
                       placeholder="Last Name"
                       value={formData.lastName}
                       onChange={handleInputChange}
-                      className="bg-gray-800 border-gray-600 text-white"
+                      className="bg-gray-800/50 border-slate-600/50 text-white focus:border-teal-500/50 focus:ring-teal-500/20"
                       required
                     />
                   </>
@@ -252,7 +282,7 @@ export default function LoginSimple() {
                     placeholder="Email address"
                     value={formData.email}
                     onChange={handleInputChange}
-                    className="bg-gray-800 border-gray-600 text-white pl-10"
+                    className="bg-gray-800/50 border-slate-600/50 text-white pl-10 focus:border-teal-500/50 focus:ring-teal-500/20"
                     required
                   />
                 </div>
@@ -265,7 +295,7 @@ export default function LoginSimple() {
                     placeholder="Password"
                     value={formData.password}
                     onChange={handleInputChange}
-                    className="bg-gray-800 border-gray-600 text-white pl-10 pr-10"
+                    className="bg-gray-800/50 border-slate-600/50 text-white pl-10 pr-10 focus:border-teal-500/50 focus:ring-teal-500/20"
                     required
                   />
                   <button
@@ -284,7 +314,7 @@ export default function LoginSimple() {
                         id="remember-me"
                         checked={rememberMe}
                         onCheckedChange={setRememberMe}
-                        className="border-gray-600 data-[state=checked]:bg-teal-600"
+                        className="border-slate-600/50 data-[state=checked]:bg-teal-600 data-[state=checked]:border-teal-600"
                       />
                       <label htmlFor="remember-me" className="text-sm text-gray-400">
                         Remember me
@@ -304,7 +334,7 @@ export default function LoginSimple() {
                 <Button
                   type="submit"
                   disabled={isLoading}
-                  className="w-full bg-teal-600 hover:bg-teal-700"
+                  className="w-full bg-gradient-to-r from-teal-600 to-blue-600 hover:from-teal-700 hover:to-blue-700 text-white font-semibold"
                 >
                   {isLoading ? "Loading..." : (isLogin ? "Sign In" : "Create Account")}
                 </Button>
@@ -317,7 +347,7 @@ export default function LoginSimple() {
                     <div className="w-full border-t border-gray-600"></div>
                   </div>
                   <div className="relative flex justify-center text-sm">
-                    <span className="bg-gray-900 px-2 text-gray-400">Or continue with</span>
+                    <span className="bg-black px-2 text-gray-400">Or continue with</span>
                   </div>
                 </div>
 
@@ -326,7 +356,7 @@ export default function LoginSimple() {
                     type="button"
                     variant="outline"
                     onClick={handleGoogleAuth}
-                    className="bg-gray-800 border-gray-600 text-white hover:bg-gray-700"
+                    className="bg-gray-800/50 border-slate-600/50 text-white hover:bg-gray-700/50 hover:border-teal-500/50"
                     disabled={isLoading}
                   >
                     <SiGoogle className="w-4 h-4 mr-2" />
@@ -336,7 +366,7 @@ export default function LoginSimple() {
                     type="button"
                     variant="outline"
                     onClick={handleFacebookAuth}
-                    className="bg-gray-800 border-gray-600 text-white hover:bg-gray-700"
+                    className="bg-gray-800/50 border-slate-600/50 text-white hover:bg-gray-700/50 hover:border-teal-500/50"
                     disabled={isLoading}
                   >
                     <SiFacebook className="w-4 h-4 mr-2 text-blue-500" />
