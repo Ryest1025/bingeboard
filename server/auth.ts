@@ -49,45 +49,28 @@ export async function setupAuth(app: Express) {
   app.set("trust proxy", 1);
   app.use(getSession());
   
-  console.log('Firebase authentication system initialized');
-  console.log('All OAuth authentication handled by Firebase');
+  // Add bulletproof authentication middleware
+  const { BulletproofAuth } = await import('./bulletproof-auth');
+  
+  // Add session recovery middleware for all requests
+  app.use(BulletproofAuth.createSessionRecoveryMiddleware());
+  
+  // Add emergency fallback for complete failures
+  app.use(BulletproofAuth.createEmergencyFallback());
+  
+  // Validate system stability on startup
+  const isStable = await BulletproofAuth.validateReplicationStability();
+  if (!isStable) {
+    console.error('🚨 System stability check failed - authentication may be unreliable');
+  }
+  
+  console.log('✅ Firebase authentication system initialized with bulletproof protection');
+  console.log('✅ All OAuth authentication handled by Firebase with fallback systems');
 }
 
 export const isAuthenticated: RequestHandler = async (req, res, next) => {
-  console.log("🔍 isAuthenticated middleware triggered");
-
-  // Check if session exists
-  if (!req.session) {
-    console.warn("⚠️ req.session is missing");
-    return res.status(401).json({ message: "Unauthorized - no session" });
-  }
-
-  // Check if user is set on session
-  if (!req.session.user) {
-    console.warn("⚠️ req.session.user is undefined");
-    console.log("🔎 req.session:", JSON.stringify(req.session, null, 2));
-    return res.status(401).json({ message: "Unauthorized - no user" });
-  }
-
-  // Check if user has claims
-  if (!req.session.user.claims) {
-    console.warn("⚠️ req.session.user.claims is undefined");
-    return res.status(401).json({ message: "Unauthorized - no claims" });
-  }
-
-  // Check if token is expired
-  const now = Math.floor(Date.now() / 1000);
-  if (req.session.user.claims.exp && now > req.session.user.claims.exp) {
-    console.warn("⚠️ Token expired");
-    return res.status(401).json({ message: "Unauthorized - token expired" });
-  }
-
-  // Set req.user for route handlers
-  (req as any).user = req.session.user;
-  console.log("✅ Authenticated user:", req.session.user.email || req.session.user.id);
-  console.log("✅ Set req.user:", JSON.stringify((req as any).user, null, 2));
-  
-  next();
+  const { BulletproofAuth } = await import('./bulletproof-auth');
+  return BulletproofAuth.createRobustAuthMiddleware()(req, res, next);
 };
 
 // Export utility functions for password handling
