@@ -274,11 +274,20 @@ export default function LoginSimple() {
       console.error('Google authentication error:', error);
       setIsLoading(false);
       
-      toast({
-        title: "Login failed",
-        description: error.message || "Failed to login with Google. Please check your internet connection.",
-        variant: "destructive",
-      });
+      // Check for domain authorization error specifically
+      if (error.message && error.message.includes('domain is authorized')) {
+        toast({
+          title: "Mobile authentication setup needed",
+          description: "Domain authorization required in Firebase Console. Please contact support or try desktop login.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Login failed",
+          description: error.message || "Failed to login with Google. Please check your internet connection.",
+          variant: "destructive",
+        });
+      }
     }
   };
 
@@ -508,6 +517,18 @@ export default function LoginSimple() {
           <p className="text-gray-400 text-sm">
             {showForgotPassword ? "Reset your password" : (isLogin ? "Welcome back to your entertainment hub" : "Join the ultimate entertainment hub")}
           </p>
+          
+          {/* Mobile domain authorization warning */}
+          {/iPhone|iPad|iPod|Android/i.test(navigator.userAgent) && (
+            <div className="mt-4 p-3 bg-amber-900/20 border border-amber-500/30 rounded-lg">
+              <div className="flex items-center space-x-2">
+                <div className="w-2 h-2 bg-amber-400 rounded-full flex-shrink-0"></div>
+                <p className="text-amber-200 text-xs">
+                  Mobile authentication is being configured. If login fails, please try desktop version or contact support.
+                </p>
+              </div>
+            </div>
+          )}
         </CardHeader>
         <CardContent>
           {showForgotPassword ? (

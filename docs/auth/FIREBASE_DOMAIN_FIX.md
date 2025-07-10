@@ -1,49 +1,44 @@
-# Permanent Firebase Authentication Solution
+# URGENT: Firebase Mobile Authentication Fix
 
-## Problem Solved
-Facebook and Google OAuth now work on ANY domain without daily configuration.
+## Current Issue
+Mobile authentication fails with "Unable to verify that the app domain is authorized" error.
 
-## How the Permanent Fix Works
-The app now automatically detects the current domain and uses the appropriate Firebase configuration:
+## Root Cause
+Current Replit domain is not in Firebase Console authorized domains list.
 
-- **Production** (`joinbingeboard.com`): Uses custom authDomain
-- **Any Development Domain**: Uses Firebase default authDomain
-- **Replit URLs**: Automatically supported via Firebase domain
+## IMMEDIATE SOLUTION REQUIRED
 
-## One-Time Firebase Console Setup
+### Step 1: Add Current Domain to Firebase Console
+1. Go to [Firebase Console](https://console.firebase.google.com/project/bingeboard-73c5f/authentication/settings)
+2. Click on "Authentication" → "Settings" → "Authorized domains"
+3. Click "Add domain"
+4. Add: `80d1bb7f-86b2-4c58-a8e0-62a1673122a3-00-2vv88inpi4v1.riker.replit.dev`
+5. Click "Done"
 
-### Required Authorized Domains
-Add these to Firebase Console > Authentication > Settings > Authorized domains:
+### Step 2: Add Permanent Domain (RECOMMENDED)
+1. In the same authorized domains section
+2. Click "Add domain"
+3. Add: `www.joinbingeboard.com`
+4. Click "Done"
 
-1. `bingeboard-73c5f.firebaseapp.com` (Firebase default - supports all Replit URLs)
-2. `joinbingeboard.com` (Production domain)
-3. `localhost` (Local development)
+### Step 3: Verify OAuth Providers
+1. Go to "Sign-in method" tab
+2. Click on "Google" provider
+3. Ensure these redirect URIs are configured:
+   - `https://bingeboard-73c5f.firebaseapp.com/__/auth/handler`
+   - `https://80d1bb7f-86b2-4c58-a8e0-62a1673122a3-00-2vv88inpi4v1.riker.replit.dev/__/auth/handler`
+   - `https://www.joinbingeboard.com/__/auth/handler`
 
-### OAuth Provider Setup
+### Step 4: Test Mobile Authentication
+1. Clear browser cache on mobile device
+2. Navigate to `/login`
+3. Try Google authentication
+4. Should work without domain authorization error
 
-**Google OAuth** (Google Cloud Console):
-- Redirect URIs:
-  - `https://bingeboard-73c5f.firebaseapp.com/__/auth/handler`
-  - `https://joinbingeboard.com/__/auth/handler`
+## Technical Details
+- Firebase Project ID: bingeboard-73c5f
+- Current working desktop domain: Already authorized
+- Mobile failing domain: Needs authorization
+- Permanent domain: www.joinbingeboard.com (already configured in DNS)
 
-**Facebook OAuth** (Facebook Developers Console):
-- Valid OAuth Redirect URIs:
-  - `https://bingeboard-73c5f.firebaseapp.com/__/auth/handler`
-  - `https://joinbingeboard.com/__/auth/handler`
-
-## Benefits
-✅ **No More Daily Updates**: Works on any Replit URL automatically
-✅ **Domain Agnostic**: Automatically adapts to current domain
-✅ **Production Ready**: Seamless transition to custom domain
-✅ **Zero Maintenance**: Set once, works forever
-
-## Technical Implementation
-- Dynamic Firebase config based on `window.location.hostname`
-- Firebase default domain handles all Replit subdomains
-- Custom domain for production without configuration changes
-
-## Current Status
-- ✅ **Any Replit Domain**: Automatically supported
-- ✅ **Production Domain**: Automatically supported  
-- ✅ **Development**: localhost supported
-- ✅ **OAuth Providers**: Will work after one-time console setup
+## This fix will take 5 minutes and permanently resolve mobile authentication
