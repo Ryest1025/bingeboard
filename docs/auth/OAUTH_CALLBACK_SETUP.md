@@ -1,64 +1,41 @@
-# OAuth Callback URL Setup Guide
+# OAuth Callback Setup Guide
 
-## Current Domain Setup (For Testing)
-**Current Replit Domain:** `80d1bb7f-86b2-4c58-a8e0-62a1673122a3-00-2vv88inpi4v1.riker.replit.dev`
+## Current OAuth Callback URLs
 
-**Required Callback URL:** `https://80d1bb7f-86b2-4c58-a8e0-62a1673122a3-00-2vv88inpi4v1.riker.replit.dev/auth/callback`
+**✅ GOOGLE CLOUD CONSOLE SETUP:**
+1. Go to: https://console.cloud.google.com/apis/credentials
+2. Select your project: `bingeboard`
+3. Edit the OAuth 2.0 Client ID: `874663258237-lem9602ckq4b1a6fsnqnaek96vgu7vfr.apps.googleusercontent.com`
+4. Add this URL to "Authorized redirect URIs":
+   ```
+   https://80d1bb7f-86b2-4c58-a8e0-62a1673122a3-00-2vv88inpi4v1.riker.replit.dev/api/auth/google/callback
+   ```
 
-**Status:** Use this URL for immediate OAuth testing!
+**✅ FACEBOOK DEVELOPER CONSOLE SETUP:**
+1. Go to: https://developers.facebook.com/apps/
+2. Select your app: `bingeboard`
+3. Go to Facebook Login → Settings
+4. Add this URL to "Valid OAuth Redirect URIs":
+   ```
+   https://80d1bb7f-86b2-4c58-a8e0-62a1673122a3-00-2vv88inpi4v1.riker.replit.dev/api/auth/facebook/callback
+   ```
 
-## Google Cloud Console Setup
+## Current Domain
+The current Replit domain is: `80d1bb7f-86b2-4c58-a8e0-62a1673122a3-00-2vv88inpi4v1.riker.replit.dev`
 
-1. **Go to Google Cloud Console:**
-   - Visit: https://console.cloud.google.com/apis/credentials
-   - Select your project (or create one if needed)
+This domain changes daily, which is why OAuth breaks every day.
 
-2. **Configure OAuth Client:**
-   - Find your OAuth 2.0 Client ID: `874663258237-lem9602ckq4b1a6fsnqnaek96vgu7vfr.apps.googleusercontent.com`
-   - Click "Edit" on the OAuth client
-   - In "Authorized redirect URIs", add:
-     ```
-     https://80d1bb7f-86b2-4c58-a8e0-62a1673122a3-00-2vv88inpi4v1.riker.replit.dev/auth/callback
-     ```
-   - Click "Save"
+## Permanent Solution
+Configure custom domain `www.joinbingeboard.com` to eliminate daily OAuth URL changes.
 
-## Facebook Developer Console Setup
+## Testing OAuth
+After adding the callback URLs:
+1. Test Google login: Visit the app and click "Sign in with Google"
+2. Test Facebook login: Visit the app and click "Sign in with Facebook"
+3. Both should complete authentication and redirect back to the app
 
-1. **Go to Facebook Developer Console:**
-   - Visit: https://developers.facebook.com/apps/
-   - Select your app ID: `1407155243762479`
-
-2. **Configure OAuth Settings:**
-   - Go to "Facebook Login" → "Settings"
-   - In "Valid OAuth Redirect URIs", add:
-     ```
-     https://80d1bb7f-86b2-4c58-a8e0-62a1673122a3-00-2vv88inpi4v1.riker.replit.dev/auth/callback
-     ```
-   - Click "Save Changes"
-
-## Testing After Setup
-
-1. **Test Google Login:**
-   - Go to `/login` page
-   - Click "Log in with Google"
-   - Should redirect to Google authentication
-   - After approval, redirects back to your app
-
-2. **Test Facebook Login:**
-   - Go to `/login` page
-   - Click "Log in with Facebook"
-   - Should redirect to Facebook authentication
-   - After approval, redirects back to your app
-
-## Troubleshooting
-
-- **403 Error:** Callback URL not configured in provider console
-- **Invalid Redirect URI:** URL doesn't match exactly (check https/http)
-- **App Not Approved:** Facebook apps need review for public use
-
-## Notes
-
-- **PERMANENT SOLUTION:** Using custom domain eliminates daily OAuth breakage
-- **One-time Setup:** Configure callback URL once, works forever
-- **Mobile Compatible:** Works identically on all devices
-- Both OAuth providers are already enabled in Firebase Console
+## Current Status
+- ✅ Server-side OAuth routes working
+- ✅ Callback handlers implemented
+- ❌ Provider console URLs need configuration
+- ❌ Domain changes daily (requires custom domain solution)

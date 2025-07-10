@@ -52,6 +52,27 @@ function convertToCSV(data: any): string {
   return rows.join('\n');
 }
 
+// Helper function to get the correct protocol and domain for OAuth callbacks
+function getOAuthCallbackUrl(req: any, path: string): string {
+  const currentDomain = req.get('host');
+  const forwardedProto = req.get('x-forwarded-proto');
+  
+  // Check if we're on a Replit domain or custom domain - always use HTTPS
+  if (currentDomain?.includes('replit.dev') || currentDomain?.includes('joinbingeboard.com')) {
+    return `https://${currentDomain}${path}`;
+  }
+  
+  // For local development, check various protocol indicators
+  if (currentDomain?.includes('localhost') || currentDomain?.includes('127.0.0.1')) {
+    // Use HTTP for localhost unless explicitly HTTPS
+    const protocol = req.secure || forwardedProto === 'https' ? 'https' : 'http';
+    return `${protocol}://${currentDomain}${path}`;
+  }
+  
+  // Default to HTTPS for any other domain
+  return `https://${currentDomain}${path}`;
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
   await setupAuth(app);
@@ -74,9 +95,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     // Store original session ID for callback
     (req as any).session.oauthState = req.sessionID;
     (req as any).session.save(() => {
-      const currentDomain = req.get('host');
-      const protocol = req.secure || req.get('x-forwarded-proto') === 'https' ? 'https' : 'http';
-      const redirectUri = `${protocol}://${currentDomain}/api/auth/google/callback`;
+      const redirectUri = getOAuthCallbackUrl(req, '/api/auth/google/callback');
       
       const googleAuthUrl = `https://accounts.google.com/oauth/authorize?` +
         `client_id=${process.env.GOOGLE_CLIENT_ID}&` +
@@ -95,9 +114,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     // Store original session ID for callback
     (req as any).session.oauthState = req.sessionID;
     (req as any).session.save(() => {
-      const currentDomain = req.get('host');
-      const protocol = req.secure || req.get('x-forwarded-proto') === 'https' ? 'https' : 'http';
-      const redirectUri = `${protocol}://${currentDomain}/api/auth/facebook/callback`;
+      const redirectUri = getOAuthCallbackUrl(req, '/api/auth/facebook/callback');
       
       const facebookAuthUrl = `https://www.facebook.com/v18.0/dialog/oauth?` +
         `client_id=${process.env.FACEBOOK_APP_ID}&` +
@@ -129,9 +146,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log('Google OAuth callback received, exchanging code for token...');
       
       // Exchange code for access token
-      const currentDomain = req.get('host');
-      const protocol = req.secure || req.get('x-forwarded-proto') === 'https' ? 'https' : 'http';
-      const redirectUri = `${protocol}://${currentDomain}/api/auth/google/callback`;
+      const redirectUri = getOAuthCallbackUrl(req, '/api/auth/google/callback');
       
       const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
         method: 'POST',
@@ -222,9 +237,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log('Facebook OAuth callback received, exchanging code for token...');
       
       // Exchange code for access token
-      const currentDomain = req.get('host');
-      const protocol = req.secure || req.get('x-forwarded-proto') === 'https' ? 'https' : 'http';
-      const redirectUri = `${protocol}://${currentDomain}/api/auth/facebook/callback`;
+      const redirectUri = getOAuthCallbackUrl(req, '/api/auth/facebook/callback');
       
       const tokenResponse = await fetch('https://graph.facebook.com/v18.0/oauth/access_token', {
         method: 'POST',
@@ -422,6 +435,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/test', (req, res) => {
     console.log('Test endpoint called');
     res.json({ message: 'API is working', timestamp: Date.now() });
+  });
+
+  // OAuth callback URL test endpoint
+  app.get('/api/test/oauth-urls', (req, res) => {
+    const googleCallback = getOAuthCallbackUrl(req, '/api/auth/google/callback');
+    const facebookCallback = getOAuthCallbackUrl(req, '/api/auth/facebook/callback');
+    
+    res.json({
+      message: 'OAuth callback URL configuration test',
+      currentDomain: req.get('host'),
+      protocol: req.secure ? 'https' : 'http',
+      forwardedProto: req.get('x-forwarded-proto'),
+      googleCallback,
+      facebookCallback,
+      instructions: {
+        google: 'Add this URL to Google Cloud Console > APIs & Services > Credentials > OAuth 2.0 Client IDs > Authorized redirect URIs',
+        facebook: 'Add this URL to Facebook Developer Console > App Settings > Facebook Login > Valid OAuth Redirect URIs'
+      },
+      timestamp: Date.now()
+    });
   });
 
   // Firebase configuration test endpoint

@@ -80,3 +80,40 @@ This solution is designed to be **maintenance-free** and survive:
 - Network interruptions
 
 **CRITICAL**: Do not modify the bulletproof auth system without extensive testing, as it's designed to prevent the recurring daily failures that have been plaguing the application.
+
+## OAuth Provider Setup Status
+
+### Current Domain Information
+- **Active Replit Domain**: `80d1bb7f-86b2-4c58-a8e0-62a1673122a3-00-2vv88inpi4v1.riker.replit.dev`
+- **Custom Domain**: `www.joinbingeboard.com` (DNS configured, requires activation)
+- **Protocol**: HTTPS (automatically enforced for all production domains)
+
+### OAuth Implementation Status
+✅ **Server-side OAuth Routes**: Implemented with proper callback handling
+✅ **Domain-agnostic URL Generation**: Smart protocol and domain detection
+✅ **Mobile/Desktop Compatibility**: Device-specific authentication flows
+✅ **Session Management**: PostgreSQL-backed Express sessions
+✅ **Error Handling**: Comprehensive redirect and error management
+
+### Required Provider Console Configuration
+
+#### Google Cloud Console Setup
+**Location**: APIs & Services > Credentials > OAuth 2.0 Client IDs
+**Required Callback URL**:
+```
+https://80d1bb7f-86b2-4c58-a8e0-62a1673122a3-00-2vv88inpi4v1.riker.replit.dev/api/auth/google/callback
+```
+
+#### Facebook Developer Console Setup
+**Location**: App Settings > Facebook Login > Valid OAuth Redirect URIs
+**Required Callback URL**:
+```
+https://80d1bb7f-86b2-4c58-a8e0-62a1673122a3-00-2vv88inpi4v1.riker.replit.dev/api/auth/facebook/callback
+```
+
+### Permanent Domain Solution
+Once custom domain is active, update both providers to use:
+- Google: `https://www.joinbingeboard.com/api/auth/google/callback`
+- Facebook: `https://www.joinbingeboard.com/api/auth/facebook/callback`
+
+This eliminates daily domain updates and provides maintenance-free OAuth.
