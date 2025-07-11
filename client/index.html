@@ -77,7 +77,10 @@
     <!-- Loading screen removed to prevent React app blocking -->
     <script>
       console.log("🚀 HTML loaded - JavaScript is working");
-      console.log("✅ Fallback loading screen displayed");
+      console.log("✅ No loading screen blocking React");
+      // Add cache busting for hard refresh
+      const timestamp = Date.now();
+      console.log("⚡ Cache bust timestamp:", timestamp);
     </script>
     <script type="module" src="/src/main.tsx"></script>
     <!-- This is a replit script which adds a banner on the top of the page when opened in development mode outside the replit environment -->

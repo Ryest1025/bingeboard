@@ -55,6 +55,10 @@ function convertToCSV(data: any): string {
 // OAuth callback helper removed - using Firebase authentication only
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Health check endpoint
+  app.get('/api/health', (_req, res) => {
+    res.json({ status: 'OK', timestamp: new Date().toISOString() });
+  });
   // Auth middleware
   await setupAuth(app);
 
