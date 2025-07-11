@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mobile Test - BingeBoard</title>
+    <style>
+        body {
+            background: #000;
+            color: #fff;
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            padding: 40px;
+            text-align: center;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .logo {
+            font-size: 32px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+        .binge {
+            background: linear-gradient(135deg, #14b8a6, #0d9488);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .test-button {
+            background: #14b8a6;
+            color: white;
+            padding: 20px 40px;
+            border: none;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            margin: 20px;
+            text-decoration: none;
+            display: inline-block;
+            transition: background 0.2s;
+        }
+        .test-button:hover {
+            background: #0d9488;
+        }
+        .info {
+            background: #1f2937;
+            border: 1px solid #374151;
+            padding: 20px;
+            border-radius: 12px;
+            margin: 20px 0;
+        }
+        .info h3 {
+            color: #14b8a6;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">
+            <span class="binge">Binge</span>Board Mobile Test
+        </div>
+        
+        <div class="info">
+            <h3>Test Mobile Version</h3>
+            <p>Click the button below to test the mobile version of BingeBoard</p>
+        </div>
+        
+        <a href="/?mobile=true" class="test-button">
+            📱 Test Mobile Version
+        </a>
+        
+        <div class="info">
+            <h3>How it Works</h3>
+            <p>The mobile version automatically detects mobile devices and serves an optimized interface. This test link forces mobile mode for testing purposes.</p>
+        </div>
+        
+        <div class="info">
+            <h3>What You'll See</h3>
+            <p>✅ Mobile-optimized BingeBoard interface<br>
+            📱 Device detection confirmation<br>
+            🎬 Trending shows functionality<br>
+            🔗 Backend connectivity test</p>
+        </div>
+    </div>
+</body>
+</html>

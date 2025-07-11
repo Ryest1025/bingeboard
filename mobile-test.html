@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mobile Test Page</title>
+    <style>
+        body {
+            background: #000;
+            color: #fff;
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            padding: 20px;
+            text-align: center;
+        }
+        .test-button {
+            background: #14b8a6;
+            color: white;
+            padding: 20px 40px;
+            border: none;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            margin: 20px;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .test-button:hover {
+            background: #0d9488;
+        }
+        .info {
+            background: #1f2937;
+            padding: 20px;
+            border-radius: 12px;
+            margin: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Mobile Test Page</h1>
+    
+    <div class="info">
+        <p>Click the button below to test the mobile version:</p>
+    </div>
+    
+    <a href="/?mobile=true" class="test-button">
+        📱 Test Mobile Version
+    </a>
+    
+    <div class="info">
+        <p>This will force the mobile interface to load for testing purposes.</p>
+    </div>
+    
+    <script>
+        console.log('Mobile test page loaded');
+    </script>
+</body>
+</html>
