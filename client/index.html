@@ -31,7 +31,61 @@
     <title>BingeBoard - TV Show Tracker</title>
   </head>
   <body>
-    <div id="root"></div>
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        background-color: #000000;
+        color: #ffffff;
+        font-family: Arial, sans-serif;
+      }
+      #root {
+        min-height: 100vh;
+      }
+      .loading-fallback {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: #000000;
+        color: #ffffff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: Arial, sans-serif;
+        z-index: 9999;
+      }
+      .loading-content {
+        text-align: center;
+      }
+      .loading-content h1 {
+        color: #14b8a6;
+        font-size: 3rem;
+        margin-bottom: 1rem;
+      }
+      .loading-content p {
+        font-size: 1.2rem;
+        margin-bottom: 0.5rem;
+      }
+      .status {
+        color: #9ca3af;
+        font-size: 1rem;
+      }
+    </style>
+    <div id="root">
+      <div class="loading-fallback">
+        <div class="loading-content">
+          <h1>BingeBoard</h1>
+          <p>Loading...</p>
+          <p class="status">If you see this for more than 5 seconds, there may be a JavaScript error</p>
+        </div>
+      </div>
+    </div>
+    <script>
+      console.log("🚀 HTML loaded - JavaScript is working");
+      console.log("✅ Fallback loading screen displayed");
+    </script>
     <script type="module" src="/src/main.tsx"></script>
     <!-- This is a replit script which adds a banner on the top of the page when opened in development mode outside the replit environment -->
     <script type="text/javascript" src="https://replit.com/public/js/replit-dev-banner.js"></script>
