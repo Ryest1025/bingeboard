@@ -112,8 +112,276 @@
     <div id="root"></div>
     
     <script>
-        // Redirect to working HTML version since React has mounting issues
-        window.location.replace('/index-simple.html');
+        // Add BingeBoard directly to bypass React mounting issues
+        const root = document.getElementById('root');
+        if (root) {
+            root.innerHTML = `
+                <div style="
+                    background: linear-gradient(to bottom, #000, #0a0a0a);
+                    color: #fff;
+                    min-height: 100vh;
+                    padding: 20px;
+                    font-family: system-ui, -apple-system, sans-serif;
+                ">
+                    <div style="
+                        max-width: 1200px;
+                        margin: 0 auto;
+                        text-align: center;
+                    ">
+                        <div style="
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            margin-bottom: 40px;
+                            font-size: 32px;
+                            font-weight: bold;
+                        ">
+                            <div style="
+                                width: 50px;
+                                height: 50px;
+                                background: linear-gradient(135deg, #1f2937, #374151);
+                                border-radius: 12px;
+                                display: flex;
+                                align-items: center;
+                                justify-content: center;
+                                border: 3px solid #fff;
+                                margin-right: 15px;
+                                font-size: 24px;
+                                color: #14b8a6;
+                            ">
+                                B
+                            </div>
+                            <span style="
+                                background: linear-gradient(135deg, #14b8a6, #0d9488);
+                                -webkit-background-clip: text;
+                                -webkit-text-fill-color: transparent;
+                                background-clip: text;
+                            ">
+                                Binge
+                            </span>
+                            <span>Board</span>
+                        </div>
+                        
+                        <h1 style="
+                            font-size: 48px;
+                            font-weight: bold;
+                            margin-bottom: 20px;
+                            line-height: 1.1;
+                        ">
+                            What To <span style="
+                                background: linear-gradient(135deg, #14b8a6, #0d9488);
+                                -webkit-background-clip: text;
+                                -webkit-text-fill-color: transparent;
+                                background-clip: text;
+                            ">Binge</span> Next!
+                        </h1>
+                        
+                        <p style="
+                            font-size: 20px;
+                            color: #aaa;
+                            max-width: 600px;
+                            margin: 0 auto 40px;
+                        ">
+                            Track your favorite shows, discover new content, and connect with friends who share your taste in entertainment.
+                        </p>
+                        
+                        <div style="
+                            display: flex;
+                            gap: 20px;
+                            justify-content: center;
+                            flex-wrap: wrap;
+                            margin-bottom: 60px;
+                        ">
+                            <button onclick="window.location.href='/login-simple.html'" style="
+                                background: #14b8a6;
+                                color: white;
+                                padding: 12px 24px;
+                                border-radius: 8px;
+                                border: none;
+                                font-size: 16px;
+                                cursor: pointer;
+                                font-weight: bold;
+                            ">
+                                Start Tracking
+                            </button>
+                            <button style="
+                                background: transparent;
+                                color: #fff;
+                                padding: 12px 24px;
+                                border-radius: 8px;
+                                border: 1px solid #374151;
+                                font-size: 16px;
+                                cursor: pointer;
+                            ">
+                                Learn More
+                            </button>
+                        </div>
+                        
+                        <div style="
+                            display: grid;
+                            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+                            gap: 30px;
+                            text-align: left;
+                            margin-bottom: 60px;
+                        ">
+                            <div style="
+                                background: #111;
+                                padding: 30px;
+                                border-radius: 12px;
+                                border: 1px solid #333;
+                            ">
+                                <div style="
+                                    width: 60px;
+                                    height: 60px;
+                                    background: linear-gradient(135deg, #14b8a6, #0d9488);
+                                    border-radius: 12px;
+                                    display: flex;
+                                    align-items: center;
+                                    justify-content: center;
+                                    margin-bottom: 20px;
+                                    font-size: 24px;
+                                ">
+                                    📺
+                                </div>
+                                <h3 style="font-size: 20px; margin-bottom: 15px;">Track Everything</h3>
+                                <p style="color: #aaa; line-height: 1.6;">
+                                    Keep track of all your favorite shows, episodes, and seasons in one place. Never lose track of what you're watching again.
+                                </p>
+                            </div>
+                            
+                            <div style="
+                                background: #111;
+                                padding: 30px;
+                                border-radius: 12px;
+                                border: 1px solid #333;
+                            ">
+                                <div style="
+                                    width: 60px;
+                                    height: 60px;
+                                    background: linear-gradient(135deg, #14b8a6, #0d9488);
+                                    border-radius: 12px;
+                                    display: flex;
+                                    align-items: center;
+                                    justify-content: center;
+                                    margin-bottom: 20px;
+                                    font-size: 24px;
+                                ">
+                                    🎯
+                                </div>
+                                <h3 style="font-size: 20px; margin-bottom: 15px;">Smart Recommendations</h3>
+                                <p style="color: #aaa; line-height: 1.6;">
+                                    Get personalized show recommendations based on your viewing history and preferences. Discover your next favorite series.
+                                </p>
+                            </div>
+                            
+                            <div style="
+                                background: #111;
+                                padding: 30px;
+                                border-radius: 12px;
+                                border: 1px solid #333;
+                            ">
+                                <div style="
+                                    width: 60px;
+                                    height: 60px;
+                                    background: linear-gradient(135deg, #14b8a6, #0d9488);
+                                    border-radius: 12px;
+                                    display: flex;
+                                    align-items: center;
+                                    justify-content: center;
+                                    margin-bottom: 20px;
+                                    font-size: 24px;
+                                ">
+                                    👥
+                                </div>
+                                <h3 style="font-size: 20px; margin-bottom: 15px;">Social Features</h3>
+                                <p style="color: #aaa; line-height: 1.6;">
+                                    Connect with friends, share reviews, and see what others are watching. Make entertainment a social experience.
+                                </p>
+                            </div>
+                        </div>
+                        
+                        <div style="
+                            background: #111;
+                            padding: 40px;
+                            border-radius: 12px;
+                            border: 1px solid #333;
+                            text-align: center;
+                        ">
+                            <h2 style="
+                                font-size: 28px;
+                                margin-bottom: 30px;
+                                display: flex;
+                                align-items: center;
+                                justify-content: center;
+                                gap: 15px;
+                            ">
+                                <div style="
+                                    width: 40px;
+                                    height: 40px;
+                                    background: linear-gradient(135deg, #14b8a6, #0d9488);
+                                    border-radius: 8px;
+                                    display: flex;
+                                    align-items: center;
+                                    justify-content: center;
+                                    font-size: 18px;
+                                ">
+                                    🔥
+                                </div>
+                                What's Trending
+                            </h2>
+                            <div style="
+                                display: grid;
+                                grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+                                gap: 20px;
+                                text-align: left;
+                            ">
+                                <div style="
+                                    background: #222;
+                                    border-radius: 8px;
+                                    padding: 20px;
+                                    border: 1px solid #444;
+                                ">
+                                    <h4 style="color: #14b8a6; margin-bottom: 10px;">The Bear</h4>
+                                    <p style="color: #aaa; font-size: 14px; margin-bottom: 10px;">Comedy Drama • Hulu</p>
+                                    <div style="color: #f59e0b;">⭐ 9.2/10</div>
+                                </div>
+                                <div style="
+                                    background: #222;
+                                    border-radius: 8px;
+                                    padding: 20px;
+                                    border: 1px solid #444;
+                                ">
+                                    <h4 style="color: #14b8a6; margin-bottom: 10px;">House of the Dragon</h4>
+                                    <p style="color: #aaa; font-size: 14px; margin-bottom: 10px;">Fantasy Drama • HBO Max</p>
+                                    <div style="color: #f59e0b;">⭐ 8.8/10</div>
+                                </div>
+                                <div style="
+                                    background: #222;
+                                    border-radius: 8px;
+                                    padding: 20px;
+                                    border: 1px solid #444;
+                                ">
+                                    <h4 style="color: #14b8a6; margin-bottom: 10px;">Stranger Things</h4>
+                                    <p style="color: #aaa; font-size: 14px; margin-bottom: 10px;">Sci-Fi Horror • Netflix</p>
+                                    <div style="color: #f59e0b;">⭐ 8.7/10</div>
+                                </div>
+                                <div style="
+                                    background: #222;
+                                    border-radius: 8px;
+                                    padding: 20px;
+                                    border: 1px solid #444;
+                                ">
+                                    <h4 style="color: #14b8a6; margin-bottom: 10px;">The Boys</h4>
+                                    <p style="color: #aaa; font-size: 14px; margin-bottom: 10px;">Superhero Drama • Prime Video</p>
+                                    <div style="color: #f59e0b;">⭐ 8.9/10</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            console.log('BingeBoard loaded successfully - bypassing React mounting issues');
+        }
     </script>
 </body>
 </html>
