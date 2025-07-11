@@ -43,15 +43,10 @@ app.use(cors({
 app.use(express.json({ limit: '50mb' })); // Increase limit for large CSV uploads
 app.use(express.urlencoded({ extended: false, limit: '50mb' }));
 
-// Custom domain redirect disabled - using Replit domain for now
+// Custom domain redirect disabled - direct access to Replit domain only
 app.use((req, res, next) => {
-  // Force redirect to Replit domain if accessing custom domain
-  if (req.get('host') === 'www.joinbingeboard.com' || req.get('host') === 'joinbingeboard.com') {
-    const replitDomain = `https://${process.env.REPL_ID}.${process.env.REPL_SLUG}.replit.dev`;
-    
-    console.log(`Redirecting from custom domain to Replit domain: ${replitDomain}`);
-    return res.redirect(301, replitDomain);
-  }
+  // Log all requests to identify actual domain
+  console.log(`Request received: ${req.method} ${req.get('host')}${req.path}`);
   next();
 });
 
