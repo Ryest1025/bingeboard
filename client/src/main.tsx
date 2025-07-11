@@ -59,7 +59,7 @@ async function initApp() {
     
     // Test App import
     console.log("✅ STEP 5: Importing App");
-    const AppModule = await import("./App-debug");
+    const AppModule = await import("./App");
     console.log("✅ STEP 6: App module:", AppModule);
     console.log("✅ STEP 7: App component:", AppModule.default);
     
