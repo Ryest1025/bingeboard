@@ -68,6 +68,13 @@ async function initApp() {
       reactRoot.render(React.createElement(AppModule.default));
       
       console.log("✅ STEP 11: SUCCESS - React app rendered");
+      
+      // Hide the loading fallback screen
+      const loadingFallback = document.querySelector('.loading-fallback');
+      if (loadingFallback) {
+        loadingFallback.style.display = 'none';
+        console.log("✅ STEP 12: Loading screen hidden");
+      }
     } else {
       console.error("❌ MISSING REQUIREMENTS");
     }
