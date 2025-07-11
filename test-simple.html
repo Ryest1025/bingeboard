@@ -1,457 +1,60 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BingeBoard Login</title>
+    <title>Simple JavaScript Test</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: system-ui, -apple-system, sans-serif;
-            background: black;
-            color: white;
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
-        
-        .container {
-            width: 100%;
-            max-width: 400px;
-        }
-        
-        .header {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-        
-        .logo {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 10px;
-        }
-        
-        .logo-icon {
-            width: 48px;
-            height: 32px;
-            background: linear-gradient(135deg, #14B8A6, #0891B2);
-            border-radius: 4px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-right: 12px;
-            box-shadow: 0 4px 14px rgba(20, 184, 166, 0.4);
-            border: 2px solid #14B8A6;
-        }
-        
-        .logo-icon span {
-            color: white;
-            font-weight: bold;
-            font-size: 20px;
-        }
-        
-        .logo-text {
-            font-size: 28px;
-            font-weight: bold;
-            background: linear-gradient(to right, #14B8A6, #06B6D4);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-        
-        .subtitle {
-            color: #9CA3AF;
-            font-size: 14px;
-        }
-        
-        .card {
-            background: rgba(31, 41, 55, 0.5);
-            border: 1px solid #374151;
-            border-radius: 12px;
-            padding: 30px;
-            backdrop-filter: blur(10px);
-        }
-        
-        .toggle-buttons {
-            display: flex;
-            justify-content: center;
-            gap: 16px;
-            margin-bottom: 20px;
-        }
-        
-        .toggle-btn {
-            padding: 8px 16px;
-            font-weight: 600;
-            border-radius: 6px;
-            border: none;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            background: transparent;
-            color: #9CA3AF;
-        }
-        
-        .toggle-btn.active {
-            background: #14B8A6;
-            color: white;
-        }
-        
-        .form-group {
-            margin-bottom: 16px;
-        }
-        
-        .form-group label {
-            display: block;
-            margin-bottom: 4px;
-            color: #D1D5DB;
-            font-size: 14px;
-        }
-        
-        .form-group input {
-            width: 100%;
-            padding: 12px;
-            background: #1F2937;
-            border: 1px solid #374151;
-            border-radius: 6px;
-            color: white;
-            font-size: 16px;
-            outline: none;
-            transition: border-color 0.2s ease;
-        }
-        
-        .form-group input:focus {
-            border-color: #14B8A6;
-        }
-        
-        .password-group {
-            position: relative;
-        }
-        
-        .password-toggle {
-            position: absolute;
-            right: 12px;
-            top: 50%;
-            transform: translateY(-50%);
-            background: none;
-            border: none;
-            color: #9CA3AF;
-            cursor: pointer;
-            font-size: 16px;
-        }
-        
-        .submit-btn {
-            width: 100%;
-            background: linear-gradient(to right, #14B8A6, #06B6D4);
-            border: none;
-            color: white;
-            padding: 12px;
-            font-size: 16px;
-            font-weight: 600;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-        
-        .submit-btn:hover {
-            background: linear-gradient(to right, #0D9488, #0891B2);
-        }
-        
-        .error-message {
-            margin-bottom: 20px;
-            padding: 12px;
-            background: rgba(185, 28, 28, 0.2);
-            border: 1px solid rgba(239, 68, 68, 0.5);
-            border-radius: 8px;
-            color: #F87171;
-            font-size: 14px;
-            display: none;
-        }
-        
-        .social-buttons {
-            margin-bottom: 20px;
-        }
-        
-        .social-btn {
-            width: 100%;
-            padding: 12px;
-            font-size: 16px;
-            font-weight: 600;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 10px;
-            border: none;
-        }
-        
-        .google-btn {
-            background: linear-gradient(to right, #2563EB, #1D4ED8);
-            color: white;
-        }
-        
-        .facebook-btn {
-            background: transparent;
-            border: 1px solid #374151;
-            color: white;
-        }
-        
-        .divider {
-            position: relative;
-            margin: 20px 0;
-        }
-        
-        .divider::before {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 0;
-            right: 0;
-            height: 1px;
-            background: #374151;
-        }
-        
-        .divider span {
-            position: relative;
-            background: rgba(31, 41, 55, 0.5);
-            padding: 0 8px;
-            color: #9CA3AF;
-            font-size: 14px;
-            display: block;
-            text-align: center;
-        }
-        
-        .footer {
-            margin-top: 20px;
-            padding-top: 20px;
-            border-top: 1px solid #374151;
-            text-align: center;
-        }
-        
-        .footer p {
-            color: #9CA3AF;
-            font-size: 14px;
-        }
-        
-        .footer button {
-            background: none;
-            border: none;
-            color: #14B8A6;
-            text-decoration: underline;
-            cursor: pointer;
-            font-size: 14px;
-        }
-        
-        .hidden {
-            display: none;
-        }
+        body { background: #000; color: #fff; font-family: Arial; padding: 20px; }
+        .test { background: #111; padding: 10px; margin: 10px 0; border-left: 3px solid #14b8a6; }
+        .error { border-left-color: #dc2626; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <div class="logo">
-                <div class="logo-icon">
-                    <span>B</span>
-                </div>
-                <h1 class="logo-text">BingeBoard</h1>
-            </div>
-            <p class="subtitle">Entertainment Hub</p>
-        </div>
-        
-        <div class="card">
-            <div class="toggle-buttons">
-                <button class="toggle-btn active" id="loginToggle">Log In</button>
-                <button class="toggle-btn" id="registerToggle">Register</button>
-            </div>
-            
-            <div class="social-buttons">
-                <button class="social-btn google-btn">
-                    <span style="margin-right: 8px;">📧</span>
-                    <span id="googleText">Log In with Google</span>
-                </button>
-                <button class="social-btn facebook-btn">
-                    <span style="margin-right: 8px; color: #3B82F6;">📘</span>
-                    <span id="facebookText">Log In with Facebook</span>
-                </button>
-            </div>
-            
-            <div class="divider">
-                <span>Or</span>
-            </div>
-            
-            <div class="error-message" id="errorMessage"></div>
-            
-            <form id="authForm">
-                <div class="form-group hidden" id="firstNameGroup">
-                    <label for="firstName">First Name</label>
-                    <input type="text" id="firstName" name="firstName" placeholder="Enter your first name" required>
-                </div>
-                
-                <div class="form-group hidden" id="lastNameGroup">
-                    <label for="lastName">Last Name</label>
-                    <input type="text" id="lastName" name="lastName" placeholder="Enter your last name" required>
-                </div>
-                
-                <div class="form-group">
-                    <label for="email">Email</label>
-                    <input type="email" id="email" name="email" placeholder="Enter your email" required>
-                </div>
-                
-                <div class="form-group">
-                    <label for="password">Password</label>
-                    <div class="password-group">
-                        <input type="password" id="password" name="password" placeholder="Enter your password" required>
-                        <button type="button" class="password-toggle" id="passwordToggle">👁️</button>
-                    </div>
-                </div>
-                
-                <div class="form-group hidden" id="confirmPasswordGroup">
-                    <label for="confirmPassword">Confirm Password</label>
-                    <div class="password-group">
-                        <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Confirm your password" required>
-                        <button type="button" class="password-toggle" id="confirmPasswordToggle">👁️</button>
-                    </div>
-                </div>
-                
-                <button type="submit" class="submit-btn" id="submitBtn">
-                    📧 Sign In
-                </button>
-            </form>
-            
-            <div class="footer">
-                <p id="footerText">
-                    New to BingeBoard? 
-                    <button type="button" id="footerLink">Create an account</button>
-                </p>
-            </div>
-        </div>
-    </div>
+    <h1>JavaScript Test</h1>
+    <div id="results"></div>
     
     <script>
-        let isLogin = true;
+        const results = document.getElementById('results');
         
-        const loginToggle = document.getElementById('loginToggle');
-        const registerToggle = document.getElementById('registerToggle');
-        const firstNameGroup = document.getElementById('firstNameGroup');
-        const lastNameGroup = document.getElementById('lastNameGroup');
-        const confirmPasswordGroup = document.getElementById('confirmPasswordGroup');
-        const submitBtn = document.getElementById('submitBtn');
-        const footerText = document.getElementById('footerText');
-        const footerLink = document.getElementById('footerLink');
-        const googleText = document.getElementById('googleText');
-        const facebookText = document.getElementById('facebookText');
-        const errorMessage = document.getElementById('errorMessage');
-        const authForm = document.getElementById('authForm');
-        const passwordToggle = document.getElementById('passwordToggle');
-        const confirmPasswordToggle = document.getElementById('confirmPasswordToggle');
-        const passwordInput = document.getElementById('password');
-        const confirmPasswordInput = document.getElementById('confirmPassword');
-        
-        function toggleMode(loginMode) {
-            isLogin = loginMode;
-            
-            if (isLogin) {
-                loginToggle.classList.add('active');
-                registerToggle.classList.remove('active');
-                firstNameGroup.classList.add('hidden');
-                lastNameGroup.classList.add('hidden');
-                confirmPasswordGroup.classList.add('hidden');
-                submitBtn.innerHTML = '📧 Sign In';
-                footerText.innerHTML = 'New to BingeBoard? <button type="button" id="footerLink">Create an account</button>';
-                googleText.textContent = 'Log In with Google';
-                facebookText.textContent = 'Log In with Facebook';
-            } else {
-                registerToggle.classList.add('active');
-                loginToggle.classList.remove('active');
-                firstNameGroup.classList.remove('hidden');
-                lastNameGroup.classList.remove('hidden');
-                confirmPasswordGroup.classList.remove('hidden');
-                submitBtn.innerHTML = '👥 Register';
-                footerText.innerHTML = 'Already have an account? <button type="button" id="footerLink">Log in</button>';
-                googleText.textContent = 'Register with Google';
-                facebookText.textContent = 'Register with Facebook';
-            }
-            
-            // Re-attach footer link event
-            document.getElementById('footerLink').addEventListener('click', () => {
-                toggleMode(!isLogin);
-            });
-            
-            // Clear any errors
-            errorMessage.style.display = 'none';
+        function addResult(test, result, error = false) {
+            const div = document.createElement('div');
+            div.className = error ? 'test error' : 'test';
+            div.innerHTML = `<strong>${test}:</strong> ${result}`;
+            results.appendChild(div);
         }
         
-        function showError(message) {
-            errorMessage.textContent = message;
-            errorMessage.style.display = 'block';
+        // Test 1: Basic JavaScript
+        addResult('Basic JavaScript', '✅ Working');
+        
+        // Test 2: ES6 Features
+        try {
+            const arrow = () => 'ES6 Arrow Functions';
+            const template = `Template literals ${arrow()}`;
+            addResult('ES6 Features', '✅ ' + template);
+        } catch (e) {
+            addResult('ES6 Features', '❌ ' + e.message, true);
         }
         
-        function hideError() {
-            errorMessage.style.display = 'none';
-        }
-        
-        // Event listeners
-        loginToggle.addEventListener('click', () => toggleMode(true));
-        registerToggle.addEventListener('click', () => toggleMode(false));
-        
-        passwordToggle.addEventListener('click', () => {
-            const isPassword = passwordInput.type === 'password';
-            passwordInput.type = isPassword ? 'text' : 'password';
-            passwordToggle.textContent = isPassword ? '🙈' : '👁️';
-        });
-        
-        confirmPasswordToggle.addEventListener('click', () => {
-            const isPassword = confirmPasswordInput.type === 'password';
-            confirmPasswordInput.type = isPassword ? 'text' : 'password';
-            confirmPasswordToggle.textContent = isPassword ? '🙈' : '👁️';
-        });
-        
-        authForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            hideError();
-            
-            const formData = new FormData(authForm);
-            const data = Object.fromEntries(formData);
-            
-            // Basic validation
-            if (!isLogin && data.password !== data.confirmPassword) {
-                showError('Passwords do not match');
-                return;
-            }
-            
+        // Test 3: Module Import (this will likely fail)
+        (async function() {
             try {
-                const endpoint = isLogin ? '/api/auth/login' : '/api/auth/register';
-                const response = await fetch(endpoint, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    credentials: 'include',
-                    body: JSON.stringify(data)
-                });
-                
-                if (response.ok) {
-                    alert(isLogin ? 'Login successful!' : 'Registration successful!');
-                    window.location.href = '/';
-                } else {
-                    const error = await response.json();
-                    showError(error.message || (isLogin ? 'Login failed' : 'Registration failed'));
-                }
-            } catch (error) {
-                console.error('Authentication error:', error);
-                showError('Authentication failed. Please try again.');
+                addResult('Module Import Test', '⏳ Testing...');
+                const module = await import('./src/App-minimal.tsx');
+                addResult('Module Import', '✅ Success: ' + typeof module);
+            } catch (e) {
+                addResult('Module Import', '❌ ' + e.message, true);
             }
+        })();
+        
+        // Test 4: Console errors
+        window.addEventListener('error', (e) => {
+            addResult('Runtime Error', '❌ ' + e.message, true);
         });
         
-        // Initialize footer link
-        toggleMode(true);
+        window.addEventListener('unhandledrejection', (e) => {
+            addResult('Promise Rejection', '❌ ' + e.reason, true);
+        });
+        
+        addResult('Error Handlers', '✅ Set up');
     </script>
 </body>
 </html>
