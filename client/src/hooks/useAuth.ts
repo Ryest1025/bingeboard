@@ -21,10 +21,10 @@ export function useAuth(): AuthState {
     // Detect mobile and redirect to working version
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|Windows Phone|Mobile/i.test(navigator.userAgent);
     
-    if (isMobile) {
+    if (isMobile && !window.location.pathname.includes('mobile')) {
       console.log('📱 Mobile device detected - redirecting to mobile version');
       // Redirect mobile users to working version
-      window.location.href = '/mobile-fix.html';
+      window.location.href = '/mobile-simple.html';
       return () => {};
     }
 
