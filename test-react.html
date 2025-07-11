@@ -1,13 +1,107 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>React Test</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>React Loading Test</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: #000;
+            color: #fff;
+            font-family: Arial, sans-serif;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border: 1px solid #333;
+        }
+        .success { border-color: #10b981; background: #064e3b; }
+        .error { border-color: #ef4444; background: #7f1d1d; }
+        .loading { border-color: #f59e0b; background: #78350f; }
+    </style>
 </head>
 <body>
-  <div id="root"></div>
-  <script>
-    console.log("HTML loaded");
-    document.getElementById('root').innerHTML = '<h1 style="color: red; font-size: 3rem;">REACT TEST WORKING</h1>';
-  </script>
+    <h1>React Loading Test</h1>
+    <div id="test-container">
+        <div class="status loading">Testing React loading...</div>
+    </div>
+    
+    <script>
+        console.log('React test starting...');
+        
+        function updateStatus(message, type = 'loading') {
+            const container = document.getElementById('test-container');
+            const div = document.createElement('div');
+            div.className = `status ${type}`;
+            div.innerHTML = message;
+            container.appendChild(div);
+            console.log(message);
+        }
+        
+        async function testReactFiles() {
+            updateStatus('Testing main.tsx access...');
+            
+            try {
+                const response = await fetch('/src/main.tsx');
+                if (response.ok) {
+                    updateStatus('✓ main.tsx accessible', 'success');
+                    const content = await response.text();
+                    updateStatus(`✓ main.tsx content loaded (${content.length} chars)`, 'success');
+                    
+                    // Check if it contains React imports
+                    if (content.includes('React') && content.includes('createRoot')) {
+                        updateStatus('✓ React imports found in main.tsx', 'success');
+                    } else {
+                        updateStatus('✗ React imports missing from main.tsx', 'error');
+                    }
+                } else {
+                    updateStatus(`✗ main.tsx not accessible (${response.status})`, 'error');
+                }
+            } catch (error) {
+                updateStatus(`✗ main.tsx fetch failed: ${error.message}`, 'error');
+            }
+            
+            // Test App.tsx
+            updateStatus('Testing App.tsx access...');
+            try {
+                const response = await fetch('/src/App.tsx');
+                if (response.ok) {
+                    updateStatus('✓ App.tsx accessible', 'success');
+                } else {
+                    updateStatus(`✗ App.tsx not accessible (${response.status})`, 'error');
+                }
+            } catch (error) {
+                updateStatus(`✗ App.tsx fetch failed: ${error.message}`, 'error');
+            }
+            
+            // Test index.css
+            updateStatus('Testing index.css access...');
+            try {
+                const response = await fetch('/src/index.css');
+                if (response.ok) {
+                    updateStatus('✓ index.css accessible', 'success');
+                } else {
+                    updateStatus(`✗ index.css not accessible (${response.status})`, 'error');
+                }
+            } catch (error) {
+                updateStatus(`✗ index.css fetch failed: ${error.message}`, 'error');
+            }
+        }
+        
+        // Run tests
+        document.addEventListener('DOMContentLoaded', testReactFiles);
+        
+        // Catch errors
+        window.addEventListener('error', function(e) {
+            updateStatus(`✗ Global error: ${e.error?.message || e.message}`, 'error');
+        });
+        
+        window.addEventListener('unhandledrejection', function(e) {
+            updateStatus(`✗ Promise rejection: ${e.reason}`, 'error');
+        });
+    </script>
 </body>
 </html>

@@ -3,40 +3,88 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BingeBoard Test</title>
+    <title>Simple Mobile Test</title>
     <style>
         body {
-            margin: 0;
-            padding: 0;
             background: #000;
             color: #fff;
             font-family: Arial, sans-serif;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-        }
-        .container {
-            text-align: center;
             padding: 20px;
-            border: 2px solid #14b8a6;
-            border-radius: 10px;
-            background: #111;
         }
-        .title {
-            color: #14b8a6;
-            font-size: 2rem;
-            margin-bottom: 10px;
+        .test { 
+            padding: 10px; 
+            margin: 10px 0; 
+            background: #333; 
+            border-radius: 5px; 
         }
+        .success { background: #155724; }
+        .error { background: #721c24; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="title">✅ BingeBoard Test Page</div>
-        <div>If you can see this, the server is working</div>
-        <div style="margin-top: 10px; font-size: 0.9rem; color: #9ca3af;">
-            Server running on port 5000
-        </div>
+    <h1>Mobile Test</h1>
+    <div id="test-results">
+        <div class="test">Loading...</div>
     </div>
+    
+    <script>
+        console.log('Simple test starting...');
+        
+        function runTests() {
+            const results = document.getElementById('test-results');
+            let html = '';
+            
+            // Test 1: Basic JavaScript
+            try {
+                const obj = {test: 'working'};
+                html += '<div class="test success">✓ JavaScript working</div>';
+                console.log('✓ JavaScript test passed');
+            } catch (e) {
+                html += '<div class="test error">✗ JavaScript failed: ' + e.message + '</div>';
+                console.error('✗ JavaScript test failed:', e);
+            }
+            
+            // Test 2: Fetch API
+            html += '<div class="test">Testing fetch API...</div>';
+            
+            fetch('/api/health')
+                .then(response => response.json())
+                .then(data => {
+                    console.log('✓ Fetch test passed:', data);
+                    const fetchTest = document.createElement('div');
+                    fetchTest.className = 'test success';
+                    fetchTest.innerHTML = '✓ Fetch API working - Server: ' + data.server;
+                    results.appendChild(fetchTest);
+                })
+                .catch(error => {
+                    console.error('✗ Fetch test failed:', error);
+                    const fetchTest = document.createElement('div');
+                    fetchTest.className = 'test error';
+                    fetchTest.innerHTML = '✗ Fetch API failed: ' + error.message;
+                    results.appendChild(fetchTest);
+                });
+            
+            // Test 3: Device info
+            html += '<div class="test">Device: ' + navigator.userAgent.substring(0, 50) + '...</div>';
+            
+            results.innerHTML = html;
+        }
+        
+        // Run tests when page loads
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', runTests);
+        } else {
+            runTests();
+        }
+        
+        // Catch errors
+        window.addEventListener('error', function(e) {
+            console.error('Global error:', e.error);
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'test error';
+            errorDiv.innerHTML = '✗ Global error: ' + e.error.message;
+            document.getElementById('test-results').appendChild(errorDiv);
+        });
+    </script>
 </body>
 </html>
