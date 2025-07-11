@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minimal Test</title>
+    <style>
+        body {
+            background: #000;
+            color: #fff;
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+        .success { color: #14b8a6; }
+        .error { color: #dc2626; }
+        .step { margin: 10px 0; padding: 10px; background: #111; }
+    </style>
+</head>
+<body>
+    <h1>BingeBoard Minimal Test</h1>
+    <div id="steps"></div>
+    <div id="root">Loading...</div>
+    
+    <script>
+        const steps = document.getElementById('steps');
+        let stepCount = 0;
+        
+        function addStep(message, success = true) {
+            stepCount++;
+            const div = document.createElement('div');
+            div.className = 'step';
+            div.innerHTML = `<span class="${success ? 'success' : 'error'}">Step ${stepCount}: ${message}</span>`;
+            steps.appendChild(div);
+            console.log(`Step ${stepCount}: ${message}`);
+        }
+        
+        // Step 1: Basic JavaScript
+        addStep('Basic JavaScript working');
+        
+        // Step 2: DOM manipulation
+        try {
+            document.getElementById('root').style.border = '2px solid #14b8a6';
+            addStep('DOM manipulation working');
+        } catch (e) {
+            addStep('DOM manipulation failed: ' + e.message, false);
+        }
+        
+        // Step 3: ES6 features
+        try {
+            const test = () => 'ES6 working';
+            const result = test();
+            addStep('ES6 features working: ' + result);
+        } catch (e) {
+            addStep('ES6 features failed: ' + e.message, false);
+        }
+        
+        // Step 4: Async/await
+        (async function() {
+            try {
+                await new Promise(resolve => setTimeout(resolve, 100));
+                addStep('Async/await working');
+                
+                // Step 5: Try React import
+                try {
+                    addStep('Attempting React import...');
+                    const React = await import('react');
+                    addStep('React import successful');
+                    
+                    // Step 6: Try ReactDOM import
+                    try {
+                        addStep('Attempting ReactDOM import...');
+                        const ReactDOM = await import('react-dom/client');
+                        addStep('ReactDOM import successful');
+                        
+                        // Step 7: Create simple React component
+                        const TestComponent = () => {
+                            return React.createElement('div', {
+                                style: {
+                                    color: '#14b8a6',
+                                    fontSize: '2rem',
+                                    textAlign: 'center',
+                                    padding: '20px'
+                                }
+                            }, 'React Test Component Working!');
+                        };
+                        
+                        // Step 8: Render React component
+                        const root = document.getElementById('root');
+                        if (root) {
+                            addStep('Creating React root...');
+                            const reactRoot = ReactDOM.createRoot(root);
+                            
+                            addStep('Rendering React component...');
+                            reactRoot.render(React.createElement(TestComponent));
+                            
+                            addStep('React component rendered successfully!');
+                        } else {
+                            addStep('Root element not found', false);
+                        }
+                        
+                    } catch (e) {
+                        addStep('ReactDOM import failed: ' + e.message, false);
+                    }
+                    
+                } catch (e) {
+                    addStep('React import failed: ' + e.message, false);
+                }
+                
+            } catch (e) {
+                addStep('Async/await failed: ' + e.message, false);
+            }
+        })();
+        
+        // Global error handlers
+        window.addEventListener('error', (e) => {
+            addStep('Runtime error: ' + e.message + ' at ' + e.filename + ':' + e.lineno, false);
+        });
+        
+        window.addEventListener('unhandledrejection', (e) => {
+            addStep('Promise rejection: ' + e.reason, false);
+        });
+        
+        addStep('Error handlers set up');
+    </script>
+</body>
+</html>
