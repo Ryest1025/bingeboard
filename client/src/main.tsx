@@ -59,21 +59,24 @@ async function initApp() {
     
     // Test App import
     console.log("✅ STEP 5: Importing App");
-    const AppModule = await import("./App-simple");
+    const AppModule = await import("./App-working");
     console.log("✅ STEP 6: App module:", AppModule);
     console.log("✅ STEP 7: App component:", AppModule.default);
+    
+    // If default export is null, try the named export
+    const AppComponent = AppModule.default || AppModule.App;
     
     // Find root
     const root = document.getElementById("root");
     console.log("✅ STEP 8: Root element:", !!root);
     
-    if (root && React && createRoot && AppModule.default) {
+    if (root && React && createRoot && AppComponent) {
       console.log("✅ STEP 9: Creating React root");
       const reactRoot = createRoot(root);
       
       console.log("✅ STEP 10: Rendering component");
       try {
-        reactRoot.render(React.createElement(AppModule.default));
+        reactRoot.render(React.createElement(AppComponent));
         console.log("✅ STEP 10a: React render call successful");
       } catch (renderError) {
         console.error("❌ React render error:", renderError);

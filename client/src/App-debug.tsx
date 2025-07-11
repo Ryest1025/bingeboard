@@ -1,17 +1,7 @@
 import React from "react";
 
 export default function App() {
-  console.log("🎯 App-debug rendering");
-  
-  // Force immediate visibility
-  React.useEffect(() => {
-    console.log("🎯 App-debug useEffect running");
-    const fallback = document.querySelector('.loading-fallback');
-    if (fallback) {
-      fallback.remove();
-      console.log("🎯 Removed loading fallback");
-    }
-  }, []);
+  console.log("🚀 App-debug rendering");
   
   return (
     <div style={{
@@ -20,65 +10,89 @@ export default function App() {
       left: 0,
       width: '100vw',
       height: '100vh',
-      backgroundColor: '#000000',
+      backgroundColor: '#1a1a1a',
       color: '#ffffff',
       display: 'flex',
+      flexDirection: 'column',
       alignItems: 'center',
       justifyContent: 'center',
-      fontFamily: 'Arial, sans-serif',
-      fontSize: '2rem',
-      zIndex: 10000
+      fontFamily: 'system-ui, -apple-system, sans-serif',
+      zIndex: 9999
     }}>
+      {/* BingeBoard Logo */}
       <div style={{
-        textAlign: 'center',
-        padding: '20px',
-        border: '3px solid #14b8a6',
-        borderRadius: '10px',
-        backgroundColor: '#111111',
-        boxShadow: '0 0 20px #14b8a6'
+        width: '80px',
+        height: '80px',
+        background: 'linear-gradient(135deg, #14b8a6, #3b82f6)',
+        borderRadius: '16px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginBottom: '2rem',
+        boxShadow: '0 10px 30px rgba(20, 184, 166, 0.3)'
       }}>
         <div style={{
-          color: '#14b8a6',
-          marginBottom: '20px',
-          fontSize: '3rem',
-          fontWeight: 'bold'
-        }}>
-          ✅ BingeBoard Debug
-        </div>
+          color: 'white',
+          fontSize: '2rem',
+          fontWeight: '900'
+        }}>B</div>
+      </div>
+      
+      {/* Title */}
+      <h1 style={{
+        fontSize: '3rem',
+        fontWeight: '900',
+        marginBottom: '1rem',
+        textAlign: 'center',
+        background: 'linear-gradient(135deg, #14b8a6, #3b82f6)',
+        WebkitBackgroundClip: 'text',
+        WebkitTextFillColor: 'transparent',
+        backgroundClip: 'text'
+      }}>
+        BingeBoard
+      </h1>
+      
+      <p style={{
+        fontSize: '1.2rem',
+        color: '#9ca3af',
+        marginBottom: '2rem',
+        textAlign: 'center'
+      }}>
+        Your Entertainment Hub
+      </p>
+      
+      {/* Debug Message */}
+      <div style={{
+        background: 'rgba(20, 184, 166, 0.1)',
+        border: '1px solid rgba(20, 184, 166, 0.3)',
+        borderRadius: '8px',
+        padding: '1rem 2rem',
+        textAlign: 'center',
+        maxWidth: '600px'
+      }}>
         <div style={{
-          color: '#ffffff',
           fontSize: '1.5rem',
-          marginBottom: '10px'
+          fontWeight: 'bold',
+          color: '#14b8a6',
+          marginBottom: '0.5rem'
         }}>
-          React App Working!
+          🔍 Debug Mode
         </div>
         <div style={{
           color: '#9ca3af',
           fontSize: '1rem',
-          marginTop: '10px'
+          marginBottom: '1rem'
         }}>
-          If you can see this, React is rendering correctly
-        </div>
-        <div style={{
-          color: '#14b8a6',
-          fontSize: '0.9rem',
-          marginTop: '10px',
-          fontFamily: 'monospace'
-        }}>
-          Check console for step-by-step logs
+          Testing React app display - Time: {new Date().toLocaleTimeString()}
         </div>
         <div style={{
           color: '#ffffff',
-          fontSize: '0.8rem',
-          marginTop: '15px',
-          padding: '10px',
-          border: '1px solid #14b8a6',
-          borderRadius: '5px',
-          backgroundColor: '#0a0a0a'
+          fontSize: '0.9rem',
+          lineHeight: '1.5'
         }}>
-          <div>Environment: {typeof window !== 'undefined' ? 'Browser' : 'Server'}</div>
-          <div>URL: {typeof window !== 'undefined' ? window.location.href : 'Unknown'}</div>
-          <div>Time: {new Date().toLocaleTimeString()}</div>
+          If you can see this, React is working. The issue is with the complex components.
+          <br />
+          Let's restore your beautiful modern designs step by step.
         </div>
       </div>
     </div>
