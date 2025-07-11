@@ -285,6 +285,16 @@ app.get('/test-mobile', (req, res) => {
     throw err;
   });
 
+  // Serve static HTML files before Vite setup
+  app.use(express.static('.', {
+    extensions: ['html'],
+    setHeaders: (res, path) => {
+      if (path.endsWith('.html')) {
+        res.setHeader('Cache-Control', 'no-cache');
+      }
+    }
+  }));
+  
   // importantly only setup vite in development and after
   // setting up all the other routes so the catch-all route
   // doesn't interfere with the other routes
