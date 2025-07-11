@@ -50,19 +50,31 @@ app.use((req, res, next) => {
   
   console.log(`🌍 Request: ${req.method} ${req.get('host')}${req.path} - Mobile: ${isMobile} - UA: ${userAgent.substring(0, 50)}...`);
   
-  // Serve mobile HTML directly for mobile devices requesting the root path or any main routes
-  if (isMobile && (req.path === '/' || req.path === '/discover' || req.path === '/lists' || req.path === '/social' || req.path === '/profile') && req.method === 'GET') {
+  // Serve mobile HTML directly for mobile devices - ANY route except API calls
+  if (isMobile && !req.path.startsWith('/api') && !req.path.includes('.') && req.method === 'GET') {
     console.log('📱 MOBILE DEVICE DETECTED - SERVING MOBILE HTML DIRECTLY');
     console.log('📱 User Agent:', userAgent);
     console.log('📱 Requested Path:', req.path);
+    
+    // Serve the mobile-instant.html file directly
+    const fs = require('fs');
+    const path = require('path');
+    
+    try {
+      const mobileHtmlPath = path.join(__dirname, '../mobile-instant.html');
+      const mobileHtml = fs.readFileSync(mobileHtmlPath, 'utf8');
+      return res.send(mobileHtml);
+    } catch (error) {
+      console.log('📱 Error loading mobile-instant.html, serving inline version');
+    }
     
     const mobileHtml = `
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BingeBoard Mobile</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>BingeBoard Mobile - Instant</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { background: #000; color: #fff; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif; min-height: 100vh; padding: 20px; }
