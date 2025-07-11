@@ -3,71 +3,109 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Debug Test</title>
+    <title>Loading Debug</title>
     <style>
         body {
-            margin: 0;
-            padding: 20px;
             background: #000;
             color: #fff;
             font-family: Arial, sans-serif;
-        }
-        .test-box {
-            background: red;
-            color: white;
             padding: 20px;
+        }
+        .test-result {
+            padding: 10px;
             margin: 10px 0;
-            border-radius: 8px;
-            font-size: 18px;
+            border: 1px solid #333;
+            border-radius: 5px;
+        }
+        .success { border-color: #10b981; background: #064e3b; }
+        .error { border-color: #ef4444; background: #7f1d1d; }
+        .loading { border-color: #f59e0b; background: #78350f; }
+        button {
+            background: #14b8a6;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            margin: 5px;
         }
     </style>
 </head>
 <body>
-    <div id="root"></div>
-    
-    <div class="test-box">
-        <h1>Direct HTML Test</h1>
-        <p>This should be visible immediately</p>
-    </div>
+    <h1>Loading State Debug</h1>
+    <div id="results"></div>
+    <button onclick="simulateLoadingLoop()">Simulate Loading Loop</button>
+    <button onclick="testInfiniteSpinner()">Test Infinite Spinner</button>
+    <button onclick="window.location.href='/'">Go to Main App</button>
     
     <script>
-        console.log("🚀 Debug HTML loaded");
-        console.log("🚀 Testing basic JavaScript");
-        
-        // Test basic DOM manipulation
-        const root = document.getElementById('root');
-        console.log("🚀 Root element:", root);
-        
-        if (root) {
-            root.innerHTML = `
-                <div style="background: blue; color: white; padding: 20px; margin: 10px 0; border-radius: 8px; font-size: 18px;">
-                    <h2>JavaScript Working!</h2>
-                    <p>DOM manipulation successful</p>
-                </div>
-            `;
-            console.log("✅ DOM manipulation successful");
-        } else {
-            console.error("❌ Root element not found");
+        function log(message, type = 'loading') {
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = `test-result ${type}`;
+            div.innerHTML = `[${new Date().toLocaleTimeString()}] ${message}`;
+            results.appendChild(div);
+            console.log(message);
         }
         
-        // Test if we can access the current URL
-        console.log("🌍 Current URL:", window.location.href);
-        console.log("🌍 Protocol:", window.location.protocol);
-        console.log("🌍 Host:", window.location.host);
+        function simulateLoadingLoop() {
+            log('Starting loading simulation...');
+            
+            // Simulate React Query loading state
+            let count = 0;
+            const interval = setInterval(() => {
+                count++;
+                log(`Loading state ${count}...`, 'loading');
+                
+                if (count > 20) {
+                    clearInterval(interval);
+                    log('Loading loop detected! This might be the issue.', 'error');
+                }
+            }, 500);
+            
+            // Simulate authentication check
+            setTimeout(() => {
+                log('Simulating auth check...', 'loading');
+                setTimeout(() => {
+                    log('Auth check complete - but still loading?', 'error');
+                }, 2000);
+            }, 1000);
+        }
         
-        // Test basic fetch
-        console.log("🔄 Testing fetch to server");
-        fetch('/api/health')
-            .then(response => {
-                console.log("✅ Fetch successful:", response.status);
-                return response.text();
-            })
-            .then(data => {
-                console.log("📦 Response data:", data);
-            })
-            .catch(error => {
-                console.log("❌ Fetch failed:", error);
+        function testInfiniteSpinner() {
+            log('Testing infinite spinner scenario...');
+            
+            // Common causes of infinite loading
+            const issues = [
+                'useQuery never resolves',
+                'Authentication hook stuck in loading state',
+                'API call timing out',
+                'React Query stale time issues',
+                'Firebase auth state not updating',
+                'Mobile browser caching issues'
+            ];
+            
+            issues.forEach((issue, index) => {
+                setTimeout(() => {
+                    log(`Potential issue ${index + 1}: ${issue}`, 'error');
+                }, index * 1000);
             });
+        }
+        
+        // Auto-start analysis
+        document.addEventListener('DOMContentLoaded', () => {
+            log('Loading debug page started');
+            log('User Agent: ' + navigator.userAgent);
+            log('Mobile: ' + /Mobile|Android|iPhone|iPad|iPod|BlackBerry|Windows Phone/i.test(navigator.userAgent));
+            
+            // Test main app URL
+            fetch('/')
+                .then(response => {
+                    log('Main app responds: ' + response.status, 'success');
+                })
+                .catch(error => {
+                    log('Main app fetch failed: ' + error.message, 'error');
+                });
+        });
     </script>
 </body>
 </html>

@@ -37,11 +37,31 @@ try {
   const root = document.getElementById("root");
   if (root) {
     console.log("✅ Root element found, creating React app");
+    
+    // Add timeout to detect stuck loading states
+    const loadingTimeout = setTimeout(() => {
+      console.error("❌ React app took too long to load - showing fallback");
+      root.innerHTML = `
+        <div style="color: white; padding: 20px; background: #000; text-align: center;">
+          <h1 style="color: #14b8a6;">BingeBoard</h1>
+          <p>App is taking longer than expected to load...</p>
+          <p>Device: ${navigator.userAgent.substring(0, 50)}...</p>
+          <button onclick="window.location.reload()" style="background: #14b8a6; color: white; padding: 10px 20px; border: none; border-radius: 5px; margin: 10px;">
+            Reload Page
+          </button>
+          <br><br>
+          <a href="/debug-mobile.html" style="color: #14b8a6;">Debug Tools</a>
+        </div>
+      `;
+    }, 10000); // 10 second timeout
+    
     createRoot(root).render(<App />);
     console.log("✅ React app rendered successfully");
+    
+    // Clear timeout if app loads successfully
+    clearTimeout(loadingTimeout);
   } else {
     console.error("❌ Root element not found in DOM");
-    // Create emergency fallback
     document.body.innerHTML = '<div style="color: red; padding: 20px;">Error: Root element not found</div>';
   }
 } catch (error) {

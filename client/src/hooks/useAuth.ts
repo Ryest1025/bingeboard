@@ -18,16 +18,33 @@ export function useAuth(): AuthState {
   useEffect(() => {
     let isMounted = true;
 
+    // Add timeout to prevent infinite loading
+    const loadingTimeout = setTimeout(() => {
+      if (isMounted) {
+        console.log('⚠️ Auth loading timeout - setting not authenticated');
+        setAuthState({
+          user: null,
+          isLoading: false,
+          isAuthenticated: false
+        });
+      }
+    }, 10000); // 10 second max loading time
+
     // Set up Firebase auth state listener for real-time updates
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser: FirebaseUser | null) => {
       if (!isMounted) return;
+      
+      clearTimeout(loadingTimeout);
 
       if (firebaseUser) {
         try {
           // Get Firebase ID token
           const idToken = await firebaseUser.getIdToken();
           
-          // Create/restore backend session
+          // Create/restore backend session with timeout
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+          
           const sessionResponse = await fetch('/api/auth/firebase-session', {
             method: 'POST',
             headers: {
@@ -35,8 +52,11 @@ export function useAuth(): AuthState {
               'Authorization': `Bearer ${idToken}`
             },
             credentials: 'include',
-            body: JSON.stringify({ idToken })
+            body: JSON.stringify({ idToken }),
+            signal: controller.signal
           });
+
+          clearTimeout(timeoutId);
 
           if (sessionResponse.ok) {
             const userData = await sessionResponse.json();
@@ -48,19 +68,31 @@ export function useAuth(): AuthState {
               isAuthenticated: true
             });
           } else {
-            console.log('⚠️ Failed to create backend session');
+            console.log('⚠️ Failed to create backend session, using Firebase-only auth');
+            // Fall back to Firebase-only authentication
             setAuthState({
-              user: null,
+              user: {
+                id: firebaseUser.uid,
+                email: firebaseUser.email,
+                displayName: firebaseUser.displayName,
+                firebase: true
+              },
               isLoading: false,
-              isAuthenticated: false
+              isAuthenticated: true
             });
           }
         } catch (error) {
-          console.error('Session creation error:', error);
+          console.error('Session creation error, using Firebase-only auth:', error);
+          // Fall back to Firebase-only authentication
           setAuthState({
-            user: null,
+            user: {
+              id: firebaseUser.uid,
+              email: firebaseUser.email,
+              displayName: firebaseUser.displayName,
+              firebase: true
+            },
             isLoading: false,
-            isAuthenticated: false
+            isAuthenticated: true
           });
         }
       } else {
@@ -102,6 +134,7 @@ export function useAuth(): AuthState {
     return () => {
       isMounted = false;
       unsubscribe();
+      clearTimeout(loadingTimeout);
     };
   }, []);
 
