@@ -43,9 +43,8 @@ app.use(cors({
 app.use(express.json({ limit: '50mb' })); // Increase limit for large CSV uploads
 app.use(express.urlencoded({ extended: false, limit: '50mb' }));
 
-// Custom domain redirect disabled - direct access to Replit domain only
+// Request logging for debugging
 app.use((req, res, next) => {
-  // Log all requests to identify actual domain
   console.log(`Request received: ${req.method} ${req.get('host')}${req.path}`);
   next();
 });
