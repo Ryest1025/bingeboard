@@ -18,15 +18,8 @@ export function useAuth(): AuthState {
   useEffect(() => {
     let isMounted = true;
 
-    // Detect mobile and redirect to working version
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|Windows Phone|Mobile/i.test(navigator.userAgent);
-    
-    if (isMobile && !window.location.pathname.includes('mobile')) {
-      console.log('📱 Mobile device detected - redirecting to mobile version');
-      // Redirect mobile users to working version
-      window.location.href = '/mobile-simple.html';
-      return () => {};
-    }
+    // Mobile detection handled by server-side middleware
+    // No client-side redirect needed
 
     // Desktop flow with timeout protection
     const loadingTimeout = setTimeout(() => {
