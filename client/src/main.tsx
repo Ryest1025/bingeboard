@@ -3,7 +3,7 @@ console.log("🚀 BINGEBOARD MAIN.TSX LOADED - If you see this, the script is ex
 if (typeof document !== 'undefined') {
   console.log("✅ DOM is available");
 
-  // Create loading container
+  // Create loading container (do NOT include #root inside it)
   const loadingDiv = document.createElement('div');
   loadingDiv.id = 'loading-screen';
   loadingDiv.style.position = 'fixed';
@@ -23,7 +23,6 @@ if (typeof document !== 'undefined') {
       <h1 style="color: #14b8a6; font-size: 3rem; margin-bottom: 1rem;">BingeBoard</h1>
       <p style="font-size: 1.5rem;">Loading React app...</p>
       <p style="color: #9ca3af; font-size: 1rem;">main.tsx is executing</p>
-      <div id="root"></div>
     </div>
   `;
   document.body.appendChild(loadingDiv);
