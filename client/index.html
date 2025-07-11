@@ -54,7 +54,7 @@
         align-items: center;
         justify-content: center;
         font-family: Arial, sans-serif;
-        z-index: 9999;
+        z-index: 999;
       }
       .loading-content {
         text-align: center;
@@ -74,13 +74,7 @@
       }
     </style>
     <div id="root"></div>
-    <div class="loading-fallback">
-      <div class="loading-content">
-        <h1>BingeBoard</h1>
-        <p>Loading...</p>
-        <p class="status">If you see this for more than 5 seconds, there may be a JavaScript error</p>
-      </div>
-    </div>
+    <!-- Loading screen removed to prevent blocking React app -->
     <script>
       console.log("🚀 HTML loaded - JavaScript is working");
       console.log("✅ Fallback loading screen displayed");

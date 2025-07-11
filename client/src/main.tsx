@@ -59,7 +59,7 @@ async function initApp() {
     
     // Test App import
     console.log("✅ STEP 5: Importing App");
-    const AppModule = await import("./App");
+    const AppModule = await import("./App-simple");
     console.log("✅ STEP 6: App module:", AppModule);
     console.log("✅ STEP 7: App component:", AppModule.default);
     
@@ -76,11 +76,20 @@ async function initApp() {
       
       console.log("✅ STEP 11: SUCCESS - React app rendered");
       
-      // Hide the loading fallback screen
+      // Hide the loading fallback screen with multiple methods
       const loadingFallback = document.querySelector('.loading-fallback');
+      const loadingFallbackById = document.getElementById('loading-fallback');
+      
       if (loadingFallback) {
         loadingFallback.style.display = 'none';
-        console.log("✅ STEP 12: Loading screen hidden");
+        loadingFallback.remove();
+        console.log("✅ STEP 12: Loading screen hidden via class");
+      }
+      
+      if (loadingFallbackById) {
+        loadingFallbackById.style.display = 'none';
+        loadingFallbackById.remove();
+        console.log("✅ STEP 12b: Loading screen hidden via ID");
       }
       
       // Ensure root div is visible

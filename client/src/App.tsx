@@ -63,44 +63,13 @@ function Router() {
 
   // OAuth redirect handling is now done in login-simple.tsx
 
-  // Add comprehensive global error handlers that completely prevent unhandled promise rejections
+  // Remove loading overlays after React mounts
   useEffect(() => {
-    const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
-      // Always prevent default browser handling
-      event.preventDefault();
-      event.stopPropagation();
-      event.stopImmediatePropagation();
-      
-      // Completely silence all promise rejections to prevent runtime errors
-      console.debug('Promise rejection silently handled');
-      
-      // Return handled to prevent further propagation
-      return false;
-    };
-
-    const handleError = (event: ErrorEvent) => {
-      // Prevent default browser handling for all network errors
-      event.preventDefault();
-      event.stopPropagation();
-      event.stopImmediatePropagation();
-      console.debug('Error silently handled:', event.message);
-      return false;
-    };
-
-    // Add multiple event listeners to catch all possible error events
-    window.addEventListener('unhandledrejection', handleUnhandledRejection, true);
-    window.addEventListener('error', handleError, true);
-    window.addEventListener('rejectionhandled', handleUnhandledRejection, true);
-    document.addEventListener('unhandledrejection', handleUnhandledRejection, true);
-    document.addEventListener('error', handleError, true);
-    
-    return () => {
-      window.removeEventListener('unhandledrejection', handleUnhandledRejection, true);
-      window.removeEventListener('error', handleError, true);
-      window.removeEventListener('rejectionhandled', handleUnhandledRejection, true);
-      document.removeEventListener('unhandledrejection', handleUnhandledRejection, true);
-      document.removeEventListener('error', handleError, true);
-    };
+    const loadingDiv = document.querySelector('.loading-fallback') || document.getElementById('loading-fallback');
+    if (loadingDiv && loadingDiv.parentNode) {
+      loadingDiv.parentNode.removeChild(loadingDiv);
+      console.log('✅ Removed loading overlay');
+    }
   }, []);
 
   // Show loading briefly while auth is being determined to prevent 404 race condition
