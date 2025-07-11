@@ -52,7 +52,7 @@ async function initApp() {
     
     // Test App import
     console.log("✅ STEP 5: Importing App");
-    const AppModule = await import("./App");
+    const AppModule = await import("./App-debug");
     console.log("✅ STEP 6: App module:", AppModule);
     console.log("✅ STEP 7: App component:", AppModule.default);
     
@@ -74,6 +74,15 @@ async function initApp() {
       if (loadingFallback) {
         loadingFallback.style.display = 'none';
         console.log("✅ STEP 12: Loading screen hidden");
+      }
+      
+      // Ensure root div is visible
+      const rootDiv = document.getElementById('root');
+      if (rootDiv) {
+        rootDiv.style.display = 'block';
+        rootDiv.style.visibility = 'visible';
+        rootDiv.style.opacity = '1';
+        console.log("✅ STEP 13: Root div made visible");
       }
     } else {
       console.error("❌ MISSING REQUIREMENTS");
