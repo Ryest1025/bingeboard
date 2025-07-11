@@ -107,75 +107,13 @@
     </style>
 </head>
 <body>
-    <div class="loading-screen" id="loadingScreen">
-        <div class="logo">
-            <div class="logo-icon"></div>
-            <div class="logo-text">
-                <span class="binge">Binge</span>Board
-            </div>
-        </div>
-        <div class="spinner"></div>
-        <div class="loading-text">Loading your entertainment hub...</div>
-        <div class="device-info">
-            <div>Device: <span id="deviceType">Desktop</span></div>
-            <div>Status: <span id="loadingStatus">Initializing...</span></div>
-        </div>
-    </div>
+    <!-- Loading screen removed to allow React app to display directly -->
     
     <div id="root"></div>
     
     <script>
-        // Update device detection
-        document.getElementById('deviceType').textContent = isMobileDevice() ? 'Mobile' : 'Desktop';
-        
-        // Loading status updates
-        let loadingStep = 0;
-        const loadingSteps = [
-            'Initializing...',
-            'Loading components...',
-            'Connecting to services...',
-            'Preparing your experience...',
-            'Almost ready...'
-        ];
-        
-        function updateLoadingStatus() {
-            const statusEl = document.getElementById('loadingStatus');
-            if (statusEl && loadingStep < loadingSteps.length) {
-                statusEl.textContent = loadingSteps[loadingStep];
-                loadingStep++;
-            }
-        }
-        
-        // Update loading status every second
-        const statusInterval = setInterval(updateLoadingStatus, 1000);
-        
-        // Remove loading screen after 10 seconds if React doesn't load
-        setTimeout(() => {
-            const loadingScreen = document.getElementById('loadingScreen');
-            if (loadingScreen) {
-                clearInterval(statusInterval);
-                loadingScreen.innerHTML = `
-                    <div class="logo">
-                        <div class="logo-icon"></div>
-                        <div class="logo-text">
-                            <span class="binge">Binge</span>Board
-                        </div>
-                    </div>
-                    <div style="text-align: center; max-width: 400px; padding: 20px;">
-                        <h2 style="color: #14b8a6; margin-bottom: 15px;">Loading Taking Too Long</h2>
-                        <p style="color: #9ca3af; margin-bottom: 20px;">The app is taking longer than expected to load.</p>
-                        <button onclick="window.location.reload()" style="background: #14b8a6; color: white; border: none; padding: 12px 24px; border-radius: 8px; margin: 5px; cursor: pointer;">
-                            Reload Page
-                        </button>
-                        <button onclick="window.location.href='/mobile-fix.html'" style="background: #374151; color: white; border: none; padding: 12px 24px; border-radius: 8px; margin: 5px; cursor: pointer;">
-                            Mobile Version
-                        </button>
-                    </div>
-                `;
-            }
-        }, 10000);
+        // Redirect to working app version
+        window.location.replace('/working-app.html');
     </script>
-    
-    <script type="module" src="/src/main.tsx"></script>
 </body>
 </html>
