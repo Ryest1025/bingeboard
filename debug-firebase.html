@@ -1,67 +1,98 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Firebase OAuth Debug</title>
-    <script src="https://www.gstatic.com/firebasejs/9.17.2/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.17.2/firebase-auth.js"></script>
+    <title>Debug Firebase</title>
+    <style>
+        body { 
+            background: #000; 
+            color: #fff; 
+            font-family: Arial; 
+            padding: 20px; 
+        }
+        .log {
+            background: #111;
+            padding: 10px;
+            margin: 5px 0;
+            border-left: 3px solid #14b8a6;
+        }
+        .error { border-left-color: #dc2626; }
+    </style>
 </head>
 <body>
-    <h1>Firebase OAuth Debug</h1>
-    <p>Current domain: <span id="current-domain"></span></p>
-    <p>Firebase project: <span id="firebase-project"></span></p>
-    <button onclick="testGoogleAuth()">Test Google OAuth</button>
-    <button onclick="testFacebookAuth()">Test Facebook OAuth</button>
-    <div id="result"></div>
-
+    <h1>BingeBoard Debug</h1>
+    <div id="logs"></div>
+    <div id="root">Loading...</div>
+    
     <script>
-        // Firebase config
-        const firebaseConfig = {
-            apiKey: "AIzaSyDqDRqRvPkv6rJAP7sJGlIJQ6-bBwLZfFo",
-            authDomain: "bingeboard-73c5f.firebaseapp.com", 
-            projectId: "bingeboard-73c5f",
-            storageBucket: "bingeboard-73c5f.firebasestorage.app",
-            messagingSenderId: "145846820194",
-            appId: "1:145846820194:web:2c7f4f5b8e2d3f4f5b8e2d"
+        const logs = document.getElementById('logs');
+        
+        function addLog(message, isError = false) {
+            const div = document.createElement('div');
+            div.className = isError ? 'log error' : 'log';
+            div.textContent = new Date().toLocaleTimeString() + ': ' + message;
+            logs.appendChild(div);
+            console.log(message);
+        }
+        
+        // Override console to capture logs
+        const originalLog = console.log;
+        const originalError = console.error;
+        
+        console.log = function(...args) {
+            originalLog.apply(console, args);
+            addLog(args.join(' '));
         };
-
-        // Initialize Firebase
-        firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
-
-        // Display current domain
-        document.getElementById('current-domain').textContent = window.location.hostname;
-        document.getElementById('firebase-project').textContent = firebaseConfig.projectId;
-
-        // Test Google OAuth
-        async function testGoogleAuth() {
+        
+        console.error = function(...args) {
+            originalError.apply(console, args);
+            addLog(args.join(' '), true);
+        };
+        
+        addLog("Debug page loaded");
+        
+        // Test React loading step by step
+        (async function() {
             try {
-                const provider = new firebase.auth.GoogleAuthProvider();
-                await auth.signInWithRedirect(provider);
-                document.getElementById('result').innerHTML = '<p style="color:green">Google OAuth initiated successfully</p>';
+                addLog("Step 1: Loading React...");
+                const React = await import('react');
+                addLog("Step 2: React loaded: " + (React ? "✅" : "❌"));
+                
+                addLog("Step 3: Loading ReactDOM...");
+                const ReactDOM = await import('react-dom/client');
+                addLog("Step 4: ReactDOM loaded: " + (ReactDOM ? "✅" : "❌"));
+                
+                addLog("Step 5: Creating simple component...");
+                const TestComponent = () => {
+                    addLog("TestComponent rendering");
+                    return React.createElement('div', { 
+                        style: { 
+                            color: '#14b8a6', 
+                            fontSize: '2rem', 
+                            textAlign: 'center',
+                            padding: '20px'
+                        }
+                    }, 'React is working!');
+                };
+                
+                addLog("Step 6: Finding root element...");
+                const root = document.getElementById('root');
+                addLog("Root element found: " + (root ? "✅" : "❌"));
+                
+                if (root) {
+                    addLog("Step 7: Creating React root...");
+                    const reactRoot = ReactDOM.createRoot(root);
+                    addLog("React root created: " + (reactRoot ? "✅" : "❌"));
+                    
+                    addLog("Step 8: Rendering component...");
+                    reactRoot.render(React.createElement(TestComponent));
+                    addLog("Step 9: Component rendered ✅");
+                }
+                
             } catch (error) {
-                document.getElementById('result').innerHTML = '<p style="color:red">Google OAuth Error: ' + error.message + '</p>';
+                addLog("ERROR: " + error.message, true);
+                addLog("Stack: " + error.stack, true);
             }
-        }
-
-        // Test Facebook OAuth
-        async function testFacebookAuth() {
-            try {
-                const provider = new firebase.auth.FacebookAuthProvider();
-                await auth.signInWithRedirect(provider);
-                document.getElementById('result').innerHTML = '<p style="color:green">Facebook OAuth initiated successfully</p>';
-            } catch (error) {
-                document.getElementById('result').innerHTML = '<p style="color:red">Facebook OAuth Error: ' + error.message + '</p>';
-            }
-        }
-
-        // Handle redirect results
-        auth.getRedirectResult().then((result) => {
-            if (result.user) {
-                document.getElementById('result').innerHTML = '<p style="color:green">OAuth Success! User: ' + result.user.email + '</p>';
-            }
-        }).catch((error) => {
-            document.getElementById('result').innerHTML = '<p style="color:red">OAuth Redirect Error: ' + error.message + '</p>';
-        });
+        })();
     </script>
 </body>
 </html>
