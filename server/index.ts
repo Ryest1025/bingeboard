@@ -21,6 +21,7 @@ app.use(cors({
     const allowedOrigins = [
       'https://www.joinbingeboard.com',
       'https://joinbingeboard.com',
+      'https://80d1bb7f-86b2-4c58-a8e0-62a1673122a3-00-2vv88inpi4v1.riker.replit.dev',
       /\.replit\.dev$/
     ];
     
