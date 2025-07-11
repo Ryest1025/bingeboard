@@ -111,7 +111,10 @@
     
     <div id="root"></div>
     
-    <script type="module" src="/src/main-standalone.tsx"></script>
+    <script>
+        // Redirect to working HTML version
+        window.location.replace('/working-bingeboard.html');
+    </script>
     
     <!-- Fallback BingeBoard display if React fails -->
     <script>
