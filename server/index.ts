@@ -43,14 +43,15 @@ app.use(cors({
 // CRITICAL: Mobile detection FIRST - before any other middleware
 app.use((req, res, next) => {
   const userAgent = req.get('user-agent') || '';
-  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|Windows Phone|Mobile/i.test(userAgent);
+  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|Windows Phone|Mobile|IEMobile|Opera Mini/i.test(userAgent);
   
-  console.log(`🚀 FIRST MIDDLEWARE - Mobile check: ${isMobile} - Path: ${req.path}`);
+  console.log(`🚀 FIRST MIDDLEWARE - Mobile check: ${isMobile} - Path: ${req.path} - UA: ${userAgent.substring(0, 100)}`);
   
   // Serve mobile HTML for ANY non-API request from mobile devices OR force mobile mode
   if ((isMobile || req.query.mobile === 'true') && !req.path.startsWith('/api') && !req.path.includes('.') && req.method === 'GET') {
     console.log('📱 MOBILE REDIRECT ACTIVATED - SERVING MOBILE HTML NOW');
     console.log('📱 Mobile detection:', isMobile, 'Force mobile:', req.query.mobile === 'true');
+    console.log('📱 Full User Agent:', userAgent);
     
     const mobileHtml = `<!DOCTYPE html>
 <html lang="en">
@@ -96,7 +97,7 @@ app.use(express.urlencoded({ extended: false, limit: '50mb' }));
 // Secondary mobile detection middleware (backup)
 app.use((req, res, next) => {
   const userAgent = req.get('user-agent') || '';
-  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|Windows Phone|Mobile/i.test(userAgent);
+  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|Windows Phone|Mobile|IEMobile|Opera Mini/i.test(userAgent);
   
   console.log(`🌍 Request: ${req.method} ${req.get('host')}${req.path} - Mobile: ${isMobile} - UA: ${userAgent.substring(0, 50)}...`);
   
