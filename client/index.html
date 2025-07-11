@@ -74,7 +74,13 @@
       }
     </style>
     <div id="root"></div>
-    <!-- Loading screen removed to prevent blocking React app -->
+    <div class="loading-fallback" id="loading-fallback" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #000; color: #fff; display: flex; align-items: center; justify-content: center; z-index: 1;">
+      <div style="text-align: center;">
+        <h1 style="color: #14b8a6; font-size: 2rem; margin-bottom: 1rem;">BingeBoard</h1>
+        <p style="font-size: 1.2rem; margin-bottom: 0.5rem;">Loading...</p>
+        <p style="color: #9ca3af; font-size: 1rem;">If you see this for more than 5 seconds, check console for errors</p>
+      </div>
+    </div>
     <script>
       console.log("🚀 HTML loaded - JavaScript is working");
       console.log("✅ Fallback loading screen displayed");
