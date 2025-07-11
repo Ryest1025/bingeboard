@@ -45,7 +45,15 @@ app.use(express.urlencoded({ extended: false, limit: '50mb' }));
 
 // Request logging for debugging
 app.use((req, res, next) => {
-  console.log(`Request received: ${req.method} ${req.get('host')}${req.path}`);
+  const host = req.get('host');
+  const userAgent = req.get('user-agent');
+  console.log(`🌍 Request: ${req.method} ${host}${req.path} - User-Agent: ${userAgent ? userAgent.substring(0, 50) : 'Unknown'}`);
+  
+  // Special handling for custom domain
+  if (host === 'www.joinbingeboard.com' || host === 'joinbingeboard.com') {
+    console.log('🎯 Custom domain request detected - serving app directly');
+  }
+  
   next();
 });
 
