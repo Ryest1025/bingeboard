@@ -48,6 +48,7 @@ import ImportHistory from "@/pages/import-history";
 import ResetPassword from "@/pages/reset-password";
 // OAuth redirect page removed - Firebase authentication only
 import UITestPage from "@/pages/ui-test";
+import MobileDiagnostic from "@/pages/mobile-diagnostic";
 
 
 function Router() {
@@ -134,6 +135,7 @@ function Router() {
               <Route path="/notifications" component={NotificationCenter} />
               <Route path="/import-history" component={ImportHistory} />
               <Route path="/ui-test" component={UITestPage} />
+              <Route path="/mobile-diagnostic" component={MobileDiagnostic} />
               <Route path="/show/:id" component={ShowDetails} />
             </>
           ) : (
@@ -145,6 +147,7 @@ function Router() {
               <Route path="/features" component={Features} />
               <Route path="/streaming-demo" component={StreamingDemo} />
               <Route path="/notifications-demo" component={NotificationsDemo} />
+              <Route path="/mobile-diagnostic" component={MobileDiagnostic} />
             </>
           )}
           <Route component={NotFound} />

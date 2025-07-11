@@ -1,14 +1,14 @@
-// Device detection utilities
-export const isMobileDevice = (): boolean => {
-  // Check if we're running in a browser environment
-  if (typeof window === 'undefined' || typeof navigator === 'undefined') {
-    return false;
-  }
+/**
+ * Device detection and mobile optimization utilities
+ */
 
-  // Check for mobile user agents
+export const isMobileDevice = () => {
+  if (typeof window === 'undefined') return false;
+  
+  // Check user agent for mobile devices
   const userAgent = navigator.userAgent || navigator.vendor || (window as any).opera;
   
-  // Mobile detection patterns
+  // Mobile device patterns
   const mobilePatterns = [
     /Android/i,
     /webOS/i,
@@ -20,18 +20,62 @@ export const isMobileDevice = (): boolean => {
     /Mobile/i
   ];
   
-  // Check if any mobile pattern matches
-  const isMobileUA = mobilePatterns.some(pattern => pattern.test(userAgent));
-  
-  // Also check for touch capability and small screen
-  const hasTouchScreen = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-  const hasSmallScreen = window.innerWidth <= 768;
-  
-  // Return true if mobile user agent OR (touch screen AND small screen)
-  return isMobileUA || (hasTouchScreen && hasSmallScreen);
+  return mobilePatterns.some(pattern => pattern.test(userAgent));
 };
 
-// Check if device supports popups reliably
-export const supportsPopups = (): boolean => {
-  return !isMobileDevice();
+export const isIOS = () => {
+  if (typeof window === 'undefined') return false;
+  
+  return /iPad|iPhone|iPod/.test(navigator.userAgent);
+};
+
+export const isAndroid = () => {
+  if (typeof window === 'undefined') return false;
+  
+  return /Android/.test(navigator.userAgent);
+};
+
+export const getDeviceType = () => {
+  if (isMobileDevice()) {
+    if (isIOS()) return 'iOS';
+    if (isAndroid()) return 'Android';
+    return 'Mobile';
+  }
+  return 'Desktop';
+};
+
+export const getMobileViewportMeta = () => {
+  // Optimized viewport settings for mobile
+  return {
+    width: 'device-width',
+    initialScale: 1,
+    maximumScale: 1,
+    userScalable: 'no',
+    viewportFit: 'cover'
+  };
+};
+
+export const applyMobileOptimizations = () => {
+  if (typeof window === 'undefined') return;
+  
+  // Add mobile-specific CSS classes
+  if (isMobileDevice()) {
+    document.documentElement.classList.add('mobile-device');
+    
+    if (isIOS()) {
+      document.documentElement.classList.add('ios-device');
+    }
+    
+    if (isAndroid()) {
+      document.documentElement.classList.add('android-device');
+    }
+  }
+  
+  // Prevent zoom on input focus (mobile)
+  if (isMobileDevice()) {
+    const viewportMeta = document.querySelector('meta[name="viewport"]');
+    if (viewportMeta) {
+      viewportMeta.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no');
+    }
+  }
 };

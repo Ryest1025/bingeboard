@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -16,6 +16,9 @@ import {
   ArrowRight,
   Sparkles
 } from "lucide-react";
+import { SiGoogle, SiFacebook } from "react-icons/si";
+import { getAuth, signInWithPopup, GoogleAuthProvider, FacebookAuthProvider } from "firebase/auth";
+import { useToast } from "@/hooks/use-toast";
 
 
 interface Show {
@@ -141,8 +144,91 @@ function ShowCard({ show }: { show: Show }) {
 }
 
 export default function Landing() {
+  const [, setLocation] = useLocation();
+  const { toast } = useToast();
+  const [loading, setLoading] = useState(false);
+  
   // State for trending shows
   const [trendingShows, setTrendingShows] = useState<{ results: Show[] } | null>(null);
+  
+  const auth = getAuth();
+  
+  const createBackendSession = async (user: any) => {
+    try {
+      const idToken = await user.getIdToken();
+      const response = await fetch('/api/auth/firebase-session', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${idToken}`
+        },
+        credentials: 'include'
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to create backend session');
+      }
+      
+      return await response.json();
+    } catch (error) {
+      console.error('Backend session creation failed:', error);
+      throw error;
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    setLoading(true);
+    
+    try {
+      const provider = new GoogleAuthProvider();
+      const result = await signInWithPopup(auth, provider);
+      
+      // Create backend session
+      await createBackendSession(result.user);
+      
+      toast({
+        title: "Welcome to BingeBoard!",
+        description: "Successfully signed in with Google",
+      });
+      
+      setLocation('/');
+    } catch (err: any) {
+      toast({
+        title: "Sign-in Failed",
+        description: err.message,
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleFacebookLogin = async () => {
+    setLoading(true);
+    
+    try {
+      const provider = new FacebookAuthProvider();
+      const result = await signInWithPopup(auth, provider);
+      
+      // Create backend session
+      await createBackendSession(result.user);
+      
+      toast({
+        title: "Welcome to BingeBoard!",
+        description: "Successfully signed in with Facebook",
+      });
+      
+      setLocation('/');
+    } catch (err: any) {
+      toast({
+        title: "Sign-in Failed",
+        description: err.message,
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
   
   // Safe fetch function that never throws errors
   const safeFetch = async (url: string) => {
@@ -234,24 +320,61 @@ export default function Landing() {
               </p>
             </div>
             
-            <div className="flex flex-col sm:flex-row gap-4 justify-center max-w-md mx-auto">
-              <Link href="/login">
+            <div className="space-y-6 max-w-md mx-auto">
+              {/* Social Login Options */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <Button 
+                  onClick={handleGoogleLogin}
+                  disabled={loading}
                   size="lg" 
-                  className="bg-gradient-to-r from-teal-600 via-cyan-600 to-blue-600 hover:from-teal-700 hover:via-cyan-700 hover:to-blue-700 text-white px-8 py-4 text-lg font-semibold w-full sm:w-auto"
+                  variant="outline"
+                  className="border-slate-700 bg-white/5 hover:bg-white/10 text-white px-6 py-4 w-full"
                 >
-                  Join Now
+                  <SiGoogle className="h-5 w-5 mr-3" />
+                  Continue with Google
                 </Button>
-              </Link>
-              <Link href="/login">
                 <Button 
+                  onClick={handleFacebookLogin}
+                  disabled={loading}
                   size="lg" 
-                  variant="outline" 
-                  className="border-teal-400/30 text-teal-300 hover:bg-teal-500/10 px-8 py-4 text-lg w-full sm:w-auto"
+                  variant="outline"
+                  className="border-slate-700 bg-blue-600/20 hover:bg-blue-600/30 text-white px-6 py-4 w-full"
                 >
-                  Log In
+                  <SiFacebook className="h-5 w-5 mr-3" />
+                  Continue with Facebook
                 </Button>
-              </Link>
+              </div>
+              
+              {/* OR Separator */}
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t border-slate-700" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 px-2 text-slate-400">Or</span>
+                </div>
+              </div>
+              
+              {/* Email Login Options */}
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <Link href="/login">
+                  <Button 
+                    size="lg" 
+                    className="bg-gradient-to-r from-teal-600 via-cyan-600 to-blue-600 hover:from-teal-700 hover:via-cyan-700 hover:to-blue-700 text-white px-8 py-4 text-lg font-semibold w-full sm:w-auto"
+                  >
+                    Join Now
+                  </Button>
+                </Link>
+                <Link href="/login">
+                  <Button 
+                    size="lg" 
+                    variant="outline" 
+                    className="border-teal-400/30 text-teal-300 hover:bg-teal-500/10 px-8 py-4 text-lg w-full sm:w-auto"
+                  >
+                    Log In
+                  </Button>
+                </Link>
+              </div>
             </div>
           </div>
         </div>

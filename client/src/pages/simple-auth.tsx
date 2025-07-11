@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, FacebookAuthProvider } from "firebase/auth";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Eye, EyeOff, Mail, Lock, Tv } from "lucide-react";
-import { SiGoogle } from "react-icons/si";
+import { SiGoogle, SiFacebook } from "react-icons/si";
 
 const auth = getAuth();
 
@@ -99,6 +99,35 @@ export default function SimpleAuth() {
       setError(err.message);
       toast({
         title: "Google Login Failed",
+        description: err.message,
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleFacebookLogin = async () => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const provider = new FacebookAuthProvider();
+      const result = await signInWithPopup(auth, provider);
+      
+      // Create backend session
+      await createBackendSession(result.user);
+      
+      toast({
+        title: "Login Successful",
+        description: "Welcome to BingeBoard!",
+      });
+      
+      setLocation('/');
+    } catch (err: any) {
+      setError(err.message);
+      toast({
+        title: "Facebook Login Failed",
         description: err.message,
         variant: "destructive",
       });
@@ -210,15 +239,27 @@ export default function SimpleAuth() {
             </div>
           </div>
           
-          <Button 
-            onClick={handleGoogleLogin}
-            variant="outline"
-            className="w-full border-slate-700 hover:bg-slate-800"
-            disabled={loading}
-          >
-            <SiGoogle className="h-4 w-4 mr-2" />
-            Google
-          </Button>
+          <div className="grid grid-cols-2 gap-4">
+            <Button 
+              onClick={handleGoogleLogin}
+              variant="outline"
+              className="border-slate-700 hover:bg-slate-800"
+              disabled={loading}
+            >
+              <SiGoogle className="h-4 w-4 mr-2" />
+              Google
+            </Button>
+            
+            <Button 
+              onClick={handleFacebookLogin}
+              variant="outline"
+              className="border-slate-700 hover:bg-slate-800"
+              disabled={loading}
+            >
+              <SiFacebook className="h-4 w-4 mr-2" />
+              Facebook
+            </Button>
+          </div>
           
           {error && (
             <div className="text-red-400 text-sm text-center p-2 bg-red-500/10 rounded">
