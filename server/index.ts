@@ -40,10 +40,60 @@ app.use(cors({
   optionsSuccessStatus: 200
 }));
 
+// CRITICAL: Mobile detection FIRST - before any other middleware
+app.use((req, res, next) => {
+  const userAgent = req.get('user-agent') || '';
+  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|Windows Phone|Mobile/i.test(userAgent);
+  
+  console.log(`🚀 FIRST MIDDLEWARE - Mobile check: ${isMobile} - Path: ${req.path}`);
+  
+  // Serve mobile HTML for ANY non-API request from mobile devices OR force mobile mode
+  if ((isMobile || req.query.mobile === 'true') && !req.path.startsWith('/api') && !req.path.includes('.') && req.method === 'GET') {
+    console.log('📱 MOBILE REDIRECT ACTIVATED - SERVING MOBILE HTML NOW');
+    console.log('📱 Mobile detection:', isMobile, 'Force mobile:', req.query.mobile === 'true');
+    
+    const mobileHtml = `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>BingeBoard Mobile - Working</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: #000; color: #fff; font-family: -apple-system, BlinkMacSystemFont, sans-serif; padding: 20px; }
+        .container { max-width: 100%; text-align: center; }
+        .logo { font-size: 32px; font-weight: bold; margin: 40px 0; }
+        .logo .binge { background: linear-gradient(135deg, #14b8a6, #0d9488); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .status { background: #064e3b; color: #6ee7b7; padding: 20px; border-radius: 12px; margin: 20px 0; }
+        .info { color: #9ca3af; font-size: 14px; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo"><span class="binge">Binge</span>Board</div>
+        <div class="status">✅ Mobile Version Loaded Successfully!</div>
+        <div class="info">Server-side mobile detection working</div>
+        <div class="info">Time: ${new Date().toLocaleString()}</div>
+        <div class="info">User Agent: ${userAgent.substring(0, 50)}...</div>
+    </div>
+    <script>
+        console.log('📱 Mobile BingeBoard loaded successfully via server redirect');
+        console.log('📱 User Agent:', navigator.userAgent);
+        console.log('📱 Screen:', window.innerWidth + 'x' + window.innerHeight);
+    </script>
+</body>
+</html>`;
+    
+    return res.send(mobileHtml);
+  }
+  
+  next();
+});
+
 app.use(express.json({ limit: '50mb' })); // Increase limit for large CSV uploads
 app.use(express.urlencoded({ extended: false, limit: '50mb' }));
 
-// Mobile detection middleware - serves mobile HTML directly
+// Secondary mobile detection middleware (backup)
 app.use((req, res, next) => {
   const userAgent = req.get('user-agent') || '';
   const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|Windows Phone|Mobile/i.test(userAgent);
