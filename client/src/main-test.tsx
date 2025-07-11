@@ -13,7 +13,7 @@ function TestApp() {
   );
 }
 
-console.log("main.tsx is loading...");
+console.log("main-test.tsx is loading...");
 
 const root = document.getElementById("root");
 if (root) {
