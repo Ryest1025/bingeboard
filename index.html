@@ -111,53 +111,7 @@
     
     <div id="root"></div>
     
-    <script type="module">
-        // Bypass Vite plugin errors and load React directly
-        import { createElement } from 'react';
-        import { createRoot } from 'react-dom/client';
-        
-        // Suppress plugin errors globally
-        const originalError = console.error;
-        console.error = (...args) => {
-          const message = args[0]?.toString() || '';
-          if (message.includes('plugin-react') || message.includes('preamble') || message.includes('vitejs')) {
-            return; // Suppress all Vite plugin errors
-          }
-          originalError.apply(console, args);
-        };
-        
-        // Handle promise rejections
-        window.addEventListener('unhandledrejection', (event) => {
-          const message = event.reason?.toString() || '';
-          if (message.includes('plugin-react') || message.includes('preamble')) {
-            event.preventDefault();
-            return;
-          }
-        });
-        
-        // Load your actual modern BingeBoard app
-        async function loadModernApp() {
-          try {
-            console.log('🚀 Loading modern BingeBoard app...');
-            const { default: App } = await import('./src/App.tsx');
-            const root = document.getElementById('root');
-            if (root) {
-              console.log('✅ Root found, rendering modern app');
-              createRoot(root).render(createElement(App));
-              console.log('✅ Modern BingeBoard app loaded successfully');
-            }
-          } catch (error) {
-            console.error('Failed to load modern app:', error);
-            // Show fallback message
-            const root = document.getElementById('root');
-            if (root) {
-              root.innerHTML = '<div style="color: white; text-align: center; padding: 40px; background: #000; min-height: 100vh; display: flex; align-items: center; justify-content: center;"><div><h1 style="color: #14b8a6; font-size: 32px; margin-bottom: 20px;">BingeBoard</h1><p style="font-size: 18px; margin-bottom: 20px;">Loading your modern entertainment platform...</p><button onclick="window.location.reload()" style="background: #14b8a6; color: white; padding: 12px 24px; border: none; border-radius: 8px; cursor: pointer; font-size: 16px;">Refresh</button></div></div>';
-            }
-          }
-        }
-        
-        loadModernApp();
-    </script>
+    <script type="module" src="/src/main.tsx"></script>
     
     <!-- Fallback BingeBoard display if React fails -->
     <script>
