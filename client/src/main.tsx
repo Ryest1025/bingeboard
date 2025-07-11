@@ -1,4 +1,3 @@
-import React from "react";
 import { createRoot } from "react-dom/client";
 import App from "./App";
 import "./index.css";
@@ -44,7 +43,7 @@ const mountReactApp = () => {
     console.log("✅ Root element found, creating React app");
     
     const reactRoot = createRoot(root);
-    reactRoot.render(React.createElement(App));
+    reactRoot.render(<App />);
     
     // Remove loading screen after successful render
     setTimeout(removeLoadingScreen, 100);
