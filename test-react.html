@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>React Test</title>
+    <style>
+        body { margin: 0; padding: 20px; background: #000; color: #fff; font-family: Arial; }
+        #root { border: 2px solid #14b8a6; min-height: 200px; padding: 20px; }
+    </style>
+</head>
+<body>
+    <h1>React Test Page</h1>
+    <div id="root">Loading...</div>
+    
+    <script>
+        console.log("Basic HTML loaded");
+        
+        // Test if React loads
+        setTimeout(() => {
+            console.log("Checking root element:", document.getElementById('root'));
+        }, 1000);
+    </script>
+    
+    <script type="module">
+        console.log("Module script loading...");
+        
+        try {
+            const React = await import('react');
+            const ReactDOM = await import('react-dom/client');
+            
+            console.log("React imported successfully");
+            
+            const root = document.getElementById('root');
+            const reactRoot = ReactDOM.createRoot(root);
+            
+            const TestComponent = () => {
+                return React.createElement('div', { 
+                    style: { 
+                        color: '#14b8a6', 
+                        fontSize: '2rem',
+                        textAlign: 'center',
+                        padding: '20px'
+                    }
+                }, 'React Working!');
+            };
+            
+            reactRoot.render(React.createElement(TestComponent));
+            console.log("React component rendered");
+            
+        } catch (error) {
+            console.error("React loading error:", error);
+            document.getElementById('root').innerHTML = 
+                '<div style="color: red; font-size: 1.5rem;">Error: ' + error.message + '</div>';
+        }
+    </script>
+</body>
+</html>

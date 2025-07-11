@@ -1,7 +1,10 @@
 import React from 'react';
 
+console.log("App-minimal.tsx loaded");
+
 function App() {
   console.log("🎯 App component rendering...");
+  console.log("App function called successfully");
   
   return (
     <div style={{

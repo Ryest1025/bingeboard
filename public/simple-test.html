@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Test</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background-color: #000000;
+            color: #ffffff;
+            font-family: Arial, sans-serif;
+        }
+        .test-box {
+            border: 2px solid #14b8a6;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        .success {
+            background-color: #14b8a6;
+            color: #000000;
+        }
+        .error {
+            background-color: #dc2626;
+            color: #ffffff;
+        }
+    </style>
+</head>
+<body>
+    <h1>BingeBoard Simple Test</h1>
+    
+    <div class="test-box">
+        <h2>HTML Loading Test</h2>
+        <p>✅ If you see this, HTML is working</p>
+    </div>
+    
+    <div class="test-box">
+        <h2>JavaScript Test</h2>
+        <p id="js-test">⏳ Testing JavaScript...</p>
+    </div>
+    
+    <div class="test-box">
+        <h2>React Test</h2>
+        <div id="react-test">⏳ Loading React...</div>
+    </div>
+    
+    <div class="test-box">
+        <h2>Console Logs</h2>
+        <p>Open browser console (F12) to see detailed logs</p>
+        <div id="console-output"></div>
+    </div>
+    
+    <script>
+        console.log("🚀 Simple test page loaded");
+        
+        // Test 1: JavaScript working
+        document.getElementById('js-test').innerHTML = '✅ JavaScript is working!';
+        document.getElementById('js-test').className = 'success';
+        
+        // Test 2: React loading
+        (async function testReact() {
+            try {
+                console.log("🔍 Testing React import...");
+                
+                // Import React
+                const React = await import('react');
+                const ReactDOM = await import('react-dom/client');
+                
+                console.log("✅ React imported successfully");
+                
+                // Create simple React component
+                const TestComponent = () => {
+                    return React.createElement('div', { 
+                        className: 'success',
+                        style: { padding: '10px', margin: '10px 0' }
+                    }, '✅ React is working!');
+                };
+                
+                // Render to test div
+                const container = document.getElementById('react-test');
+                const root = ReactDOM.createRoot(container);
+                root.render(React.createElement(TestComponent));
+                
+                console.log("✅ React component rendered successfully");
+                
+            } catch (error) {
+                console.error("❌ React test failed:", error);
+                document.getElementById('react-test').innerHTML = 
+                    '<div class="error">❌ React failed: ' + error.message + '</div>';
+            }
+        })();
+        
+        // Test 3: Console output capture
+        const originalLog = console.log;
+        const originalError = console.error;
+        const consoleOutput = document.getElementById('console-output');
+        
+        function addToConsoleOutput(message, type = 'log') {
+            const div = document.createElement('div');
+            div.style.cssText = `
+                padding: 5px;
+                margin: 2px 0;
+                background: ${type === 'error' ? '#dc2626' : '#14b8a6'};
+                color: ${type === 'error' ? '#ffffff' : '#000000'};
+                font-family: monospace;
+                font-size: 12px;
+            `;
+            div.textContent = message;
+            consoleOutput.appendChild(div);
+        }
+        
+        console.log = function(...args) {
+            originalLog.apply(console, args);
+            addToConsoleOutput(args.join(' '), 'log');
+        };
+        
+        console.error = function(...args) {
+            originalError.apply(console, args);
+            addToConsoleOutput(args.join(' '), 'error');
+        };
+        
+        console.log("🎯 Console logging test complete");
+    </script>
+</body>
+</html>
