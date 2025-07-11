@@ -305,10 +305,8 @@ app.get('/test-mobile', (req, res) => {
     serveStatic(app);
   }
 
-  // ALWAYS serve the app on port 5000
-  // this serves both the API and the client.
-  // It is the only port that is not firewalled.
-  const port = 5000;
+  // Use environment port or default to 5000
+  const port = parseInt(process.env.PORT || '5000');
   
   server.on('error', (err: any) => {
     if (err.code === 'EADDRINUSE') {

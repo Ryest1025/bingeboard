@@ -1,6 +1,6 @@
 import React from "react";
 import { createRoot } from "react-dom/client";
-import App from "./App-minimal";
+import App from "./App-working";
 import "./index.css";
 
 console.log("🚀 MAIN.TSX LOADED - Starting React app");
@@ -28,13 +28,12 @@ try {
     console.log("✅ React app rendered successfully");
   } else {
     console.error("❌ Root element not found");
+    // Redirect to working HTML version
+    window.location.replace('/index-simple.html');
   }
 } catch (error) {
   console.error("❌ Error creating React app:", error);
   
-  // Fallback display
-  const root = document.getElementById("root");
-  if (root) {
-    root.innerHTML = '<div style="color: white; padding: 20px; background: #000; text-align: center;"><h2>BingeBoard</h2><p>Loading...</p></div>';
-  }
+  // Redirect to working HTML version instead of showing broken app
+  window.location.replace('/index-simple.html');
 }
