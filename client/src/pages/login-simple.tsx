@@ -8,7 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Eye, EyeOff, Mail, Lock } from "lucide-react";
 import { SiGoogle, SiFacebook } from "react-icons/si";
 import { signInWithRedirect, getRedirectResult, linkWithCredential, fetchSignInMethodsForEmail, FacebookAuthProvider } from 'firebase/auth';
-import { auth, googleProvider, facebookProvider } from '@/firebase/config-simple';
+import { auth, googleProvider, facebookProvider } from '@/firebase/config';
 
 export default function LoginSimple() {
   const [, setLocation] = useLocation();

@@ -1,30 +1,48 @@
-// Firebase configuration for BingeBoard
-import { initializeApp } from 'firebase/app';
+// Firebase configuration using v9 modular syntax
+import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider, FacebookAuthProvider } from 'firebase/auth';
 
-// Firebase configuration
+// Firebase configuration with proper environment variables
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyB45zr8b2HjIx1fzXOuQsHxeQK9wl_wC88",
-  authDomain: `${import.meta.env.VITE_FIREBASE_PROJECT_ID || "bingeboard-73c5f"}.firebaseapp.com`,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "bingeboard-73c5f",
-  storageBucket: `${import.meta.env.VITE_FIREBASE_PROJECT_ID || "bingeboard-73c5f"}.firebasestorage.app`,
+  apiKey: "AIzaSyB45zr8b2HjIx1fzXOuQsHxeQK9wl_wC88",
+  authDomain: "bingeboard-73c5f.firebaseapp.com",
+  projectId: "bingeboard-73c5f",
+  storageBucket: "bingeboard-73c5f.firebasestorage.app",
   messagingSenderId: "145846820194",
-  appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:145846820194:web:047efd7a8e59b36944a03b",
+  appId: "1:145846820194:web:047efd7a8e59b36944a03b",
   measurementId: "G-TB1ZXQ79LB"
 };
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
+// Initialize Firebase app only if it doesn't exist
+const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
 
-// Configure providers
-const googleProvider = new GoogleAuthProvider();
-const facebookProvider = new FacebookAuthProvider();
+// Initialize Firebase Auth and export it
+export const auth = getAuth(app);
 
-// Configure scopes
+// Add debug logging
+console.log('Firebase initialized:', {
+  apiKey: firebaseConfig.apiKey ? 'Set' : 'Missing',
+  authDomain: firebaseConfig.authDomain,
+  projectId: firebaseConfig.projectId,
+  appId: firebaseConfig.appId ? 'Set' : 'Missing',
+  currentDomain: window.location.hostname
+});
+
+// Configure providers with custom parameters for domain compatibility
+export const googleProvider = new GoogleAuthProvider();
+export const facebookProvider = new FacebookAuthProvider();
+
+// Configure scopes and custom parameters
 googleProvider.addScope('profile');
 googleProvider.addScope('email');
-facebookProvider.addScope('email');
+googleProvider.setCustomParameters({
+  prompt: 'select_account',
+  hd: '' // Allow any hosted domain
+});
 
-export { app, auth, googleProvider, facebookProvider };
+facebookProvider.addScope('email');
+facebookProvider.setCustomParameters({
+  display: 'redirect' // Use redirect for better mobile compatibility
+});
+
 export default app;

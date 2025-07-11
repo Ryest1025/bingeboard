@@ -15,7 +15,7 @@ import NotFound from "@/pages/not-found";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import Landing from "@/pages/landing";
 import LoginSimple from "@/pages/login-simple";
-import Home from "@/pages/modern-home-clean";
+import Home from "@/pages/modern-home";
 import ModernDiscover from "@/pages/modern-discover";
 import Activity from "@/pages/activity";
 import Friends from "@/pages/social";
