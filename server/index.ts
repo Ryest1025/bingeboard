@@ -255,6 +255,21 @@ app.use((req, res, next) => {
   next();
 });
 
+// Add mobile test endpoint
+app.get('/test-mobile', (req, res) => {
+  const userAgent = req.get('user-agent') || '';
+  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|Windows Phone|Mobile/i.test(userAgent);
+  
+  res.json({
+    isMobile,
+    userAgent,
+    query: req.query,
+    path: req.path,
+    method: req.method,
+    timestamp: new Date().toISOString()
+  });
+});
+
 (async () => {
   // Initialize Firebase Admin SDK
   initializeFirebaseAdmin();
