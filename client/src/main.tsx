@@ -1,6 +1,6 @@
 import React from "react";
 import { createRoot } from "react-dom/client";
-import TestApp from "./TestApp";
+import App from "./App";
 import "./index.css";
 
 console.log("🚀 MAIN.TSX LOADED - Starting React app");
@@ -20,7 +20,7 @@ try {
     console.log("✅ Root element found, creating React app");
     
     const reactRoot = createRoot(root);
-    reactRoot.render(<TestApp />);
+    reactRoot.render(<App />);
     
     // Remove loading screen after a short delay
     setTimeout(removeLoadingScreen, 1000);

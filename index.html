@@ -111,11 +111,14 @@
     
     <div id="root"></div>
     
+    <script type="module" src="/src/main.tsx"></script>
+    
+    <!-- Fallback BingeBoard display if React fails -->
     <script>
-        // Add BingeBoard directly to bypass React mounting issues
-        const root = document.getElementById('root');
-        if (root) {
-            root.innerHTML = `
+        setTimeout(() => {
+            const root = document.getElementById('root');
+            if (root && (!root.innerHTML || root.innerHTML.trim() === '')) {
+                root.innerHTML = `
                 <div style="
                     background: linear-gradient(to bottom, #000, #0a0a0a);
                     color: #fff;
@@ -380,8 +383,9 @@
                     </div>
                 </div>
             `;
-            console.log('BingeBoard loaded successfully - bypassing React mounting issues');
-        }
+                console.log('BingeBoard fallback loaded - React mounting failed');
+            }
+        }, 3000);
     </script>
 </body>
 </html>
