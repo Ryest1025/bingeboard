@@ -3,6 +3,16 @@ import React from "react";
 export default function App() {
   console.log("🎯 App-debug rendering");
   
+  // Force immediate visibility
+  React.useEffect(() => {
+    console.log("🎯 App-debug useEffect running");
+    const fallback = document.querySelector('.loading-fallback');
+    if (fallback) {
+      fallback.remove();
+      console.log("🎯 Removed loading fallback");
+    }
+  }, []);
+  
   return (
     <div style={{
       position: 'fixed',
@@ -22,20 +32,23 @@ export default function App() {
       <div style={{
         textAlign: 'center',
         padding: '20px',
-        border: '2px solid #14b8a6',
+        border: '3px solid #14b8a6',
         borderRadius: '10px',
-        backgroundColor: '#111111'
+        backgroundColor: '#111111',
+        boxShadow: '0 0 20px #14b8a6'
       }}>
         <div style={{
           color: '#14b8a6',
           marginBottom: '20px',
-          fontSize: '3rem'
+          fontSize: '3rem',
+          fontWeight: 'bold'
         }}>
-          ✅ BingeBoard
+          ✅ BingeBoard Debug
         </div>
         <div style={{
           color: '#ffffff',
-          fontSize: '1.5rem'
+          fontSize: '1.5rem',
+          marginBottom: '10px'
         }}>
           React App Working!
         </div>
@@ -44,7 +57,15 @@ export default function App() {
           fontSize: '1rem',
           marginTop: '10px'
         }}>
-          Loading screen removed successfully
+          If you can see this, React is rendering correctly
+        </div>
+        <div style={{
+          color: '#14b8a6',
+          fontSize: '0.9rem',
+          marginTop: '10px',
+          fontFamily: 'monospace'
+        }}>
+          Check console for step-by-step logs
         </div>
       </div>
     </div>

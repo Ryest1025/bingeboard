@@ -1,38 +1,45 @@
 console.log("🚀 MAIN.TSX LOADED");
 
-// Error handlers first
+// Enhanced error handlers for debugging
 window.addEventListener('error', (e) => {
   console.error('❌ RUNTIME ERROR:', e.error);
   console.error('❌ ERROR MESSAGE:', e.message);
   console.error('❌ ERROR STACK:', e.error?.stack);
+  console.error('❌ ERROR FILE:', e.filename, 'LINE:', e.lineno);
   
-  // Show error on screen
-  const root = document.getElementById('root');
-  if (root) {
-    root.innerHTML = `
-      <div style="color: red; padding: 20px; background: #000; font-family: Arial;">
-        <h2>JavaScript Error</h2>
-        <p><strong>Message:</strong> ${e.message}</p>
-        <p><strong>File:</strong> ${e.filename}:${e.lineno}</p>
-        <pre>${e.error?.stack || 'No stack trace'}</pre>
-      </div>
-    `;
-  }
+  // Show error on screen but don't prevent React from trying to render
+  const errorDiv = document.createElement('div');
+  errorDiv.style.cssText = `
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+    background: rgba(0,0,0,0.9); color: red; padding: 20px; 
+    font-family: Arial; z-index: 99999; overflow: auto;
+  `;
+  errorDiv.innerHTML = `
+    <h2>JavaScript Error Detected</h2>
+    <p><strong>Message:</strong> ${e.message}</p>
+    <p><strong>File:</strong> ${e.filename}:${e.lineno}</p>
+    <pre>${e.error?.stack || 'No stack trace'}</pre>
+    <button onclick="this.parentNode.remove()" style="background: #14b8a6; color: white; padding: 10px; border: none; margin-top: 10px;">Close</button>
+  `;
+  document.body.appendChild(errorDiv);
 });
 
 window.addEventListener('unhandledrejection', (e) => {
   console.error('❌ PROMISE REJECTION:', e.reason);
   
-  // Show error on screen
-  const root = document.getElementById('root');
-  if (root) {
-    root.innerHTML = `
-      <div style="color: red; padding: 20px; background: #000; font-family: Arial;">
-        <h2>Promise Rejection</h2>
-        <p><strong>Reason:</strong> ${e.reason}</p>
-      </div>
-    `;
-  }
+  // Show error but don't prevent React from trying to render
+  const errorDiv = document.createElement('div');
+  errorDiv.style.cssText = `
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+    background: rgba(0,0,0,0.9); color: red; padding: 20px; 
+    font-family: Arial; z-index: 99999; overflow: auto;
+  `;
+  errorDiv.innerHTML = `
+    <h2>Promise Rejection</h2>
+    <p><strong>Reason:</strong> ${e.reason}</p>
+    <button onclick="this.parentNode.remove()" style="background: #14b8a6; color: white; padding: 10px; border: none; margin-top: 10px;">Close</button>
+  `;
+  document.body.appendChild(errorDiv);
 });
 
 // Very simple initialization

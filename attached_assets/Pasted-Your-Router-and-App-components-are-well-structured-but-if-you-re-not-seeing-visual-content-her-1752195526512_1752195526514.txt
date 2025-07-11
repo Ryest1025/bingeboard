@@ -1,0 +1,82 @@
+Your `Router` and `App` components are well-structured, but if you’re not seeing visual content, here are the most likely causes and quick fixes:
+
+---
+
+### **Common Causes for No Visual Content**
+
+1. **CSS Overlap or Z-Index Issue**
+   - If a loading screen or overlay is present, it may cover your app.
+   - Make sure any loading or fallback screen is removed or hidden once React renders.
+
+2. **Component Render Issues**
+   - If a route’s component throws an error or returns `null`, nothing will show.
+   - Use your `ErrorBoundary` to catch and display errors.
+
+3. **Authentication State**
+   - If `isAuthenticated` is `false`, only public routes render.
+   - If your route is not matched, the `NotFound` page will show.
+
+4. **Global Error Handlers**
+   - Your global error handlers silence all errors.  
+     If a component throws, you won’t see any error message—just a blank screen.
+
+---
+
+### **Quick Debug Steps**
+
+1. **Add a visible fallback to your `ErrorBoundary`**  
+   Make sure it displays something if an error occurs.
+
+2. **Temporarily remove or comment out your global error handlers**  
+   This will let you see errors in the console and on the page.
+
+3. **Add a test route/component**  
+   Add a simple route that always renders a visible message:
+   ````jsx
+   <Route path="/test" component={() => <div style={{color: 'lime'}}>Test Route Works</div>} />
+   ````
+
+4. **Check the DOM in DevTools**  
+   Inspect `<div id="root">` to see if your React tree is present but hidden.
+
+---
+
+### **Example: ErrorBoundary Fallback**
+
+````jsx
+import React from "react";
+
+export class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+  componentDidCatch(error, info) {
+    console.error("ErrorBoundary caught:", error, info);
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{ color: "red", padding: "2rem" }}>
+          <h2>Something went wrong.</h2>
+          <pre>{this.state.error?.message}</pre>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+````
+
+---
+
+**Summary:**  
+- Remove or hide overlays after React renders.
+- Temporarily disable global error handlers to see errors.
+- Add a visible test route/component.
+- Use a visible fallback in your `ErrorBoundary`.
+
+Let me know if you want to review a specific route/component or need help with error handling!
