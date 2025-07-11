@@ -67,6 +67,19 @@ export default function App() {
         }}>
           Check console for step-by-step logs
         </div>
+        <div style={{
+          color: '#ffffff',
+          fontSize: '0.8rem',
+          marginTop: '15px',
+          padding: '10px',
+          border: '1px solid #14b8a6',
+          borderRadius: '5px',
+          backgroundColor: '#0a0a0a'
+        }}>
+          <div>Environment: {typeof window !== 'undefined' ? 'Browser' : 'Server'}</div>
+          <div>URL: {typeof window !== 'undefined' ? window.location.href : 'Unknown'}</div>
+          <div>Time: {new Date().toLocaleTimeString()}</div>
+        </div>
       </div>
     </div>
   );

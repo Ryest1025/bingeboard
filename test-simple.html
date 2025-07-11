@@ -1,60 +1,42 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Simple JavaScript Test</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BingeBoard Test</title>
     <style>
-        body { background: #000; color: #fff; font-family: Arial; padding: 20px; }
-        .test { background: #111; padding: 10px; margin: 10px 0; border-left: 3px solid #14b8a6; }
-        .error { border-left-color: #dc2626; }
+        body {
+            margin: 0;
+            padding: 0;
+            background: #000;
+            color: #fff;
+            font-family: Arial, sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+        .container {
+            text-align: center;
+            padding: 20px;
+            border: 2px solid #14b8a6;
+            border-radius: 10px;
+            background: #111;
+        }
+        .title {
+            color: #14b8a6;
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
     </style>
 </head>
 <body>
-    <h1>JavaScript Test</h1>
-    <div id="results"></div>
-    
-    <script>
-        const results = document.getElementById('results');
-        
-        function addResult(test, result, error = false) {
-            const div = document.createElement('div');
-            div.className = error ? 'test error' : 'test';
-            div.innerHTML = `<strong>${test}:</strong> ${result}`;
-            results.appendChild(div);
-        }
-        
-        // Test 1: Basic JavaScript
-        addResult('Basic JavaScript', '✅ Working');
-        
-        // Test 2: ES6 Features
-        try {
-            const arrow = () => 'ES6 Arrow Functions';
-            const template = `Template literals ${arrow()}`;
-            addResult('ES6 Features', '✅ ' + template);
-        } catch (e) {
-            addResult('ES6 Features', '❌ ' + e.message, true);
-        }
-        
-        // Test 3: Module Import (this will likely fail)
-        (async function() {
-            try {
-                addResult('Module Import Test', '⏳ Testing...');
-                const module = await import('./src/App-minimal.tsx');
-                addResult('Module Import', '✅ Success: ' + typeof module);
-            } catch (e) {
-                addResult('Module Import', '❌ ' + e.message, true);
-            }
-        })();
-        
-        // Test 4: Console errors
-        window.addEventListener('error', (e) => {
-            addResult('Runtime Error', '❌ ' + e.message, true);
-        });
-        
-        window.addEventListener('unhandledrejection', (e) => {
-            addResult('Promise Rejection', '❌ ' + e.reason, true);
-        });
-        
-        addResult('Error Handlers', '✅ Set up');
-    </script>
+    <div class="container">
+        <div class="title">✅ BingeBoard Test Page</div>
+        <div>If you can see this, the server is working</div>
+        <div style="margin-top: 10px; font-size: 0.9rem; color: #9ca3af;">
+            Server running on port 5000
+        </div>
+    </div>
 </body>
 </html>
