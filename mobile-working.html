@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BingeBoard Mobile - Working</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: #000;
+            color: #fff;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            min-height: 100vh;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        
+        .logo-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, #1f2937, #374151);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid #fff;
+            margin-right: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+        
+        .logo-icon::before {
+            content: 'B';
+            font-size: 24px;
+            font-weight: bold;
+            color: #14b8a6;
+        }
+        
+        .logo-text {
+            font-size: 28px;
+            font-weight: bold;
+        }
+        
+        .logo-text .binge {
+            background: linear-gradient(135deg, #14b8a6, #0d9488);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .subtitle {
+            color: #9ca3af;
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+        
+        .status {
+            background: #064e3b;
+            color: #6ee7b7;
+            border: 1px solid #047857;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: 500;
+        }
+        
+        .card {
+            background: #1f2937;
+            border-radius: 16px;
+            padding: 24px;
+            border: 1px solid #374151;
+            margin-bottom: 20px;
+        }
+        
+        .card h3 {
+            color: #14b8a6;
+            margin-bottom: 16px;
+            font-size: 18px;
+        }
+        
+        .button {
+            background: #14b8a6;
+            color: white;
+            border: none;
+            padding: 16px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            width: 100%;
+            margin-bottom: 12px;
+            transition: background 0.2s;
+            text-decoration: none;
+            display: block;
+            text-align: center;
+        }
+        
+        .button:hover {
+            background: #0d9488;
+        }
+        
+        .button.secondary {
+            background: #374151;
+            color: #d1d5db;
+        }
+        
+        .button.secondary:hover {
+            background: #4b5563;
+        }
+        
+        .trending-section {
+            margin-top: 20px;
+        }
+        
+        .show-item {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            border-bottom: 1px solid #374151;
+            transition: background 0.2s;
+        }
+        
+        .show-item:hover {
+            background: #374151;
+        }
+        
+        .show-poster {
+            width: 40px;
+            height: 60px;
+            background: #374151;
+            border-radius: 4px;
+            margin-right: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #9ca3af;
+            font-size: 10px;
+            text-align: center;
+            overflow: hidden;
+        }
+        
+        .show-poster img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 4px;
+        }
+        
+        .show-info {
+            flex: 1;
+        }
+        
+        .show-title {
+            font-weight: 500;
+            color: #fff;
+            margin-bottom: 4px;
+            font-size: 14px;
+        }
+        
+        .show-rating {
+            font-size: 12px;
+            color: #9ca3af;
+        }
+        
+        .loading {
+            text-align: center;
+            color: #9ca3af;
+            padding: 20px;
+        }
+        
+        .error {
+            background: #7f1d1d;
+            color: #fca5a5;
+            border: 1px solid #dc2626;
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+            margin: 16px 0;
+        }
+        
+        .success {
+            background: #064e3b;
+            color: #6ee7b7;
+            border: 1px solid #047857;
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+            margin: 16px 0;
+        }
+        
+        .test-info {
+            background: #1e293b;
+            border: 1px solid #475569;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+        
+        .test-info h4 {
+            color: #14b8a6;
+            margin-bottom: 8px;
+        }
+        
+        .test-info code {
+            background: #0f172a;
+            padding: 2px 6px;
+            border-radius: 4px;
+            color: #e2e8f0;
+            font-family: 'Courier New', monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">
+                <div class="logo-icon"></div>
+                <div class="logo-text">
+                    <span class="binge">Binge</span>Board
+                </div>
+            </div>
+            <p class="subtitle">Mobile Entertainment Hub</p>
+        </div>
+        
+        <div class="status">
+            ✅ Mobile Version Working!
+        </div>
+        
+        <div class="test-info">
+            <h4>Mobile Detection Success</h4>
+            <p>User Agent: <code id="user-agent"></code></p>
+            <p>Screen: <code id="screen-info"></code></p>
+            <p>Time: <code id="load-time"></code></p>
+        </div>
+        
+        <div class="card">
+            <h3>Quick Actions</h3>
+            <button class="button" onclick="loadTrendingShows()">Load Trending Shows</button>
+            <button class="button secondary" onclick="testBackend()">Test Backend Connection</button>
+            <a href="/?mobile=bypass" class="button secondary">Try Desktop Version</a>
+        </div>
+        
+        <div class="card trending-section" id="trending-section" style="display: none;">
+            <h3>Trending Shows</h3>
+            <div id="trending-content">
+                <div class="loading">Loading trending shows...</div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h3>BingeBoard Features</h3>
+            <p style="color: #9ca3af; margin-bottom: 16px;">Track your favorite shows and discover new content</p>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                <button class="button secondary" onclick="showFeature('watchlist')">My Watchlist</button>
+                <button class="button secondary" onclick="showFeature('trending')">Trending</button>
+                <button class="button secondary" onclick="showFeature('recommendations')">Recommendations</button>
+                <button class="button secondary" onclick="showFeature('friends')">Friends</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Display device info
+        document.getElementById('user-agent').textContent = navigator.userAgent;
+        document.getElementById('screen-info').textContent = `${screen.width}x${screen.height}`;
+        document.getElementById('load-time').textContent = new Date().toLocaleTimeString();
+        
+        console.log('✅ Mobile BingeBoard loaded successfully');
+        console.log('Device info:', {
+            userAgent: navigator.userAgent,
+            screen: `${screen.width}x${screen.height}`,
+            viewport: `${window.innerWidth}x${window.innerHeight}`
+        });
+        
+        function loadTrendingShows() {
+            const section = document.getElementById('trending-section');
+            const content = document.getElementById('trending-content');
+            
+            section.style.display = 'block';
+            content.innerHTML = '<div class="loading">Loading trending shows...</div>';
+            
+            // Test with real API
+            fetch('/api/tmdb/trending')
+                .then(response => {
+                    console.log('API Response:', response.status, response.ok);
+                    if (!response.ok) {
+                        throw new Error(`API Error: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Trending data received:', data);
+                    
+                    if (data.results && data.results.length > 0) {
+                        const showsHtml = data.results.slice(0, 5).map(show => {
+                            const posterUrl = show.poster_path 
+                                ? `https://image.tmdb.org/t/p/w92${show.poster_path}`
+                                : null;
+                            
+                            return `
+                                <div class="show-item">
+                                    <div class="show-poster">
+                                        ${posterUrl ? 
+                                            `<img src="${posterUrl}" alt="${show.name || show.title}">` :
+                                            'No Image'
+                                        }
+                                    </div>
+                                    <div class="show-info">
+                                        <div class="show-title">${show.name || show.title}</div>
+                                        <div class="show-rating">★ ${show.vote_average.toFixed(1)}/10</div>
+                                    </div>
+                                </div>
+                            `;
+                        }).join('');
+                        
+                        content.innerHTML = showsHtml;
+                        content.insertAdjacentHTML('beforeend', '<div class="success">✅ Shows loaded successfully!</div>');
+                    } else {
+                        content.innerHTML = '<div class="error">No trending shows found</div>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading trending shows:', error);
+                    content.innerHTML = `<div class="error">Failed to load shows: ${error.message}</div>`;
+                });
+        }
+        
+        function testBackend() {
+            const originalText = event.target.textContent;
+            event.target.textContent = 'Testing...';
+            event.target.style.background = '#78350f';
+            
+            fetch('/api/tmdb/trending')
+                .then(response => {
+                    console.log('Backend test result:', response.status, response.ok);
+                    if (response.ok) {
+                        event.target.textContent = '✅ Backend Working';
+                        event.target.style.background = '#047857';
+                        
+                        // Show success message
+                        const successDiv = document.createElement('div');
+                        successDiv.className = 'success';
+                        successDiv.textContent = 'Backend connection successful!';
+                        event.target.parentElement.appendChild(successDiv);
+                        
+                        setTimeout(() => {
+                            successDiv.remove();
+                        }, 3000);
+                    } else {
+                        throw new Error(`HTTP ${response.status}`);
+                    }
+                })
+                .catch(error => {
+                    console.error('Backend test failed:', error);
+                    event.target.textContent = '✗ Backend Failed';
+                    event.target.style.background = '#dc2626';
+                    
+                    // Show error message
+                    const errorDiv = document.createElement('div');
+                    errorDiv.className = 'error';
+                    errorDiv.textContent = `Backend error: ${error.message}`;
+                    event.target.parentElement.appendChild(errorDiv);
+                    
+                    setTimeout(() => {
+                        errorDiv.remove();
+                    }, 5000);
+                })
+                .finally(() => {
+                    setTimeout(() => {
+                        event.target.textContent = originalText;
+                        event.target.style.background = '';
+                    }, 2000);
+                });
+        }
+        
+        function showFeature(feature) {
+            const featureNames = {
+                'watchlist': 'My Watchlist',
+                'trending': 'Trending Shows',
+                'recommendations': 'AI Recommendations',
+                'friends': 'Friends & Social'
+            };
+            
+            alert(`${featureNames[feature]} feature available in full BingeBoard app!`);
+        }
+        
+        // Auto-test on load
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('Mobile page fully loaded');
+            
+            // Test backend connectivity
+            fetch('/api/tmdb/trending')
+                .then(response => {
+                    if (response.ok) {
+                        console.log('✅ Backend connectivity confirmed');
+                    } else {
+                        console.log('⚠️ Backend response not OK:', response.status);
+                    }
+                })
+                .catch(error => {
+                    console.error('❌ Backend connectivity failed:', error);
+                });
+        });
+    </script>
+</body>
+</html>

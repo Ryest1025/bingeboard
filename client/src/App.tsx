@@ -53,6 +53,15 @@ import MobileDiagnostic from "@/pages/mobile-diagnostic";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
+  
+  // Remove loading screen after React mounts
+  useEffect(() => {
+    const loadingScreen = document.getElementById('loadingScreen');
+    if (loadingScreen) {
+      loadingScreen.style.display = 'none';
+      console.log('✅ Loading screen removed after React mount');
+    }
+  }, []);
   const { toast } = useToast();
   const [location] = useLocation();
 

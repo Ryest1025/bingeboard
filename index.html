@@ -13,7 +13,7 @@
         // Check if mobile and redirect
         if (isMobileDevice() && !window.location.search.includes('mobile=bypass')) {
             console.log('Mobile device detected - redirecting to mobile version');
-            window.location.href = '/mobile-fix.html';
+            window.location.replace('/mobile-working.html');
         }
     </script>
     <style>

@@ -5,6 +5,62 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Mobile device optimizations */
+.mobile-device {
+  /* Improve touch responsiveness */
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.mobile-device * {
+  /* Prevent text selection on mobile */
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.mobile-device input,
+.mobile-device textarea,
+.mobile-device [contenteditable] {
+  /* Allow selection in input fields */
+  -webkit-user-select: auto;
+  user-select: auto;
+}
+
+/* Mobile-specific button improvements */
+.mobile-device button {
+  min-height: 44px; /* Apple's recommended minimum touch target */
+  min-width: 44px;
+  cursor: pointer;
+}
+
+/* Mobile scroll improvements */
+.mobile-device {
+  -webkit-overflow-scrolling: touch;
+  overflow-scrolling: touch;
+}
+
+/* Prevent zoom on input focus */
+.mobile-device input,
+.mobile-device textarea,
+.mobile-device select {
+  font-size: 16px; /* Prevents zoom on iOS */
+}
+
+/* Mobile-optimized loading states */
+.mobile-device .loading {
+  transform: scale(1.2);
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
 /* Font Standards */
 * {
   font-family: 'Inter', system-ui, -apple-system, sans-serif;

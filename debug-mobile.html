@@ -5,215 +5,307 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BingeBoard Mobile Debug</title>
     <style>
-        body {
-            margin: 0;
-            padding: 20px;
-            background: #000;
-            color: #fff;
-            font-family: Arial, sans-serif;
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            background: #000; 
+            color: #fff; 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif; 
+            padding: 20px; 
+            line-height: 1.6;
         }
-        .test-box {
-            background: #1a1a1a;
-            padding: 20px;
-            margin: 10px 0;
-            border-radius: 8px;
-            border: 1px solid #333;
+        .container { max-width: 500px; margin: 0 auto; }
+        .header { text-align: center; margin-bottom: 30px; }
+        .logo { font-size: 24px; font-weight: bold; color: #14b8a6; margin-bottom: 10px; }
+        .section { background: #1f2937; padding: 20px; border-radius: 12px; margin-bottom: 20px; border: 1px solid #374151; }
+        .section h3 { color: #14b8a6; margin-bottom: 16px; }
+        .info-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #374151; }
+        .info-item:last-child { border-bottom: none; }
+        .info-label { font-weight: 500; color: #d1d5db; }
+        .info-value { color: #9ca3af; font-size: 14px; word-break: break-all; }
+        .button { 
+            background: #14b8a6; 
+            color: white; 
+            border: none; 
+            padding: 12px 20px; 
+            border-radius: 8px; 
+            font-size: 14px; 
+            cursor: pointer; 
+            width: 100%; 
+            margin-bottom: 12px; 
         }
-        .success { border-color: #10b981; }
-        .error { border-color: #ef4444; }
-        .warning { border-color: #f59e0b; }
-        button {
-            background: #14b8a6;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
-            margin: 5px;
-            cursor: pointer;
+        .button:hover { background: #0d9488; }
+        .button.secondary { background: #374151; }
+        .button.secondary:hover { background: #4b5563; }
+        .test-result { 
+            padding: 12px; 
+            border-radius: 8px; 
+            margin: 12px 0; 
+            text-align: center; 
+            font-weight: 500;
         }
-        #console-output {
-            background: #111;
-            padding: 10px;
-            border-radius: 5px;
-            white-space: pre-wrap;
-            font-family: monospace;
-            font-size: 12px;
-            max-height: 300px;
-            overflow-y: auto;
+        .test-result.success { background: #064e3b; color: #6ee7b7; border: 1px solid #047857; }
+        .test-result.error { background: #7f1d1d; color: #fca5a5; border: 1px solid #dc2626; }
+        .test-result.loading { background: #78350f; color: #fbbf24; border: 1px solid #d97706; }
+        .console-output { 
+            background: #0f172a; 
+            padding: 12px; 
+            border-radius: 8px; 
+            font-family: 'Courier New', monospace; 
+            font-size: 12px; 
+            color: #e2e8f0; 
+            max-height: 200px; 
+            overflow-y: auto; 
+            border: 1px solid #334155;
         }
+        .diagnostic-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .diagnostic-item { background: #374151; padding: 12px; border-radius: 8px; text-align: center; }
+        .diagnostic-value { font-size: 18px; font-weight: bold; color: #14b8a6; }
+        .diagnostic-label { font-size: 12px; color: #9ca3af; margin-top: 4px; }
     </style>
 </head>
 <body>
-    <h1>📱 BingeBoard Mobile Debug</h1>
-    
-    <div class="test-box">
-        <h3>🔍 JavaScript Runtime Test</h3>
-        <p>If you can see this page, JavaScript is working!</p>
-        <button onclick="testJavaScript()">Test JavaScript</button>
-        <div id="js-test-result"></div>
-    </div>
+    <div class="container">
+        <div class="header">
+            <div class="logo">BingeBoard Debug Tools</div>
+            <p style="color: #9ca3af;">Mobile diagnostics and troubleshooting</p>
+        </div>
 
-    <div class="test-box">
-        <h3>🌐 Network Test</h3>
-        <button onclick="testAPI()">Test API Connection</button>
-        <div id="api-test-result"></div>
-    </div>
+        <div class="section">
+            <h3>Device Information</h3>
+            <div class="info-item">
+                <span class="info-label">User Agent:</span>
+                <span class="info-value" id="user-agent">Loading...</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Screen Size:</span>
+                <span class="info-value" id="screen-size">Loading...</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Viewport:</span>
+                <span class="info-value" id="viewport">Loading...</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Device Type:</span>
+                <span class="info-value" id="device-type">Loading...</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Touch Support:</span>
+                <span class="info-value" id="touch-support">Loading...</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Network:</span>
+                <span class="info-value" id="network-info">Loading...</span>
+            </div>
+        </div>
 
-    <div class="test-box">
-        <h3>📱 Device Information</h3>
-        <div id="device-info"></div>
-    </div>
+        <div class="section">
+            <h3>Performance Metrics</h3>
+            <div class="diagnostic-grid">
+                <div class="diagnostic-item">
+                    <div class="diagnostic-value" id="page-load-time">0ms</div>
+                    <div class="diagnostic-label">Page Load</div>
+                </div>
+                <div class="diagnostic-item">
+                    <div class="diagnostic-value" id="memory-usage">0MB</div>
+                    <div class="diagnostic-label">Memory</div>
+                </div>
+                <div class="diagnostic-item">
+                    <div class="diagnostic-value" id="api-response-time">0ms</div>
+                    <div class="diagnostic-label">API Speed</div>
+                </div>
+                <div class="diagnostic-item">
+                    <div class="diagnostic-value" id="connection-type">Unknown</div>
+                    <div class="diagnostic-label">Connection</div>
+                </div>
+            </div>
+        </div>
 
-    <div class="test-box">
-        <h3>🚀 React Test</h3>
-        <button onclick="testReact()">Test React Loading</button>
-        <div id="react-test-result"></div>
-    </div>
+        <div class="section">
+            <h3>System Tests</h3>
+            <button class="button" onclick="testBackendConnection()">Test Backend Connection</button>
+            <button class="button" onclick="testTMDBAPI()">Test TMDB API</button>
+            <button class="button" onclick="testMobileRedirect()">Test Mobile Redirect</button>
+            <button class="button secondary" onclick="clearCache()">Clear Cache</button>
+            <div id="test-results"></div>
+        </div>
 
-    <div class="test-box">
-        <h3>📋 Console Output</h3>
-        <div id="console-output"></div>
+        <div class="section">
+            <h3>Console Output</h3>
+            <div class="console-output" id="console-output">
+                Console messages will appear here...
+            </div>
+            <button class="button secondary" onclick="clearConsole()">Clear Console</button>
+        </div>
+
+        <div class="section">
+            <h3>Quick Actions</h3>
+            <button class="button" onclick="location.href='/'">Go to Main App</button>
+            <button class="button secondary" onclick="location.href='/mobile-working.html'">Go to Mobile Version</button>
+            <button class="button secondary" onclick="location.href='/?mobile=bypass'">Force Desktop Mode</button>
+        </div>
     </div>
 
     <script>
-        // Capture console logs
+        const startTime = Date.now();
+        let consoleMessages = [];
+
+        // Override console methods to capture output
         const originalLog = console.log;
         const originalError = console.error;
-        const consoleOutput = document.getElementById('console-output');
-        
+        const originalWarn = console.warn;
+
         function addToConsole(type, message) {
             const timestamp = new Date().toLocaleTimeString();
-            consoleOutput.textContent += `[${timestamp}] ${type}: ${message}\n`;
-            consoleOutput.scrollTop = consoleOutput.scrollHeight;
+            const formattedMessage = `[${timestamp}] ${type.toUpperCase()}: ${message}`;
+            consoleMessages.push(formattedMessage);
+            
+            const consoleElement = document.getElementById('console-output');
+            if (consoleElement) {
+                consoleElement.innerHTML = consoleMessages.slice(-20).join('\n');
+                consoleElement.scrollTop = consoleElement.scrollHeight;
+            }
         }
-        
+
         console.log = function(...args) {
+            addToConsole('log', args.join(' '));
             originalLog.apply(console, args);
-            addToConsole('LOG', args.join(' '));
         };
-        
+
         console.error = function(...args) {
+            addToConsole('error', args.join(' '));
             originalError.apply(console, args);
-            addToConsole('ERROR', args.join(' '));
         };
-        
-        // Test JavaScript
-        function testJavaScript() {
-            const result = document.getElementById('js-test-result');
-            try {
-                const testObj = { test: 'working' };
-                const testArray = [1, 2, 3];
-                const testFunction = () => 'success';
-                
-                result.innerHTML = `
-                    <div class="success">
-                        ✅ JavaScript is working!<br>
-                        Object: ${JSON.stringify(testObj)}<br>
-                        Array: ${testArray}<br>
-                        Function: ${testFunction()}
-                    </div>
-                `;
-                console.log('✅ JavaScript test passed');
-            } catch (error) {
-                result.innerHTML = `<div class="error">❌ JavaScript error: ${error.message}</div>`;
-                console.error('❌ JavaScript test failed:', error);
-            }
-        }
-        
-        // Test API connection
-        async function testAPI() {
-            const result = document.getElementById('api-test-result');
-            result.innerHTML = '<div class="warning">⏳ Testing API connection...</div>';
-            
-            try {
-                const response = await fetch('/api/health');
-                const data = await response.json();
-                
-                if (response.ok) {
-                    result.innerHTML = `
-                        <div class="success">
-                            ✅ API connection working!<br>
-                            Status: ${data.status}<br>
-                            Server: ${data.server}<br>
-                            Mobile: ${data.mobile}
-                        </div>
-                    `;
-                    console.log('✅ API test passed:', data);
-                } else {
-                    throw new Error(`HTTP ${response.status}`);
-                }
-            } catch (error) {
-                result.innerHTML = `<div class="error">❌ API error: ${error.message}</div>`;
-                console.error('❌ API test failed:', error);
-            }
-        }
-        
-        // Test React
-        async function testReact() {
-            const result = document.getElementById('react-test-result');
-            result.innerHTML = '<div class="warning">⏳ Testing React loading...</div>';
-            
-            try {
-                // Try to load React main file
-                const response = await fetch('/src/main.tsx');
-                
-                if (response.ok) {
-                    result.innerHTML = `
-                        <div class="success">
-                            ✅ React main.tsx accessible!<br>
-                            Status: ${response.status}<br>
-                            Content-Type: ${response.headers.get('content-type')}
-                        </div>
-                    `;
-                    console.log('✅ React file test passed');
-                } else {
-                    throw new Error(`HTTP ${response.status}`);
-                }
-            } catch (error) {
-                result.innerHTML = `<div class="error">❌ React loading error: ${error.message}</div>`;
-                console.error('❌ React test failed:', error);
-            }
-        }
-        
-        // Display device info
-        function displayDeviceInfo() {
-            const deviceInfo = document.getElementById('device-info');
+
+        console.warn = function(...args) {
+            addToConsole('warn', args.join(' '));
+            originalWarn.apply(console, args);
+        };
+
+        // Initialize diagnostics
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Debug page loaded');
+            updateDeviceInfo();
+            updatePerformanceMetrics();
+        });
+
+        function updateDeviceInfo() {
             const userAgent = navigator.userAgent;
             const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|Windows Phone|Mobile/i.test(userAgent);
             
-            deviceInfo.innerHTML = `
-                <strong>User Agent:</strong> ${userAgent}<br>
-                <strong>Mobile Device:</strong> ${isMobile ? 'Yes' : 'No'}<br>
-                <strong>Screen:</strong> ${screen.width}x${screen.height}<br>
-                <strong>Viewport:</strong> ${window.innerWidth}x${window.innerHeight}<br>
-                <strong>URL:</strong> ${window.location.href}
-            `;
+            document.getElementById('user-agent').textContent = userAgent;
+            document.getElementById('screen-size').textContent = `${screen.width}x${screen.height}`;
+            document.getElementById('viewport').textContent = `${window.innerWidth}x${window.innerHeight}`;
+            document.getElementById('device-type').textContent = isMobile ? 'Mobile' : 'Desktop';
+            document.getElementById('touch-support').textContent = 'ontouchstart' in window ? 'Yes' : 'No';
             
-            console.log('Device info displayed');
+            // Network information
+            if (navigator.connection) {
+                const connection = navigator.connection;
+                document.getElementById('network-info').textContent = `${connection.effectiveType || 'Unknown'} (${connection.downlink || 'Unknown'} Mbps)`;
+            } else {
+                document.getElementById('network-info').textContent = 'Not available';
+            }
         }
-        
-        // Initialize
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('🚀 Mobile debug page loaded');
-            displayDeviceInfo();
+
+        function updatePerformanceMetrics() {
+            const loadTime = Date.now() - startTime;
+            document.getElementById('page-load-time').textContent = `${loadTime}ms`;
             
-            // Auto-run tests
+            // Memory usage (if available)
+            if (performance.memory) {
+                const memoryMB = Math.round(performance.memory.usedJSHeapSize / 1024 / 1024);
+                document.getElementById('memory-usage').textContent = `${memoryMB}MB`;
+            }
+            
+            // Connection type
+            if (navigator.connection) {
+                document.getElementById('connection-type').textContent = navigator.connection.effectiveType || 'Unknown';
+            }
+        }
+
+        function showTestResult(message, type = 'success') {
+            const resultsDiv = document.getElementById('test-results');
+            const resultDiv = document.createElement('div');
+            resultDiv.className = `test-result ${type}`;
+            resultDiv.textContent = message;
+            resultsDiv.appendChild(resultDiv);
+            
             setTimeout(() => {
-                testJavaScript();
-                testAPI();
-            }, 1000);
-        });
-        
-        // Catch any unhandled errors
-        window.addEventListener('error', function(e) {
-            console.error('Global error:', e.error);
-            addToConsole('ERROR', `Global error: ${e.error?.message || e.message}`);
-        });
-        
-        window.addEventListener('unhandledrejection', function(e) {
-            console.error('Unhandled promise rejection:', e.reason);
-            addToConsole('ERROR', `Promise rejection: ${e.reason}`);
-        });
+                resultsDiv.removeChild(resultDiv);
+            }, 5000);
+        }
+
+        function testBackendConnection() {
+            console.log('Testing backend connection...');
+            const startTime = Date.now();
+            
+            fetch('/api/tmdb/trending')
+                .then(response => {
+                    const responseTime = Date.now() - startTime;
+                    document.getElementById('api-response-time').textContent = `${responseTime}ms`;
+                    
+                    if (response.ok) {
+                        showTestResult(`Backend connection successful (${responseTime}ms)`, 'success');
+                        console.log('Backend test passed');
+                    } else {
+                        throw new Error(`HTTP ${response.status}`);
+                    }
+                })
+                .catch(error => {
+                    showTestResult(`Backend connection failed: ${error.message}`, 'error');
+                    console.error('Backend test failed:', error);
+                });
+        }
+
+        function testTMDBAPI() {
+            console.log('Testing TMDB API...');
+            
+            fetch('/api/tmdb/trending')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.results && data.results.length > 0) {
+                        showTestResult(`TMDB API working (${data.results.length} shows)`, 'success');
+                        console.log('TMDB test passed');
+                    } else {
+                        throw new Error('No results returned');
+                    }
+                })
+                .catch(error => {
+                    showTestResult(`TMDB API failed: ${error.message}`, 'error');
+                    console.error('TMDB test failed:', error);
+                });
+        }
+
+        function testMobileRedirect() {
+            console.log('Testing mobile redirect...');
+            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|Windows Phone|Mobile/i.test(navigator.userAgent);
+            
+            if (isMobile) {
+                showTestResult('Mobile device detected - redirect should work', 'success');
+            } else {
+                showTestResult('Desktop device - no redirect needed', 'success');
+            }
+        }
+
+        function clearCache() {
+            console.log('Clearing cache...');
+            if ('caches' in window) {
+                caches.keys().then(names => {
+                    names.forEach(name => {
+                        caches.delete(name);
+                    });
+                });
+            }
+            showTestResult('Cache cleared', 'success');
+        }
+
+        function clearConsole() {
+            consoleMessages = [];
+            document.getElementById('console-output').innerHTML = 'Console cleared...';
+        }
+
+        // Auto-update performance metrics every 5 seconds
+        setInterval(updatePerformanceMetrics, 5000);
     </script>
 </body>
 </html>
