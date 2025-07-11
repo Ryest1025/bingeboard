@@ -48,11 +48,13 @@ app.use((req, res, next) => {
   const userAgent = req.get('user-agent') || '';
   const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|Windows Phone|Mobile/i.test(userAgent);
   
-  console.log(`🌍 Request: ${req.method} ${req.get('host')}${req.path} - Mobile: ${isMobile}`);
+  console.log(`🌍 Request: ${req.method} ${req.get('host')}${req.path} - Mobile: ${isMobile} - UA: ${userAgent.substring(0, 50)}...`);
   
-  // Serve mobile HTML directly for mobile devices requesting the root path
-  if (isMobile && req.path === '/' && req.method === 'GET') {
-    console.log('📱 Mobile device detected - serving mobile HTML directly');
+  // Serve mobile HTML directly for mobile devices requesting the root path or any main routes
+  if (isMobile && (req.path === '/' || req.path === '/discover' || req.path === '/lists' || req.path === '/social' || req.path === '/profile') && req.method === 'GET') {
+    console.log('📱 MOBILE DEVICE DETECTED - SERVING MOBILE HTML DIRECTLY');
+    console.log('📱 User Agent:', userAgent);
+    console.log('📱 Requested Path:', req.path);
     
     const mobileHtml = `
 <!DOCTYPE html>
