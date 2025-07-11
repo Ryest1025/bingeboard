@@ -21,7 +21,6 @@ app.use(cors({
     const allowedOrigins = [
       'https://www.joinbingeboard.com',
       'https://joinbingeboard.com',
-      'https://80d1bb7f-86b2-4c58-a8e0-62a1673122a3-00-2vv88inpi4v1.riker.replit.dev',
       /\.replit\.dev$/
     ];
     
@@ -44,14 +43,48 @@ app.use(cors({
 // CRITICAL: Mobile detection FIRST - before any other middleware
 app.use((req, res, next) => {
   const userAgent = req.get('user-agent') || '';
-  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|Windows Phone|Mobile|IEMobile|Opera Mini/i.test(userAgent);
+  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|Windows Phone|Mobile/i.test(userAgent);
   
-  console.log(`🚀 FIRST MIDDLEWARE - Mobile check: ${isMobile} - Path: ${req.path} - UA: ${userAgent.substring(0, 100)}`);
+  console.log(`🚀 FIRST MIDDLEWARE - Mobile check: ${isMobile} - Path: ${req.path}`);
   
   // Serve mobile HTML for ANY non-API request from mobile devices OR force mobile mode
   if ((isMobile || req.query.mobile === 'true') && !req.path.startsWith('/api') && !req.path.includes('.') && req.method === 'GET') {
-    console.log('📱 MOBILE REDIRECT ACTIVATED - SERVING MOBILE-SIMPLE.HTML');
-    return res.sendFile(path.join(__dirname, '..', 'mobile-simple.html'));
+    console.log('📱 MOBILE REDIRECT ACTIVATED - SERVING MOBILE HTML NOW');
+    console.log('📱 Mobile detection:', isMobile, 'Force mobile:', req.query.mobile === 'true');
+    
+    const mobileHtml = `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>BingeBoard Mobile - Working</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: #000; color: #fff; font-family: -apple-system, BlinkMacSystemFont, sans-serif; padding: 20px; }
+        .container { max-width: 100%; text-align: center; }
+        .logo { font-size: 32px; font-weight: bold; margin: 40px 0; }
+        .logo .binge { background: linear-gradient(135deg, #14b8a6, #0d9488); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .status { background: #064e3b; color: #6ee7b7; padding: 20px; border-radius: 12px; margin: 20px 0; }
+        .info { color: #9ca3af; font-size: 14px; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo"><span class="binge">Binge</span>Board</div>
+        <div class="status">✅ Mobile Version Loaded Successfully!</div>
+        <div class="info">Server-side mobile detection working</div>
+        <div class="info">Time: ${new Date().toLocaleString()}</div>
+        <div class="info">User Agent: ${userAgent.substring(0, 50)}...</div>
+    </div>
+    <script>
+        console.log('📱 Mobile BingeBoard loaded successfully via server redirect');
+        console.log('📱 User Agent:', navigator.userAgent);
+        console.log('📱 Screen:', window.innerWidth + 'x' + window.innerHeight);
+    </script>
+</body>
+</html>`;
+    
+    return res.send(mobileHtml);
   }
   
   next();
@@ -63,7 +96,7 @@ app.use(express.urlencoded({ extended: false, limit: '50mb' }));
 // Secondary mobile detection middleware (backup)
 app.use((req, res, next) => {
   const userAgent = req.get('user-agent') || '';
-  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|Windows Phone|Mobile|IEMobile|Opera Mini/i.test(userAgent);
+  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|Windows Phone|Mobile/i.test(userAgent);
   
   console.log(`🌍 Request: ${req.method} ${req.get('host')}${req.path} - Mobile: ${isMobile} - UA: ${userAgent.substring(0, 50)}...`);
   
@@ -222,21 +255,6 @@ app.use((req, res, next) => {
   next();
 });
 
-// Add mobile test endpoint
-app.get('/test-mobile', (req, res) => {
-  const userAgent = req.get('user-agent') || '';
-  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|Windows Phone|Mobile/i.test(userAgent);
-  
-  res.json({
-    isMobile,
-    userAgent,
-    query: req.query,
-    path: req.path,
-    method: req.method,
-    timestamp: new Date().toISOString()
-  });
-});
-
 (async () => {
   // Initialize Firebase Admin SDK
   initializeFirebaseAdmin();
@@ -251,16 +269,6 @@ app.get('/test-mobile', (req, res) => {
     throw err;
   });
 
-  // Serve static HTML files before Vite setup
-  app.use(express.static('.', {
-    extensions: ['html'],
-    setHeaders: (res, path) => {
-      if (path.endsWith('.html')) {
-        res.setHeader('Cache-Control', 'no-cache');
-      }
-    }
-  }));
-  
   // importantly only setup vite in development and after
   // setting up all the other routes so the catch-all route
   // doesn't interfere with the other routes
@@ -270,8 +278,10 @@ app.get('/test-mobile', (req, res) => {
     serveStatic(app);
   }
 
-  // Use environment port or default to 5000
-  const port = parseInt(process.env.PORT || '5000');
+  // ALWAYS serve the app on port 5000
+  // this serves both the API and the client.
+  // It is the only port that is not firewalled.
+  const port = 5000;
   
   server.on('error', (err: any) => {
     if (err.code === 'EADDRINUSE') {

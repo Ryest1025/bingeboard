@@ -18,16 +18,16 @@ export function useAuth(): AuthState {
   useEffect(() => {
     let isMounted = true;
 
-    // Mobile detection and redirect - DISABLED to prevent desktop redirect
-    // const userAgent = navigator.userAgent || '';
-    // const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|Windows Phone|Mobile/i.test(userAgent);
-    // const bypassMobile = window.location.search.includes('mobile=bypass');
+    // Mobile detection and redirect - only on first load
+    const userAgent = navigator.userAgent || '';
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|Windows Phone|Mobile/i.test(userAgent);
+    const bypassMobile = window.location.search.includes('mobile=bypass');
     
-    // if (isMobile && !bypassMobile && window.location.pathname === '/') {
-    //   console.log('📱 Mobile device detected - redirecting to mobile version');
-    //   window.location.href = '/mobile-working.html';
-    //   return;
-    // }
+    if (isMobile && !bypassMobile && window.location.pathname === '/') {
+      console.log('📱 Mobile device detected - redirecting to mobile version');
+      window.location.href = '/mobile-working.html';
+      return;
+    }
 
     // Desktop flow with timeout protection
     const loadingTimeout = setTimeout(() => {
