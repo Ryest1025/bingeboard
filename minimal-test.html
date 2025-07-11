@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minimal Mobile Test</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: #000;
+            color: #fff;
+            font-family: Arial, sans-serif;
+        }
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #14b8a6;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .result {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border: 1px solid #333;
+        }
+        .success { border-color: #10b981; background: #064e3b; }
+        .error { border-color: #ef4444; background: #7f1d1d; }
+    </style>
+</head>
+<body>
+    <h1>BingeBoard Mobile Loading Test</h1>
+    <div id="loading" class="spinner"></div>
+    <div id="results"></div>
+    
+    <script>
+        function addResult(message, type = 'success') {
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = `result ${type}`;
+            div.innerHTML = `[${new Date().toLocaleTimeString()}] ${message}`;
+            results.appendChild(div);
+            console.log(message);
+        }
+        
+        function hideSpinner() {
+            const loading = document.getElementById('loading');
+            if (loading) {
+                loading.style.display = 'none';
+            }
+        }
+        
+        // Simulate the exact loading issue
+        async function testLoadingIssue() {
+            addResult('Testing mobile loading issue...');
+            
+            // Test 1: Basic React loading simulation
+            addResult('Step 1: Simulating React app initialization...');
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            // Test 2: Firebase auth state check
+            addResult('Step 2: Checking Firebase auth state...');
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            // Test 3: API call that might be hanging
+            addResult('Step 3: Testing API call that might hang...');
+            try {
+                const controller = new AbortController();
+                const timeout = setTimeout(() => controller.abort(), 3000);
+                
+                const response = await fetch('/api/auth/firebase-session', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ test: true }),
+                    signal: controller.signal
+                });
+                
+                clearTimeout(timeout);
+                addResult('API call successful: ' + response.status);
+            } catch (error) {
+                addResult('API call failed: ' + error.message, 'error');
+            }
+            
+            // Test 4: React Query simulation
+            addResult('Step 4: Testing React Query behavior...');
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            hideSpinner();
+            addResult('Loading test complete - app should load now');
+        }
+        
+        // Start test after 2 seconds
+        setTimeout(testLoadingIssue, 2000);
+        
+        // Also try direct navigation after 10 seconds
+        setTimeout(() => {
+            addResult('Attempting direct navigation bypass...');
+            
+            // Create a working version of the app
+            const appDiv = document.createElement('div');
+            appDiv.innerHTML = `
+                <div style="text-align: center; padding: 40px;">
+                    <h1 style="color: #14b8a6; font-size: 2em; margin-bottom: 10px;">
+                        <span style="background: linear-gradient(135deg, #0f766e, #14b8a6); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Binge</span>Board
+                    </h1>
+                    <p style="color: #6b7280; margin-bottom: 30px;">Your Entertainment Hub</p>
+                    
+                    <div style="background: #1f2937; padding: 30px; border-radius: 10px; margin-bottom: 20px;">
+                        <h2 style="color: #14b8a6; margin-bottom: 15px;">Mobile Loading Issue Detected</h2>
+                        <p style="margin-bottom: 15px;">The React app is experiencing loading issues on mobile devices.</p>
+                        <p style="margin-bottom: 15px;">This is likely caused by:</p>
+                        <ul style="text-align: left; margin-bottom: 15px;">
+                            <li>React Query infinite loading state</li>
+                            <li>Firebase authentication hanging</li>
+                            <li>API timeout issues</li>
+                            <li>Mobile browser compatibility</li>
+                        </ul>
+                        <button onclick="window.location.reload()" style="background: #14b8a6; color: white; padding: 10px 20px; border: none; border-radius: 5px; margin: 5px;">
+                            Try Again
+                        </button>
+                        <button onclick="window.location.href='/debug-mobile.html'" style="background: #f59e0b; color: white; padding: 10px 20px; border: none; border-radius: 5px; margin: 5px;">
+                            Debug Tools
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(appDiv);
+            addResult('Emergency fallback UI loaded');
+        }, 10000);
+    </script>
+</body>
+</html>

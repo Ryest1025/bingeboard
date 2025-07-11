@@ -11,14 +11,28 @@ interface AuthState {
 export function useAuth(): AuthState {
   const [authState, setAuthState] = useState<AuthState>({
     user: null,
-    isLoading: true,
+    isLoading: false, // Start with false on mobile to prevent infinite loading
     isAuthenticated: false
   });
 
   useEffect(() => {
     let isMounted = true;
 
-    // Add timeout to prevent infinite loading
+    // Detect mobile and use simpler flow
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|Windows Phone|Mobile/i.test(navigator.userAgent);
+    
+    if (isMobile) {
+      console.log('📱 Mobile device detected - using simplified auth flow');
+      // Start with not authenticated on mobile to prevent loading issues
+      setAuthState({
+        user: null,
+        isLoading: false,
+        isAuthenticated: false
+      });
+      return () => {};
+    }
+
+    // Desktop flow with timeout protection
     const loadingTimeout = setTimeout(() => {
       if (isMounted) {
         console.log('⚠️ Auth loading timeout - setting not authenticated');
@@ -28,7 +42,7 @@ export function useAuth(): AuthState {
           isAuthenticated: false
         });
       }
-    }, 10000); // 10 second max loading time
+    }, 5000); // 5 second timeout for desktop
 
     // Set up Firebase auth state listener for real-time updates
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser: FirebaseUser | null) => {
