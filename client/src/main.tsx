@@ -59,7 +59,7 @@ async function initApp() {
     
     // Test App import
     console.log("✅ STEP 5: Importing App");
-    const AppModule = await import("./App-fresh");
+    const AppModule = await import("./App-test");
     console.log("✅ STEP 6: App module:", AppModule);
     console.log("✅ STEP 7: App component:", AppModule.default);
     
@@ -72,7 +72,12 @@ async function initApp() {
       const reactRoot = createRoot(root);
       
       console.log("✅ STEP 10: Rendering component");
-      reactRoot.render(React.createElement(AppModule.default));
+      try {
+        reactRoot.render(React.createElement(AppModule.default));
+        console.log("✅ STEP 10a: React render call successful");
+      } catch (renderError) {
+        console.error("❌ React render error:", renderError);
+      }
       
       console.log("✅ STEP 11: SUCCESS - React app rendered");
       
