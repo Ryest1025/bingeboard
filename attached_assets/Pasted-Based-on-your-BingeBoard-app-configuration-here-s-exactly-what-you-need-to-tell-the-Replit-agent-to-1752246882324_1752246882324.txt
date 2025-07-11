@@ -1,0 +1,58 @@
+Based on your BingeBoard app configuration, here's exactly what you need to tell the Replit agent to fix the mobile app issue:
+
+## **Tell the Replit Agent:**
+
+"My BingeBoard app loads on web but not on mobile. I need help setting up the required environment variables and Firebase configuration for mobile compatibility. Here's what needs to be done:
+
+### **1. Add these Secrets in Replit's Secrets tab:**
+
+```
+FIREBASE_API_KEY=your_firebase_api_key_here
+FIREBASE_PROJECT_ID=your_firebase_project_id_here
+FIREBASE_APP_ID=your_firebase_app_id_here
+FIREBASE_MESSAGING_SENDER_ID=your_firebase_messaging_sender_id_here
+FIREBASE_ADMIN_KEY=your_firebase_admin_service_account_json_here
+SESSION_SECRET=your_random_32_character_session_secret_here
+TMDB_API_KEY=your_tmdb_api_key_here
+```
+
+### **2. Enable PostgreSQL database:**
+Make sure the .replit file includes `postgresql-16` in the modules section (it should already be there).
+
+### **3. Firebase Console Setup:**
+I need to add these domains to my Firebase project's authorized domains:
+- `https://[my-repl-name].[my-username].repl.co`
+- `https://[my-repl-name].[my-username].replit.dev`
+
+### **4. The specific issue:**
+The app works on desktop but fails on mobile browsers. The error is likely related to:
+- Missing Firebase configuration
+- CORS issues with mobile browsers
+- Session cookies not working on mobile
+- Database connection problems
+
+### **5. Files already configured for Replit:**
+- .env file uses Replit environment variable syntax
+- index.ts has CORS configured for `.repl.co` domains
+- auth.ts has mobile-friendly session settings
+- db.ts supports both `REPLIT_DB_URL` and external database
+
+Can you help me:
+1. Set up the Firebase project and get the required API keys?
+2. Add all the secrets to Replit's environment?
+3. Test the mobile functionality?
+4. Debug any remaining mobile-specific issues?"
+
+---
+
+## **Additional Context for the Agent:**
+
+"This is a React + TypeScript app with:
+- Firebase authentication
+- PostgreSQL database (using Replit's built-in or Neon)
+- Express.js backend
+- Mobile-responsive design that should work on phones
+
+The main issue is that mobile browsers can't authenticate or load the app properly, while desktop browsers work fine."
+
+This gives the Replit agent all the specific information they need to help you configure the environment variables, set up Firebase, and debug the mobile compatibility issues.
