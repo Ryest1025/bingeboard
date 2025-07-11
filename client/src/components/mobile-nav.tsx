@@ -15,7 +15,7 @@ export default function MobileNav() {
     { path: "/", icon: HomeIcon, label: "Home" },
     { path: "/discover", icon: DiscoverIcon, label: "Discover" },
     { path: "/lists", icon: List, label: "Lists" },
-    { path: "/friends", icon: FriendsIcon, label: "Social" },
+    { path: "/social", icon: FriendsIcon, label: "Social" },
     { path: "/profile", icon: ProfileIcon, label: "Profile" },
   ];
 
