@@ -159,17 +159,11 @@ function Router() {
   );
 }
 
-function App() {
+export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <ErrorBoundary>
-          <style>{`
-            @keyframes spin {
-              0% { transform: rotate(0deg); }
-              100% { transform: rotate(360deg); }
-            }
-          `}</style>
           <Router />
           <Toaster />
         </ErrorBoundary>
@@ -177,5 +171,3 @@ function App() {
     </QueryClientProvider>
   );
 }
-
-export default App;

@@ -1,19 +1,54 @@
+import React from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "./lib/queryClient";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { Router, Route, Switch } from "wouter";
-import ModernHome from "@/pages/modern-home";
-import ModernDiscover from "@/pages/modern-discover";
-import ModernLists from "@/pages/modern-lists";
-import ModernProfile from "@/pages/modern-profile";
-import ModernSocial from "@/pages/modern-social";
 import Landing from "@/pages/landing";
-import MobileNav from "@/components/mobile-nav";
+import { Button } from "@/components/ui/button";
 
 export default function App() {
   const { isAuthenticated, isLoading } = useAuth();
+
+  // Show logout button if authenticated
+  if (isAuthenticated) {
+    return (
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <div className="min-h-screen bg-black text-white p-8">
+            <div className="max-w-4xl mx-auto">
+              <div className="flex items-center justify-between mb-8">
+                <h1 className="text-3xl font-bold bg-gradient-to-r from-teal-400 to-blue-600 bg-clip-text text-transparent">
+                  BingeBoard
+                </h1>
+                <Button 
+                  onClick={async () => {
+                    try {
+                      await fetch('/api/auth/logout', {
+                        method: 'POST',
+                        credentials: 'include'
+                      });
+                      window.location.reload();
+                    } catch (error) {
+                      console.error('Logout error:', error);
+                    }
+                  }}
+                  className="bg-red-500 hover:bg-red-600"
+                >
+                  Logout
+                </Button>
+              </div>
+              <div className="text-center">
+                <p className="text-lg mb-4">You are logged in as: rachel.gubin@gmail.com</p>
+                <p className="text-gray-400">Click logout to see the landing page</p>
+              </div>
+            </div>
+          </div>
+          <Toaster />
+        </TooltipProvider>
+      </QueryClientProvider>
+    );
+  }
 
   if (isLoading) {
     return (
@@ -31,24 +66,9 @@ export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <Router>
-          <div className="min-h-screen bg-black">
-            {isAuthenticated ? (
-              <>
-                <Switch>
-                  <Route path="/" component={ModernHome} />
-                  <Route path="/discover" component={ModernDiscover} />
-                  <Route path="/lists" component={ModernLists} />
-                  <Route path="/social" component={ModernSocial} />
-                  <Route path="/profile" component={ModernProfile} />
-                </Switch>
-                <MobileNav />
-              </>
-            ) : (
-              <Landing />
-            )}
-          </div>
-        </Router>
+        <div className="min-h-screen bg-black">
+          <Landing />
+        </div>
         <Toaster />
       </TooltipProvider>
     </QueryClientProvider>
