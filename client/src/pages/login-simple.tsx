@@ -9,6 +9,7 @@ import { Eye, EyeOff, Mail, Lock } from "lucide-react";
 import { SiGoogle, SiFacebook } from "react-icons/si";
 import { signInWithRedirect, getRedirectResult, linkWithCredential, fetchSignInMethodsForEmail, FacebookAuthProvider } from 'firebase/auth';
 import { auth, googleProvider, facebookProvider } from '@/firebase/config';
+import { signInWithEmail, registerWithEmail } from '@/lib/permanentAuth';
 
 export default function LoginSimple() {
   const [, setLocation] = useLocation();

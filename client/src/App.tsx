@@ -15,6 +15,8 @@ import NotFound from "@/pages/not-found";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import Landing from "@/pages/landing";
 import LoginSimple from "@/pages/login-simple";
+import MobileLogin from "@/pages/mobile-login";
+import SimpleAuth from "@/pages/simple-auth";
 import Home from "@/pages/modern-home";
 import ModernDiscover from "@/pages/modern-discover";
 import Activity from "@/pages/activity";
@@ -95,7 +97,9 @@ function Router() {
       <main className={`flex-1 ${isAuthenticated ? "pt-16 pb-20 md:pb-20" : "pt-0 pb-0"}`}>
         <Switch>
           {/* Public routes - always accessible */}
-          <Route path="/login" component={LoginSimple} />
+          <Route path="/login" component={SimpleAuth} />
+          <Route path="/mobile-login" component={MobileLogin} />
+          <Route path="/simple-auth" component={SimpleAuth} />
 
           <Route path="/privacy-policy" component={PrivacyPolicy} />
           <Route path="/terms-of-service" component={TermsOfService} />
