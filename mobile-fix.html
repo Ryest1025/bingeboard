@@ -159,23 +159,23 @@
         <p class="subtitle">Your Entertainment Hub</p>
         
         <div class="card">
-            <h2>Mobile Loading Fixed</h2>
-            <p>This is a simplified mobile version that bypasses the React loading issues.</p>
+            <h2>Mobile Version Ready</h2>
+            <p>Your mobile-optimized BingeBoard experience is ready to use.</p>
             
             <div id="status-container">
-                <div class="status loading">Testing mobile compatibility...</div>
+                <div class="status success">Mobile version loaded successfully!</div>
             </div>
             
-            <button class="button" onclick="tryMainApp()">
-                Try Main App
+            <button class="button" onclick="showLogin()">
+                Sign In
             </button>
             
-            <button class="button secondary" onclick="runDiagnostics()">
-                Run Diagnostics
+            <button class="button secondary" onclick="showDiscover()">
+                Discover Shows
             </button>
             
-            <button class="button secondary" onclick="clearAndRetry()">
-                Clear Cache & Retry
+            <button class="button secondary" onclick="tryMainApp()">
+                Try Full App
             </button>
         </div>
         
@@ -204,31 +204,104 @@
             console.log(message);
         }
 
-        function tryMainApp() {
-            addStatus('Attempting to load main app...', 'loading');
+        function showLogin() {
+            addStatus('Loading mobile login...', 'loading');
             
-            // Try to load main app with timeout
-            const timeout = setTimeout(() => {
-                addStatus('Main app loading timeout - staying on mobile version', 'error');
-            }, 5000);
+            // Create mobile login interface
+            const container = document.querySelector('.container');
+            container.innerHTML = `
+                <div class="logo">
+                    <div class="logo-icon"></div>
+                    <div class="logo-text">
+                        <span class="binge">Binge</span>Board
+                    </div>
+                </div>
+                <p class="subtitle">Sign in to your account</p>
+                
+                <div class="card">
+                    <h2>Sign In</h2>
+                    <form id="loginForm">
+                        <input type="email" id="email" placeholder="Email" required style="width: 100%; padding: 12px; margin-bottom: 12px; border: 1px solid #374151; border-radius: 8px; background: #111827; color: #fff;">
+                        <input type="password" id="password" placeholder="Password" required style="width: 100%; padding: 12px; margin-bottom: 16px; border: 1px solid #374151; border-radius: 8px; background: #111827; color: #fff;">
+                        <button type="submit" class="button">Sign In</button>
+                    </form>
+                    <div style="text-align: center; margin: 16px 0; color: #6b7280;">or</div>
+                    <button class="button secondary" onclick="window.location.href='/login'">
+                        Use Web Login
+                    </button>
+                </div>
+            `;
             
-            // Test if main app loads
-            fetch('/')
-                .then(response => {
-                    clearTimeout(timeout);
-                    if (response.ok) {
-                        addStatus('Main app responsive - redirecting...', 'success');
-                        setTimeout(() => {
-                            window.location.href = '/';
-                        }, 1000);
+            // Handle form submission
+            document.getElementById('loginForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                addStatus('Login feature coming soon - use web login for now', 'loading');
+            });
+        }
+        
+        function showDiscover() {
+            addStatus('Loading discover section...', 'loading');
+            
+            // Create discover interface
+            const container = document.querySelector('.container');
+            container.innerHTML = `
+                <div class="logo">
+                    <div class="logo-icon"></div>
+                    <div class="logo-text">
+                        <span class="binge">Binge</span>Board
+                    </div>
+                </div>
+                <p class="subtitle">Discover What to Binge</p>
+                
+                <div class="card">
+                    <h2>Trending Now</h2>
+                    <div id="trending-shows">
+                        <div class="status loading">Loading trending shows...</div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h2>Quick Actions</h2>
+                    <button class="button secondary" onclick="window.location.href='/mobile-fix.html'">
+                        Back to Home
+                    </button>
+                    <button class="button secondary" onclick="window.location.href='/discover'">
+                        Full Discover Page
+                    </button>
+                </div>
+            `;
+            
+            // Load trending shows
+            fetch('/api/tmdb/trending')
+                .then(response => response.json())
+                .then(data => {
+                    const trendingDiv = document.getElementById('trending-shows');
+                    if (data.results && data.results.length > 0) {
+                        trendingDiv.innerHTML = data.results.slice(0, 5).map(show => `
+                            <div style="padding: 8px; border-bottom: 1px solid #374151; display: flex; align-items: center;">
+                                <div style="width: 40px; height: 60px; background: #374151; border-radius: 4px; margin-right: 12px; display: flex; align-items: center; justify-content: center; color: #9ca3af; font-size: 12px;">
+                                    ${show.poster_path ? `<img src="https://image.tmdb.org/t/p/w92${show.poster_path}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 4px;">` : 'No Image'}
+                                </div>
+                                <div>
+                                    <div style="font-weight: 500; color: #fff; margin-bottom: 4px;">${show.name || show.title}</div>
+                                    <div style="font-size: 12px; color: #9ca3af;">★ ${show.vote_average}/10</div>
+                                </div>
+                            </div>
+                        `).join('');
                     } else {
-                        addStatus('Main app not responsive', 'error');
+                        trendingDiv.innerHTML = '<div class="status error">No trending shows available</div>';
                     }
                 })
                 .catch(error => {
-                    clearTimeout(timeout);
-                    addStatus('Main app fetch failed: ' + error.message, 'error');
+                    document.getElementById('trending-shows').innerHTML = '<div class="status error">Failed to load shows</div>';
                 });
+        }
+        
+        function tryMainApp() {
+            addStatus('Attempting to load main app...', 'loading');
+            
+            // Force redirect to main app
+            window.location.href = '/?mobile=bypass';
         }
 
         function runDiagnostics() {

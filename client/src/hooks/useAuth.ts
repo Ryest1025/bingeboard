@@ -18,17 +18,13 @@ export function useAuth(): AuthState {
   useEffect(() => {
     let isMounted = true;
 
-    // Detect mobile and use simpler flow
+    // Detect mobile and redirect to working version
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|Windows Phone|Mobile/i.test(navigator.userAgent);
     
     if (isMobile) {
-      console.log('📱 Mobile device detected - using simplified auth flow');
-      // Start with not authenticated on mobile to prevent loading issues
-      setAuthState({
-        user: null,
-        isLoading: false,
-        isAuthenticated: false
-      });
+      console.log('📱 Mobile device detected - redirecting to mobile version');
+      // Redirect mobile users to working version
+      window.location.href = '/mobile-fix.html';
       return () => {};
     }
 
