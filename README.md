@@ -81,6 +81,26 @@ A cutting-edge social TV show tracking platform with robust multi-provider authe
 4. **Open Browser**
    Navigate to `http://localhost:5000`
 
+## 🌐 GitHub Codespaces
+
+BingeBoard supports development using GitHub Codespaces:
+
+1. **Open in Codespaces**
+   - Go to your GitHub repository
+   - Click the "Code" button
+   - Select the "Codespaces" tab
+   - Click "Create codespace on main"
+
+2. **Development in Codespaces**
+   - The environment will automatically install dependencies
+   - Forward ports 3000 (frontend) and 5000 (backend) are pre-configured
+   - Access your app through the "Ports" tab or click the browser icon next to the forwarded port
+
+3. **Testing Mobile Access**
+   - When using Codespaces, your app is accessible via a public URL
+   - Use the Codespaces URL from the "Ports" tab to access from mobile devices
+   - No SSL certificate or local network issues to worry about
+
 ## 📱 Mobile Deployment
 
 BingeBoard supports iOS deployment using Capacitor:
