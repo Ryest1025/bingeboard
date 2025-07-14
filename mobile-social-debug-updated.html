@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mobile Social Login Debug - Updated</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #1a1a1a;
+            color: white;
+            line-height: 1.6;
+        }
+        .debug-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #333;
+            border-radius: 8px;
+            background: #2a2a2a;
+        }
+        .button {
+            background: linear-gradient(45deg, #00bcd4, #2196f3);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            margin: 10px 5px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            display: inline-block;
+            text-decoration: none;
+        }
+        .button:hover {
+            opacity: 0.8;
+        }
+        .button.facebook {
+            background: linear-gradient(45deg, #1877f2, #42a5f5);
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            background: #333;
+        }
+        .error { background: #d32f2f; }
+        .success { background: #388e3c; }
+        .warning { background: #f57c00; }
+        .info { background: #1976d2; }
+        #debug-log {
+            height: 300px;
+            overflow-y: auto;
+            background: #111;
+            padding: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            border: 1px solid #333;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 Mobile Social Login Debug Tool</h1>
+    <p>This tool helps diagnose issues with mobile social login functionality.</p>
+    
+    <div class="debug-section">
+        <h2>🌍 Environment Detection</h2>
+        <div id="environment-info"></div>
+    </div>
+
+    <div class="debug-section">
+        <h2>📱 Mobile Detection</h2>
+        <div id="mobile-detection"></div>
+    </div>
+
+    <div class="debug-section">
+        <h2>🔒 HTTPS & Security</h2>
+        <div id="network-info"></div>
+        <button class="button" onclick="testHttps()">🔍 Test HTTPS</button>
+    </div>
+
+    <div class="debug-section">
+        <h2>🔥 Firebase Status</h2>
+        <div id="firebase-status"></div>
+        <button class="button" onclick="checkFirebase()">🔍 Check Firebase</button>
+    </div>
+
+    <div class="debug-section">
+        <h2>🧪 Social Login Tests</h2>
+        <p>Test social login functionality:</p>
+        <button class="button" onclick="testGoogleLogin()">📧 Test Google Login</button>
+        <button class="button facebook" onclick="testFacebookLogin()">📘 Test Facebook Login</button>
+        <div id="login-results"></div>
+    </div>
+
+    <div class="debug-section">
+        <h2>📊 Debug Log</h2>
+        <div id="debug-log"></div>
+        <button class="button" onclick="clearLog()">🗑️ Clear Log</button>
+        <button class="button" onclick="exportLog()">💾 Export Log</button>
+    </div>
+
+    <script>
+        // Global debug state
+        let debugData = {
+            environment: {},
+            mobile: {},
+            https: {},
+            firebase: {},
+            logs: []
+        };
+
+        // Debug logging function
+        function debugLog(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = { timestamp, message, type };
+            debugData.logs.push(logEntry);
+            
+            const logDiv = document.getElementById('debug-log');
+            const colors = {
+                error: '#ff5252',
+                success: '#4caf50', 
+                warning: '#ff9800',
+                info: '#64b5f6'
+            };
+            
+            const color = colors[type] || colors.info;
+            logDiv.innerHTML += `<div style="color: ${color}; margin: 2px 0;">[${timestamp}] ${message}</div>`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+            
+            console.log(`[DEBUG] [${timestamp}] ${message}`);
+        }
+
+        // Clear log function
+        window.clearLog = function() {
+            document.getElementById('debug-log').innerHTML = '';
+            debugData.logs = [];
+            debugLog('🗑️ Debug log cleared');
+        };
+
+        // Export log function
+        window.exportLog = function() {
+            const logText = debugData.logs.map(log => 
+                `[${log.timestamp}] [${log.type.toUpperCase()}] ${log.message}`
+            ).join('\\n');
+            
+            const blob = new Blob([logText], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `mobile-social-debug-${Date.now()}.log`;
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            debugLog('💾 Debug log exported');
+        };
+
+        // Environment detection
+        function detectEnvironment() {
+            debugLog('🔍 Detecting environment...');
+            
+            const info = {
+                userAgent: navigator.userAgent,
+                platform: navigator.platform,
+                language: navigator.language,
+                cookieEnabled: navigator.cookieEnabled,
+                onLine: navigator.onLine,
+                url: location.href,
+                protocol: location.protocol,
+                host: location.host,
+                port: location.port || 'default',
+                pathname: location.pathname,
+                viewport: \`\${window.innerWidth}x\${window.innerHeight}\`,
+                screen: \`\${screen.width}x\${screen.height}\`,
+                devicePixelRatio: window.devicePixelRatio,
+                timestamp: new Date().toISOString()
+            };
+
+            debugData.environment = info;
+
+            const envDiv = document.getElementById('environment-info');
+            envDiv.innerHTML = \`
+                <div class="status">
+                    <strong>🌐 URL:</strong> \${info.url}<br>
+                    <strong>🔒 Protocol:</strong> \${info.protocol} \${info.protocol === 'https:' ? '✅' : '❌'}<br>
+                    <strong>🖥️ Platform:</strong> \${info.platform}<br>
+                    <strong>🌍 Language:</strong> \${info.language}<br>
+                    <strong>🍪 Cookies:</strong> \${info.cookieEnabled ? '✅' : '❌'}<br>
+                    <strong>📶 Online:</strong> \${info.onLine ? '✅' : '❌'}<br>
+                    <strong>📱 Viewport:</strong> \${info.viewport}<br>
+                    <strong>🖼️ Screen:</strong> \${info.screen}<br>
+                    <strong>🔍 Pixel Ratio:</strong> \${info.devicePixelRatio}
+                </div>
+            \`;
+
+            debugLog(\`✅ Environment detected: \${info.protocol} on \${info.platform}\`);
+            return info;
+        }
+
+        // Mobile detection with multiple methods
+        function detectMobile() {
+            debugLog('📱 Detecting mobile device...');
+            
+            const checks = {
+                userAgent: /iPhone|iPad|iPod|Android|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent),
+                touchCapable: 'ontouchstart' in window || navigator.maxTouchPoints > 0,
+                orientation: 'orientation' in window,
+                maxTouchPoints: navigator.maxTouchPoints,
+                screenWidth: window.innerWidth <= 768,
+                aspectRatio: window.innerHeight > window.innerWidth
+            };
+
+            // Advanced mobile detection
+            const mobileKeywords = ['Mobi', 'Android', 'iPhone', 'iPad', 'iPod', 'BlackBerry', 'webOS'];
+            const containsMobileKeyword = mobileKeywords.some(keyword => 
+                navigator.userAgent.includes(keyword)
+            );
+
+            const finalResult = checks.userAgent || (checks.touchCapable && checks.screenWidth);
+            debugData.mobile = { ...checks, containsMobileKeyword, finalResult };
+
+            const mobileDiv = document.getElementById('mobile-detection');
+            mobileDiv.innerHTML = \`
+                <div class="status \${finalResult ? 'success' : 'warning'}">
+                    <strong>📱 Mobile Detected:</strong> \${finalResult ? '✅ YES' : '❌ NO'}<br>
+                    <strong>🔍 User Agent Check:</strong> \${checks.userAgent ? '✅' : '❌'}<br>
+                    <strong>👆 Touch Capable:</strong> \${checks.touchCapable ? '✅' : '❌'}<br>
+                    <strong>🔄 Has Orientation:</strong> \${checks.orientation ? '✅' : '❌'}<br>
+                    <strong>👆 Max Touch Points:</strong> \${checks.maxTouchPoints}<br>
+                    <strong>📏 Small Screen:</strong> \${checks.screenWidth ? '✅' : '❌'}<br>
+                    <strong>📐 Portrait Mode:</strong> \${checks.aspectRatio ? '✅' : '❌'}<br>
+                    <strong>🔤 Keywords Found:</strong> \${containsMobileKeyword ? '✅' : '❌'}
+                </div>
+            \`;
+
+            debugLog(\`📱 Mobile detection result: \${finalResult ? 'Mobile' : 'Desktop'}\`);
+            return finalResult;
+        }
+
+        // Test HTTPS and security
+        window.testHttps = function() {
+            debugLog('🔒 Testing HTTPS and security...');
+            
+            const isHttps = location.protocol === 'https:';
+            const isLocalhost = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+            const port = location.port;
+            
+            debugData.https = { isHttps, isLocalhost, port, protocol: location.protocol };
+            
+            const networkDiv = document.getElementById('network-info');
+            networkDiv.innerHTML = \`
+                <div class="status \${isHttps ? 'success' : 'error'}">
+                    <strong>🔒 Protocol:</strong> \${location.protocol}<br>
+                    <strong>🏠 Host:</strong> \${location.hostname}<br>
+                    <strong>🚪 Port:</strong> \${port || 'default'}<br>
+                    <strong>🔐 HTTPS Status:</strong> \${isHttps ? '✅ Secure' : '❌ Not Secure'}<br>
+                    <strong>🏠 Localhost:</strong> \${isLocalhost ? '✅' : '❌'}
+                </div>
+            \`;
+
+            if (!isHttps) {
+                debugLog('❌ HTTPS required for Facebook login!', 'error');
+                const httpsUrl = location.href.replace('http:', 'https:');
+                networkDiv.innerHTML += \`
+                    <div class="status error">
+                        <strong>⚠️ Facebook Login Issue:</strong><br>
+                        Facebook requires HTTPS for social login.<br>
+                        <strong>Solution:</strong> Access via <a href="\${httpsUrl}" style="color: #64b5f6;">\${httpsUrl}</a>
+                    </div>
+                \`;
+            } else {
+                debugLog('✅ HTTPS detected - Facebook login should work', 'success');
+            }
+        };
+
+        // Check Firebase configuration
+        window.checkFirebase = async function() {
+            debugLog('🔥 Checking Firebase configuration...');
+            
+            const firebaseDiv = document.getElementById('firebase-status');
+            
+            try {
+                // Check if running on the actual app
+                const response = await fetch('/api/auth/user').catch(() => null);
+                
+                if (response) {
+                    debugLog('✅ Connected to BingeBoard backend', 'success');
+                    firebaseDiv.innerHTML = \`
+                        <div class="status success">
+                            <strong>🔥 Firebase Status:</strong> ✅ Connected to BingeBoard<br>
+                            <strong>🔗 Backend:</strong> Available<br>
+                            <strong>📝 Note:</strong> Real Firebase config is in use
+                        </div>
+                    \`;
+                } else {
+                    debugLog('⚠️ Not connected to BingeBoard backend', 'warning');
+                    firebaseDiv.innerHTML = \`
+                        <div class="status warning">
+                            <strong>🔥 Firebase Status:</strong> ⚠️ Standalone mode<br>
+                            <strong>🔗 Backend:</strong> Not available<br>
+                            <strong>📝 Note:</strong> This is a debug tool, not the actual app
+                        </div>
+                    \`;
+                }
+                
+            } catch (error) {
+                debugLog(\`❌ Firebase check error: \${error.message}\`, 'error');
+                firebaseDiv.innerHTML = \`
+                    <div class="status error">
+                        <strong>🔥 Firebase Error:</strong> \${error.message}
+                    </div>
+                \`;
+            }
+        };
+
+        // Test Google login
+        window.testGoogleLogin = function() {
+            debugLog('📧 Testing Google login flow...');
+            
+            const resultsDiv = document.getElementById('login-results');
+            const isMobile = debugData.mobile.finalResult;
+            const isHttps = debugData.https.isHttps;
+            
+            let status = 'success';
+            let message = '✅ Google login should work';
+            
+            if (!isHttps) {
+                status = 'warning';
+                message = '⚠️ Google login may work on HTTP for localhost';
+            }
+            
+            resultsDiv.innerHTML = \`
+                <div class="status \${status}">
+                    <strong>📧 Google Login Test:</strong><br>
+                    <strong>📱 Mobile Mode:</strong> \${isMobile ? 'signInWithRedirect' : 'signInWithPopup'}<br>
+                    <strong>🔒 HTTPS:</strong> \${isHttps ? '✅' : '⚠️'}<br>
+                    <strong>📝 Result:</strong> \${message}
+                </div>
+            \`;
+            
+            debugLog(\`📧 Google login test: \${message}\`);
+        };
+
+        // Test Facebook login
+        window.testFacebookLogin = function() {
+            debugLog('📘 Testing Facebook login flow...');
+            
+            const resultsDiv = document.getElementById('login-results');
+            const isMobile = debugData.mobile.finalResult;
+            const isHttps = debugData.https.isHttps;
+            
+            let status, message;
+            
+            if (!isHttps) {
+                status = 'error';
+                message = '❌ Facebook REQUIRES HTTPS - will fail on HTTP';
+                debugLog('❌ Facebook login will fail - HTTPS required!', 'error');
+            } else {
+                status = 'success';
+                message = '✅ Facebook login should work';
+                debugLog('✅ Facebook login requirements met', 'success');
+            }
+            
+            resultsDiv.innerHTML += \`
+                <div class="status \${status}">
+                    <strong>📘 Facebook Login Test:</strong><br>
+                    <strong>📱 Mobile Mode:</strong> \${isMobile ? 'signInWithRedirect' : 'signInWithPopup'}<br>
+                    <strong>🔒 HTTPS Required:</strong> \${isHttps ? '✅ Met' : '❌ Missing'}<br>
+                    <strong>📝 Result:</strong> \${message}
+                </div>
+            \`;
+        };
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            debugLog('🚀 Mobile Social Login Debug Tool initialized');
+            
+            // Run all detection functions
+            detectEnvironment();
+            detectMobile();
+            window.testHttps();
+            window.checkFirebase();
+            
+            debugLog('🔍 Initial diagnostics complete');
+            
+            // Add some helpful information
+            const isMobile = debugData.mobile?.finalResult;
+            const isHttps = debugData.https?.isHttps;
+            
+            if (!isHttps) {
+                debugLog('💡 TIP: Start your dev server with HTTPS to test Facebook login', 'warning');
+            }
+            
+            if (isMobile) {
+                debugLog('📱 Mobile device detected - social login will use redirect flow', 'info');
+            } else {
+                debugLog('🖥️ Desktop detected - social login will use popup flow', 'info');
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Firebase Auth Test - Local Development</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #111;
+            color: white;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            background: #222;
+            border-radius: 8px;
+        }
+        .success { color: #4ade80; }
+        .error { color: #ef4444; }
+        .warning { color: #f59e0b; }
+        button {
+            background: #0ea5e9;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0284c7;
+        }
+        pre {
+            background: #000;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>Firebase Authentication Test - Local Development</h1>
+    
+    <div class="test-section">
+        <h2>Firebase Configuration Status</h2>
+        <div id="config-status">Checking Firebase configuration...</div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Firebase Authentication Test</h2>
+        <button onclick="testGoogleAuth()">Test Google Login</button>
+        <button onclick="testFacebookAuth()">Test Facebook Login</button>
+        <button onclick="checkAuthState()">Check Auth State</button>
+        <button onclick="signOutUser()">Sign Out</button>
+        <div id="auth-status"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Backend Session Test</h2>
+        <button onclick="testBackendSession()">Test Backend Session</button>
+        <div id="session-status"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Logs</h2>
+        <pre id="logs"></pre>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js';
+        import { 
+            getAuth, 
+            signInWithPopup, 
+            GoogleAuthProvider, 
+            FacebookAuthProvider,
+            onAuthStateChanged,
+            signOut 
+        } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js';
+
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyB45zr8b2HjIx1fzXOuQsHxeQK9wl_wC88",
+            authDomain: "bingeboard-73c5f.firebaseapp.com",
+            projectId: "bingeboard-73c5f",
+            storageBucket: "bingeboard-73c5f.firebasestorage.app",
+            messagingSenderId: "145846820194",
+            appId: "1:145846820194:web:047efd7a8e59b36944a03b"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        
+        // Providers
+        const googleProvider = new GoogleAuthProvider();
+        const facebookProvider = new FacebookAuthProvider();
+
+        // Global functions
+        window.auth = auth;
+        window.googleProvider = googleProvider;
+        window.facebookProvider = facebookProvider;
+
+        // Logging function
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logElement = document.getElementById('logs');
+            const colorClass = type === 'error' ? 'error' : type === 'success' ? 'success' : '';
+            logElement.innerHTML += `<span class="${colorClass}">[${timestamp}] ${message}</span>\n`;
+            logElement.scrollTop = logElement.scrollHeight;
+            console.log(`[${timestamp}] ${message}`);
+        }
+
+        window.log = log;
+
+        // Check Firebase configuration
+        function checkConfig() {
+            const status = document.getElementById('config-status');
+            const domain = window.location.hostname;
+            
+            let configStatus = '';
+            configStatus += `<div class="success">✓ Firebase Config Loaded</div>`;
+            configStatus += `<div>Domain: ${domain}</div>`;
+            configStatus += `<div>Auth Domain: ${firebaseConfig.authDomain}</div>`;
+            configStatus += `<div>Project ID: ${firebaseConfig.projectId}</div>`;
+            
+            if (domain === 'localhost') {
+                configStatus += `<div class="warning">⚠ Running on localhost - Firebase auth should work for development</div>`;
+            }
+            
+            status.innerHTML = configStatus;
+            log('Firebase configuration checked', 'success');
+        }
+
+        // Test Google authentication
+        window.testGoogleAuth = async function() {
+            log('Testing Google authentication...');
+            const statusDiv = document.getElementById('auth-status');
+            
+            try {
+                statusDiv.innerHTML = '<div>Attempting Google sign-in...</div>';
+                const result = await signInWithPopup(auth, googleProvider);
+                const user = result.user;
+                
+                statusDiv.innerHTML = `
+                    <div class="success">✓ Google Auth Success!</div>
+                    <div>User: ${user.email}</div>
+                    <div>Name: ${user.displayName}</div>
+                    <div>UID: ${user.uid}</div>
+                `;
+                
+                log(`Google auth successful: ${user.email}`, 'success');
+            } catch (error) {
+                statusDiv.innerHTML = `<div class="error">✗ Google Auth Failed: ${error.message}</div>`;
+                log(`Google auth failed: ${error.message}`, 'error');
+            }
+        };
+
+        // Test Facebook authentication
+        window.testFacebookAuth = async function() {
+            log('Testing Facebook authentication...');
+            const statusDiv = document.getElementById('auth-status');
+            
+            try {
+                statusDiv.innerHTML = '<div>Attempting Facebook sign-in...</div>';
+                const result = await signInWithPopup(auth, facebookProvider);
+                const user = result.user;
+                
+                statusDiv.innerHTML = `
+                    <div class="success">✓ Facebook Auth Success!</div>
+                    <div>User: ${user.email}</div>
+                    <div>Name: ${user.displayName}</div>
+                    <div>UID: ${user.uid}</div>
+                `;
+                
+                log(`Facebook auth successful: ${user.email}`, 'success');
+            } catch (error) {
+                statusDiv.innerHTML = `<div class="error">✗ Facebook Auth Failed: ${error.message}</div>`;
+                log(`Facebook auth failed: ${error.message}`, 'error');
+            }
+        };
+
+        // Check auth state
+        window.checkAuthState = function() {
+            const user = auth.currentUser;
+            const statusDiv = document.getElementById('auth-status');
+            
+            if (user) {
+                statusDiv.innerHTML = `
+                    <div class="success">✓ User is signed in</div>
+                    <div>Email: ${user.email}</div>
+                    <div>Name: ${user.displayName}</div>
+                `;
+                log(`User signed in: ${user.email}`, 'success');
+            } else {
+                statusDiv.innerHTML = '<div>No user signed in</div>';
+                log('No user signed in');
+            }
+        };
+
+        // Sign out
+        window.signOutUser = async function() {
+            try {
+                await signOut(auth);
+                document.getElementById('auth-status').innerHTML = '<div class="success">✓ Signed out successfully</div>';
+                log('User signed out', 'success');
+            } catch (error) {
+                log(`Sign out failed: ${error.message}`, 'error');
+            }
+        };
+
+        // Test backend session
+        window.testBackendSession = async function() {
+            log('Testing backend session creation...');
+            const statusDiv = document.getElementById('session-status');
+            const user = auth.currentUser;
+            
+            if (!user) {
+                statusDiv.innerHTML = '<div class="error">Please sign in first</div>';
+                return;
+            }
+            
+            try {
+                statusDiv.innerHTML = '<div>Creating backend session...</div>';
+                const idToken = await user.getIdToken();
+                
+                const response = await fetch('/api/auth/firebase-session', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${idToken}`
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        firebaseToken: {
+                            uid: user.uid,
+                            email: user.email,
+                            displayName: user.displayName,
+                            photoURL: user.photoURL
+                        }
+                    })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    statusDiv.innerHTML = `
+                        <div class="success">✓ Backend session created!</div>
+                        <div>User ID: ${data.user?.id}</div>
+                        <div>Session created: ${data.message}</div>
+                    `;
+                    log('Backend session created successfully', 'success');
+                } else {
+                    const error = await response.text();
+                    statusDiv.innerHTML = `<div class="error">✗ Backend session failed: ${error}</div>`;
+                    log(`Backend session failed: ${error}`, 'error');
+                }
+            } catch (error) {
+                statusDiv.innerHTML = `<div class="error">✗ Request failed: ${error.message}</div>`;
+                log(`Backend session request failed: ${error.message}`, 'error');
+            }
+        };
+
+        // Initialize
+        checkConfig();
+        
+        // Listen for auth state changes
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                log(`Auth state changed: User signed in (${user.email})`, 'success');
+            } else {
+                log('Auth state changed: User signed out');
+            }
+        });
+    </script>
+</body>
+</html>

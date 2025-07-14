@@ -1116,10 +1116,11 @@ export default function EnhancedOnboardingModal() {
                       console.log("Facebook button clicked!");
                       
                       try {
-                        const { signInWithFacebook } = await import('@/lib/firebaseAuth');
-                        const result = await signInWithFacebook();
+                        const { signInWithPopup } = await import('firebase/auth');
+                        const { auth, facebookProvider } = await import('@/firebase/config');
+                        const result = await signInWithPopup(auth, facebookProvider);
                         
-                        if (result.success) {
+                        if (result.user) {
                           console.log('Facebook authentication successful');
                           window.location.reload(); // Refresh to update auth state
                         } else {

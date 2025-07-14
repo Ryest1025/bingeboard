@@ -7,13 +7,14 @@
 
 import { useState } from "react";
 import { useLocation } from "wouter";
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Eye, EyeOff, Mail, Lock, Tv } from "lucide-react";
-import { mobileSignIn, mobileRegister, isMobileDevice } from "@/lib/mobileAuth";
+import { auth } from "@/firebase/config-simple";
 
 export default function MobileLogin() {
   const [, setLocation] = useLocation();
@@ -37,10 +38,10 @@ export default function MobileLogin() {
     
     try {
       const result = isLogin 
-        ? await mobileSignIn(formData.email, formData.password)
-        : await mobileRegister(formData.email, formData.password);
+        ? await signInWithEmailAndPassword(auth, formData.email, formData.password)
+        : await createUserWithEmailAndPassword(auth, formData.email, formData.password);
       
-      if (result.success) {
+      if (result.user) {
         toast({
           title: isLogin ? "Login Successful" : "Registration Successful",
           description: isLogin ? "Welcome back!" : "Welcome to BingeBoard!",
@@ -49,14 +50,14 @@ export default function MobileLogin() {
       } else {
         toast({
           title: isLogin ? "Login Failed" : "Registration Failed",
-          description: result.error || "Please try again",
+          description: "Please try again",
           variant: "destructive",
         });
       }
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Error",
-        description: "Something went wrong. Please try again.",
+        description: error.message || "Something went wrong. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -64,6 +65,8 @@ export default function MobileLogin() {
     }
   };
 
+  // Simple mobile detection
+  const isMobileDevice = () => /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
   const deviceType = isMobileDevice() ? "Mobile" : "Desktop";
 
   return (

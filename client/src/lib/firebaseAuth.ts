@@ -1,32 +1,25 @@
-// Temporarily disabled Firebase imports to resolve dependency issues
-// import { 
-//   signInWithPopup, 
-//   signInWithRedirect, 
-//   getRedirectResult, 
-//   GoogleAuthProvider, 
-//   FacebookAuthProvider, 
-//   AuthProvider, 
-//   linkWithCredential, 
-//   signInWithCredential, 
-//   fetchSignInMethodsForEmail,
-//   signOut,
-//   onAuthStateChanged,
-//   updateProfile,
-//   sendEmailVerification,
-//   EmailAuthProvider,
-//   updatePassword,
-//   reauthenticateWithCredential,
-//   type UserCredential
-// } from "firebase/auth";
+// Firebase Auth imports - properly configured
+import { 
+  signInWithPopup, 
+  signInWithRedirect, 
+  getRedirectResult, 
+  GoogleAuthProvider, 
+  FacebookAuthProvider, 
+  type AuthProvider, 
+  linkWithCredential, 
+  signInWithCredential, 
+  fetchSignInMethodsForEmail,
+  signOut,
+  onAuthStateChanged,
+  updateProfile,
+  sendEmailVerification,
+  EmailAuthProvider,
+  updatePassword,
+  reauthenticateWithCredential,
+  type UserCredential,
+  type User
+} from "firebase/auth";
 
-// Mock Firebase auth functions for now
-const GoogleAuthProvider = class { constructor() {} };
-const FacebookAuthProvider = class { constructor() {} };
-const signInWithRedirect = () => Promise.resolve();
-const signInWithPopup = () => Promise.resolve({ user: { getIdToken: () => Promise.resolve("mock-token") } });
-const getRedirectResult = () => Promise.resolve(null);
-type User = { uid: string; email: string; displayName: string };
-type UserCredential = { user: User };
 import { auth } from "@/firebase/config";
 
 // Mobile detection function
@@ -117,11 +110,22 @@ export const handleRedirectResult = async (): Promise<{ success: boolean; user?:
       const idToken = await result.user.getIdToken();
       console.log("🔍 Got ID token, sending to backend...");
       
-      const response = await fetch('/api/auth/firebase', {
+      const response = await fetch('/api/auth/firebase-session', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${idToken}`
+        },
         credentials: 'include',
-        body: JSON.stringify({ idToken })
+        body: JSON.stringify({ 
+          firebaseToken: idToken,
+          user: {
+            uid: result.user.uid,
+            email: result.user.email,
+            displayName: result.user.displayName,
+            photoURL: result.user.photoURL
+          }
+        })
       });
       
       console.log("🔍 Backend response status:", response.status);
@@ -161,7 +165,13 @@ export const handleRedirectResult = async (): Promise<{ success: boolean; user?:
   }
 };
 
-export const signInWithFacebookOld = async (): Promise<{ success: boolean; user?: any; error?: string }> => {
+export const signInWithFacebookOld = async (): Promise<{ 
+  success: boolean; 
+  user?: any; 
+  error?: string; 
+  code?: string; 
+  showGooglePrompt?: boolean; 
+}> => {
   try {
     const provider = new FacebookAuthProvider();
     const result = await signInWithPopup(auth, provider);

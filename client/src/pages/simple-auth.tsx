@@ -1,274 +1,207 @@
-import React, { useState } from "react";
-import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, FacebookAuthProvider } from "firebase/auth";
-import { useLocation } from "wouter";
+import { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Eye, EyeOff, Mail, Lock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { Eye, EyeOff, Mail, Lock, Tv } from "lucide-react";
-import { SiGoogle, SiFacebook } from "react-icons/si";
 
-const auth = getAuth();
+interface Message {
+  type: 'success' | 'error';
+  text: string;
+}
 
 export default function SimpleAuth() {
-  const [, setLocation] = useLocation();
-  const { toast } = useToast();
   const [isLogin, setIsLogin] = useState(true);
-  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
+  const [message, setMessage] = useState<Message | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
+  const [formData, setFormData] = useState({
+    email: '',
+    password: '',
+    firstName: '',
+    lastName: ''
+  });
 
-  const createBackendSession = async (user: any) => {
-    try {
-      const idToken = await user.getIdToken();
-      const response = await fetch('/api/auth/firebase-session', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${idToken}`
-        },
-        credentials: 'include'
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to create backend session');
-      }
-      
-      return await response.json();
-    } catch (error) {
-      console.error('Backend session creation failed:', error);
-      throw error;
-    }
-  };
+  const { toast } = useToast();
 
-  const handleEmailLogin = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !password) return;
-    
     setLoading(true);
-    setError(null);
-    
+    setMessage(null);
+
     try {
-      const result = isLogin 
-        ? await signInWithEmailAndPassword(auth, email, password)
-        : await createUserWithEmailAndPassword(auth, email, password);
-      
-      // Create backend session
-      await createBackendSession(result.user);
-      
-      toast({
-        title: isLogin ? "Login Successful" : "Account Created",
-        description: isLogin ? "Welcome back!" : "Welcome to BingeBoard!",
+      const endpoint = isLogin ? '/api/auth/login' : '/api/auth/register';
+      const payload = isLogin 
+        ? { email: formData.email, password: formData.password }
+        : { 
+            email: formData.email, 
+            password: formData.password,
+            firstName: formData.firstName,
+            lastName: formData.lastName
+          };
+
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(payload),
       });
-      
-      setLocation('/');
-    } catch (err: any) {
-      setError(err.message);
-      toast({
-        title: isLogin ? "Login Failed" : "Registration Failed",
-        description: err.message,
-        variant: "destructive",
-      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        toast({
+          title: isLogin ? "Login successful" : "Registration successful",
+          description: isLogin ? "Welcome back!" : "Account created successfully!",
+        });
+        
+        // Give a moment for the session to be established, then redirect
+        setTimeout(() => {
+          window.location.href = '/';
+        }, 500);
+      } else {
+        setMessage({ type: 'error', text: data.message || 'Authentication failed' });
+      }
+    } catch (error) {
+      setMessage({ type: 'error', text: 'Network error. Please try again.' });
     } finally {
       setLoading(false);
     }
   };
 
-  const handleGoogleLogin = async () => {
-    setLoading(true);
-    setError(null);
-    
-    try {
-      const provider = new GoogleAuthProvider();
-      const result = await signInWithPopup(auth, provider);
-      
-      // Create backend session
-      await createBackendSession(result.user);
-      
-      toast({
-        title: "Login Successful",
-        description: "Welcome to BingeBoard!",
-      });
-      
-      setLocation('/');
-    } catch (err: any) {
-      setError(err.message);
-      toast({
-        title: "Google Login Failed",
-        description: err.message,
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleFacebookLogin = async () => {
-    setLoading(true);
-    setError(null);
-    
-    try {
-      const provider = new FacebookAuthProvider();
-      const result = await signInWithPopup(auth, provider);
-      
-      // Create backend session
-      await createBackendSession(result.user);
-      
-      toast({
-        title: "Login Successful",
-        description: "Welcome to BingeBoard!",
-      });
-      
-      setLocation('/');
-    } catch (err: any) {
-      setError(err.message);
-      toast({
-        title: "Facebook Login Failed",
-        description: err.message,
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    });
   };
 
   return (
     <div className="min-h-screen bg-black flex items-center justify-center p-4">
       <Card className="w-full max-w-md glass-effect border-slate-700/50">
-        <CardHeader className="text-center space-y-4">
-          {/* BingeBoard Logo */}
-          <div className="flex justify-center">
+        <CardHeader className="space-y-1">
+          <div className="flex items-center justify-center mb-6">
             <div className="relative">
-              <div className="w-16 h-12 bg-gradient-to-br from-slate-600 to-slate-800 rounded-lg border-2 border-slate-500 shadow-lg">
-                <div className="absolute inset-2 bg-gradient-to-br from-teal-500 to-blue-600 rounded flex items-center justify-center">
-                  <span className="text-white font-black text-xl">B</span>
-                </div>
-                <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-8 h-1 bg-slate-600 rounded-full"></div>
-                <div className="absolute -bottom-2 left-1/4 w-2 h-2 bg-slate-600 rounded-full"></div>
-                <div className="absolute -bottom-2 right-1/4 w-2 h-2 bg-slate-600 rounded-full"></div>
+              <div className="w-12 h-12 bg-gradient-to-br from-teal-500 via-cyan-500 to-blue-500 rounded-lg flex items-center justify-center">
+                <div className="text-2xl font-bold text-white">B</div>
               </div>
             </div>
           </div>
-          
-          <div>
-            <h1 className="text-2xl font-black text-white">
-              <span className="bg-gradient-to-r from-teal-500 to-blue-600 bg-clip-text text-transparent">Binge</span>
-              <span className="text-white font-light">Board</span>
-            </h1>
-            <p className="text-slate-400 text-sm mt-1">Entertainment Hub</p>
-          </div>
+          <CardTitle className="text-2xl font-bold text-center text-white">
+            {isLogin ? 'Welcome Back' : 'Create Account'}
+          </CardTitle>
+          <p className="text-center text-gray-400">
+            {isLogin ? 'Sign in to your BingeBoard account' : 'Join BingeBoard to track your entertainment'}
+          </p>
         </CardHeader>
-        
-        <CardContent className="space-y-6">
-          <div className="flex space-x-2">
-            <Button 
-              variant={isLogin ? "default" : "outline"}
-              className="flex-1"
-              onClick={() => setIsLogin(true)}
-            >
-              Log In
-            </Button>
-            <Button 
-              variant={!isLogin ? "default" : "outline"}
-              className="flex-1"
-              onClick={() => setIsLogin(false)}
-            >
-              Sign Up
-            </Button>
-          </div>
-          
-          <form onSubmit={handleEmailLogin} className="space-y-4">
-            <div>
-              <Label htmlFor="email">Email</Label>
+        <CardContent className="space-y-4">
+          {message && (
+            <div className={`p-3 rounded-lg text-sm ${
+              message.type === 'error' 
+                ? 'bg-red-500/10 text-red-400 border border-red-500/20' 
+                : 'bg-green-500/10 text-green-400 border border-green-500/20'
+            }`}>
+              {message.text}
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {!isLogin && (
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="firstName" className="text-gray-300">First Name</Label>
+                  <Input
+                    id="firstName"
+                    name="firstName"
+                    type="text"
+                    value={formData.firstName}
+                    onChange={handleInputChange}
+                    required={!isLogin}
+                    className="bg-gray-800 border-gray-700 text-white focus:border-teal-500"
+                    placeholder="John"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="lastName" className="text-gray-300">Last Name</Label>
+                  <Input
+                    id="lastName"
+                    name="lastName"
+                    type="text"
+                    value={formData.lastName}
+                    onChange={handleInputChange}
+                    required={!isLogin}
+                    className="bg-gray-800 border-gray-700 text-white focus:border-teal-500"
+                    placeholder="Doe"
+                  />
+                </div>
+              </div>
+            )}
+
+            <div className="space-y-2">
+              <Label htmlFor="email" className="text-gray-300">Email</Label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-4 w-4" />
+                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                 <Input
                   id="email"
+                  name="email"
                   type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="bg-slate-900/50 border-slate-700 pl-10"
-                  placeholder="your@email.com"
+                  value={formData.email}
+                  onChange={handleInputChange}
                   required
+                  className="bg-gray-800 border-gray-700 text-white focus:border-teal-500 pl-10"
+                  placeholder="your@email.com"
                 />
               </div>
             </div>
-            
-            <div>
-              <Label htmlFor="password">Password</Label>
+
+            <div className="space-y-2">
+              <Label htmlFor="password" className="text-gray-300">Password</Label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-4 w-4" />
+                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                 <Input
                   id="password"
+                  name="password"
                   type={showPassword ? "text" : "password"}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="bg-slate-900/50 border-slate-700 pl-10 pr-10"
-                  placeholder="••••••••"
+                  value={formData.password}
+                  onChange={handleInputChange}
                   required
+                  className="bg-gray-800 border-gray-700 text-white focus:border-teal-500 pl-10 pr-10"
+                  placeholder="Enter your password"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-300"
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white"
                 >
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
             </div>
-            
-            <Button 
-              type="submit" 
-              className="w-full bg-gradient-to-r from-teal-500 to-blue-600 hover:from-teal-600 hover:to-blue-700"
+
+            <Button
+              type="submit"
               disabled={loading}
+              className="w-full bg-gradient-to-r from-teal-600 via-cyan-600 to-blue-600 hover:from-teal-700 hover:via-cyan-700 hover:to-blue-700 text-white"
             >
-              {loading ? "Please wait..." : isLogin ? "Log In" : "Create Account"}
+              {loading ? (
+                <div className="flex items-center space-x-2">
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  <span>{isLogin ? 'Signing in...' : 'Creating account...'}</span>
+                </div>
+              ) : (
+                isLogin ? 'Sign In' : 'Create Account'
+              )}
             </Button>
           </form>
-          
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t border-slate-700" />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-black px-2 text-slate-400">Or continue with</span>
-            </div>
-          </div>
-          
-          <div className="grid grid-cols-2 gap-4">
-            <Button 
-              onClick={handleGoogleLogin}
-              variant="outline"
-              className="border-slate-700 hover:bg-slate-800"
-              disabled={loading}
+
+          <div className="text-center">
+            <button
+              onClick={() => setIsLogin(!isLogin)}
+              className="text-sm text-teal-400 hover:text-teal-300 underline"
             >
-              <SiGoogle className="h-4 w-4 mr-2" />
-              Google
-            </Button>
-            
-            <Button 
-              onClick={handleFacebookLogin}
-              variant="outline"
-              className="border-slate-700 hover:bg-slate-800"
-              disabled={loading}
-            >
-              <SiFacebook className="h-4 w-4 mr-2" />
-              Facebook
-            </Button>
-          </div>
-          
-          {error && (
-            <div className="text-red-400 text-sm text-center p-2 bg-red-500/10 rounded">
-              {error}
-            </div>
-          )}
-          
-          <div className="text-center text-xs text-slate-500">
-            <p>Simple Firebase authentication • No domain restrictions</p>
+              {isLogin ? "Don't have an account? Sign up" : "Already have an account? Sign in"}
+            </button>
           </div>
         </CardContent>
       </Card>

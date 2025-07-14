@@ -1,65 +1,112 @@
 {
-  "name": "BingeBoard - TV Show Tracker",
+  "name": "BingeBoard",
   "short_name": "BingeBoard",
-  "description": "Track your favorite TV shows and discover new content with friends",
+  "description": "Your ultimate entertainment tracking companion",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#1a1b23",
-  "theme_color": "#8b5cf6",
+  "background_color": "#000000",
+  "theme_color": "#ef4444",
   "orientation": "portrait-primary",
   "categories": ["entertainment", "lifestyle", "social"],
+  "screenshots": [
+    {
+      "src": "/screenshots/mobile-home.png",
+      "sizes": "390x844",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Home screen showing trending movies and shows"
+    },
+    {
+      "src": "/screenshots/mobile-watchlist.png", 
+      "sizes": "390x844",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Personal watchlist with tracking status"
+    },
+    {
+      "src": "/screenshots/desktop-dashboard.png",
+      "sizes": "1920x1080", 
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Desktop dashboard with comprehensive tracking"
+    }
+  ],
   "icons": [
     {
-      "src": "icon-192x192.png",
+      "src": "/icons/icon-72x72.png",
+      "sizes": "72x72",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icons/icon-96x96.png",
+      "sizes": "96x96", 
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icons/icon-128x128.png",
+      "sizes": "128x128",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icons/icon-144x144.png",
+      "sizes": "144x144",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icons/icon-152x152.png",
+      "sizes": "152x152",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icons/icon-192x192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "icon-512x512.png",
+      "src": "/icons/icon-384x384.png",
+      "sizes": "384x384",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-512x512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
     }
   ],
-  "screenshots": [
-    {
-      "src": "screenshot-mobile.png",
-      "sizes": "390x844",
-      "type": "image/png",
-      "form_factor": "narrow"
-    },
-    {
-      "src": "screenshot-desktop.png", 
-      "sizes": "1280x720",
-      "type": "image/png",
-      "form_factor": "wide"
-    }
-  ],
   "shortcuts": [
     {
-      "name": "Discover Shows",
-      "short_name": "Discover",
-      "description": "Find new shows to watch",
-      "url": "/discover",
+      "name": "Search Movies",
+      "short_name": "Search",
+      "description": "Search for movies and TV shows",
+      "url": "/search?shortcut=true",
       "icons": [
         {
-          "src": "icon-192x192.png",
-          "sizes": "192x192"
+          "src": "/icons/search-shortcut.png",
+          "sizes": "96x96"
         }
       ]
     },
     {
       "name": "My Watchlist",
-      "short_name": "Watchlist",
-      "description": "View your saved shows",
-      "url": "/",
+      "short_name": "Watchlist", 
+      "description": "View your personal watchlist",
+      "url": "/watchlist?shortcut=true",
       "icons": [
         {
-          "src": "icon-192x192.png", 
-          "sizes": "192x192"
+          "src": "/icons/watchlist-shortcut.png",
+          "sizes": "96x96"
         }
       ]
     }
-  ]
+  ],
+  "prefer_related_applications": false,
+  "related_applications": []
 }

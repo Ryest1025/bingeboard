@@ -25,7 +25,9 @@ export function TopNav() {
     enabled: isAuthenticated,
   });
 
-  const unreadCount = notifications.filter((n: any) => !n.isRead).length;
+  const unreadCount = notifications && Array.isArray(notifications) 
+    ? notifications.filter((n: any) => !n.isRead).length 
+    : 0;
 
   if (!isAuthenticated) {
     return (
@@ -190,12 +192,13 @@ export function TopNav() {
                 <DropdownMenuItem 
                   className="text-gray-300 hover:text-white hover:bg-slate-700 cursor-pointer"
                   onClick={async () => {
-                    console.log('🔐 Starting logout process...');
+                    console.log('🔐 MANUAL LOGOUT BUTTON CLICKED - Starting logout process...');
+                    console.trace('🔍 Stack trace for logout button click:');
                     
                     try {
                       // Step 1: Sign out from Firebase client
                       const { signOut } = await import('firebase/auth');
-                      const { auth } = await import('@/firebase/config-simple');
+                      const { auth } = await import('@/firebase/config');
                       await signOut(auth);
                       console.log('✅ Firebase client signout successful');
                     } catch (error) {

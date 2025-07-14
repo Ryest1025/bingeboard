@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>BingeBoard Icon Generator</title>
+    <style>
+        .icon {
+            width: 512px;
+            height: 512px;
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            border-radius: 128px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            margin: 20px;
+        }
+        
+        .icon-content {
+            color: white;
+            text-align: center;
+            font-weight: bold;
+        }
+        
+        .logo-symbol {
+            font-size: 200px;
+            line-height: 1;
+            margin-bottom: 10px;
+        }
+        
+        .logo-text {
+            font-size: 48px;
+            letter-spacing: -2px;
+        }
+        
+        .small-icon {
+            width: 192px;
+            height: 192px;
+            border-radius: 48px;
+        }
+        
+        .small-icon .logo-symbol {
+            font-size: 100px;
+        }
+        
+        .small-icon .logo-text {
+            font-size: 24px;
+        }
+        
+        body {
+            background: #f0f0f0;
+            padding: 20px;
+        }
+        
+        .instructions {
+            max-width: 600px;
+            margin-bottom: 20px;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="instructions">
+        <h2>BingeBoard PWA Icon Generator</h2>
+        <p>Instructions:</p>
+        <ol>
+            <li>Right-click on each icon below</li>
+            <li>Select "Save image as..." or "Copy image"</li>
+            <li>Save as PNG format with the specified dimensions</li>
+            <li>Use a screenshot tool to capture exact dimensions if needed</li>
+        </ol>
+        <p><strong>Required sizes:</strong> 16x16, 32x32, 72x72, 96x96, 128x128, 144x144, 152x152, 192x192, 384x384, 512x512</p>
+    </div>
+    
+    <h3>512x512 Icon (Main)</h3>
+    <div class="icon" id="icon-512">
+        <div class="icon-content">
+            <div class="logo-symbol">🎬</div>
+            <div class="logo-text">BB</div>
+        </div>
+    </div>
+    
+    <h3>192x192 Icon</h3>
+    <div class="icon small-icon" id="icon-192">
+        <div class="icon-content">
+            <div class="logo-symbol">🎬</div>
+            <div class="logo-text">BB</div>
+        </div>
+    </div>
+    
+    <script>
+        // Generate canvas versions for download
+        function generateIcon(size, elementId) {
+            const canvas = document.createElement('canvas');
+            canvas.width = size;
+            canvas.height = size;
+            const ctx = canvas.getContext('2d');
+            
+            // Background gradient
+            const gradient = ctx.createLinearGradient(0, 0, size, size);
+            gradient.addColorStop(0, '#ef4444');
+            gradient.addColorStop(1, '#dc2626');
+            
+            // Draw background
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.roundRect(0, 0, size, size, size * 0.25);
+            ctx.fill();
+            
+            // Draw icon content
+            ctx.fillStyle = 'white';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            
+            // Movie emoji
+            ctx.font = `${size * 0.4}px Arial`;
+            ctx.fillText('🎬', size/2, size/2 - size * 0.1);
+            
+            // BB text
+            ctx.font = `bold ${size * 0.1}px Arial`;
+            ctx.fillText('BB', size/2, size/2 + size * 0.2);
+            
+            return canvas;
+        }
+        
+        // Create download links
+        const sizes = [16, 32, 72, 96, 128, 144, 152, 192, 384, 512];
+        const downloadContainer = document.createElement('div');
+        downloadContainer.innerHTML = '<h3>Download Icons:</h3>';
+        
+        sizes.forEach(size => {
+            const canvas = generateIcon(size, `icon-${size}`);
+            const link = document.createElement('a');
+            link.download = `icon-${size}x${size}.png`;
+            link.href = canvas.toDataURL();
+            link.textContent = `Download ${size}x${size}`;
+            link.style.display = 'inline-block';
+            link.style.margin = '5px';
+            link.style.padding = '8px 12px';
+            link.style.background = '#ef4444';
+            link.style.color = 'white';
+            link.style.textDecoration = 'none';
+            link.style.borderRadius = '4px';
+            
+            downloadContainer.appendChild(link);
+        });
+        
+        document.body.appendChild(downloadContainer);
+    </script>
+</body>
+</html>

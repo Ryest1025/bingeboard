@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BingeBoard - Mobile Auth Test</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: #0f0f23;
+            color: #fff;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            min-height: 100vh;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .logo {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .logo h1 {
+            font-size: 2rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #14b8a6, #3b82f6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .auth-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 30px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .social-button {
+            width: 100%;
+            padding: 16px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            transition: all 0.2s;
+        }
+        
+        .google-btn {
+            background: #fff;
+            color: #333;
+        }
+        
+        .google-btn:hover {
+            background: #f5f5f5;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+        
+        .facebook-btn {
+            background: #1877F2;
+            color: white;
+        }
+        
+        .facebook-btn:hover {
+            background: #166FE5;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(24, 119, 242, 0.3);
+        }
+        
+        .status {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 14px;
+        }
+        
+        .status.success {
+            background: rgba(34, 197, 94, 0.1);
+            border: 1px solid rgba(34, 197, 94, 0.2);
+            color: #4ade80;
+        }
+        
+        .status.error {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            color: #f87171;
+        }
+        
+        .status.loading {
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            color: #60a5fa;
+        }
+        
+        .user-info {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(34, 197, 94, 0.1);
+            border: 1px solid rgba(34, 197, 94, 0.2);
+            border-radius: 8px;
+        }
+        
+        .user-info h3 {
+            color: #4ade80;
+            margin-bottom: 10px;
+        }
+        
+        .user-info p {
+            margin: 5px 0;
+            font-size: 14px;
+        }
+        
+        .divider {
+            text-align: center;
+            margin: 24px 0;
+            position: relative;
+        }
+        
+        .divider::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .divider span {
+            background: #0f0f23;
+            padding: 0 16px;
+            color: #888;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">
+            <h1>BingeBoard</h1>
+            <p style="color: #888; margin-top: 8px;">Mobile Authentication Test</p>
+        </div>
+        
+        <div class="auth-card">
+            <button class="social-button google-btn" onclick="signInWithGoogle()">
+                <svg width="20" height="20" viewBox="0 0 24 24">
+                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                </svg>
+                Continue with Google
+            </button>
+            
+            <button class="social-button facebook-btn" onclick="signInWithFacebook()">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                </svg>
+                Continue with Facebook
+            </button>
+            
+            <div class="divider">
+                <span>Authentication Status</span>
+            </div>
+            
+            <div id="status" class="status" style="display: none;"></div>
+            <div id="userInfo" class="user-info" style="display: none;"></div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js';
+        import { getAuth, signInWithPopup, signInWithRedirect, getRedirectResult, GoogleAuthProvider, FacebookAuthProvider } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js';
+        
+        // Firebase config
+        const firebaseConfig = {
+            apiKey: "AIzaSyBs5LHOHZKBz9n6K2O-vOe14vOnOeqfvPo",
+            authDomain: "bingeboard-389423.firebaseapp.com",
+            projectId: "bingeboard-389423",
+            storageBucket: "bingeboard-389423.appspot.com",
+            messagingSenderId: "991075756175",
+            appId: "1:991075756175:web:12cbb5bd8d1e59bb7ae123"
+        };
+        
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        
+        // Providers
+        const googleProvider = new GoogleAuthProvider();
+        const facebookProvider = new FacebookAuthProvider();
+        
+        // Configure providers
+        googleProvider.addScope('email');
+        googleProvider.addScope('profile');
+        facebookProvider.addScope('email');
+        
+        // Mobile detection
+        const isMobile = () => /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+        
+        // Status display
+        function showStatus(message, type) {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.className = `status ${type}`;
+            status.style.display = 'block';
+        }
+        
+        function showUserInfo(user) {
+            const userInfo = document.getElementById('userInfo');
+            userInfo.innerHTML = `
+                <h3>✅ Authentication Successful!</h3>
+                <p><strong>Name:</strong> ${user.displayName || 'N/A'}</p>
+                <p><strong>Email:</strong> ${user.email || 'N/A'}</p>
+                <p><strong>Provider:</strong> ${user.providerData[0]?.providerId || 'Unknown'}</p>
+                <p><strong>UID:</strong> ${user.uid}</p>
+            `;
+            userInfo.style.display = 'block';
+        }
+        
+        // Check for redirect result on page load
+        getRedirectResult(auth).then((result) => {
+            if (result && result.user) {
+                console.log('✅ Redirect authentication successful:', result.user);
+                showStatus('Redirect authentication successful!', 'success');
+                showUserInfo(result.user);
+            }
+        }).catch((error) => {
+            console.error('❌ Redirect authentication error:', error);
+            showStatus(`Redirect error: ${error.message}`, 'error');
+        });
+        
+        // Google Sign In
+        window.signInWithGoogle = async () => {
+            console.log('🔵 Google login initiated');
+            showStatus('Signing in with Google...', 'loading');
+            
+            try {
+                let result;
+                
+                if (isMobile()) {
+                    console.log('📱 Using mobile redirect for Google');
+                    await signInWithRedirect(auth, googleProvider);
+                    return; // Will handle result on page reload
+                } else {
+                    console.log('💻 Using desktop popup for Google');
+                    result = await signInWithPopup(auth, googleProvider);
+                }
+                
+                console.log('✅ Google authentication successful:', result.user);
+                showStatus('Google authentication successful!', 'success');
+                showUserInfo(result.user);
+                
+            } catch (error) {
+                console.error('❌ Google authentication error:', error);
+                showStatus(`Google login failed: ${error.message}`, 'error');
+            }
+        };
+        
+        // Facebook Sign In
+        window.signInWithFacebook = async () => {
+            console.log('🔴 Facebook login initiated');
+            showStatus('Signing in with Facebook...', 'loading');
+            
+            try {
+                let result;
+                
+                if (isMobile()) {
+                    console.log('📱 Using mobile redirect for Facebook');
+                    await signInWithRedirect(auth, facebookProvider);
+                    return; // Will handle result on page reload
+                } else {
+                    console.log('💻 Using desktop popup for Facebook');
+                    result = await signInWithPopup(auth, facebookProvider);
+                }
+                
+                console.log('✅ Facebook authentication successful:', result.user);
+                showStatus('Facebook authentication successful!', 'success');
+                showUserInfo(result.user);
+                
+            } catch (error) {
+                console.error('❌ Facebook authentication error:', error);
+                showStatus(`Facebook login failed: ${error.message}`, 'error');
+            }
+        };
+        
+        console.log('🚀 Firebase auth test page loaded');
+        console.log('📱 Device type:', isMobile() ? 'Mobile' : 'Desktop');
+    </script>
+</body>
+</html>

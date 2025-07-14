@@ -8,7 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { Facebook, Instagram, Twitter, MessageCircle, UserPlus, Users, X } from "lucide-react";
-import { auth, googleProvider, facebookProvider } from '@/firebase/config-simple';
+import { auth, googleProvider, facebookProvider } from '@/firebase/config';
 import { signInWithRedirect, getRedirectResult } from 'firebase/auth';
 
 interface SocialConnection {

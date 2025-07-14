@@ -33,5 +33,17 @@ export default defineConfig({
       strict: true,
       deny: ["**/.*"],
     },
+    hmr: {
+      overlay: false
+    },
+    host: '0.0.0.0', // Allow access from all network interfaces
+    port: 3000, // Try a different port
+    cors: true, // Enable CORS for all origins
+    ...(process.env.HTTPS === 'true' && {
+      https: {
+        key: './localhost.key',
+        cert: './localhost.crt'
+      }
+    }),
   },
 });

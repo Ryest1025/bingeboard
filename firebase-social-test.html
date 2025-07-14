@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Firebase Social Login Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        button { margin: 10px; padding: 10px 20px; font-size: 16px; }
+        #result { margin: 20px 0; padding: 10px; border: 1px solid #ccc; min-height: 100px; }
+        .loading { color: blue; }
+        .success { color: green; }
+        .error { color: red; }
+    </style>
+</head>
+<body>
+    <h1>Firebase Social Login Test</h1>
+    <button id="google-login">Test Google Login</button>
+    <button id="facebook-login">Test Facebook Login</button>
+    <button id="test-config">Test Firebase Config</button>
+    <div id="result">Ready to test...</div>
+
+    <script type="module">
+        // Test Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyB45zr8b2HjIx1fzXOuQsHxeQK9wl_wC88",
+            authDomain: "bingeboard-73c5f.firebaseapp.com",
+            projectId: "bingeboard-73c5f",
+            storageBucket: "bingeboard-73c5f.firebasestorage.app",
+            messagingSenderId: "145846820194",
+            appId: "1:145846820194:web:047efd7a8e59b36944a03b"
+        };
+
+        const resultDiv = document.getElementById('result');
+        let isLoading = false;
+
+        function showResult(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const newMessage = `[${timestamp}] ${message}`;
+            resultDiv.innerHTML += `<p class="${type}">${newMessage}</p>`;
+            resultDiv.scrollTop = resultDiv.scrollHeight;
+            console.log(newMessage);
+        }
+
+        function clearResults() {
+            resultDiv.innerHTML = '';
+        }
+
+        // Test Firebase configuration
+        document.getElementById('test-config').addEventListener('click', async () => {
+            clearResults();
+            showResult('🔧 Testing Firebase configuration...', 'loading');
+            
+            try {
+                // Import Firebase
+                showResult('📦 Loading Firebase modules...', 'loading');
+                const { initializeApp } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js');
+                const { getAuth, GoogleAuthProvider, FacebookAuthProvider } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js');
+                
+                showResult('✅ Firebase modules loaded successfully', 'success');
+                
+                // Initialize Firebase
+                showResult('🔄 Initializing Firebase app...', 'loading');
+                const app = initializeApp(firebaseConfig);
+                showResult('✅ Firebase app initialized', 'success');
+                
+                // Initialize Auth
+                showResult('🔄 Initializing Firebase Auth...', 'loading');
+                const auth = getAuth(app);
+                showResult('✅ Firebase Auth initialized', 'success');
+                
+                // Test providers
+                showResult('🔄 Testing auth providers...', 'loading');
+                const googleProvider = new GoogleAuthProvider();
+                const facebookProvider = new FacebookAuthProvider();
+                showResult('✅ Auth providers created successfully', 'success');
+                
+                showResult('🎉 Firebase configuration test completed successfully!', 'success');
+                
+            } catch (error) {
+                showResult(`❌ Configuration test failed: ${error.message}`, 'error');
+            }
+        });
+
+        // Test Google Login with timeout
+        document.getElementById('google-login').addEventListener('click', async () => {
+            if (isLoading) {
+                showResult('⚠️ Login already in progress...', 'error');
+                return;
+            }
+            
+            clearResults();
+            isLoading = true;
+            
+            try {
+                showResult('🔄 Starting Google login test...', 'loading');
+                
+                // Import Firebase with timeout
+                showResult('📦 Loading Firebase modules...', 'loading');
+                const { initializeApp } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js');
+                const { getAuth, GoogleAuthProvider, signInWithPopup } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js');
+                
+                // Initialize Firebase
+                const app = initializeApp(firebaseConfig);
+                const auth = getAuth(app);
+                showResult('✅ Firebase initialized', 'success');
+                
+                // Create provider
+                const provider = new GoogleAuthProvider();
+                provider.setCustomParameters({
+                    prompt: 'select_account'
+                });
+                showResult('✅ Google provider configured', 'success');
+                
+                // Add timeout to catch hanging popups
+                showResult('🔄 Opening Google login popup...', 'loading');
+                const timeoutPromise = new Promise((_, reject) => {
+                    setTimeout(() => reject(new Error('Login timeout - popup may be blocked or taking too long')), 30000);
+                });
+                
+                const loginPromise = signInWithPopup(auth, provider);
+                
+                const result = await Promise.race([loginPromise, timeoutPromise]);
+                showResult(`✅ Google login successful: ${result.user.email}`, 'success');
+                showResult(`📋 User info: ${JSON.stringify({
+                    uid: result.user.uid,
+                    email: result.user.email,
+                    displayName: result.user.displayName
+                }, null, 2)}`, 'success');
+                
+            } catch (error) {
+                showResult(`❌ Google login failed: ${error.code || 'UNKNOWN'} - ${error.message}`, 'error');
+                
+                if (error.message.includes('timeout')) {
+                    showResult('💡 Possible causes: Popup blocked, slow network, or Firebase config issue', 'error');
+                } else if (error.code === 'auth/popup-blocked') {
+                    showResult('💡 Solution: Allow popups for this site in your browser', 'error');
+                } else if (error.code === 'auth/popup-closed-by-user') {
+                    showResult('💡 User cancelled the login', 'error');
+                } else if (error.code === 'auth/operation-not-allowed') {
+                    showResult('💡 Google sign-in not enabled in Firebase Console', 'error');
+                }
+            } finally {
+                isLoading = false;
+            }
+        });
+
+        // Test Facebook Login with timeout
+        document.getElementById('facebook-login').addEventListener('click', async () => {
+            if (isLoading) {
+                showResult('⚠️ Login already in progress...', 'error');
+                return;
+            }
+            
+            clearResults();
+            isLoading = true;
+            
+            try {
+                showResult('🔄 Starting Facebook login test...', 'loading');
+                
+                // Import Firebase
+                const { initializeApp } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js');
+                const { getAuth, FacebookAuthProvider, signInWithPopup } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js');
+                
+                // Initialize Firebase
+                const app = initializeApp(firebaseConfig);
+                const auth = getAuth(app);
+                showResult('✅ Firebase initialized', 'success');
+                
+                // Create provider
+                const provider = new FacebookAuthProvider();
+                provider.setCustomParameters({
+                    display: 'popup'
+                });
+                showResult('✅ Facebook provider configured', 'success');
+                
+                // Add timeout
+                showResult('🔄 Opening Facebook login popup...', 'loading');
+                const timeoutPromise = new Promise((_, reject) => {
+                    setTimeout(() => reject(new Error('Login timeout - popup may be blocked or taking too long')), 30000);
+                });
+                
+                const loginPromise = signInWithPopup(auth, provider);
+                
+                const result = await Promise.race([loginPromise, timeoutPromise]);
+                showResult(`✅ Facebook login successful: ${result.user.email}`, 'success');
+                
+            } catch (error) {
+                showResult(`❌ Facebook login failed: ${error.code || 'UNKNOWN'} - ${error.message}`, 'error');
+            } finally {
+                isLoading = false;
+            }
+        });
+
+        // Initial status
+        showResult('🔧 Firebase Social Login Test Ready', 'info');
+        showResult('👆 Click "Test Firebase Config" first to verify setup', 'info');
+    </script>
+</body>
+</html>

@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mobile Social Login Debug</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #1a1a1a;
+            color: white;
+        }l>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mobile Social Login Debug</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #1a1a1a;
+            color: white;
+        }
+        .debug-section {
+            background: #2a2a2a;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+        }
+        button {
+            background: #4285f4;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            margin: 10px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button.facebook {
+            background: #1877f2;
+        }
+        .error {
+            color: #ff6b6b;
+            margin: 10px 0;
+        }
+        .success {
+            color: #51cf66;
+            margin: 10px 0;
+        }
+        .info {
+            color: #74c0fc;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 Mobile Social Login Debug</h1>
+    
+    <div class="debug-section">
+        <h3>Environment Check</h3>
+        <div id="env-check">Checking...</div>
+    </div>
+    
+    <div class="debug-section">
+        <h3>Firebase Configuration</h3>
+        <div id="firebase-check">Checking...</div>
+    </div>
+    
+    <div class="debug-section">
+        <h3>Device Detection</h3>
+        <div id="device-check">Checking...</div>
+    </div>
+    
+    <div class="debug-section">
+        <h3>Test Social Login</h3>
+        <button onclick="testGoogleLogin()">🔐 Test Google Login</button>
+        <button class="facebook" onclick="testFacebookLogin()">📘 Test Facebook Login</button>
+        <div id="login-result"></div>
+    </div>
+    
+    <div class="debug-section">
+        <h3>Debug Log</h3>
+        <div id="debug-log" style="background: #000; padding: 10px; border-radius: 4px; font-family: monospace; font-size: 12px; max-height: 300px; overflow-y: auto;"></div>
+    </div>
+
+    <script type="module">
+        // Debug logging
+        function log(message, type = 'info') {
+            const logDiv = document.getElementById('debug-log');
+            const timestamp = new Date().toLocaleTimeString();
+            const className = type === 'error' ? 'error' : type === 'success' ? 'success' : 'info';
+            logDiv.innerHTML += `<div class="${className}">[${timestamp}] ${message}</div>`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+            console.log(`[${timestamp}] ${message}`);
+        }
+
+        // Environment check
+        function checkEnvironment() {
+            const envDiv = document.getElementById('env-check');
+            const currentUrl = window.location.href;
+            const isHttps = currentUrl.startsWith('https://');
+            const protocol = window.location.protocol;
+            
+            envDiv.innerHTML = `
+                <div class="${isHttps ? 'success' : 'error'}">Protocol: ${protocol}</div>
+                <div class="${isHttps ? 'success' : 'error'}">HTTPS: ${isHttps ? 'Yes' : 'No'}</div>
+                <div class="info">URL: ${currentUrl}</div>
+            `;
+            
+            log(`Environment - Protocol: ${protocol}, HTTPS: ${isHttps}`, isHttps ? 'success' : 'error');
+            
+            if (!isHttps) {
+                log('⚠️ Facebook login requires HTTPS. Google may work on localhost.', 'error');
+            }
+        }
+
+        // Device detection
+        function checkDevice() {
+            const deviceDiv = document.getElementById('device-check');
+            const userAgent = navigator.userAgent;
+            const isMobile = /iPhone|iPad|iPod|Android/i.test(userAgent);
+            const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+            
+            deviceDiv.innerHTML = `
+                <div class="info">User Agent: ${userAgent}</div>
+                <div class="${isMobile ? 'success' : 'info'}">Mobile Detected: ${isMobile ? 'Yes' : 'No'}</div>
+                <div class="${isTouchDevice ? 'success' : 'info'}">Touch Device: ${isTouchDevice ? 'Yes' : 'No'}</div>
+            `;
+            
+            log(`Device - Mobile: ${isMobile}, Touch: ${isTouchDevice}`, 'info');
+        }
+
+        // Firebase configuration check
+        async function checkFirebase() {
+            const firebaseDiv = document.getElementById('firebase-check');
+            
+            try {
+                // Try to import Firebase config
+                const firebaseConfig = {
+                    apiKey: "your_firebase_api_key_here",
+                    authDomain: "your-project.firebaseapp.com",
+                    projectId: "your-project-id",
+                    storageBucket: "your-project-id.appspot.com",
+                    messagingSenderId: "your_sender_id",
+                    appId: "your_app_id"
+                };
+                
+                const hasValidConfig = firebaseConfig.apiKey && 
+                                     !firebaseConfig.apiKey.includes('your_') &&
+                                     firebaseConfig.authDomain &&
+                                     !firebaseConfig.authDomain.includes('your-project');
+                
+                firebaseDiv.innerHTML = `
+                    <div class="${hasValidConfig ? 'success' : 'error'}">Config Valid: ${hasValidConfig ? 'Yes' : 'No'}</div>
+                    <div class="info">API Key: ${firebaseConfig.apiKey.substring(0, 10)}...</div>
+                    <div class="info">Auth Domain: ${firebaseConfig.authDomain}</div>
+                    <div class="info">Project ID: ${firebaseConfig.projectId}</div>
+                `;
+                
+                log(`Firebase Config - Valid: ${hasValidConfig}`, hasValidConfig ? 'success' : 'error');
+                
+                if (!hasValidConfig) {
+                    log('❌ Firebase configuration contains placeholder values', 'error');
+                }
+                
+            } catch (error) {
+                firebaseDiv.innerHTML = `<div class="error">Error: ${error.message}</div>`;
+                log(`Firebase Error: ${error.message}`, 'error');
+            }
+        }
+
+        // Test Google login
+        window.testGoogleLogin = async function() {
+            const resultDiv = document.getElementById('login-result');
+            resultDiv.innerHTML = '<div class="info">Testing Google login...</div>';
+            log('Starting Google login test...', 'info');
+            
+            try {
+                // Simulate the login process
+                const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+                const method = isMobile ? 'signInWithRedirect' : 'signInWithPopup';
+                
+                log(`Would use ${method} for Google login`, 'info');
+                resultDiv.innerHTML = `<div class="info">Would use: ${method}</div>`;
+                
+                // Note: Can't actually test Firebase without real config
+                log('Cannot complete test without valid Firebase configuration', 'error');
+                
+            } catch (error) {
+                log(`Google Login Error: ${error.message}`, 'error');
+                resultDiv.innerHTML = `<div class="error">Error: ${error.message}</div>`;
+            }
+        };
+
+        // Test Facebook login
+        window.testFacebookLogin = async function() {
+            const resultDiv = document.getElementById('login-result');
+            resultDiv.innerHTML = '<div class="info">Testing Facebook login...</div>';
+            log('Starting Facebook login test...', 'info');
+            
+            try {
+                const isHttps = window.location.protocol === 'https:';
+                
+                if (!isHttps) {
+                    log('❌ Facebook login requires HTTPS', 'error');
+                    resultDiv.innerHTML = '<div class="error">Facebook requires HTTPS</div>';
+                    return;
+                }
+                
+                const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+                const method = isMobile ? 'signInWithRedirect' : 'signInWithPopup';
+                
+                log(`Would use ${method} for Facebook login`, 'info');
+                resultDiv.innerHTML = `<div class="info">Would use: ${method}</div>`;
+                
+                // Note: Can't actually test Firebase without real config
+                log('Cannot complete test without valid Firebase configuration', 'error');
+                
+            } catch (error) {
+                log(`Facebook Login Error: ${error.message}`, 'error');
+                resultDiv.innerHTML = `<div class="error">Error: ${error.message}</div>`;
+            }
+        };
+
+        // Initialize checks
+        checkEnvironment();
+        checkDevice();
+        checkFirebase();
+        
+        log('Mobile Social Login Debug Tool Initialized', 'success');
+    </script>
+</body>
+</html>

@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mobile Access - BingeBoard</title>
+    <style>
+        body {
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            color: #ffffff;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            min-height: 100vh;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .qr-code {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            display: inline-block;
+            margin: 20px 0;
+        }
+        
+        .url-box {
+            background: #1f2937;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+            word-break: break-all;
+            font-family: monospace;
+            border: 1px solid #374151;
+            font-size: 16px;
+        }
+        
+        .step {
+            text-align: left;
+            margin: 15px 0;
+            padding: 15px;
+            background: rgba(59, 130, 246, 0.1);
+            border-radius: 8px;
+            border-left: 4px solid #3b82f6;
+        }
+        
+        .button {
+            background: linear-gradient(135deg, #14b8a6, #0891b2);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 15px 25px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 10px;
+            transition: all 0.3s ease;
+        }
+        
+        .button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(20, 184, 166, 0.3);
+        }
+        
+        h1 { color: #14b8a6; }
+        h2 { color: #3b82f6; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <h1>📱 Mobile Access Setup</h1>
+            <p>Get BingeBoard running on your mobile device</p>
+        </div>
+        
+        <div class="card">
+            <h2>🌐 Your Mobile URL</h2>
+            <div class="url-box" id="mobile-url">
+                http://192.168.1.234:5000
+            </div>
+            
+            <div class="qr-code">
+                <div id="qrcode"></div>
+            </div>
+            
+            <p style="color: #9ca3af;">
+                📸 Scan this QR code with your phone's camera app
+            </p>
+        </div>
+        
+        <div class="card">
+            <h2>📋 Step-by-Step Instructions</h2>
+            
+            <div class="step">
+                <strong>Step 1:</strong> Make sure your phone is connected to the same WiFi network as this computer
+            </div>
+            
+            <div class="step">
+                <strong>Step 2:</strong> Open your phone's camera app and point it at the QR code above
+            </div>
+            
+            <div class="step">
+                <strong>Step 3:</strong> Tap the notification/link that appears to open BingeBoard
+            </div>
+            
+            <div class="step">
+                <strong>Alternative:</strong> Manually type the URL into your phone's browser:
+                <div class="url-box">http://192.168.1.234:5000</div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h2>🔧 Troubleshooting</h2>
+            
+            <div class="step">
+                <strong>Can't connect?</strong> Check that both devices are on the same WiFi network
+            </div>
+            
+            <div class="step">
+                <strong>Still not working?</strong> Try these URLs:
+                <div class="url-box">http://192.168.1.234:5000/mobile-status</div>
+                <div class="url-box">http://192.168.1.234:5000/mobile-working.html</div>
+            </div>
+            
+            <div class="step">
+                <strong>Page won't load?</strong> Your firewall might be blocking connections. Try temporarily disabling Windows Firewall.
+            </div>
+            
+            <div class="step">
+                <strong>Need help?</strong> Check the mobile diagnostic page:
+                <div class="url-box">http://192.168.1.234:5000/mobile-status</div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <button class="button" onclick="testConnection()">🧪 Test Connection</button>
+            <button class="button" onclick="openMobileStatus()">📊 Mobile Diagnostics</button>
+            <button class="button" onclick="copyUrl()">📋 Copy URL</button>
+        </div>
+        
+        <div id="status" style="margin-top: 20px;"></div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+    <script>
+        const mobileUrl = 'http://192.168.1.234:5000';
+        
+        // Generate QR code
+        QRCode.toCanvas(document.getElementById('qrcode'), mobileUrl, {
+            width: 200,
+            margin: 2,
+            color: {
+                dark: '#000000',
+                light: '#FFFFFF'
+            }
+        }, function (error) {
+            if (error) console.error(error);
+            console.log('QR code generated successfully!');
+        });
+        
+        function testConnection() {
+            const status = document.getElementById('status');
+            status.innerHTML = '<div style="color: #14b8a6;">🔄 Testing connection...</div>';
+            
+            fetch('/api/health')
+                .then(response => response.json())
+                .then(data => {
+                    status.innerHTML = '<div style="color: #10b981;">✅ Server is running and accessible!</div>';
+                })
+                .catch(error => {
+                    status.innerHTML = '<div style="color: #ef4444;">❌ Connection failed: ' + error.message + '</div>';
+                });
+        }
+        
+        function openMobileStatus() {
+            window.open('/mobile-status', '_blank');
+        }
+        
+        function copyUrl() {
+            navigator.clipboard.writeText(mobileUrl).then(function() {
+                const status = document.getElementById('status');
+                status.innerHTML = '<div style="color: #10b981;">📋 URL copied to clipboard!</div>';
+                setTimeout(() => status.innerHTML = '', 3000);
+            }, function(err) {
+                console.error('Could not copy text: ', err);
+            });
+        }
+        
+        // Auto-test connection on load
+        setTimeout(testConnection, 1000);
+    </script>
+</body>
+</html>

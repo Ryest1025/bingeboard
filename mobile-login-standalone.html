@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BingeBoard Mobile Login</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      padding: 20px;
+      max-width: 500px;
+      margin: 0 auto;
+      background-color: #0f172a;
+      color: #e2e8f0;
+    }
+    h1 {
+      text-align: center;
+      color: #38bdf8;
+    }
+    .card {
+      background-color: #1e293b;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    .button {
+      display: block;
+      width: 100%;
+      padding: 12px;
+      background-color: #0ea5e9;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 16px;
+      margin-bottom: 10px;
+      cursor: pointer;
+      text-align: center;
+      text-decoration: none;
+    }
+    .button:hover {
+      background-color: #0284c7;
+    }
+    .status {
+      margin-top: 10px;
+      padding: 10px;
+      border-radius: 6px;
+      background-color: #1e293b;
+      border: 1px solid #475569;
+    }
+    .log {
+      margin-top: 20px;
+      padding: 10px;
+      background-color: #1e293b;
+      border-radius: 6px;
+      max-height: 200px;
+      overflow-y: auto;
+      font-family: monospace;
+      font-size: 12px;
+      border: 1px solid #475569;
+    }
+    .log-entry {
+      margin-bottom: 5px;
+      border-bottom: 1px solid #334155;
+      padding-bottom: 5px;
+    }
+    .success {
+      color: #4ade80;
+    }
+    .error {
+      color: #f87171;
+    }
+    .info {
+      color: #38bdf8;
+    }
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    input {
+      padding: 10px;
+      border-radius: 4px;
+      border: 1px solid #475569;
+      background-color: #1e293b;
+      color: white;
+    }
+    label {
+      margin-bottom: 5px;
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <h1>BingeBoard Mobile Login</h1>
+  
+  <div class="card">
+    <h2>Login Form</h2>
+    <form id="loginForm">
+      <div>
+        <label for="email">Email</label>
+        <input type="email" id="email" placeholder="you@example.com" required>
+      </div>
+      <div>
+        <label for="password">Password</label>
+        <input type="password" id="password" placeholder="••••••••" required>
+      </div>
+      <button type="submit" class="button">Log In</button>
+    </form>
+  </div>
+  
+  <div class="card">
+    <h2>Google Login</h2>
+    <button id="googleLoginBtn" class="button">Continue with Google</button>
+  </div>
+  
+  <div class="card">
+    <h2>Connection Information</h2>
+    <div>
+      <p>Server URLs to try:</p>
+      <ul>
+        <li><a href="http://192.168.7.122:3000" class="info">http://192.168.7.122:3000</a></li>
+        <li><a href="http://192.168.7.122:5000" class="info">http://192.168.7.122:5000</a></li>
+        <li><a href="http://localhost:3000" class="info">http://localhost:3000</a></li>
+        <li><a href="http://localhost:5000" class="info">http://localhost:5000</a></li>
+      </ul>
+    </div>
+    <div class="status" id="status">Not connected to server</div>
+  </div>
+  
+  <div class="card">
+    <h2>Network Diagnostic</h2>
+    <button id="checkConnBtn" class="button">Check Connection</button>
+    <div class="log" id="log"></div>
+  </div>
+
+  <script>
+    const log = document.getElementById('log');
+    const status = document.getElementById('status');
+    const loginForm = document.getElementById('loginForm');
+    const googleLoginBtn = document.getElementById('googleLoginBtn');
+    const checkConnBtn = document.getElementById('checkConnBtn');
+    
+    function addLog(message, type = 'info') {
+      const entry = document.createElement('div');
+      entry.className = `log-entry ${type}`;
+      entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+      log.prepend(entry);
+    }
+    
+    async function checkConnection(url) {
+      try {
+        addLog(`Trying to connect to ${url}/api/health...`);
+        const response = await fetch(`${url}/api/health`, {
+          method: 'GET',
+          headers: {
+            'Accept': 'application/json',
+          },
+          mode: 'cors',
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          status.innerHTML = `<span class="success">✓ Connected to server: ${url}</span><br>Status: ${data.status}<br>Time: ${data.timestamp}`;
+          addLog(`Successfully connected to ${url}`, 'success');
+          return true;
+        } else {
+          addLog(`Server error at ${url}: ${response.status}`, 'error');
+          return false;
+        }
+      } catch (error) {
+        addLog(`Connection error to ${url}: ${error.message}`, 'error');
+        return false;
+      }
+    }
+    
+    async function tryAllServers() {
+      const urls = [
+        'http://192.168.7.122:3000',
+        'http://192.168.7.122:5000',
+        'http://localhost:3000',
+        'http://localhost:5000'
+      ];
+      
+      status.innerHTML = 'Checking all possible server URLs...';
+      
+      for (const url of urls) {
+        const success = await checkConnection(url);
+        if (success) {
+          return url;
+        }
+      }
+      
+      status.innerHTML = '<span class="error">✗ Could not connect to any server</span>';
+      return null;
+    }
+    
+    loginForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      
+      addLog(`Attempting to log in as ${email}...`);
+      
+      // First find a working server
+      const serverUrl = await tryAllServers();
+      
+      if (!serverUrl) {
+        addLog('Cannot log in: No server connection available', 'error');
+        return;
+      }
+      
+      try {
+        addLog(`Sending login request to ${serverUrl}...`);
+        // This is just a simulation, in a real app you'd send the credentials to your server
+        addLog('Login simulation successful! (No actual authentication happened)', 'success');
+      } catch (error) {
+        addLog(`Login error: ${error.message}`, 'error');
+      }
+    });
+    
+    googleLoginBtn.addEventListener('click', async () => {
+      addLog('Google login is not implemented in this demo page.');
+      addLog('Please access the real app at one of the URLs above if they work.');
+    });
+    
+    checkConnBtn.addEventListener('click', async () => {
+      await tryAllServers();
+    });
+    
+    // Add user agent info
+    addLog(`User Agent: ${navigator.userAgent}`, 'info');
+    
+    // Add device info
+    addLog(`Screen: ${window.innerWidth}x${window.innerHeight}`, 'info');
+    
+    // Add protocol info
+    addLog(`Protocol: ${window.location.protocol}`, 'info');
+    
+    // Try connecting on page load
+    tryAllServers();
+  </script>
+</body>
+</html>

@@ -11,7 +11,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tv, Star, Users, Calendar, Play, Shield, Zap, Globe } from "lucide-react";
-import { isMobileDevice } from "@/lib/mobileAuth";
+
+// Simple mobile detection
+const isMobileDevice = () => /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
 export default function BulletproofLanding() {
   const [, setLocation] = useLocation();

@@ -54,9 +54,16 @@ export function ListSelectorModal({
   const queryClient = useQueryClient();
 
   // Fetch user's custom lists
-  const { data: userLists = [], isLoading } = useQuery<UserList[]>({
+  const { data: userLists = [], isLoading, error } = useQuery<UserList[]>({
     queryKey: ['/api/lists'],
     staleTime: 5 * 60 * 1000,
+    retry: (failureCount, error: any) => {
+      // Don't retry on authentication errors
+      if (error?.status === 401 || error?.message?.includes('Authentication')) {
+        return false;
+      }
+      return failureCount < 3;
+    }
   });
 
   // Create new list mutation
@@ -110,12 +117,12 @@ export function ListSelectorModal({
       return await response.json();
     },
     onSuccess: (_, { listId }) => {
-      const list = userLists.find(l => l.id === listId);
+      const list = userLists?.find(l => l.id === listId);
       queryClient.invalidateQueries({ queryKey: ['/api/lists'] });
       queryClient.invalidateQueries({ queryKey: [`/api/lists/${listId}/items`] });
       toast({
         title: "Added to List",
-        description: `"${show.title || show.name}" has been added to "${list?.name}".`,
+        description: `"${show.title || show.name}" has been added to "${list?.name || 'your list'}".`,
       });
       onSuccess?.();
       onClose();
@@ -242,7 +249,7 @@ export function ListSelectorModal({
             
             {isLoading ? (
               <div className="text-center text-gray-400 py-4">Loading your lists...</div>
-            ) : userLists.length === 0 ? (
+            ) : !userLists || userLists.length === 0 ? (
               <div className="text-center text-gray-400 py-4">
                 <List className="h-8 w-8 mx-auto mb-2 opacity-50" />
                 No lists yet. Create your first list!

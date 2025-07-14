@@ -1,9 +1,6 @@
-// Firebase messaging disabled for development environment
-// import { getToken, onMessage, MessagePayload } from 'firebase/messaging';
-// import { messaging } from './config';
-
-// Mock messaging for compatibility
-const messaging = null;
+// Firebase messaging - properly configured
+import { getToken, onMessage, type MessagePayload } from 'firebase/messaging';
+import { messaging } from './config';
 
 // VAPID key - will be provided via environment variable
 const VAPID_KEY = import.meta.env.VITE_FIREBASE_VAPID_KEY;

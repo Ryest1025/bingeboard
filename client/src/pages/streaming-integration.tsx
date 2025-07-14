@@ -302,6 +302,7 @@ export default function StreamingIntegration() {
             
             <TabsContent value="patterns" className="space-y-4">
               {viewingPatterns && !patternsLoading && (
+                <div>
                   <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                     <Card>
                       <CardHeader className="pb-2">
@@ -318,93 +319,93 @@ export default function StreamingIntegration() {
                       </CardContent>
                     </Card>
 
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium">Preferred Platforms</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-1">
-                    {viewingPatterns.preferredPlatforms.map((platform: string) => (
-                      <Badge key={platform} variant="outline" className="text-xs">
-                        {platform}
-                      </Badge>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium">Viewing Times</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-1">
-                    {viewingPatterns.viewingTimes.map((time: string) => (
-                      <Badge key={time} variant="outline" className="text-xs">
-                        {formatTime(time)}
-                      </Badge>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium">Completion Rate</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-primary">
-                    {Math.round(viewingPatterns.completionRate * 100)}%
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    Average rating: {viewingPatterns.averageRating.toFixed(1)}/5
-                  </p>
-                </CardContent>
-              </Card>
-            </div>
-          </div>
-        )}
-
-        {/* Recent Viewing History */}
-        {viewingHistory.length > 0 && !historyLoading && (
-          <div className="space-y-4">
-            <h2 className="text-xl font-semibold flex items-center gap-2">
-              <Eye className="h-5 w-5" />
-              Recent Viewing History
-            </h2>
-            <Card>
-              <CardContent className="p-0">
-                <div className="space-y-0">
-                  {viewingHistory.slice(0, 10).map((record: any, index: number) => (
-                    <div key={record.id}>
-                      <div className="flex items-center justify-between p-4">
-                        <div className="flex items-center gap-3">
-                          <Tv className="h-4 w-4 text-muted-foreground" />
-                          <div>
-                            <p className="font-medium">
-                              {record.showTitle || "Unknown Show"}
-                            </p>
-                            <p className="text-sm text-muted-foreground">
-                              {record.platform} • {formatDate(record.watchedAt)}
-                            </p>
-                          </div>
+                    <Card>
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-sm font-medium">Preferred Platforms</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-1">
+                          {viewingPatterns.preferredPlatforms.map((platform: string) => (
+                            <Badge key={platform} variant="outline" className="text-xs">
+                              {platform}
+                            </Badge>
+                          ))}
                         </div>
-                        <div className="text-right">
-                          <p className="text-sm font-medium">
-                            {Math.round((record.completionPercentage || 0) * 100)}%
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            {record.watchDuration || 0}min
-                          </p>
+                      </CardContent>
+                    </Card>
+
+                    <Card>
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-sm font-medium">Viewing Times</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-1">
+                          {viewingPatterns.viewingTimes.map((time: string) => (
+                            <Badge key={time} variant="outline" className="text-xs">
+                              {formatTime(time)}
+                            </Badge>
+                          ))}
                         </div>
-                      </div>
-                      {index < viewingHistory.slice(0, 10).length - 1 && <Separator />}
-                    </div>
-                  ))}
+                      </CardContent>
+                    </Card>
+
+                    <Card>
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-sm font-medium">Completion Rate</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-2xl font-bold text-primary">
+                          {Math.round(viewingPatterns.completionRate * 100)}%
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          Average rating: {viewingPatterns.averageRating.toFixed(1)}/5
+                        </p>
+                      </CardContent>
+                    </Card>
+                  </div>
                 </div>
-              </CardContent>
-            </Card>
-          </div>
+              )}
+
+              {/* Recent Viewing History */}
+              {viewingHistory.length > 0 && !historyLoading && (
+                <div className="space-y-4">
+                  <h2 className="text-xl font-semibold flex items-center gap-2">
+                    <Eye className="h-5 w-5" />
+                    Recent Viewing History
+                  </h2>
+                  <Card>
+                    <CardContent className="p-0">
+                      <div className="space-y-0">
+                        {viewingHistory.slice(0, 10).map((record: any, index: number) => (
+                          <div key={record.id}>
+                            <div className="flex items-center justify-between p-4">
+                              <div className="flex items-center gap-3">
+                                <Tv className="h-4 w-4 text-muted-foreground" />
+                                <div>
+                                  <p className="font-medium">
+                                    {record.showTitle || "Unknown Show"}
+                                  </p>
+                                  <p className="text-sm text-muted-foreground">
+                                    {record.platform} • {formatDate(record.watchedAt)}
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="text-right">
+                                <p className="text-sm font-medium">
+                                  {Math.round((record.completionPercentage || 0) * 100)}%
+                                </p>
+                                <p className="text-xs text-muted-foreground">
+                                  {record.watchDuration || 0}min
+                                </p>
+                              </div>
+                            </div>
+                            {index < viewingHistory.slice(0, 10).length - 1 && <Separator />}
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
               )}
             </TabsContent>
           </Tabs>

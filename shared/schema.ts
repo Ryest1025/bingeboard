@@ -34,6 +34,7 @@ export const users = pgTable("users", {
   username: varchar("username").unique(),
   firstName: varchar("first_name"),
   lastName: varchar("last_name"),
+  phoneNumber: varchar("phone_number"), // For SMS notifications and password reset
   profileImageUrl: varchar("profile_image_url"),
   passwordHash: varchar("password_hash"), // For email authentication
   authProvider: varchar("auth_provider").default("replit"), // 'replit', 'email', 'facebook', 'google'

@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Firebase Auth Diagnostic</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .result { margin: 10px 0; padding: 10px; border: 1px solid #ccc; }
+        .error { background-color: #ffe6e6; border-color: #ff0000; }
+        .success { background-color: #e6ffe6; border-color: #00ff00; }
+        .warning { background-color: #fff3cd; border-color: #ffc107; }
+    </style>
+</head>
+<body>
+    <h1>Firebase Auth Configuration Diagnostic</h1>
+    <div id="results"></div>
+    
+    <script type="module">
+        const results = document.getElementById('results');
+        
+        function addResult(message, type = 'info') {
+            const div = document.createElement('div');
+            div.className = `result ${type}`;
+            div.innerHTML = message;
+            results.appendChild(div);
+        }
+        
+        // Import Firebase
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { 
+            getAuth, 
+            GoogleAuthProvider, 
+            FacebookAuthProvider
+        } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+
+        // Test Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyB45zr8b2HjIx1fzXOuQsHxeQK9wl_wC88",
+            authDomain: "bingeboard-73c5f.firebaseapp.com",
+            projectId: "bingeboard-73c5f",
+            storageBucket: "bingeboard-73c5f.firebasestorage.app",
+            messagingSenderId: "145846820194",
+            appId: "1:145846820194:web:047efd7a8e59b36944a03b"
+        };
+
+        try {
+            // Initialize Firebase
+            addResult("🔧 Initializing Firebase...", "info");
+            const app = initializeApp(firebaseConfig);
+            addResult("✅ Firebase app initialized successfully", "success");
+            
+            // Initialize Auth
+            const auth = getAuth(app);
+            addResult("✅ Firebase Auth initialized successfully", "success");
+            
+            // Test provider creation
+            try {
+                const googleProvider = new GoogleAuthProvider();
+                addResult("✅ Google provider created successfully", "success");
+            } catch (error) {
+                addResult(`❌ Failed to create Google provider: ${error.message}`, "error");
+            }
+            
+            try {
+                const facebookProvider = new FacebookAuthProvider();
+                addResult("✅ Facebook provider created successfully", "success");
+            } catch (error) {
+                addResult(`❌ Failed to create Facebook provider: ${error.message}`, "error");
+            }
+            
+            // Check current domain
+            addResult(`🌐 Current domain: ${window.location.hostname}`, "info");
+            addResult(`🌐 Current origin: ${window.location.origin}`, "info");
+            addResult(`🌐 Firebase auth domain: ${firebaseConfig.authDomain}`, "info");
+            
+            // Check if localhost is likely authorized
+            if (window.location.hostname === 'localhost') {
+                addResult("⚠️ Running on localhost - make sure 'localhost' is added to Firebase Console → Authentication → Settings → Authorized domains", "warning");
+            }
+            
+            // Provide configuration instructions
+            addResult(`
+                <h3>📋 To enable social login:</h3>
+                <ol>
+                    <li>Go to <a href="https://console.firebase.google.com/project/bingeboard-73c5f/authentication/providers" target="_blank">Firebase Console</a></li>
+                    <li>Enable Google and/or Facebook providers</li>
+                    <li>Add 'localhost' to Authorized domains</li>
+                    <li>For Google: No additional setup needed</li>
+                    <li>For Facebook: Add your Facebook App ID and Secret</li>
+                </ol>
+            `, "info");
+            
+        } catch (error) {
+            addResult(`💥 Firebase initialization failed: ${error.message}`, "error");
+        }
+    </script>
+</body>
+</html>

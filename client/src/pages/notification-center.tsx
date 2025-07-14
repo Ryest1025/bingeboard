@@ -168,13 +168,17 @@ export default function NotificationCenter() {
     return date.toLocaleDateString();
   };
 
-  const filteredNotifications = notifications.filter((notification: Notification) => {
-    if (activeTab === 'all') return true;
-    if (activeTab === 'unread') return !notification.isRead;
-    return notification.type === activeTab;
-  });
+  const filteredNotifications = notifications && Array.isArray(notifications) 
+    ? notifications.filter((notification: Notification) => {
+        if (activeTab === 'all') return true;
+        if (activeTab === 'unread') return !notification.isRead;
+        return notification.type === activeTab;
+      })
+    : [];
 
-  const unreadCount = notifications.filter((n: Notification) => !n.isRead).length;
+  const unreadCount = notifications && Array.isArray(notifications) 
+    ? notifications.filter((n: Notification) => !n.isRead).length 
+    : 0;
 
   if (!isSupported) {
     return (

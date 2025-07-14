@@ -1,3 +1,15 @@
+/**
+ * 🔐 LANDING PAGE WITH PROTECTED FIREBASE SOCIAL LOGINS
+ * 
+ * ⚠️ CRITICAL: This file uses DYNAMIC FIREBASE IMPORTS to prevent conflicts 
+ * with the useAuth hook's authentication system.
+ * 
+ * 🚨 DO NOT CHANGE these patterns:
+ * 1. ✅ Dynamic imports: await import("firebase/auth")
+ * 2. ❌ NEVER use static imports from "firebase/auth"
+ * 
+ * Last Fixed: July 11, 2025 - Converted static imports to dynamic
+ */
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
@@ -17,8 +29,8 @@ import {
   Sparkles
 } from "lucide-react";
 import { SiGoogle, SiFacebook } from "react-icons/si";
-import { getAuth, signInWithPopup, GoogleAuthProvider, FacebookAuthProvider } from "firebase/auth";
 import { useToast } from "@/hooks/use-toast";
+import { isMobileDevice } from "@/lib/deviceUtils";
 
 
 interface Show {
@@ -151,81 +163,341 @@ export default function Landing() {
   // State for trending shows
   const [trendingShows, setTrendingShows] = useState<{ results: Show[] } | null>(null);
   
-  const auth = getAuth();
+  // Handle redirect results for mobile social login
+  useEffect(() => {
+    const handleRedirectResult = async () => {
+      try {
+        const { getRedirectResult } = await import("firebase/auth");
+        const auth = await getFirebaseAuth();
+        
+        const result = await getRedirectResult(auth);
+        if (result?.user) {
+          console.log("✅ Redirect login successful:", result.user.email);
+          
+          // Create backend session with detailed logging
+          console.log("🔄 Starting backend session creation...");
+          const sessionResult = await createBackendSession(result.user);
+          console.log("✅ Backend session created:", sessionResult);
+          
+          // Wait a moment for session to settle
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          
+          toast({
+            title: "Welcome to BingeBoard!",
+            description: `Successfully signed in with ${result.user.email}`,
+          });
+          
+          // Force a page reload to refresh auth state
+          console.log("🔄 Forcing page reload to refresh auth state...");
+          window.location.href = '/';
+        }
+      } catch (error: any) {
+        console.error("❌ Redirect login failed:", error);
+        if (error.code !== 'auth/null-user') {
+          toast({
+            title: "Sign-in Failed",
+            description: error.message,
+            variant: "destructive",
+          });
+        }
+      }
+    };
+    
+    handleRedirectResult();
+  }, []);
+  
+  // Dynamic Firebase auth - only loaded when needed
+  const getFirebaseAuth = async () => {
+    const { getAuth } = await import("firebase/auth");
+    const { initializeApp, getApps, getApp } = await import("firebase/app");
+    
+    // Use the same Firebase config as the main app
+    const firebaseConfig = {
+      apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+      authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+      projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+      storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+      messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+      appId: import.meta.env.VITE_FIREBASE_APP_ID,
+      measurementId: "G-TB1ZXQ79LB"
+    };
+    
+    console.log('🔧 Firebase config for social login:', {
+      authDomain: firebaseConfig.authDomain,
+      projectId: firebaseConfig.projectId,
+      isDev: import.meta.env.DEV
+    });
+    
+    // Initialize Firebase app only if it doesn't exist
+    const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
+    const auth = getAuth(app);
+    
+    // Configure auth settings for better compatibility with storage partitioning
+    if (import.meta.env.DEV) {
+      console.log('🔧 Configuring Firebase Auth for development');
+      
+      // Disable app verification for testing
+      if (auth.settings) {
+        auth.settings.appVerificationDisabledForTesting = true;
+      }
+    }
+    
+    return auth;
+  };
   
   const createBackendSession = async (user: any) => {
     try {
+      console.log('🔐 Creating backend session for:', user.email);
       const idToken = await user.getIdToken();
+      console.log('🎫 Firebase ID token obtained');
+      
+      const requestBody = { 
+        firebaseToken: idToken,
+        user: {
+          uid: user.uid,
+          email: user.email,
+          displayName: user.displayName,
+          photoURL: user.photoURL
+        }
+      };
+      
+      console.log('📤 Sending session request to backend...');
       const response = await fetch('/api/auth/firebase-session', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${idToken}`
         },
-        credentials: 'include'
+        credentials: 'include',
+        body: JSON.stringify(requestBody)
       });
       
+      console.log('📥 Backend response status:', response.status);
+      
       if (!response.ok) {
-        throw new Error('Failed to create backend session');
+        const errorText = await response.text();
+        console.error('❌ Backend session creation failed:', errorText);
+        throw new Error(`Failed to create backend session: ${response.status} ${errorText}`);
       }
       
-      return await response.json();
+      const result = await response.json();
+      console.log('✅ Backend session created successfully:', result);
+      return result;
     } catch (error) {
-      console.error('Backend session creation failed:', error);
+      console.error('💥 Backend session creation failed:', error);
       throw error;
     }
   };
 
   const handleGoogleLogin = async () => {
+    console.log("🔄 Google login button clicked!");
     setLoading(true);
     
     try {
-      const provider = new GoogleAuthProvider();
-      const result = await signInWithPopup(auth, provider);
+      console.log("🔄 Starting Google login process...");
+      console.log("🔍 Current URL:", window.location.href);
+      console.log("🔍 Firebase config check:");
+      console.log("  - API Key:", import.meta.env.VITE_FIREBASE_API_KEY ? "✅ Set" : "❌ Missing");
+      console.log("  - Auth Domain:", import.meta.env.VITE_FIREBASE_AUTH_DOMAIN);
+      console.log("  - Project ID:", import.meta.env.VITE_FIREBASE_PROJECT_ID);
       
-      // Create backend session
-      await createBackendSession(result.user);
+      // Dynamic imports to prevent conflicts with useAuth hook
+      const { GoogleAuthProvider, signInWithPopup } = await import("firebase/auth");
+      console.log("✅ Firebase auth imports loaded");
+      
+      const auth = await getFirebaseAuth();
+      console.log("✅ Firebase auth instance obtained:", auth?.app?.options?.projectId);
+      
+      const provider = new GoogleAuthProvider();
+      console.log("✅ Google provider created");
+      
+      // Add custom parameters to ensure popup behavior
+      provider.addScope('email');
+      provider.addScope('profile');
+      provider.setCustomParameters({
+        prompt: 'select_account'
+      });
+      
+      console.log('🌐 Current origin:', window.location.origin);
+      console.log('🌐 Development mode:', import.meta.env.DEV);
+      
+      // Check if popup will be blocked
+      const testPopup = window.open('', '_blank', 'width=1,height=1');
+      if (!testPopup || testPopup.closed || typeof testPopup.closed == 'undefined') {
+        console.warn('⚠️ Popup might be blocked by browser');
+        toast({
+          title: "Popup Blocked",
+          description: "Please allow popups for this site and try again.",
+          variant: "destructive",
+        });
+        return;
+      } else {
+        testPopup.close();
+        console.log('✅ Popup test passed');
+      }
+      
+      // Use popup authentication
+      console.log("🛠️ Attempting Google popup sign-in...");
+      
+      const result = await signInWithPopup(auth, provider);
+      console.log("✅ Google popup login successful:");
+      console.log("  - User ID:", result.user.uid);
+      console.log("  - Email:", result.user.email);
+      console.log("  - Display Name:", result.user.displayName);
+      console.log("  - Photo URL:", result.user.photoURL);
+      
+      // Create backend session with detailed logging
+      console.log("🔄 Starting backend session creation...");
+      const sessionResult = await createBackendSession(result.user);
+      console.log("✅ Backend session created:", sessionResult);
+      
+      // Wait a moment for session to settle
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
       toast({
         title: "Welcome to BingeBoard!",
         description: "Successfully signed in with Google",
       });
       
-      setLocation('/');
+      // Force a page reload to refresh auth state
+      console.log("🔄 Forcing page reload to refresh auth state...");
+      window.location.href = '/';
+      
     } catch (err: any) {
+      console.error("💥 Google login error:", err);
+      console.error("Error code:", err.code);
+      console.error("Error message:", err.message);
+      console.error("Error stack:", err.stack);
+      
+      // Handle specific Firebase errors
+      let errorMessage = err.message;
+      if (err.code === 'auth/popup-blocked') {
+        errorMessage = 'Popup was blocked by browser. Please allow popups and try again.';
+      } else if (err.code === 'auth/popup-closed-by-user') {
+        errorMessage = 'Sign-in was cancelled.';
+      } else if (err.code === 'auth/operation-not-allowed') {
+        errorMessage = 'Google sign-in is not enabled in Firebase Console.';
+      } else if (err.code === 'auth/configuration-not-found') {
+        errorMessage = 'Firebase configuration error. Please check the setup.';
+      } else if (err.code === 'auth/unauthorized-domain') {
+        errorMessage = 'This domain is not authorized for OAuth operations in Firebase Console.';
+      } else if (err.code === 'auth/network-request-failed') {
+        errorMessage = 'Network error. Please check your internet connection.';
+      }
+      
       toast({
         title: "Sign-in Failed",
-        description: err.message,
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
+      console.log("🔄 Setting loading to false");
       setLoading(false);
     }
   };
 
   const handleFacebookLogin = async () => {
+    console.log("🔄 Facebook login button clicked!");
     setLoading(true);
     
     try {
-      const provider = new FacebookAuthProvider();
-      const result = await signInWithPopup(auth, provider);
+      console.log("🔄 Starting Facebook login process...");
+      console.log("🔍 Current URL:", window.location.href);
+      console.log("🔍 Firebase config check:");
+      console.log("  - API Key:", import.meta.env.VITE_FIREBASE_API_KEY ? "✅ Set" : "❌ Missing");
+      console.log("  - Auth Domain:", import.meta.env.VITE_FIREBASE_AUTH_DOMAIN);
+      console.log("  - Project ID:", import.meta.env.VITE_FIREBASE_PROJECT_ID);
       
-      // Create backend session
-      await createBackendSession(result.user);
+      // Dynamic imports to prevent conflicts with useAuth hook
+      const { FacebookAuthProvider, signInWithPopup } = await import("firebase/auth");
+      console.log("✅ Firebase auth imports loaded");
+      
+      const auth = await getFirebaseAuth();
+      console.log("✅ Firebase auth instance obtained:", auth?.app?.options?.projectId);
+      
+      const provider = new FacebookAuthProvider();
+      console.log("✅ Facebook provider created");
+      
+      // Add custom parameters
+      provider.addScope('email');
+      provider.setCustomParameters({
+        display: 'popup'
+      });
+      
+      console.log('🌐 Current origin:', window.location.origin);
+      console.log('🌐 Development mode:', import.meta.env.DEV);
+      
+      // Check if popup will be blocked
+      const testPopup = window.open('', '_blank', 'width=1,height=1');
+      if (!testPopup || testPopup.closed || typeof testPopup.closed == 'undefined') {
+        console.warn('⚠️ Popup might be blocked by browser');
+        toast({
+          title: "Popup Blocked",
+          description: "Please allow popups for this site and try again.",
+          variant: "destructive",
+        });
+        return;
+      } else {
+        testPopup.close();
+        console.log('✅ Popup test passed');
+      }
+      
+      // Use popup authentication
+      console.log("🛠️ Attempting Facebook popup sign-in...");
+      
+      const result = await signInWithPopup(auth, provider);
+      console.log("✅ Facebook popup login successful:");
+      console.log("  - User ID:", result.user.uid);
+      console.log("  - Email:", result.user.email);
+      console.log("  - Display Name:", result.user.displayName);
+      console.log("  - Photo URL:", result.user.photoURL);
+      
+      // Create backend session with detailed logging
+      console.log("🔄 Starting backend session creation...");
+      const sessionResult = await createBackendSession(result.user);
+      console.log("✅ Backend session created:", sessionResult);
+      
+      // Wait a moment for session to settle
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
       toast({
         title: "Welcome to BingeBoard!",
         description: "Successfully signed in with Facebook",
       });
       
-      setLocation('/');
+      // Force a page reload to refresh auth state
+      console.log("🔄 Forcing page reload to refresh auth state...");
+      window.location.href = '/';
+      
     } catch (err: any) {
+      console.error("💥 Facebook login error:", err);
+      console.error("Error code:", err.code);
+      console.error("Error message:", err.message);
+      console.error("Error stack:", err.stack);
+      
+      // Handle specific Firebase errors
+      let errorMessage = err.message;
+      if (err.code === 'auth/popup-blocked') {
+        errorMessage = 'Popup was blocked by browser. Please allow popups and try again.';
+      } else if (err.code === 'auth/popup-closed-by-user') {
+        errorMessage = 'Sign-in was cancelled.';
+      } else if (err.code === 'auth/operation-not-allowed') {
+        errorMessage = 'Facebook sign-in is not enabled in Firebase Console.';
+      } else if (err.code === 'auth/configuration-not-found') {
+        errorMessage = 'Firebase configuration error. Please check the setup.';
+      } else if (err.code === 'auth/unauthorized-domain') {
+        errorMessage = 'This domain is not authorized for OAuth operations in Firebase Console.';
+      } else if (err.code === 'auth/network-request-failed') {
+        errorMessage = 'Network error. Please check your internet connection.';
+      }
+      
       toast({
         title: "Sign-in Failed",
-        description: err.message,
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
+      console.log("🔄 Setting loading to false");
       setLoading(false);
     }
   };
@@ -277,7 +549,7 @@ export default function Landing() {
               </div>
             </div>
             <div className="flex items-center space-x-2 sm:space-x-4">
-              <Link href="/login">
+              <Link href="/login-simple">
                 <Button 
                   variant="ghost" 
                   className="text-gray-300 hover:text-white text-sm px-2 sm:px-4 py-2"
@@ -285,7 +557,7 @@ export default function Landing() {
                   Log In
                 </Button>
               </Link>
-              <Link href="/login">
+              <Link href="/login-simple">
                 <Button 
                   className="bg-gradient-to-r from-teal-600 via-cyan-600 to-blue-600 hover:from-teal-700 hover:via-cyan-700 hover:to-blue-700 text-white text-sm px-3 sm:px-4 py-2"
                 >
@@ -357,7 +629,7 @@ export default function Landing() {
               
               {/* Email Login Options */}
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Link href="/login">
+                <Link href="/login-simple">
                   <Button 
                     size="lg" 
                     className="bg-gradient-to-r from-teal-600 via-cyan-600 to-blue-600 hover:from-teal-700 hover:via-cyan-700 hover:to-blue-700 text-white px-8 py-4 text-lg font-semibold w-full sm:w-auto"
@@ -365,7 +637,7 @@ export default function Landing() {
                     Join Now
                   </Button>
                 </Link>
-                <Link href="/login">
+                <Link href="/login-simple">
                   <Button 
                     size="lg" 
                     variant="outline" 
@@ -468,7 +740,7 @@ export default function Landing() {
               Join thousands of users who have already discovered their next favorite show.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center max-w-md mx-auto">
-              <Link href="/login">
+              <Link href="/login-simple">
                 <Button 
                   size="lg" 
                   className="bg-gradient-to-r from-teal-600 via-cyan-600 to-blue-600 hover:from-teal-700 hover:via-cyan-700 hover:to-blue-700 text-white px-8 py-4 text-lg font-semibold w-full sm:w-auto"

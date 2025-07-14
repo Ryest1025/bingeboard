@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Upload, SkipForward, CheckCircle, Info, X, Bell, Smartphone, Mail, MessageSquare } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Upload, SkipForward, CheckCircle, Info, X, Bell, Smartphone, Mail, MessageSquare, User, Phone } from "lucide-react";
 import ViewingHistoryUpload from "./viewing-history-upload";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuery, useMutation } from "@tanstack/react-query";
@@ -13,6 +14,7 @@ import { apiRequest } from "@/lib/queryClient";
 export default function OnboardingModal() {
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
+  const [phoneNumber, setPhoneNumber] = useState("");
   const [notificationPrefs, setNotificationPrefs] = useState({
     episodes: true,
     recommendations: true,
@@ -32,11 +34,26 @@ export default function OnboardingModal() {
   // Mutation to save notification preferences
   const saveNotificationPrefs = useMutation({
     mutationFn: async (preferences: any) => {
-      await apiRequest("/api/notifications/preferences", {
+      const response = await fetch("/api/notifications/preferences", {
         method: "PUT",
         body: JSON.stringify(preferences),
         headers: { "Content-Type": "application/json" }
       });
+      if (!response.ok) throw new Error('Failed to save preferences');
+      return response.json();
+    }
+  });
+
+  // Mutation to save phone number
+  const savePhoneNumber = useMutation({
+    mutationFn: async (phone: string) => {
+      const response = await fetch("/api/user/profile", {
+        method: "PUT", 
+        body: JSON.stringify({ phoneNumber: phone }),
+        headers: { "Content-Type": "application/json" }
+      });
+      if (!response.ok) throw new Error('Failed to save phone number');
+      return response.json();
     }
   });
 
@@ -63,17 +80,30 @@ export default function OnboardingModal() {
   };
 
   const handleSkip = () => {
-    setCurrentStep(4); // Skip to completion step
+    setCurrentStep(5); // Skip to completion step
+  };
+
+  const handleContactNext = async () => {
+    try {
+      if (phoneNumber.trim()) {
+        await savePhoneNumber.mutateAsync(phoneNumber);
+      }
+      setCurrentStep(4); // Go to notification preferences
+    } catch (error) {
+      console.error("Failed to save phone number:", error);
+      // Continue anyway
+      setCurrentStep(4);
+    }
   };
 
   const handleNotificationNext = async () => {
     try {
       await saveNotificationPrefs.mutateAsync(notificationPrefs);
-      setCurrentStep(4); // Go to completion step
+      setCurrentStep(5); // Go to completion step
     } catch (error) {
       console.error("Failed to save notification preferences:", error);
       // Continue anyway
-      setCurrentStep(4);
+      setCurrentStep(5);
     }
   };
 
@@ -198,6 +228,55 @@ export default function OnboardingModal() {
         )}
 
         {currentStep === 3 && (
+          <div className="space-y-6">
+            <div className="text-center space-y-4">
+              <User className="h-16 w-16 text-blue-500 mx-auto" />
+              <h3 className="text-xl font-semibold">Contact Information</h3>
+              <p className="text-muted-foreground">
+                Add your phone number to enable SMS notifications and password recovery.
+              </p>
+            </div>
+
+            <Card className="p-4">
+              <CardHeader className="pb-4">
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Phone className="h-5 w-5 text-blue-500" />
+                  Phone Number (Optional)
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="phone" className="text-base font-medium">Mobile Phone</Label>
+                  <Input
+                    id="phone"
+                    type="tel"
+                    placeholder="+1 (555) 123-4567"
+                    value={phoneNumber}
+                    onChange={(e) => setPhoneNumber(e.target.value)}
+                    className="text-base"
+                  />
+                  <p className="text-sm text-muted-foreground">
+                    Used for SMS password recovery and optional SMS notifications. 
+                    We'll never share your number or send spam.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+
+            <div className="flex gap-3 justify-center">
+              <Button onClick={handleContactNext} className="flex items-center gap-2">
+                <CheckCircle className="h-4 w-4" />
+                Continue
+              </Button>
+              <Button variant="outline" onClick={() => setCurrentStep(4)} className="flex items-center gap-2">
+                <SkipForward className="h-4 w-4" />
+                Skip
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {currentStep === 4 && (
           <div className="space-y-6">
             <div className="text-center space-y-4">
               <Bell className="h-16 w-16 text-teal-500 mx-auto" />
@@ -344,14 +423,14 @@ export default function OnboardingModal() {
                   </>
                 )}
               </Button>
-              <Button variant="outline" onClick={() => setCurrentStep(2)}>
+              <Button variant="outline" onClick={() => setCurrentStep(3)}>
                 Back
               </Button>
             </div>
           </div>
         )}
 
-        {currentStep === 4 && (
+        {currentStep === 5 && (
           <div className="space-y-6 text-center">
             <div className="space-y-4">
               <CheckCircle className="h-16 w-16 text-green-500 mx-auto" />

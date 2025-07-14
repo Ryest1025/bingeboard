@@ -90,95 +90,108 @@ export default function Friends() {
 
           <TabsContent value="friends" className="space-y-4">
             {/* Friends List */}
-        {friendsList.length === 0 ? (
-          <Card className="glass-dark border-slate-700">
-            <CardContent className="p-12 text-center">
-              <Users className="h-20 w-20 text-gray-400 mx-auto mb-6" />
-              <h3 className="text-2xl font-semibold text-white mb-3">No Friends Yet</h3>
-              <p className="text-gray-400 mb-6 max-w-md mx-auto">
-                Connect with friends to share your watching experience and discover new shows together.
-              </p>
-              <Button className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600">
-                <UserPlus className="h-4 w-4 mr-2" />
-                Find Friends
-              </Button>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="space-y-4">
-            {friendsList.map((friend: Friend) => (
-              <Card 
-                key={friend.id} 
-                className="glass-dark border-slate-700 hover:border-cyan-400/30 transition-colors"
-              >
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-4">
-                      {/* Avatar */}
-                      <Avatar className="h-16 w-16">
-                        <AvatarImage 
-                          src={friend.profileImageUrl || undefined} 
-                          alt={`${friend.firstName || 'User'}'s avatar`} 
-                        />
-                        <AvatarFallback className="bg-gradient-to-br from-cyan-500 to-blue-500 text-white text-lg">
-                          {friend.firstName?.[0] || friend.email?.[0] || 'U'}
-                        </AvatarFallback>
-                      </Avatar>
-
-                      {/* Friend Info */}
-                      <div>
-                        <h3 className="text-lg font-semibold text-white">
-                          {friend.firstName && friend.lastName 
-                            ? `${friend.firstName} ${friend.lastName}`
-                            : friend.email || 'Anonymous User'
-                          }
-                        </h3>
-                        {friend.email && (friend.firstName || friend.lastName) && (
-                          <p className="text-gray-400 text-sm">{friend.email}</p>
-                        )}
-                        <div className="flex items-center space-x-2 mt-2">
-                          <Badge variant="secondary" className="bg-slate-700 text-cyan-400">
-                            <Heart className="h-3 w-3 mr-1" />
-                            Friend
-                          </Badge>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Actions */}
-                    <div className="flex items-center space-x-2">
-                      <Button variant="outline" size="sm" className="border-slate-600 text-white hover:bg-slate-800">
-                        View Profile
-                      </Button>
-                    </div>
-                  </div>
+            {friendsList.length === 0 ? (
+              <Card className="glass-dark border-slate-700">
+                <CardContent className="p-12 text-center">
+                  <Users className="h-20 w-20 text-gray-400 mx-auto mb-6" />
+                  <h3 className="text-2xl font-semibold text-white mb-3">No Friends Yet</h3>
+                  <p className="text-gray-400 mb-6 max-w-md mx-auto">
+                    Connect with friends to share your watching experience and discover new shows together.
+                  </p>
+                  <Button className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600">
+                    <UserPlus className="h-4 w-4 mr-2" />
+                    Find Friends
+                  </Button>
                 </CardContent>
               </Card>
-            ))}
-          </div>
-        )}
+            ) : (
+              <div className="space-y-4">
+                {friendsList.map((friend: Friend) => (
+                  <Card 
+                    key={friend.id} 
+                    className="glass-dark border-slate-700 hover:border-cyan-400/30 transition-colors"
+                  >
+                    <CardContent className="p-6">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-4">
+                          {/* Avatar */}
+                          <Avatar className="h-16 w-16">
+                            <AvatarImage 
+                              src={friend.profileImageUrl || undefined} 
+                              alt={`${friend.firstName || 'User'}'s avatar`} 
+                            />
+                            <AvatarFallback className="bg-gradient-to-br from-cyan-500 to-blue-500 text-white text-lg">
+                              {friend.firstName?.[0] || friend.email?.[0] || 'U'}
+                            </AvatarFallback>
+                          </Avatar>
 
-        {/* Friend Suggestions Section */}
-        <div className="mt-12">
-          <h2 className="text-xl font-semibold text-white mb-4 flex items-center">
-            <UserPlus className="h-6 w-6 mr-2 text-cyan-400" />
-            Suggested Friends
-          </h2>
-          <Card className="glass-dark border-slate-700">
-            <CardContent className="p-8 text-center">
-              <UserPlus className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-400">
-                Connect your social accounts to find friends who are already using BingeBoard
-              </p>
-              <Button 
-                variant="outline" 
-                className="mt-4 border-slate-600 text-white hover:bg-slate-800"
-              >
-                Connect Social Accounts
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
+                          {/* Friend Info */}
+                          <div>
+                            <h3 className="text-lg font-semibold text-white">
+                              {friend.firstName && friend.lastName 
+                                ? `${friend.firstName} ${friend.lastName}`
+                                : friend.email || 'Anonymous User'
+                              }
+                            </h3>
+                            {friend.email && (friend.firstName || friend.lastName) && (
+                              <p className="text-gray-400 text-sm">{friend.email}</p>
+                            )}
+                            <div className="flex items-center space-x-2 mt-2">
+                              <Badge variant="secondary" className="bg-slate-700 text-cyan-400">
+                                <Heart className="h-3 w-3 mr-1" />
+                                Friend
+                              </Badge>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Actions */}
+                        <div className="flex items-center space-x-2">
+                          <Button variant="outline" size="sm" className="border-slate-600 text-white hover:bg-slate-800">
+                            View Profile
+                          </Button>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+
+            {/* Friend Suggestions Section */}
+            <div className="mt-12">
+              <h2 className="text-xl font-semibold text-white mb-4 flex items-center">
+                <UserPlus className="h-6 w-6 mr-2 text-cyan-400" />
+                Suggested Friends
+              </h2>
+              <Card className="glass-dark border-slate-700">
+                <CardContent className="p-8 text-center">
+                  <UserPlus className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <p className="text-gray-400">
+                    Connect your social accounts to find friends who are already using BingeBoard
+                  </p>
+                  <Button 
+                    variant="outline" 
+                    className="mt-4 border-slate-600 text-white hover:bg-slate-800"
+                  >
+                    Connect Social Accounts
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="social" className="space-y-4">
+            <Card className="glass-dark border-slate-700">
+              <CardContent className="p-8 text-center">
+                <Share2 className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-400">
+                  Social media integration coming soon!
+                </p>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );

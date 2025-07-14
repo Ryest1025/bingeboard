@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auth Test Tabs - Working Example</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #1e293b 0%, #1e40af 50%, #4338ca 100%);
+            color: white;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #cbd5e1;
+            margin-bottom: 40px;
+        }
+        
+        /* Tab Styles */
+        .tabs {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        .tab-list {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            background: rgba(0, 0, 0, 0.2);
+        }
+        
+        .tab-button {
+            background: none;
+            border: none;
+            color: white;
+            padding: 15px 20px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .tab-button:last-child {
+            border-right: none;
+        }
+        
+        .tab-button:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .tab-button.active {
+            background: rgba(59, 130, 246, 0.5);
+            color: white;
+        }
+        
+        .tab-content {
+            padding: 30px;
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 25px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .status-box {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        
+        .button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+            transition: background 0.3s ease;
+        }
+        
+        .button:hover {
+            background: #2563eb;
+        }
+        
+        .button-green {
+            background: #10b981;
+        }
+        
+        .button-green:hover {
+            background: #059669;
+        }
+        
+        .button-orange {
+            background: #f59e0b;
+        }
+        
+        .button-orange:hover {
+            background: #d97706;
+        }
+        
+        .input {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 10px;
+            border-radius: 6px;
+            width: 100%;
+            margin: 10px 0;
+        }
+        
+        .input::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+        
+        .instructions {
+            background: rgba(59, 130, 246, 0.2);
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .warning {
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid #ef4444;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        
+        .success {
+            background: rgba(16, 185, 129, 0.2);
+            border: 1px solid #10b981;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        
+        .debug-info {
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 6px;
+            padding: 15px;
+            font-family: monospace;
+            font-size: 14px;
+            color: #10b981;
+            margin: 15px 0;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔥 Complete Auth Test</h1>
+        <p class="subtitle">Test Firebase, Email/Password, and Password Reset</p>
+        
+        <div class="success">
+            <h3>✅ SUCCESS! You can see the tabs!</h3>
+            <p>This proves your browser and CSS work fine. The issue is that your React development server isn't running.</p>
+        </div>
+        
+        <div class="tabs">
+            <div class="tab-list">
+                <button class="tab-button active" onclick="showTab('firebase')">Firebase</button>
+                <button class="tab-button" onclick="showTab('email')">Email Login</button>
+                <button class="tab-button" onclick="showTab('reset')">Password Reset</button>
+                <button class="tab-button" onclick="showTab('debug')">🔧 Debug</button>
+            </div>
+            
+            <div id="firebase" class="tab-content active">
+                <div class="card">
+                    <h3>🔥 Firebase Authentication</h3>
+                    <p>Test Google/Facebook authentication with Firebase</p>
+                    
+                    <div class="status-box">
+                        <p>❌ Firebase: Not authenticated (Server not running)</p>
+                    </div>
+                    
+                    <div class="status-box">
+                        <p>❌ Backend Session: Not active (Server not running)</p>
+                    </div>
+                    
+                    <button class="button" disabled>Continue with Google</button>
+                    <button class="button" disabled>Continue with Facebook</button>
+                    
+                    <div class="warning">
+                        <p><strong>These buttons don't work because this is just HTML!</strong><br>
+                        You need your React app running to test real authentication.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="email" class="tab-content">
+                <div class="card">
+                    <h3>📧 Email/Password Login</h3>
+                    <p>Test login with email and password (for manual accounts)</p>
+                    
+                    <div class="status-box">
+                        <p>❌ Login Status: Not logged in (Server not running)</p>
+                    </div>
+                    
+                    <label style="color: white; display: block; margin-top: 15px;">Email</label>
+                    <input type="email" class="input" value="rachel.gubin@gmail.com" placeholder="Enter your email">
+                    
+                    <label style="color: white; display: block; margin-top: 15px;">Password</label>
+                    <input type="password" class="input" placeholder="Enter your password">
+                    
+                    <button class="button" disabled>Sign In with Email</button>
+                    
+                    <div class="warning">
+                        <p><strong>This form doesn't work because this is just HTML!</strong><br>
+                        You need your React app running to test real login.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="reset" class="tab-content">
+                <div class="card">
+                    <h3>🔄 Password Reset</h3>
+                    <p>Test email-based password reset functionality</p>
+                    
+                    <label style="color: white; display: block; margin-top: 15px;">Email</label>
+                    <input type="email" class="input" value="rachel.gubin@gmail.com" placeholder="Enter your email">
+                    
+                    <button class="button button-green" disabled>Send Reset Email</button>
+                    
+                    <div class="warning">
+                        <p><strong>This button doesn't work because this is just HTML!</strong><br>
+                        You need your React app running to test real password reset.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="debug" class="tab-content">
+                <div class="card">
+                    <h3>🔧 Debug & Diagnostics</h3>
+                    <p>Check server status and account information</p>
+                    
+                    <div class="status-box">
+                        <p>Server Status: ❌ Unknown (Need to start React server)</p>
+                    </div>
+                    
+                    <button class="button">Check Server</button>
+                    <button class="button button-green">Check My Account</button>
+                    <button class="button button-orange">Set Test Password</button>
+                    
+                    <div class="instructions">
+                        <h4>📋 To see your REAL authentication tabs:</h4>
+                        <ol style="padding-left: 20px;">
+                            <li>Open VS Code Terminal (Ctrl + `)</li>
+                            <li>Type: <code style="background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 3px;">npm run dev</code></li>
+                            <li>Press Enter and wait for "serving on port 5000"</li>
+                            <li>Open browser to: <code style="background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 3px;">http://localhost:5000</code></li>
+                            <li>Navigate to your firebase-auth-test page</li>
+                        </ol>
+                    </div>
+                    
+                    <div class="success">
+                        <h4>✅ This proves your tabs work!</h4>
+                        <p>You can see 4 working tabs here. Your React code will create the same thing, but with real functionality!</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        function showTab(tabName) {
+            // Hide all tab contents
+            const contents = document.querySelectorAll('.tab-content');
+            contents.forEach(content => content.classList.remove('active'));
+            
+            // Remove active class from all buttons
+            const buttons = document.querySelectorAll('.tab-button');
+            buttons.forEach(button => button.classList.remove('active'));
+            
+            // Show selected tab content
+            document.getElementById(tabName).classList.add('active');
+            
+            // Add active class to clicked button
+            event.target.classList.add('active');
+        }
+    </script>
+</body>
+</html>

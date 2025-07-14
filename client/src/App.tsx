@@ -1,7 +1,8 @@
 import { Switch, Route, useLocation } from "wouter";
+import React, { Suspense, useState, useEffect, lazy } from "react";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
-import { Toaster } from "@/components/ui/toaster";
+// import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/useAuth";
 import MobileNav from "@/components/mobile-nav";
@@ -10,19 +11,18 @@ import { TopNav } from "@/components/top-nav";
 import EnhancedOnboardingModal from "@/components/enhanced-onboarding-modal";
 import SimpleNav from "@/components/simple-nav";
 import { ConsentBanner } from "@/components/consent-banner";
-import React, { useState, useEffect } from "react";
 import NotFound from "@/pages/not-found";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import Landing from "@/pages/landing";
 import LoginSimple from "@/pages/login-simple";
+import MobileSocialLogin from "@/pages/mobile-social-login";
 import MobileLogin from "@/pages/mobile-login";
-import SimpleAuth from "@/pages/simple-auth";
 import Home from "@/pages/modern-home";
 import ModernDiscover from "@/pages/modern-discover";
 import Activity from "@/pages/activity";
 import Friends from "@/pages/social";
 
-import { useToast } from "@/hooks/use-toast";
+// import { useToast } from "@/hooks/use-toast";
 import { isMobileDevice } from "@/lib/deviceUtils";
 import FriendsDiscovery from "@/pages/friends-discovery";
 import FindFriends from "@/pages/find-friends";
@@ -46,9 +46,14 @@ import NotificationsDemo from "@/pages/notifications-demo";
 import NotificationCenter from "@/pages/notification-center";
 import ImportHistory from "@/pages/import-history";
 import ResetPassword from "@/pages/reset-password";
-// OAuth redirect page removed - Firebase authentication only
-import UITestPage from "@/pages/ui-test";
 import MobileDiagnostic from "@/pages/mobile-diagnostic";
+import MobileHub from "@/pages/mobile-hub";
+import MobileApp from "@/pages/mobile-app";
+/**
+ * 🔒 CLEANED UP: Removed duplicate auth pages and test components
+ * Only keeping essential auth functionality in login-simple.tsx
+ * Last Cleaned: July 12, 2025
+ */
 
 
 function Router() {
@@ -62,7 +67,7 @@ function Router() {
       console.log('✅ Loading screen removed after React mount');
     }
   }, []);
-  const { toast } = useToast();
+  // const { toast } = useToast();
   const [location] = useLocation();
 
   // Debug logging for route changes
@@ -72,8 +77,6 @@ function Router() {
 
   // Show app immediately to prevent delays
   const [showApp, setShowApp] = useState(true);
-
-  // OAuth redirect handling is now done in login-simple.tsx
 
   // Remove loading overlays after React mounts
   useEffect(() => {
@@ -107,9 +110,14 @@ function Router() {
       <main className={`flex-1 ${isAuthenticated ? "pt-16 pb-20 md:pb-20" : "pt-0 pb-0"}`}>
         <Switch>
           {/* Public routes - always accessible */}
-          <Route path="/login" component={SimpleAuth} />
+          <Route path="/login" component={LoginSimple} />
+          <Route path="/login-simple" component={LoginSimple} />
           <Route path="/mobile-login" component={MobileLogin} />
-          <Route path="/simple-auth" component={SimpleAuth} />
+          <Route path="/mobile-social-login" component={MobileSocialLogin} />
+          <Route path="/mobile-app" component={MobileApp} />
+          <Route path="/mobile-hub" component={MobileHub} />
+          <Route path="/mobile" component={MobileHub} />
+          <Route path="/m" component={MobileHub} />
 
           <Route path="/privacy-policy" component={PrivacyPolicy} />
           <Route path="/terms-of-service" component={TermsOfService} />
@@ -117,7 +125,6 @@ function Router() {
           <Route path="/data-deletion" component={DataDeletion} />
           <Route path="/landing" component={Landing} />
           <Route path="/reset-password" component={ResetPassword} />
-          {/* OAuth callback route removed - Firebase authentication only */}
           
           {/* Protected routes - require authentication */}
           {isAuthenticated ? (
@@ -143,8 +150,8 @@ function Router() {
               <Route path="/notifications-demo" component={NotificationsDemo} />
               <Route path="/notifications" component={NotificationCenter} />
               <Route path="/import-history" component={ImportHistory} />
-              <Route path="/ui-test" component={UITestPage} />
               <Route path="/mobile-diagnostic" component={MobileDiagnostic} />
+              <Route path="/mobile-hub" component={MobileHub} />
               <Route path="/show/:id" component={ShowDetails} />
             </>
           ) : (
@@ -157,6 +164,7 @@ function Router() {
               <Route path="/streaming-demo" component={StreamingDemo} />
               <Route path="/notifications-demo" component={NotificationsDemo} />
               <Route path="/mobile-diagnostic" component={MobileDiagnostic} />
+              <Route path="/mobile-hub" component={MobileHub} />
             </>
           )}
           <Route component={NotFound} />
@@ -168,8 +176,20 @@ function Router() {
       
       {/* Consent Banner for CCPA/GDPR Compliance */}
       <ConsentBanner
-        onAccept={() => console.log('Consent accepted')}
-        onDecline={() => console.log('Consent declined')}
+        onAccept={() => {
+          console.log('Consent accepted');
+          // Navigate to landing page after consent acceptance
+          if (!isAuthenticated) {
+            window.location.href = '/landing';
+          }
+        }}
+        onDecline={() => {
+          console.log('Consent declined');
+          // Still allow access to landing page
+          if (!isAuthenticated) {
+            window.location.href = '/landing';
+          }
+        }}
       />
     </div>
   );
@@ -181,7 +201,7 @@ export default function App() {
       <TooltipProvider>
         <ErrorBoundary>
           <Router />
-          <Toaster />
+          {/* <Toaster /> */}
         </ErrorBoundary>
       </TooltipProvider>
     </QueryClientProvider>

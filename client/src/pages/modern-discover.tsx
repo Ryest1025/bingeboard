@@ -137,9 +137,13 @@ export default function ModernDiscover() {
     staleTime: 300000
   });
 
-  // Separate upcoming releases into TV and movies
-  const upcomingShows = upcomingData?.filter((item: any) => item.releaseType !== 'movie') || [];
-  const upcomingMovies = upcomingData?.filter((item: any) => item.releaseType === 'movie') || [];
+  // Separate upcoming releases into TV and movies with null safety
+  const upcomingShows = Array.isArray(upcomingData) 
+    ? upcomingData.filter((item: any) => item?.releaseType !== 'movie') 
+    : [];
+  const upcomingMovies = Array.isArray(upcomingData) 
+    ? upcomingData.filter((item: any) => item?.releaseType === 'movie') 
+    : [];
 
   const topPicksToday = trendingData?.results?.slice(0, 4) || [];
   

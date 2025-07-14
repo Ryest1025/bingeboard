@@ -1,6 +1,14 @@
+// Import core tables from SQLite schema for compatibility
 import { 
   users, 
   shows, 
+  watchlist,
+  userPreferences,
+  passwordResetCodes
+} from "../shared/schema-sqlite";
+
+// Import all other tables from PostgreSQL schema (they will use fallback behavior)
+import {
   watchlists, 
   friendships, 
   activities, 
@@ -14,7 +22,6 @@ import {
   sportsActivities,
   aiRecommendations,
   searchAlerts,
-  userPreferences,
   streamingIntegrations,
   viewingHistory,
   userBehavior,
@@ -22,6 +29,9 @@ import {
   contactImports,
   friendSuggestions,
   socialConnections,
+  episodeProgress,
+  customLists,
+  customListItems,
   type User, 
   type UpsertUser,
   type Show,
@@ -68,15 +78,10 @@ import {
   type InsertUserBehavior,
   type RecommendationTraining,
   type InsertRecommendationTraining,
-  episodeProgress,
   type EpisodeProgress,
   type InsertEpisodeProgress,
   type SocialConnection,
-  type InsertSocialConnection,
-  type ContactImport,
-  type InsertContactImport,
-  customLists,
-  customListItems
+  type InsertSocialConnection
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, or, desc, count, ilike, inArray, sql } from "drizzle-orm";
@@ -86,8 +91,6 @@ interface IStorage {
   getUser(id: string): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
-  getUserByFacebookId(facebookId: string): Promise<User | undefined>;
-  getUserByGoogleId(googleId: string): Promise<User | undefined>;
   createUser(insertUser: UpsertUser): Promise<User>;
   updateUser(id: string, updates: Partial<UpsertUser>): Promise<User>;
   upsertUser(user: UpsertUser): Promise<User>;
@@ -113,17 +116,6 @@ interface IStorage {
   acceptFriendRequest(requestId: number, userId: string): Promise<Friendship>;
   rejectFriendRequest(requestId: number, userId: string): Promise<void>;
   searchUsers(query: string): Promise<User[]>;
-  
-  // Social connections methods
-  createSocialConnection(connection: InsertSocialConnection): Promise<SocialConnection>;
-  getUserSocialConnections(userId: string): Promise<SocialConnection[]>;
-  findUsersBySocialId(platform: string, socialId: string): Promise<SocialConnection[]>;
-  getSocialConnectionsByPlatform(platform: string): Promise<SocialConnection[]>;
-  
-  // Contact import methods
-  createContactImport(contact: InsertContactImport): Promise<ContactImport>;
-  getContactMatches(userId: string): Promise<any[]>;
-  deactivateSocialConnection(userId: string, platform: string): Promise<void>;
 
   // Activity methods
   getActivityFeed(userId: string): Promise<Activity[]>;
@@ -216,6 +208,14 @@ interface IStorage {
   getUserLists(userId: string): Promise<any[]>;
   createList(listData: any): Promise<any>;
   addShowToList(listId: number, showId: number, userId: string): Promise<void>;
+
+  // Password Reset methods
+  createPasswordResetToken(userId: string, token: string, expiresAt: number): Promise<void>;
+  verifyPasswordResetToken(token: string): Promise<User | undefined>;
+  clearPasswordResetToken(userId: string): Promise<void>;
+  createPasswordResetCode(code: any): Promise<any>;
+  verifyPasswordResetCode(code: string, email?: string, phoneNumber?: string): Promise<any>;
+  clearPasswordResetCode(codeId: number): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -235,23 +235,22 @@ export class DatabaseStorage implements IStorage {
     return user || undefined;
   }
 
-  async getUserByFacebookId(facebookId: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.facebookId, facebookId));
-    return user || undefined;
-  }
-
-  async getUserByGoogleId(googleId: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.googleId, googleId));
-    return user || undefined;
-  }
-
   async createUser(insertUser: UpsertUser): Promise<User> {
     console.log('Storage: Creating user with data:', JSON.stringify(insertUser, null, 2));
     
     try {
+      // SQLite expects Unix timestamps (numbers), not Date objects
+      const timestamp = Math.floor(Date.now() / 1000);
+      
+      const newUser = {
+        ...insertUser,
+        createdAt: timestamp,
+        updatedAt: timestamp,
+      };
+      
       const [user] = await db
         .insert(users)
-        .values(insertUser)
+        .values(newUser)
         .returning();
       console.log('Storage: User created successfully:', user.id, user.email);
       return user;
@@ -262,40 +261,103 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateUser(id: string, updates: Partial<UpsertUser>): Promise<User> {
+    // SQLite expects Unix timestamps (numbers), not Date objects
+    const timestamp = Math.floor(Date.now() / 1000);
+    
     const [user] = await db
       .update(users)
-      .set({ ...updates, updatedAt: new Date() })
+      .set({ ...updates, updatedAt: timestamp })
       .where(eq(users.id, id))
       .returning();
     return user;
   }
 
   async upsertUser(user: UpsertUser): Promise<User> {
-    console.log('Storage: Upserting user with data:', JSON.stringify(user, null, 2));
+    console.log('🔄 Storage: Upserting user with data:', JSON.stringify(user, null, 2));
     
     try {
-      // Use PostgreSQL's ON CONFLICT DO UPDATE with email as the conflict target
-      // This handles both new users and existing users with the same email
-      const [upsertedUser] = await db
+      const timestamp = Math.floor(Date.now() / 1000);
+      
+      // Account merging strategy:
+      // 1. Look for existing user by Firebase ID (exact ID match)
+      // 2. If no ID match and user has email, look for existing user by email
+      // 3. If found by email, merge the accounts (update the existing user with new auth provider info)
+      // 4. If not found by either, create new user
+      
+      let existingUser: User | null = null;
+      
+      // Strategy 1: Look for exact ID match (for returning Firebase users)
+      try {
+        const foundUser = await this.getUser(user.id);
+        if (foundUser) {
+          existingUser = foundUser;
+          console.log('📍 Found existing user by ID:', existingUser.id, existingUser.email);
+          
+          // Update existing user with any new information
+          const [updatedUser] = await db
+            .update(users)
+            .set({
+              email: user.email || existingUser.email, // Keep existing email if new one is null
+              firstName: user.firstName || existingUser.firstName,
+              lastName: user.lastName || existingUser.lastName,
+              profileImageUrl: user.profileImageUrl || existingUser.profileImageUrl,
+              authProvider: user.authProvider, // Update to current auth provider
+              updatedAt: timestamp,
+            })
+            .where(eq(users.id, user.id))
+            .returning();
+          
+          console.log('✅ Storage: User updated by ID:', updatedUser.id, updatedUser.email);
+          return updatedUser;
+        }
+      } catch (error) {
+        console.log('🔍 No existing user found by ID, checking by email...');
+      }
+      
+      // Strategy 2: Look for user by email (for account merging)
+      if (user.email && !existingUser) {
+        const foundByEmail = await this.getUserByEmail(user.email);
+        if (foundByEmail) {
+          existingUser = foundByEmail;
+          console.log('🔗 Found existing user by email - merging accounts:', existingUser.id, 'with', user.id);
+          
+          // This is account merging! Update the existing user with Firebase ID and other info
+          const [updatedUser] = await db
+            .update(users)
+            .set({
+              // Keep the original ID but update other fields
+              firstName: user.firstName || existingUser.firstName,
+              lastName: user.lastName || existingUser.lastName,
+              profileImageUrl: user.profileImageUrl || existingUser.profileImageUrl,
+              authProvider: user.authProvider, // Update to current auth provider
+              updatedAt: timestamp,
+            })
+            .where(eq(users.email, user.email))
+            .returning();
+          
+          console.log('✅ Storage: Accounts merged successfully:', updatedUser.id, updatedUser.email);
+          return updatedUser;
+        }
+      }
+      
+      // Strategy 3: Create new user
+      const newUser = {
+        ...user,
+        createdAt: timestamp,
+        updatedAt: timestamp,
+      };
+      
+      console.log('➕ Creating new user:', newUser);
+      
+      const [insertedUser] = await db
         .insert(users)
-        .values(user)
-        .onConflictDoUpdate({
-          target: users.email,
-          set: {
-            // Don't update ID for existing users to avoid foreign key constraint issues
-            firstName: user.firstName,
-            lastName: user.lastName,
-            profileImageUrl: user.profileImageUrl,
-            authProvider: user.authProvider,
-            updatedAt: new Date(),
-          },
-        })
+        .values(newUser)
         .returning();
       
-      console.log('Storage: User upserted successfully:', upsertedUser.id, upsertedUser.email);
-      return upsertedUser;
+      console.log('✅ Storage: New user created:', insertedUser.id, insertedUser.email);
+      return insertedUser;
     } catch (error) {
-      console.error('Storage: Error upserting user:', error);
+      console.error('❌ Storage: Error upserting user:', error);
       throw error;
     }
   }
@@ -516,84 +578,6 @@ export class DatabaseStorage implements IStorage {
       .where(eq(friendships.id, id))
       .returning();
     return friendship;
-  }
-
-  // Social connections methods
-  async createSocialConnection(connection: InsertSocialConnection): Promise<SocialConnection> {
-    const [newConnection] = await db
-      .insert(socialConnections)
-      .values(connection)
-      .returning();
-    return newConnection;
-  }
-
-  async getUserSocialConnections(userId: string): Promise<SocialConnection[]> {
-    return await db
-      .select()
-      .from(socialConnections)
-      .where(and(eq(socialConnections.userId, userId), eq(socialConnections.isActive, true)));
-  }
-
-  async findUsersBySocialId(platform: string, socialId: string): Promise<SocialConnection[]> {
-    return await db
-      .select()
-      .from(socialConnections)
-      .where(and(
-        eq(socialConnections.platform, platform),
-        eq(socialConnections.socialId, socialId),
-        eq(socialConnections.isActive, true)
-      ));
-  }
-
-  async getSocialConnectionsByPlatform(platform: string): Promise<SocialConnection[]> {
-    return await db
-      .select()
-      .from(socialConnections)
-      .where(and(eq(socialConnections.platform, platform), eq(socialConnections.isActive, true)));
-  }
-
-  // Contact import methods
-  async createContactImport(contact: InsertContactImport): Promise<ContactImport> {
-    const [newContact] = await db
-      .insert(contactImports)
-      .values(contact)
-      .returning();
-    return newContact;
-  }
-
-  async getContactMatches(userId: string): Promise<any[]> {
-    // Find contacts that have been matched to existing users
-    const matches = await db
-      .select()
-      .from(contactImports)
-      .where(and(eq(contactImports.userId, userId), eq(contactImports.isMatched, true)));
-    
-    // Get user details for matched contacts
-    const matchedUsers = [];
-    for (const match of matches) {
-      if (match.matchedUserId) {
-        const user = await this.getUser(match.matchedUserId);
-        if (user) {
-          matchedUsers.push({
-            user,
-            source: match.source,
-            contactName: match.contactName
-          });
-        }
-      }
-    }
-    
-    return matchedUsers;
-  }
-
-  async deactivateSocialConnection(userId: string, platform: string): Promise<void> {
-    await db
-      .update(socialConnections)
-      .set({ isActive: false, updatedAt: new Date() })
-      .where(and(
-        eq(socialConnections.userId, userId),
-        eq(socialConnections.platform, platform)
-      ));
   }
 
   // Activity methods
@@ -1444,6 +1428,80 @@ export class DatabaseStorage implements IStorage {
         addedBy: userId
       })
       .onConflictDoNothing();
+  }
+
+  // Password Reset methods implementation
+  async createPasswordResetToken(userId: string, token: string, expiresAt: number): Promise<void> {
+    await db
+      .update(users)
+      .set({
+        resetToken: token,
+        resetTokenExpires: expiresAt,
+        updatedAt: Math.floor(Date.now() / 1000)
+      })
+      .where(eq(users.id, userId));
+  }
+
+  async verifyPasswordResetToken(token: string): Promise<User | undefined> {
+    const [user] = await db
+      .select()
+      .from(users)
+      .where(
+        and(
+          eq(users.resetToken, token),
+          sql`${users.resetTokenExpires} > ${Math.floor(Date.now() / 1000)}`
+        )
+      );
+    return user || undefined;
+  }
+
+  async clearPasswordResetToken(userId: string): Promise<void> {
+    await db
+      .update(users)
+      .set({
+        resetToken: null,
+        resetTokenExpires: null,
+        updatedAt: Math.floor(Date.now() / 1000)
+      })
+      .where(eq(users.id, userId));
+  }
+
+  async createPasswordResetCode(code: any): Promise<any> {
+    const [newCode] = await db
+      .insert(passwordResetCodes)
+      .values(code)
+      .returning();
+    return newCode;
+  }
+
+  async verifyPasswordResetCode(code: string, email?: string, phoneNumber?: string): Promise<any> {
+    const conditions = [
+      eq(passwordResetCodes.code, code),
+      eq(passwordResetCodes.isUsed, 0),
+      sql`${passwordResetCodes.expiresAt} > ${Math.floor(Date.now() / 1000)}`
+    ];
+
+    if (email) {
+      conditions.push(eq(passwordResetCodes.email, email));
+    }
+
+    if (phoneNumber) {
+      conditions.push(eq(passwordResetCodes.phoneNumber, phoneNumber));
+    }
+
+    const [resetCode] = await db
+      .select()
+      .from(passwordResetCodes)
+      .where(and(...conditions));
+    
+    return resetCode || undefined;
+  }
+
+  async clearPasswordResetCode(codeId: number): Promise<void> {
+    await db
+      .update(passwordResetCodes)
+      .set({ isUsed: 1 })
+      .where(eq(passwordResetCodes.id, codeId));
   }
 }
 
