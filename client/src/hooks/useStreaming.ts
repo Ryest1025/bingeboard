@@ -1,10 +1,10 @@
 import { useQuery } from '@tanstack/react-query';
-import { 
-  searchStreamingAvailability, 
-  getStreamingByImdbId, 
+import {
+  searchStreamingAvailability,
+  getStreamingByImdbId,
   UtellyResponse,
   StreamingLocation,
-  getUniqueStreamingServices 
+  getUniqueStreamingServices
 } from '../services/utellyApi';
 
 /**
@@ -38,9 +38,9 @@ export function useStreamingByImdbId(imdbId: string, country = 'us') {
  */
 export function useUniqueStreamingServices(title: string, country = 'us') {
   const { data, ...rest } = useStreamingAvailability(title, country);
-  
+
   const streamingServices = data?.results ? getUniqueStreamingServices(data.results) : [];
-  
+
   return {
     data: streamingServices,
     ...rest

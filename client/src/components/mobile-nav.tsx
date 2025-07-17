@@ -1,6 +1,6 @@
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
-import { 
+import {
   HomeIcon,
   DiscoverIcon,
   FriendsIcon,
@@ -33,19 +33,18 @@ export default function MobileNav() {
         <div className="flex items-center justify-around py-2 px-1">
           {navItems.map((item) => {
             const Icon = item.icon;
-            const isActive = location === item.path || 
+            const isActive = location === item.path ||
               (item.path === "/dashboard" && location === "/") ||
               (item.path === "/discover" && location.startsWith("/discover"));
-            
+
             return (
               <button
                 key={item.path}
                 onClick={() => setLocation(item.path)}
-                className={`flex flex-col items-center p-2 min-w-0 flex-1 transition-colors duration-200 ${
-                  isActive 
-                    ? "text-teal-400" 
+                className={`flex flex-col items-center p-2 min-w-0 flex-1 transition-colors duration-200 ${isActive
+                    ? "text-teal-400"
                     : "text-gray-400 hover:text-gray-300"
-                }`}
+                  }`}
               >
                 <Icon className="w-5 h-5 mb-1 flex-shrink-0" />
                 <span className="text-xs font-medium truncate">{item.label}</span>

@@ -56,7 +56,7 @@ const StreamingAvailability: React.FC<StreamingAvailabilityProps> = ({
         <Play className="w-5 h-5 text-green-500" />
         <h4 className="font-semibold text-gray-900">Where to Watch</h4>
       </div>
-      
+
       {streamingServices.length > 0 ? (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
           {streamingServices.map((service: StreamingLocation, index: number) => (
@@ -98,11 +98,11 @@ const StreamingServiceCard: React.FC<StreamingServiceCardProps> = ({ service }) 
           }}
         />
       )}
-      
+
       <span className="text-sm font-medium text-gray-900 text-center group-hover:text-blue-600">
         {service.display_name}
       </span>
-      
+
       <ExternalLink className="w-3 h-3 text-gray-400 mt-1 group-hover:text-blue-500" />
     </button>
   );

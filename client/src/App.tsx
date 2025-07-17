@@ -247,7 +247,7 @@ function SimpleSocial() {
 
 export default function App() {
   console.log("🚀 App with authentication and social");
-  
+
   return (
     <QueryClientProvider client={queryClient}>
 <<<<<<< HEAD
@@ -263,7 +263,7 @@ export default function App() {
         <Route path="/" component={Landing} />
         <Route path="/login" component={SimpleLogin} />
         <Route path="/signup" component={Signup} />
-        
+
         {/* Authenticated routes with persistent navigation */}
         <Route path="/dashboard">
           <Layout>
@@ -295,7 +295,7 @@ export default function App() {
             <SettingsPage />
           </Layout>
         </Route>
-        
+
         {/* Default route */}
         <Route>
           <Landing />

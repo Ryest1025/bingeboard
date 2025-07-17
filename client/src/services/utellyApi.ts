@@ -105,7 +105,7 @@ export async function getStreamingByImdbId(
  */
 export function getUniqueStreamingServices(results: UtellyResult[]): StreamingLocation[] {
   const serviceMap = new Map<string, StreamingLocation>();
-  
+
   results.forEach(result => {
     result.locations.forEach(location => {
       if (!serviceMap.has(location.name)) {
@@ -113,7 +113,7 @@ export function getUniqueStreamingServices(results: UtellyResult[]): StreamingLo
       }
     });
   });
-  
+
   return Array.from(serviceMap.values());
 }
 
@@ -139,11 +139,11 @@ export const POPULAR_STREAMING_SERVICES = [
  * Filter results by streaming service
  */
 export function filterByStreamingService(
-  results: UtellyResult[], 
+  results: UtellyResult[],
   serviceName: string
 ): UtellyResult[] {
-  return results.filter(result => 
-    result.locations.some(location => 
+  return results.filter(result =>
+    result.locations.some(location =>
       location.name.toLowerCase().includes(serviceName.toLowerCase())
     )
   );

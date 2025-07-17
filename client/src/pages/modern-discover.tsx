@@ -14,10 +14,10 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { 
-  Search, 
-  Mic, 
-  Star, 
+import {
+  Search,
+  Mic,
+  Star,
   TrendingUp,
   Sparkles,
   Heart,
@@ -56,66 +56,66 @@ import { StreamingPlatformSelector } from "@/components/ui/StreamingPlatformSele
 
 // Enhanced mood filters with better visual hierarchy
 const moodFilters = [
-  { 
-    id: "light", 
-    label: "Light & Fun", 
-    icon: Sun, 
+  {
+    id: "light",
+    label: "Light & Fun",
+    icon: Sun,
     gradient: "from-yellow-400 to-orange-500",
     description: "Comedy & feel-good shows",
     count: "2.1k shows"
   },
-  { 
-    id: "bingeable", 
-    label: "Bingeable", 
-    icon: Zap, 
+  {
+    id: "bingeable",
+    label: "Bingeable",
+    icon: Zap,
     gradient: "from-orange-500 to-red-500",
     description: "Can't-stop-watching series",
     count: "850 shows"
   },
-  { 
-    id: "feelgood", 
-    label: "Feel-Good", 
-    icon: Heart, 
+  {
+    id: "feelgood",
+    label: "Feel-Good",
+    icon: Heart,
     gradient: "from-pink-500 to-rose-500",
     description: "Uplifting & heartwarming",
     count: "1.5k shows"
   },
-  { 
-    id: "dark", 
-    label: "Dark & Intense", 
-    icon: Moon, 
+  {
+    id: "dark",
+    label: "Dark & Intense",
+    icon: Moon,
     gradient: "from-purple-600 to-indigo-600",
     description: "Thrillers & dark dramas",
     count: "920 shows"
   },
-  { 
-    id: "comedy", 
-    label: "Comedy", 
-    icon: Laugh, 
+  {
+    id: "comedy",
+    label: "Comedy",
+    icon: Laugh,
     gradient: "from-green-400 to-emerald-500",
     description: "Laugh-out-loud moments",
     count: "1.8k shows"
   },
-  { 
-    id: "drama", 
-    label: "Drama", 
-    icon: Drama, 
+  {
+    id: "drama",
+    label: "Drama",
+    icon: Drama,
     gradient: "from-blue-500 to-cyan-500",
     description: "Emotional storytelling",
     count: "2.5k shows"
   },
-  { 
-    id: "action", 
-    label: "Action", 
-    icon: Swords, 
+  {
+    id: "action",
+    label: "Action",
+    icon: Swords,
     gradient: "from-red-500 to-pink-500",
     description: "High-octane adventures",
     count: "1.2k shows"
   },
-  { 
-    id: "scifi", 
-    label: "Sci-Fi", 
-    icon: Rocket, 
+  {
+    id: "scifi",
+    label: "Sci-Fi",
+    icon: Rocket,
     gradient: "from-indigo-500 to-purple-500",
     description: "Future & beyond",
     count: "680 shows"

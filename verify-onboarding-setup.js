@@ -8,7 +8,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 console.log('🔍 BingeBoard Database & Onboarding Verification');
-console.log('=' .repeat(60));
+console.log('='.repeat(60));
 
 // Check environment
 console.log('\n📋 Environment Check:');
@@ -137,5 +137,5 @@ console.log('2. Verify data is saved to database');
 console.log('3. Check mobile pages work correctly');
 console.log('4. Confirm user preferences are applied for recommendations');
 
-console.log('\n' + '=' .repeat(60));
+console.log('\n' + '='.repeat(60));
 console.log('✅ Verification complete!');

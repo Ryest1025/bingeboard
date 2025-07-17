@@ -8,11 +8,11 @@ import { Badge } from "../components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
 import { userDataManager, UserData } from "../lib/user-data-manager";
 import OnboardingModal from "../components/onboarding/OnboardingModal-Premium";
-import { 
-  Play, 
-  Clock, 
-  Users, 
-  Star, 
+import {
+  Play,
+  Clock,
+  Users,
+  Star,
   Calendar,
   ChevronRight,
   Plus,
@@ -44,34 +44,34 @@ export default function WorkingDashboard() {
   // Helper function to check if user needs onboarding
   const needsOnboarding = (userData: UserData | null): boolean => {
     if (!userData) return true;
-    
+
     // Check if user has completed basic onboarding
-    const hasPreferences = userData.preferences.favoriteGenres.length > 0 || 
-                          userData.preferences.watchingGoals !== '' || 
-                          userData.preferences.experience !== '';
-    
+    const hasPreferences = userData.preferences.favoriteGenres.length > 0 ||
+      userData.preferences.watchingGoals !== '' ||
+      userData.preferences.experience !== '';
+
     return !hasPreferences;
   };
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged(async (user) => {
       setUser(user);
-      
+
       if (user) {
         try {
           // Initialize user data manager
           await userDataManager.initialize();
-          
+
           // Load user data
           const data = await userDataManager.getCurrentUser();
           setUserData(data);
-          
+
           if (!data) {
             // Create user data if doesn't exist
             console.log("Creating new user profile...");
             const newUserData = await userDataManager.createUserFromFirebase(user);
             setUserData(newUserData);
-            
+
             // Show onboarding for new users
             setShowOnboarding(true);
           } else if (needsOnboarding(data)) {
@@ -86,7 +86,7 @@ export default function WorkingDashboard() {
         setUserData(null);
         userDataManager.clearCurrentUser();
       }
-      
+
       setLoading(false);
     });
 
@@ -95,7 +95,7 @@ export default function WorkingDashboard() {
 
   const handleOnboardingComplete = async () => {
     setShowOnboarding(false);
-    
+
     // Reload user data after onboarding
     try {
       const updatedData = await userDataManager.getCurrentUser();
@@ -195,7 +195,7 @@ export default function WorkingDashboard() {
               <Button variant="ghost" size="sm" className="text-gray-300 hover:text-white">
                 <Search className="h-4 w-4" />
               </Button>
-              
+
               {/* Notifications */}
               <Button variant="ghost" size="sm" className="relative text-gray-300 hover:text-white">
                 <Bell className="h-4 w-4" />
@@ -247,7 +247,7 @@ export default function WorkingDashboard() {
             </CardHeader>
             <CardContent>
               <p className="text-gray-300 mb-6">
-                {userData?.preferences?.favoriteGenres && userData.preferences.favoriteGenres.length > 0 
+                {userData?.preferences?.favoriteGenres && userData.preferences.favoriteGenres.length > 0
                   ? `Ready for some ${userData.preferences.favoriteGenres.slice(0, 2).join(' and ')}? Your personalized entertainment hub awaits!`
                   : "Your personalized entertainment hub is ready. Start tracking your shows and movies!"
                 }
@@ -294,7 +294,7 @@ export default function WorkingDashboard() {
                 <div className="flex justify-between items-center">
                   <span>Watchlist Items:</span>
                   <Badge className="bg-green-600">
-                    {userData?.watchlists 
+                    {userData?.watchlists
                       ? Object.values(userData.watchlists).reduce((acc, list) => acc + list.length, 0)
                       : 0
                     }
@@ -362,28 +362,28 @@ export default function WorkingDashboard() {
               <span className="text-xs font-medium">Home</span>
             </div>
           </Link>
-          
+
           <Link href="/discover">
             <div className="flex flex-col items-center space-y-1 text-gray-400 hover:text-white transition-colors">
               <Compass className="h-5 w-5" />
               <span className="text-xs font-medium">Discover</span>
             </div>
           </Link>
-          
+
           <Link href="/lists">
             <div className="flex flex-col items-center space-y-1 text-gray-400 hover:text-white transition-colors">
               <List className="h-5 w-5" />
               <span className="text-xs font-medium">Lists</span>
             </div>
           </Link>
-          
+
           <Link href="/social">
             <div className="flex flex-col items-center space-y-1 text-gray-400 hover:text-white transition-colors">
               <Users className="h-5 w-5" />
               <span className="text-xs font-medium">Social</span>
             </div>
           </Link>
-          
+
           <Link href="/profile">
             <div className="flex flex-col items-center space-y-1 text-gray-400 hover:text-white transition-colors">
               <UserCircle className="h-5 w-5" />
@@ -401,8 +401,8 @@ export default function WorkingDashboard() {
             lastName: user.displayName?.split(' ').slice(1).join(' ') || '',
             email: user.email || '',
             profileImage: user.photoURL || '',
-            provider: user.providerData[0]?.providerId === 'google.com' ? 'google' : 
-                     user.providerData[0]?.providerId === 'facebook.com' ? 'facebook' : 'email'
+            provider: user.providerData[0]?.providerId === 'google.com' ? 'google' :
+              user.providerData[0]?.providerId === 'facebook.com' ? 'facebook' : 'email'
           } : undefined);
         }
         return null;
@@ -416,8 +416,8 @@ export default function WorkingDashboard() {
           lastName: user.displayName?.split(' ').slice(1).join(' ') || '',
           email: user.email || '',
           profileImage: user.photoURL || '',
-          provider: user.providerData[0]?.providerId === 'google.com' ? 'google' : 
-                   user.providerData[0]?.providerId === 'facebook.com' ? 'facebook' : 'email'
+          provider: user.providerData[0]?.providerId === 'google.com' ? 'google' :
+            user.providerData[0]?.providerId === 'facebook.com' ? 'facebook' : 'email'
         } : undefined}
       />
     </div>

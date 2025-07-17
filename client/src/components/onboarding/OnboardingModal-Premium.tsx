@@ -4,8 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Badge } from "../ui/badge";
 import { Progress } from "../ui/progress";
 import { Switch } from "../ui/switch";
-import { 
-  X, Sparkles, ArrowRight, ArrowLeft, Star, Zap, Users, Bell, Target, 
+import {
+  X, Sparkles, ArrowRight, ArrowLeft, Star, Zap, Users, Bell, Target,
   CheckCircle, Play, Heart, Tv, Shield, Settings, Clock, TrendingUp,
   Eye, Download, Share2, MessageSquare, Globe, Lock, UserPlus,
   Calendar, BarChart3, Award, Volume2, Upload, Plus, Link, Check, Loader2,
@@ -98,7 +98,7 @@ export default function OnboardingModal({ isOpen, onComplete, userDisplayName, u
   ];
 
   const contentTypes = [
-    "TV Series", "Movies", "Documentaries", "Anime", "Reality TV", 
+    "TV Series", "Movies", "Documentaries", "Anime", "Reality TV",
     "Talk Shows", "News", "Sports", "Kids Content", "International"
   ];
 
@@ -109,7 +109,7 @@ export default function OnboardingModal({ isOpen, onComplete, userDisplayName, u
 
   const goals = [
     "Track what I watch", "Discover new content", "Connect with friends",
-    "Get personalized recommendations", "Complete my watchlist", 
+    "Get personalized recommendations", "Complete my watchlist",
     "Track viewing time", "Rate shows/movies", "Share reviews"
   ];
 
@@ -169,7 +169,7 @@ export default function OnboardingModal({ isOpen, onComplete, userDisplayName, u
       if (shouldShowSportsStep()) return 4; // Sports Teams
       return null; // Skip this step
     }
-    
+
     let adjustedStep = currentStep;
     if (!shouldShowSportsStep() && currentStep > 4) {
       adjustedStep = currentStep - 1; // Adjust for skipped sports step
@@ -227,7 +227,7 @@ export default function OnboardingModal({ isOpen, onComplete, userDisplayName, u
               <div className="relative mx-auto mb-6">
                 {/* Outer glow ring */}
                 <div className="absolute inset-0 w-20 h-20 bg-gradient-to-r from-teal-400 via-cyan-400 to-blue-400 rounded-full blur-xl opacity-30 animate-pulse"></div>
-                
+
                 {/* Main icon container */}
                 <div className="relative w-20 h-20 bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl flex items-center justify-center shadow-2xl border border-slate-600">
                   {/* Inner BingeBoard logo with better styling */}
@@ -275,14 +275,14 @@ export default function OnboardingModal({ isOpen, onComplete, userDisplayName, u
               {userData && (
                 <div className="text-center">
                   <Badge variant="secondary" className="text-sm px-3 py-1">
-                    {userData.provider === 'google' ? '📧 Google Account' : 
-                     userData.provider === 'facebook' ? '📘 Facebook Account' : 
-                     '✉️ Email Account'} - Some fields pre-filled
+                    {userData.provider === 'google' ? '📧 Google Account' :
+                      userData.provider === 'facebook' ? '📘 Facebook Account' :
+                        '✉️ Email Account'} - Some fields pre-filled
                   </Badge>
                 </div>
               )}
             </div>
-            
+
             <Card className="glass-effect border-slate-700/50">
               <CardHeader>
                 <CardTitle className="text-xl text-white">Profile Information</CardTitle>
@@ -298,11 +298,10 @@ export default function OnboardingModal({ isOpen, onComplete, userDisplayName, u
                         ...prev,
                         userProfile: { ...prev.userProfile, firstName: e.target.value }
                       }))}
-                      className={`w-full px-4 py-3 border rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                        formData.userProfile.firstName 
-                          ? 'bg-blue-500/10 border-blue-500/40' 
+                      className={`w-full px-4 py-3 border rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${formData.userProfile.firstName
+                          ? 'bg-blue-500/10 border-blue-500/40'
                           : 'bg-slate-800/50 border-slate-600'
-                      }`}
+                        }`}
                       placeholder="Enter your first name"
                     />
                     {formData.userProfile.firstName && (
@@ -318,11 +317,10 @@ export default function OnboardingModal({ isOpen, onComplete, userDisplayName, u
                         ...prev,
                         userProfile: { ...prev.userProfile, lastName: e.target.value }
                       }))}
-                      className={`w-full px-4 py-3 border rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                        formData.userProfile.lastName 
-                          ? 'bg-blue-500/10 border-blue-500/40' 
+                      className={`w-full px-4 py-3 border rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${formData.userProfile.lastName
+                          ? 'bg-blue-500/10 border-blue-500/40'
                           : 'bg-slate-800/50 border-slate-600'
-                      }`}
+                        }`}
                       placeholder="Enter your last name"
                     />
                     {formData.userProfile.lastName && (
@@ -330,7 +328,7 @@ export default function OnboardingModal({ isOpen, onComplete, userDisplayName, u
                     )}
                   </div>
                 </div>
-                
+
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-white flex items-center gap-2">
                     <Mail className="h-4 w-4" />
@@ -343,18 +341,17 @@ export default function OnboardingModal({ isOpen, onComplete, userDisplayName, u
                       ...prev,
                       userProfile: { ...prev.userProfile, email: e.target.value }
                     }))}
-                    className={`w-full px-4 py-3 border rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                      formData.userProfile.email 
-                        ? 'bg-blue-500/10 border-blue-500/40' 
+                    className={`w-full px-4 py-3 border rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${formData.userProfile.email
+                        ? 'bg-blue-500/10 border-blue-500/40'
                         : 'bg-slate-800/50 border-slate-600'
-                    }`}
+                      }`}
                     placeholder="Enter your email address"
                   />
                   {formData.userProfile.email && (
                     <p className="text-xs text-blue-400">✓ Auto-filled from your account</p>
                   )}
                 </div>
-                
+
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-white flex items-center gap-2">
                     <Phone className="h-4 w-4" />
@@ -372,7 +369,7 @@ export default function OnboardingModal({ isOpen, onComplete, userDisplayName, u
                   />
                   <p className="text-xs text-gray-400">Required for password recovery via SMS</p>
                 </div>
-                
+
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-white flex items-center gap-2">
                     <Cake className="h-4 w-4" />
@@ -389,7 +386,7 @@ export default function OnboardingModal({ isOpen, onComplete, userDisplayName, u
                   />
                   <p className="text-xs text-gray-400">Helps us recommend age-appropriate content</p>
                 </div>
-                
+
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-white flex items-center gap-2">
                     <MapPin className="h-4 w-4" />
@@ -407,7 +404,7 @@ export default function OnboardingModal({ isOpen, onComplete, userDisplayName, u
                   />
                   <p className="text-xs text-gray-400">Helps us show local content and streaming availability</p>
                 </div>
-                
+
                 <div className="p-4 bg-blue-500/10 border border-blue-500/20 rounded-xl">
                   <p className="text-sm text-blue-300">
                     <Lock className="h-4 w-4 inline mr-2" />
@@ -429,7 +426,7 @@ export default function OnboardingModal({ isOpen, onComplete, userDisplayName, u
               <h2 className="text-3xl font-bold text-white">What genres do you love?</h2>
               <p className="text-lg text-muted-foreground">Select your favorite genres (choose at least 3)</p>
             </div>
-            
+
             <Card className="glass-effect border-slate-700/50">
               <CardHeader className="text-center pb-4">
                 <p className="text-sm text-muted-foreground">
@@ -444,11 +441,10 @@ export default function OnboardingModal({ isOpen, onComplete, userDisplayName, u
                         key={genre}
                         variant={formData.favoriteGenres.includes(genre) ? "default" : "outline"}
                         onClick={() => toggleSelection(genre, 'favoriteGenres')}
-                        className={`h-14 text-base font-medium transition-all duration-300 ${
-                          formData.favoriteGenres.includes(genre)
+                        className={`h-14 text-base font-medium transition-all duration-300 ${formData.favoriteGenres.includes(genre)
                             ? 'bg-gradient-to-r from-teal-500 to-cyan-500 text-white shadow-lg'
                             : 'glass-effect hover:bg-white/10 hover:border-teal-400/40'
-                        }`}
+                          }`}
                       >
                         {genre}
                       </Button>
@@ -481,7 +477,7 @@ export default function OnboardingModal({ isOpen, onComplete, userDisplayName, u
               <h2 className="text-3xl font-bold text-white">Choose Your Sports Teams! ⚽</h2>
               <p className="text-lg text-muted-foreground">Select your favorite teams to get sports content recommendations</p>
             </div>
-            
+
             <div className="space-y-6">
               {Object.entries(sportsTeams).map(([league, teams]) => (
                 <Card key={league} className="glass-effect border-slate-700/50">
@@ -495,11 +491,10 @@ export default function OnboardingModal({ isOpen, onComplete, userDisplayName, u
                           key={team}
                           variant={formData.favoriteTeams.includes(team) ? "default" : "outline"}
                           onClick={() => toggleSelection(team, 'favoriteTeams')}
-                          className={`h-12 text-sm font-medium transition-all duration-300 ${
-                            formData.favoriteTeams.includes(team)
+                          className={`h-12 text-sm font-medium transition-all duration-300 ${formData.favoriteTeams.includes(team)
                               ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg'
                               : 'glass-effect hover:bg-white/10 hover:border-green-400/40'
-                          }`}
+                            }`}
                         >
                           {team}
                         </Button>
@@ -508,7 +503,7 @@ export default function OnboardingModal({ isOpen, onComplete, userDisplayName, u
                   </CardContent>
                 </Card>
               ))}
-              
+
               <div className="text-center">
                 <Badge variant="secondary" className="text-sm px-4 py-2">
                   Selected: {formData.favoriteTeams.length} teams
@@ -528,18 +523,17 @@ export default function OnboardingModal({ isOpen, onComplete, userDisplayName, u
               <h2 className="text-3xl font-bold text-white">Which platforms do you use? 📱</h2>
               <p className="text-lg text-muted-foreground">Select your streaming services</p>
             </div>
-            
+
             <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
               {platforms.map((platform) => (
                 <Button
                   key={platform}
                   variant={formData.streamingPlatforms.includes(platform) ? "default" : "outline"}
                   onClick={() => toggleSelection(platform, 'streamingPlatforms')}
-                  className={`h-16 text-base font-medium transition-all duration-300 ${
-                    formData.streamingPlatforms.includes(platform)
+                  className={`h-16 text-base font-medium transition-all duration-300 ${formData.streamingPlatforms.includes(platform)
                       ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white shadow-lg'
                       : 'glass-effect hover:bg-white/10 hover:border-blue-400/40'
-                  }`}
+                    }`}
                 >
                   {platform}
                 </Button>
@@ -558,24 +552,23 @@ export default function OnboardingModal({ isOpen, onComplete, userDisplayName, u
               <h2 className="text-3xl font-bold text-white">What type of content do you love? ❤️</h2>
               <p className="text-lg text-muted-foreground">Select all that you enjoy watching</p>
             </div>
-            
+
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
               {contentTypes.map((type) => (
                 <Button
                   key={type}
                   variant={formData.contentTypes.includes(type) ? "default" : "outline"}
                   onClick={() => toggleSelection(type, 'contentTypes')}
-                  className={`h-16 text-base font-medium transition-all duration-300 ${
-                    formData.contentTypes.includes(type)
+                  className={`h-16 text-base font-medium transition-all duration-300 ${formData.contentTypes.includes(type)
                       ? 'bg-gradient-to-r from-red-500 to-pink-500 text-white shadow-lg scale-105'
                       : 'glass-effect hover:bg-white/10 hover:border-red-400/40 hover:scale-105'
-                  }`}
+                    }`}
                 >
                   {type}
                 </Button>
               ))}
             </div>
-            
+
             <div className="text-center">
               <Badge variant="secondary" className="text-sm px-4 py-2">
                 Selected: {formData.contentTypes.length} content types
@@ -594,7 +587,7 @@ export default function OnboardingModal({ isOpen, onComplete, userDisplayName, u
               <h2 className="text-3xl font-bold text-white">Notification Preferences 🔔</h2>
               <p className="text-lg text-muted-foreground">Choose what you'd like to be notified about</p>
             </div>
-            
+
             <Card className="glass-effect border-slate-700/50">
               <CardHeader>
                 <CardTitle className="text-xl text-white">Notification Settings</CardTitle>
@@ -642,7 +635,7 @@ export default function OnboardingModal({ isOpen, onComplete, userDisplayName, u
               <h2 className="text-3xl font-bold text-white">Import Your Viewing History 📚</h2>
               <p className="text-lg text-muted-foreground">Upload your watch history files or connect your streaming accounts</p>
             </div>
-            
+
             <div className="space-y-6">
               {/* Quick Import Toggle */}
               <Card className="glass-effect border-slate-700/50">
@@ -660,7 +653,7 @@ export default function OnboardingModal({ isOpen, onComplete, userDisplayName, u
                     </div>
                     <Switch
                       checked={formData.importHistory}
-                      onCheckedChange={(checked) => setFormData(prev => ({...prev, importHistory: checked}))}
+                      onCheckedChange={(checked) => setFormData(prev => ({ ...prev, importHistory: checked }))}
                     />
                   </div>
                 </CardContent>
@@ -697,7 +690,7 @@ export default function OnboardingModal({ isOpen, onComplete, userDisplayName, u
                           </Button>
                         </div>
                       </div>
-                      
+
                       {/* Supported Formats */}
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-center">
                         <div className="p-3 bg-slate-800/50 rounded-lg">
@@ -858,8 +851,8 @@ export default function OnboardingModal({ isOpen, onComplete, userDisplayName, u
                       </p>
                     </CardHeader>
                     <CardContent>
-                      <Button 
-                        variant="outline" 
+                      <Button
+                        variant="outline"
                         className="w-full h-12 border-dashed border-gray-500 text-gray-300 hover:bg-white/5"
                         onClick={() => {
                           // This would open a manual entry modal
@@ -877,7 +870,7 @@ export default function OnboardingModal({ isOpen, onComplete, userDisplayName, u
                     <CardHeader>
                       <CardTitle className="text-lg text-white flex items-center gap-2">
                         <Link className="h-5 w-5" />
-                        Connect Accounts 
+                        Connect Accounts
                         <Badge className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white text-xs">Premium</Badge>
                       </CardTitle>
                       <p className="text-sm text-muted-foreground">
@@ -900,7 +893,7 @@ export default function OnboardingModal({ isOpen, onComplete, userDisplayName, u
                       </div>
                       <div className="mt-4 p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
                         <p className="text-sm text-blue-300">
-                          � <strong>Coming Soon:</strong> Direct account connections for automatic history sync. 
+                          � <strong>Coming Soon:</strong> Direct account connections for automatic history sync.
                           For now, please use the file upload method above.
                         </p>
                       </div>
@@ -922,7 +915,7 @@ export default function OnboardingModal({ isOpen, onComplete, userDisplayName, u
               <h2 className="text-3xl font-bold text-white">Content Discovery 🔍</h2>
               <p className="text-lg text-muted-foreground">Customize how you discover new content</p>
             </div>
-            
+
             <Card className="glass-effect border-slate-700/50">
               <CardHeader>
                 <CardTitle className="text-xl text-white">Discovery Preferences</CardTitle>
@@ -944,7 +937,7 @@ export default function OnboardingModal({ isOpen, onComplete, userDisplayName, u
                     }))}
                   />
                 </div>
-                
+
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
                     <TrendingUp className="h-5 w-5 text-green-400" />
@@ -961,7 +954,7 @@ export default function OnboardingModal({ isOpen, onComplete, userDisplayName, u
                     }))}
                   />
                 </div>
-                
+
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
                     <Award className="h-5 w-5 text-green-400" />
@@ -978,7 +971,7 @@ export default function OnboardingModal({ isOpen, onComplete, userDisplayName, u
                     }))}
                   />
                 </div>
-                
+
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
                     <Sparkles className="h-5 w-5 text-green-400" />
@@ -1010,7 +1003,7 @@ export default function OnboardingModal({ isOpen, onComplete, userDisplayName, u
               <h2 className="text-3xl font-bold text-white">Social & Privacy 🔒</h2>
               <p className="text-lg text-muted-foreground">Control how you interact with others on BingeBoard</p>
             </div>
-            
+
             <div className="space-y-6">
               <Card className="glass-effect border-slate-700/50">
                 <CardHeader>
@@ -1025,12 +1018,11 @@ export default function OnboardingModal({ isOpen, onComplete, userDisplayName, u
                     <Button
                       key={option.value}
                       variant={formData.privacy === option.value ? "default" : "outline"}
-                      onClick={() => setFormData(prev => ({...prev, privacy: option.value}))}
-                      className={`w-full h-16 justify-start text-left transition-all duration-300 ${
-                        formData.privacy === option.value
+                      onClick={() => setFormData(prev => ({ ...prev, privacy: option.value }))}
+                      className={`w-full h-16 justify-start text-left transition-all duration-300 ${formData.privacy === option.value
                           ? 'bg-gradient-to-r from-teal-500 to-emerald-500 text-white shadow-lg'
                           : 'glass-effect hover:bg-white/10'
-                      }`}
+                        }`}
                     >
                       <option.icon className="h-5 w-5 mr-3" />
                       <div>
@@ -1041,7 +1033,7 @@ export default function OnboardingModal({ isOpen, onComplete, userDisplayName, u
                   ))}
                 </CardContent>
               </Card>
-              
+
               <Card className="glass-effect border-slate-700/50">
                 <CardHeader>
                   <CardTitle className="text-xl text-white">Social Features</CardTitle>
@@ -1057,10 +1049,10 @@ export default function OnboardingModal({ isOpen, onComplete, userDisplayName, u
                     </div>
                     <Switch
                       checked={formData.shareActivity}
-                      onCheckedChange={(checked) => setFormData(prev => ({...prev, shareActivity: checked}))}
+                      onCheckedChange={(checked) => setFormData(prev => ({ ...prev, shareActivity: checked }))}
                     />
                   </div>
-                  
+
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-3">
                       <UserPlus className="h-5 w-5 text-teal-400" />
@@ -1071,10 +1063,10 @@ export default function OnboardingModal({ isOpen, onComplete, userDisplayName, u
                     </div>
                     <Switch
                       checked={formData.findFriends}
-                      onCheckedChange={(checked) => setFormData(prev => ({...prev, findFriends: checked}))}
+                      onCheckedChange={(checked) => setFormData(prev => ({ ...prev, findFriends: checked }))}
                     />
                   </div>
-                  
+
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-3">
                       <TrendingUp className="h-5 w-5 text-teal-400" />
@@ -1085,7 +1077,7 @@ export default function OnboardingModal({ isOpen, onComplete, userDisplayName, u
                     </div>
                     <Switch
                       checked={formData.allowRecommendations}
-                      onCheckedChange={(checked) => setFormData(prev => ({...prev, allowRecommendations: checked}))}
+                      onCheckedChange={(checked) => setFormData(prev => ({ ...prev, allowRecommendations: checked }))}
                     />
                   </div>
                 </CardContent>
@@ -1104,17 +1096,16 @@ export default function OnboardingModal({ isOpen, onComplete, userDisplayName, u
               <h2 className="text-3xl font-bold text-white">Choose Your Theme 🎨</h2>
               <p className="text-lg text-muted-foreground">Select a theme that matches your style</p>
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {themes.map((theme) => (
-                <Card 
+                <Card
                   key={theme.value}
-                  className={`cursor-pointer transition-all duration-300 ${
-                    formData.theme === theme.value
+                  className={`cursor-pointer transition-all duration-300 ${formData.theme === theme.value
                       ? 'ring-2 ring-violet-500 bg-gradient-to-br from-violet-500/20 to-purple-500/20'
                       : 'glass-effect hover:bg-white/10'
-                  }`}
-                  onClick={() => setFormData(prev => ({...prev, theme: theme.value}))}
+                    }`}
+                  onClick={() => setFormData(prev => ({ ...prev, theme: theme.value }))}
                 >
                   <CardContent className="p-6 text-center space-y-4">
                     <div className={`w-16 h-16 rounded-xl flex items-center justify-center mx-auto ${theme.gradient}`}>
@@ -1128,7 +1119,7 @@ export default function OnboardingModal({ isOpen, onComplete, userDisplayName, u
                 </Card>
               ))}
             </div>
-            
+
             <div className="text-center">
               <Card className="glass-effect border-yellow-500/30 bg-gradient-to-r from-yellow-500/10 to-orange-500/10">
                 <CardContent className="p-4">
@@ -1154,7 +1145,7 @@ export default function OnboardingModal({ isOpen, onComplete, userDisplayName, u
               <h2 className="text-3xl font-bold text-white">Content Filters ⚙️</h2>
               <p className="text-lg text-muted-foreground">Customize your content preferences and safety settings</p>
             </div>
-            
+
             <div className="space-y-6">
               <Card className="glass-effect border-slate-700/50">
                 <CardHeader>
@@ -1177,7 +1168,7 @@ export default function OnboardingModal({ isOpen, onComplete, userDisplayName, u
                       }))}
                     />
                   </div>
-                  
+
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-3">
                       <Shield className="h-5 w-5 text-violet-400" />
@@ -1207,11 +1198,10 @@ export default function OnboardingModal({ isOpen, onComplete, userDisplayName, u
                             ...prev,
                             contentFilters: { ...prev.contentFilters, maxRating: rating }
                           }))}
-                          className={`h-10 transition-all duration-300 ${
-                            formData.contentFilters.maxRating === rating
+                          className={`h-10 transition-all duration-300 ${formData.contentFilters.maxRating === rating
                               ? 'bg-gradient-to-r from-violet-500 to-indigo-500 text-white'
                               : 'glass-effect hover:bg-white/10'
-                          }`}
+                            }`}
                         >
                           {rating}
                         </Button>
@@ -1237,7 +1227,7 @@ export default function OnboardingModal({ isOpen, onComplete, userDisplayName, u
               <h2 className="text-3xl font-bold text-white">Unlock Premium Features ✨</h2>
               <p className="text-lg text-muted-foreground">Get the most out of your BingeBoard experience</p>
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Free Plan */}
               <Card className="glass-effect border-slate-700/50">
@@ -1252,7 +1242,7 @@ export default function OnboardingModal({ isOpen, onComplete, userDisplayName, u
                   <div className="space-y-3">
                     {[
                       "Basic recommendations",
-                      "Track up to 50 shows/movies", 
+                      "Track up to 50 shows/movies",
                       "Standard themes (4 options)",
                       "Basic notifications",
                       "Public profile sharing",
@@ -1264,10 +1254,10 @@ export default function OnboardingModal({ isOpen, onComplete, userDisplayName, u
                       </div>
                     ))}
                   </div>
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     className="w-full mt-6 border-gray-600 text-gray-300"
-                    onClick={() => setFormData(prev => ({...prev, selectedPlan: 'free'}))}
+                    onClick={() => setFormData(prev => ({ ...prev, selectedPlan: 'free' }))}
                   >
                     Continue with Free
                   </Button>
@@ -1289,12 +1279,12 @@ export default function OnboardingModal({ isOpen, onComplete, userDisplayName, u
                     <div className="text-3xl font-bold text-white">$4.99<span className="text-lg text-gray-400">/month</span></div>
                     <p className="text-sm text-yellow-400">First month free!</p>
                   </div>
-                  
+
                   <div className="space-y-3">
                     {[
                       "AI-powered recommendations",
                       "Unlimited show/movie tracking",
-                      "Premium themes + custom theme builder", 
+                      "Premium themes + custom theme builder",
                       "Advanced notifications & insights",
                       "Private groups & watch parties",
                       "Automatic platform sync",
@@ -1308,21 +1298,21 @@ export default function OnboardingModal({ isOpen, onComplete, userDisplayName, u
                       </div>
                     ))}
                   </div>
-                  
-                  <Button 
+
+                  <Button
                     className="w-full mt-6 bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white font-semibold"
-                    onClick={() => setFormData(prev => ({...prev, selectedPlan: 'premium'}))}
+                    onClick={() => setFormData(prev => ({ ...prev, selectedPlan: 'premium' }))}
                   >
                     Start Free Trial
                   </Button>
-                  
+
                   <p className="text-xs text-center text-gray-400 mt-2">
                     Cancel anytime. No commitment.
                   </p>
                 </CardContent>
               </Card>
             </div>
-            
+
             <div className="text-center">
               <p className="text-sm text-gray-400">
                 You can always upgrade later from your account settings
@@ -1345,7 +1335,7 @@ export default function OnboardingModal({ isOpen, onComplete, userDisplayName, u
                 Hi {userDisplayName}! Let's customize your entertainment experience and get you started.
               </p>
             </div>
-            
+
             <Card className="glass-effect border-green-500/20 p-8">
               <CardContent className="space-y-6">
                 <h3 className="text-2xl font-bold text-white text-center mb-6">Your Profile Summary</h3>
@@ -1395,7 +1385,7 @@ export default function OnboardingModal({ isOpen, onComplete, userDisplayName, u
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="mt-8 p-6 bg-gradient-to-r from-green-500/10 to-emerald-500/10 border border-green-500/20 rounded-xl">
                   <div className="text-center space-y-3">
                     <h4 className="text-lg font-semibold text-white">You're all set!</h4>
@@ -1406,7 +1396,7 @@ export default function OnboardingModal({ isOpen, onComplete, userDisplayName, u
                 </div>
               </CardContent>
             </Card>
-            
+
             <div className="text-center space-y-6">
               <Button
                 onClick={handleComplete}
@@ -1438,13 +1428,13 @@ export default function OnboardingModal({ isOpen, onComplete, userDisplayName, u
   const handleNext = () => {
     if (currentStep < getTotalSteps()) {
       let nextStep = currentStep + 1;
-      
+
       // Skip Sports Teams step (4) if Sports genre is not selected
       if (nextStep === 4 && !shouldShowSportsStep()) {
         console.log("🏃‍♂️ Skipping Sports Teams step (4) because Sports genre not selected");
         nextStep = 5; // Skip to Streaming Platforms
       }
-      
+
       console.log(`➡️ Navigation: Step ${currentStep} → Step ${nextStep}`);
       setCurrentStep(nextStep);
     }
@@ -1453,13 +1443,13 @@ export default function OnboardingModal({ isOpen, onComplete, userDisplayName, u
   const handlePrev = () => {
     if (currentStep > 1) {
       let prevStep = currentStep - 1;
-      
+
       // Skip Sports Teams step (4) if Sports genre is not selected
       if (prevStep === 4 && !shouldShowSportsStep()) {
         console.log("🏃‍♂️ Skipping Sports Teams step (4) in reverse because Sports genre not selected");
         prevStep = 3; // Go back to Genres
       }
-      
+
       console.log(`⬅️ Navigation: Step ${currentStep} → Step ${prevStep}`);
       setCurrentStep(prevStep);
     }
@@ -1473,7 +1463,7 @@ export default function OnboardingModal({ isOpen, onComplete, userDisplayName, u
 
   const handleComplete = async () => {
     setIsLoading(true);
-    
+
     try {
       // Log all collected onboarding data
       console.log("🎉 ONBOARDING COMPLETED! Here's what we collected:");
@@ -1494,7 +1484,7 @@ export default function OnboardingModal({ isOpen, onComplete, userDisplayName, u
         selectedPlan: formData.selectedPlan,
         contentFilters: formData.contentFilters
       });
-      
+
       console.log("📊 Summary:");
       console.log(`👤 User: ${formData.userProfile.firstName} ${formData.userProfile.lastName}`);
       console.log(`📧 Email: ${formData.userProfile.email}`);
@@ -1503,10 +1493,10 @@ export default function OnboardingModal({ isOpen, onComplete, userDisplayName, u
       console.log(`🏆 Sports Teams: ${formData.favoriteTeams.join(', ')}`);
       console.log(`🎨 Theme: ${formData.theme}`);
       console.log(`💎 Plan: ${formData.selectedPlan}`);
-      
+
       // Save onboarding data to the database
       console.log("💾 Saving onboarding data to database...");
-      
+
       // 1. Save/Update user profile information
       const profileResponse = await fetch('/api/user/profile', {
         method: 'PUT',
@@ -1520,13 +1510,13 @@ export default function OnboardingModal({ isOpen, onComplete, userDisplayName, u
           birthday: formData.userProfile.birthday
         })
       });
-      
+
       if (!profileResponse.ok) {
         console.error("Failed to save profile:", await profileResponse.text());
       } else {
         console.log("✅ Profile saved successfully");
       }
-      
+
       // 2. Save user preferences
       const preferencesResponse = await fetch('/api/user/preferences', {
         method: 'PUT',
@@ -1551,13 +1541,13 @@ export default function OnboardingModal({ isOpen, onComplete, userDisplayName, u
           })
         })
       });
-      
+
       if (!preferencesResponse.ok) {
         console.error("Failed to save preferences:", await preferencesResponse.text());
       } else {
         console.log("✅ Preferences saved successfully");
       }
-      
+
       // 3. Save notification preferences
       const notificationResponse = await fetch('/api/notifications/preferences', {
         method: 'PUT',
@@ -1571,13 +1561,13 @@ export default function OnboardingModal({ isOpen, onComplete, userDisplayName, u
           trendingContent: formData.notifications.trendingContent
         })
       });
-      
+
       if (!notificationResponse.ok) {
         console.error("Failed to save notifications:", await notificationResponse.text());
       } else {
         console.log("✅ Notifications saved successfully");
       }
-      
+
       // 4. Mark onboarding as completed
       const onboardingResponse = await fetch('/api/user/onboarding/complete', {
         method: 'POST',
@@ -1603,21 +1593,21 @@ export default function OnboardingModal({ isOpen, onComplete, userDisplayName, u
           }
         })
       });
-      
+
       if (!onboardingResponse.ok) {
         console.error("Failed to complete onboarding:", await onboardingResponse.text());
       } else {
         console.log("✅ Onboarding marked as complete");
       }
-      
+
       console.log("🎊 All onboarding data saved successfully to the database!");
-      
+
       // Complete the onboarding process
       setTimeout(() => {
         setIsLoading(false);
         onComplete();
       }, 1000);
-      
+
     } catch (error) {
       console.error("❌ Error saving onboarding data:", error);
       setIsLoading(false);
@@ -1632,7 +1622,7 @@ export default function OnboardingModal({ isOpen, onComplete, userDisplayName, u
     console.log(`🔒 Privacy: ${formData.privacy}`);
     console.log(`🎨 Theme: ${formData.theme}`);
     console.log(`⭐ Plan: ${formData.selectedPlan}`);
-    
+
     try {
       await userDataManager.updatePreferences({
         favoriteGenres: formData.favoriteGenres,
@@ -1677,7 +1667,7 @@ export default function OnboardingModal({ isOpen, onComplete, userDisplayName, u
                 <X className="h-4 w-4" />
               </Button>
             </div>
-            
+
             {/* Compact Progress Bar */}
             <div className="space-y-1">
               <div className="flex justify-between text-xs text-gray-400">
@@ -1685,7 +1675,7 @@ export default function OnboardingModal({ isOpen, onComplete, userDisplayName, u
                 <span>{Math.round(progressPercentage)}% complete</span>
               </div>
               <div className="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
-                <div 
+                <div
                   className="h-full bg-gradient-to-r from-teal-500 via-cyan-500 to-blue-500 transition-all duration-500 ease-out"
                   style={{ width: `${progressPercentage}%` }}
                 />
@@ -1693,12 +1683,12 @@ export default function OnboardingModal({ isOpen, onComplete, userDisplayName, u
             </div>
           </div>
         </div>
-        
+
         {/* Scrollable Content */}
         <div className="flex-1 overflow-y-auto p-6">
           {renderStep()}
         </div>
-        
+
         {/* Enhanced Footer Navigation */}
         <div className="flex-shrink-0 p-4 border-t border-slate-700/50 bg-slate-900/50">
           <div className="flex justify-between items-center">
@@ -1711,7 +1701,7 @@ export default function OnboardingModal({ isOpen, onComplete, userDisplayName, u
               <ArrowLeft className="h-4 w-4 mr-2" />
               Previous
             </Button>
-            
+
             <div className="flex items-center space-x-4">
               {/* Skip Button for optional steps */}
               {(currentStep >= 5 && currentStep <= 10) && (
@@ -1723,7 +1713,7 @@ export default function OnboardingModal({ isOpen, onComplete, userDisplayName, u
                   Skip
                 </Button>
               )}
-              
+
               {currentStep < getTotalSteps() ? (
                 <Button
                   onClick={handleNext}

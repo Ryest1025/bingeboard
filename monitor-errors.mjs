@@ -3,7 +3,7 @@ import { spawn } from 'child_process';
 import fs from 'fs';
 
 // Start the server
-const server = spawn('npx', ['vite', '--host', '0.0.0.0'], { 
+const server = spawn('npx', ['vite', '--host', '0.0.0.0'], {
   cwd: './client',
   shell: true,
   stdio: 'pipe'

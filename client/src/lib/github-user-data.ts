@@ -99,7 +99,7 @@ class GitHubUserDataService {
   async getUserData(userId: string): Promise<UserData | null> {
     try {
       console.log(`📚 Loading user data for: ${userId}`);
-      
+
       // Check cache first
       if (this.gistCache.has(userId)) {
         console.log('📦 Returning cached user data');
@@ -108,7 +108,7 @@ class GitHubUserDataService {
 
       // Find user's gist by description
       const gists = await this.octokit.rest.gists.list();
-      const userGist = gists.data.find(gist => 
+      const userGist = gists.data.find(gist =>
         gist.description === `BingeBoard-UserData-${userId}`
       );
 
@@ -129,10 +129,10 @@ class GitHubUserDataService {
       }
 
       const userData = JSON.parse(userDataFile.content) as UserData;
-      
+
       // Cache the data
       this.gistCache.set(userId, userData);
-      
+
       console.log('✅ User data loaded successfully');
       return userData;
     } catch (error) {
@@ -145,12 +145,12 @@ class GitHubUserDataService {
   async saveUserData(userData: UserData): Promise<boolean> {
     try {
       console.log(`💾 Saving user data for: ${userData.userId}`);
-      
+
       userData.lastUpdated = new Date().toISOString();
-      
+
       // Check if gist already exists
       const gists = await this.octokit.rest.gists.list();
-      const existingGist = gists.data.find(gist => 
+      const existingGist = gists.data.find(gist =>
         gist.description === `BingeBoard-UserData-${userData.userId}`
       );
 
@@ -182,7 +182,7 @@ class GitHubUserDataService {
 
       // Update cache
       this.gistCache.set(userData.userId, userData);
-      
+
       return true;
     } catch (error) {
       console.error('❌ Error saving user data:', error);
@@ -193,14 +193,14 @@ class GitHubUserDataService {
   // Create new user
   async createUser(userId: string, email: string, displayName: string): Promise<UserData> {
     console.log(`👤 Creating new user: ${displayName} (${email})`);
-    
+
     const userData = this.createDefaultUserData(userId, email, displayName);
-    
+
     const success = await this.saveUserData(userData);
     if (!success) {
       throw new Error('Failed to create user data');
     }
-    
+
     return userData;
   }
 

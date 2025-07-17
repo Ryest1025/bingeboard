@@ -6,10 +6,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card"
 import { Checkbox } from "../components/ui/checkbox";
 import { SiGoogle, SiFacebook } from "react-icons/si";
 import { Eye, EyeOff, Mail, Lock, Loader2 } from "lucide-react";
-import { 
-  signInWithGoogle, 
-  signInWithFacebook, 
-  signInWithEmail, 
+import {
+  signInWithGoogle,
+  signInWithFacebook,
+  signInWithEmail,
   signUpWithEmail,
   sendPasswordReset
 } from "../lib/auth";
@@ -66,7 +66,7 @@ export default function SimpleLogin() {
   const handleGoogleLogin = async () => {
     setIsLoading(true);
     setError(null);
-    
+
     try {
       const user = await signInWithGoogle();
       showSuccess(`Welcome ${user.displayName || user.email}!`);
@@ -81,7 +81,7 @@ export default function SimpleLogin() {
   const handleFacebookLogin = async () => {
     setIsLoading(true);
     setError(null);
-    
+
     try {
       const user = await signInWithFacebook();
       showSuccess(`Welcome ${user.displayName || user.email}!`);
@@ -108,8 +108,8 @@ export default function SimpleLogin() {
         // Sign up with email/password
         const displayName = `${formData.firstName} ${formData.lastName}`.trim();
         const user = await signUpWithEmail(
-          formData.email, 
-          formData.password, 
+          formData.email,
+          formData.password,
           displayName || undefined
         );
         showSuccess(`Account created for ${user.email}!`);
@@ -125,12 +125,12 @@ export default function SimpleLogin() {
             const hasGoogle = methods.some(method => method.includes('google'));
             const hasFacebook = methods.some(method => method.includes('facebook'));
             const hasPassword = methods.some(method => method === 'password');
-            
+
             if ((hasGoogle || hasFacebook) && !hasPassword && isLogin) {
               const providers = [];
               if (hasGoogle) providers.push('Google');
               if (hasFacebook) providers.push('Facebook');
-              
+
               showError(`This email was registered with ${providers.join(' and ')}. Please use the "${providers[0]} Sign-in" button above instead.`);
             } else {
               showError(err.message);
@@ -178,7 +178,7 @@ export default function SimpleLogin() {
             {isLogin ? "Sign in to your account" : "Sign up for BingeBoard"}
           </p>
         </CardHeader>
-        
+
         <CardContent className="space-y-6">
           {/* Error Message */}
           {error && (
@@ -201,21 +201,21 @@ export default function SimpleLogin() {
                 <h3 className="text-lg font-medium text-white mb-2">Reset Password</h3>
                 <p className="text-gray-400 text-sm">Enter your email to receive a password reset link</p>
               </div>
-              
+
               <div className="relative">
                 <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                 <Input
                   type="email"
                   placeholder="Email address"
                   value={formData.email}
-                  onChange={(e) => setFormData({...formData, email: e.target.value})}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   className="pl-10 bg-slate-800/50 border-slate-700 text-white placeholder:text-gray-400"
                   required
                 />
               </div>
 
               <div className="flex space-x-3">
-                <Button 
+                <Button
                   onClick={handleForgotPassword}
                   disabled={isLoading}
                   className="flex-1 bg-gradient-to-r from-teal-600 to-blue-600"
@@ -225,7 +225,7 @@ export default function SimpleLogin() {
                   ) : null}
                   Send Reset Email
                 </Button>
-                <Button 
+                <Button
                   variant="outline"
                   onClick={() => setShowForgotPassword(false)}
                   className="border-slate-700 text-white"
@@ -238,8 +238,8 @@ export default function SimpleLogin() {
             <>
               {/* Social Login Buttons */}
               <div className="space-y-3">
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   className="w-full border-slate-700 bg-white/5 hover:bg-white/10 text-white"
                   onClick={handleGoogleLogin}
                   disabled={isLoading}
@@ -251,8 +251,8 @@ export default function SimpleLogin() {
                   )}
                   Continue with Google
                 </Button>
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   className="w-full border-slate-700 bg-blue-600/20 hover:bg-blue-600/30 text-white"
                   onClick={handleFacebookLogin}
                   disabled={isLoading}
@@ -266,117 +266,117 @@ export default function SimpleLogin() {
                 </Button>
               </div>
 
-          {/* Divider */}
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t border-slate-700" />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-slate-950 px-2 text-slate-400">Or</span>
-            </div>
-          </div>
-
-          {/* Email/Password Form */}
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {!isLogin && (
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Input
-                    type="text"
-                    placeholder="First name"
-                    value={formData.firstName}
-                    onChange={(e) => setFormData({...formData, firstName: e.target.value})}
-                    className="bg-slate-800/50 border-slate-700 text-white placeholder:text-gray-400"
-                  />
+              {/* Divider */}
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t border-slate-700" />
                 </div>
-                <div>
-                  <Input
-                    type="text"
-                    placeholder="Last name"
-                    value={formData.lastName}
-                    onChange={(e) => setFormData({...formData, lastName: e.target.value})}
-                    className="bg-slate-800/50 border-slate-700 text-white placeholder:text-gray-400"
-                  />
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-slate-950 px-2 text-slate-400">Or</span>
                 </div>
               </div>
-            )}
-            
-            <div className="relative">
-              <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-              <Input
-                type="email"
-                placeholder="Email address"
-                value={formData.email}
-                onChange={(e) => setFormData({...formData, email: e.target.value})}
-                className="pl-10 bg-slate-800/50 border-slate-700 text-white placeholder:text-gray-400"
-                required
-              />
-            </div>
-            
-            <div className="relative">
-              <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-              <Input
-                type={showPassword ? "text" : "password"}
-                placeholder="Password"
-                value={formData.password}
-                onChange={(e) => setFormData({...formData, password: e.target.value})}
-                className="pl-10 pr-10 bg-slate-800/50 border-slate-700 text-white placeholder:text-gray-400"
-                required
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-3 text-gray-400 hover:text-white"
-              >
-                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-              </button>
-            </div>
 
-            {/* Remember Me */}
-            {isLogin && (
-              <div className="flex items-center space-x-2">
-                <Checkbox 
-                  id="remember" 
-                  checked={rememberMe}
-                  onCheckedChange={(checked) => setRememberMe(checked as boolean)}
-                />
-                <label 
-                  htmlFor="remember" 
-                  className="text-sm text-gray-300 cursor-pointer"
+              {/* Email/Password Form */}
+              <form onSubmit={handleSubmit} className="space-y-4">
+                {!isLogin && (
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Input
+                        type="text"
+                        placeholder="First name"
+                        value={formData.firstName}
+                        onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                        className="bg-slate-800/50 border-slate-700 text-white placeholder:text-gray-400"
+                      />
+                    </div>
+                    <div>
+                      <Input
+                        type="text"
+                        placeholder="Last name"
+                        value={formData.lastName}
+                        onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                        className="bg-slate-800/50 border-slate-700 text-white placeholder:text-gray-400"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                <div className="relative">
+                  <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                  <Input
+                    type="email"
+                    placeholder="Email address"
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    className="pl-10 bg-slate-800/50 border-slate-700 text-white placeholder:text-gray-400"
+                    required
+                  />
+                </div>
+
+                <div className="relative">
+                  <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                  <Input
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Password"
+                    value={formData.password}
+                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                    className="pl-10 pr-10 bg-slate-800/50 border-slate-700 text-white placeholder:text-gray-400"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-3 text-gray-400 hover:text-white"
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+
+                {/* Remember Me */}
+                {isLogin && (
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="remember"
+                      checked={rememberMe}
+                      onCheckedChange={(checked) => setRememberMe(checked as boolean)}
+                    />
+                    <label
+                      htmlFor="remember"
+                      className="text-sm text-gray-300 cursor-pointer"
+                    >
+                      Remember me
+                    </label>
+                  </div>
+                )}
+
+                <Button
+                  type="submit"
+                  className="w-full bg-gradient-to-r from-teal-600 via-cyan-600 to-blue-600 hover:from-teal-700 hover:via-cyan-700 hover:to-blue-700"
+                  disabled={isLoading}
                 >
-                  Remember me
-                </label>
-              </div>
-            )}
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      {isLogin ? "Signing In..." : "Creating Account..."}
+                    </>
+                  ) : (
+                    isLogin ? "Sign In" : "Create Account"
+                  )}
+                </Button>
+              </form>
 
-            <Button 
-              type="submit" 
-              className="w-full bg-gradient-to-r from-teal-600 via-cyan-600 to-blue-600 hover:from-teal-700 hover:via-cyan-700 hover:to-blue-700"
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  {isLogin ? "Signing In..." : "Creating Account..."}
-                </>
-              ) : (
-                isLogin ? "Sign In" : "Create Account"
+              {/* Forgot Password Link */}
+              {isLogin && (
+                <div className="text-center">
+                  <button
+                    onClick={() => setShowForgotPassword(true)}
+                    className="text-sm text-teal-400 hover:text-teal-300 transition-colors"
+                  >
+                    Forgot your password?
+                  </button>
+                </div>
               )}
-            </Button>
-          </form>
-
-          {/* Forgot Password Link */}
-          {isLogin && (
-            <div className="text-center">
-              <button
-                onClick={() => setShowForgotPassword(true)}
-                className="text-sm text-teal-400 hover:text-teal-300 transition-colors"
-              >
-                Forgot your password?
-              </button>
-            </div>
-          )}
-          </>
+            </>
           )}
 
           {/* Toggle Login/Signup */}
@@ -385,8 +385,8 @@ export default function SimpleLogin() {
               onClick={() => setIsLogin(!isLogin)}
               className="text-sm text-gray-400 hover:text-white transition-colors"
             >
-              {isLogin 
-                ? "Don't have an account? Sign up" 
+              {isLogin
+                ? "Don't have an account? Sign up"
                 : "Already have an account? Sign in"
               }
             </button>

@@ -5,14 +5,14 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/useAuth";
-import { 
-  List, 
-  Plus, 
-  Search, 
-  Star, 
-  Play, 
-  Tv, 
-  Film, 
+import {
+  List,
+  Plus,
+  Search,
+  Star,
+  Play,
+  Tv,
+  Film,
   Clock,
   Heart,
   MoreVertical,
@@ -62,7 +62,7 @@ const mockLists: UserList[] = [
         addedAt: "2025-01-15"
       },
       {
-        id: "2", 
+        id: "2",
         title: "Dune: Part Two",
         poster_path: "/1pdfLvkbY9ohJlCjQH2CZjjYVvJ.jpg",
         vote_average: 8.5,
@@ -135,7 +135,7 @@ export default function ListsPage() {
       {/* Mobile-first layout with proper spacing */}
       <div className="pb-6 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto space-y-6">
-          
+
           {/* Header */}
           <div className="text-center space-y-4">
             <h1 className="text-3xl sm:text-4xl font-bold text-white">My Lists</h1>
@@ -154,7 +154,7 @@ export default function ListsPage() {
                 className="pl-10 bg-slate-800/50 border-slate-700 text-white placeholder-gray-400 focus:ring-teal-500 focus:border-teal-500"
               />
             </div>
-            
+
             {/* View Toggle */}
             <div className="flex gap-2">
               <Button
@@ -174,7 +174,7 @@ export default function ListsPage() {
                 <LayoutList className="w-4 h-4" />
               </Button>
             </div>
-            
+
             {/* Create List Button */}
             <Button className="bg-teal-600 hover:bg-teal-700 w-full sm:w-auto">
               <Plus className="w-4 h-4 mr-2" />
@@ -185,14 +185,14 @@ export default function ListsPage() {
           {/* Lists Grid/List View */}
           {filteredLists.length > 0 ? (
             <div className={
-              viewMode === "grid" 
-                ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6" 
+              viewMode === "grid"
+                ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6"
                 : "space-y-4"
             }>
               {filteredLists.map((list) => (
-                <ListCard 
-                  key={list.id} 
-                  list={list} 
+                <ListCard
+                  key={list.id}
+                  list={list}
                   viewMode={viewMode}
                   onClick={() => setSelectedList(list)}
                 />
@@ -214,9 +214,9 @@ export default function ListsPage() {
 
       {/* List Detail Modal/Overlay for mobile */}
       {selectedList && (
-        <ListDetailOverlay 
-          list={selectedList} 
-          onClose={() => setSelectedList(null)} 
+        <ListDetailOverlay
+          list={selectedList}
+          onClose={() => setSelectedList(null)}
         />
       )}
     </div>
@@ -231,12 +231,11 @@ interface ListCardProps {
 
 function ListCard({ list, viewMode, onClick }: ListCardProps) {
   const isGrid = viewMode === "grid";
-  
+
   return (
-    <Card 
-      className={`bg-slate-800/50 border-slate-700 hover:border-teal-500/50 transition-all duration-300 cursor-pointer group ${
-        isGrid ? '' : 'flex flex-row'
-      }`}
+    <Card
+      className={`bg-slate-800/50 border-slate-700 hover:border-teal-500/50 transition-all duration-300 cursor-pointer group ${isGrid ? '' : 'flex flex-row'
+        }`}
       onClick={onClick}
     >
       {isGrid ? (
@@ -308,7 +307,7 @@ function ListCard({ list, viewMode, onClick }: ListCardProps) {
               />
             ))}
           </div>
-          
+
           <div className="flex-1 min-w-0">
             <h3 className="font-semibold text-white group-hover:text-teal-300 transition-colors truncate">
               {list.name}
@@ -318,7 +317,7 @@ function ListCard({ list, viewMode, onClick }: ListCardProps) {
               {list.itemCount} items
             </p>
           </div>
-          
+
           <div className="flex items-center gap-2">
             {list.isPublic && (
               <Badge variant="outline" className="text-xs">
@@ -355,7 +354,7 @@ function ListDetailOverlay({ list, onClose }: ListDetailOverlayProps) {
             </Button>
           </div>
         </div>
-        
+
         <div className="p-6">
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
             {list.items.map((item) => (

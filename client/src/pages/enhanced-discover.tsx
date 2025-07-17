@@ -7,10 +7,10 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import StreamingAvailability from "@/components/StreamingAvailability";
 import { useAuth } from "@/hooks/useAuth";
-import { 
-  Search, 
-  Mic, 
-  Star, 
+import {
+  Search,
+  Mic,
+  Star,
   TrendingUp,
   Sparkles,
   Heart,
@@ -39,66 +39,66 @@ import {
 
 // Enhanced mood filters with modern design
 const moodFilters = [
-  { 
-    id: "light", 
-    label: "Light & Fun", 
-    icon: Sun, 
+  {
+    id: "light",
+    label: "Light & Fun",
+    icon: Sun,
     gradient: "from-yellow-400 via-orange-400 to-orange-500",
     description: "Comedy & feel-good shows",
     count: "2.1k"
   },
-  { 
-    id: "bingeable", 
-    label: "Bingeable", 
-    icon: Zap, 
+  {
+    id: "bingeable",
+    label: "Bingeable",
+    icon: Zap,
     gradient: "from-orange-500 via-red-500 to-pink-500",
     description: "Can't-stop-watching series",
     count: "850"
   },
-  { 
-    id: "feelgood", 
-    label: "Feel-Good", 
-    icon: Heart, 
+  {
+    id: "feelgood",
+    label: "Feel-Good",
+    icon: Heart,
     gradient: "from-pink-500 via-rose-500 to-red-500",
     description: "Uplifting & heartwarming",
     count: "1.5k"
   },
-  { 
-    id: "dark", 
-    label: "Dark & Intense", 
-    icon: Moon, 
+  {
+    id: "dark",
+    label: "Dark & Intense",
+    icon: Moon,
     gradient: "from-purple-600 via-indigo-600 to-blue-600",
     description: "Thrillers & dark dramas",
     count: "920"
   },
-  { 
-    id: "comedy", 
-    label: "Comedy", 
-    icon: Laugh, 
+  {
+    id: "comedy",
+    label: "Comedy",
+    icon: Laugh,
     gradient: "from-green-400 via-emerald-500 to-teal-500",
     description: "Laugh-out-loud moments",
     count: "1.8k"
   },
-  { 
-    id: "drama", 
-    label: "Drama", 
-    icon: Drama, 
+  {
+    id: "drama",
+    label: "Drama",
+    icon: Drama,
     gradient: "from-blue-500 via-cyan-500 to-teal-500",
     description: "Emotional storytelling",
     count: "2.5k"
   },
-  { 
-    id: "action", 
-    label: "Action", 
-    icon: Swords, 
+  {
+    id: "action",
+    label: "Action",
+    icon: Swords,
     gradient: "from-red-500 via-pink-500 to-purple-500",
     description: "High-octane adventures",
     count: "1.2k"
   },
-  { 
-    id: "scifi", 
-    label: "Sci-Fi", 
-    icon: Rocket, 
+  {
+    id: "scifi",
+    label: "Sci-Fi",
+    icon: Rocket,
     gradient: "from-indigo-500 via-purple-500 to-pink-500",
     description: "Future & beyond",
     count: "680"
@@ -201,8 +201,8 @@ export default function ModernDiscover() {
     queryFn: () => {
       if (!debouncedSearchQuery.trim()) return null;
       // Mock search results
-      return Promise.resolve({ 
-        results: mockTrendingData.filter(show => 
+      return Promise.resolve({
+        results: mockTrendingData.filter(show =>
           show.name.toLowerCase().includes(debouncedSearchQuery.toLowerCase())
         )
       });
@@ -269,7 +269,7 @@ export default function ModernDiscover() {
 
       <div className="relative z-10 pb-16 sm:pb-24">
         <div className="container mx-auto px-4 space-y-8 sm:space-y-12">
-          
+
           {/* Enhanced Hero Header - Mobile optimized */}
           <div className="text-center space-y-6 sm:space-y-8">
             <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 group">
@@ -295,7 +295,7 @@ export default function ModernDiscover() {
               Discover your next obsession with AI-powered recommendations tailored just for you
             </p>
           </div>
-          
+
           {/* Enhanced Search Section - Mobile optimized */}
           <div className="max-w-3xl mx-auto space-y-4 sm:space-y-6">
             <div className={`relative transition-all duration-500 ${isSearchFocused ? 'transform scale-105' : ''}`}>
@@ -326,18 +326,17 @@ export default function ModernDiscover() {
                       variant="ghost"
                       size="sm"
                       onClick={handleVoiceSearch}
-                      className={`p-2 sm:p-3 rounded-xl transition-all duration-300 ${
-                        isVoiceSearch 
-                          ? "text-teal-400 bg-teal-400/10 ring-2 ring-teal-400/30" 
+                      className={`p-2 sm:p-3 rounded-xl transition-all duration-300 ${isVoiceSearch
+                          ? "text-teal-400 bg-teal-400/10 ring-2 ring-teal-400/30"
                           : "text-slate-400 hover:text-white hover:bg-slate-700/50"
-                      }`}
+                        }`}
                     >
                       <Mic className="h-4 w-4 sm:h-5 sm:w-5" />
                     </Button>
                   </div>
                 </div>
               </div>
-              
+
               {/* Search Loading Indicator */}
               {searchLoading && debouncedSearchQuery && (
                 <div className="absolute top-full left-0 right-0 mt-4 p-4 bg-slate-800/90 backdrop-blur-sm rounded-2xl border border-slate-700/50 shadow-2xl">
@@ -348,7 +347,7 @@ export default function ModernDiscover() {
                 </div>
               )}
             </div>
-            
+
             {/* Trending Search Terms */}
             {!searchQuery && (
               <div className="text-center space-y-4">
@@ -388,44 +387,40 @@ export default function ModernDiscover() {
                 More Filters
               </Button>
             </div>
-            
+
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4">
               {moodFilters.map((mood, index) => {
                 const Icon = mood.icon;
                 const isSelected = selectedMood === mood.id;
-                
+
                 return (
                   <Button
                     key={mood.id}
                     variant="outline"
                     onClick={() => handleMoodFilter(mood.id)}
-                    className={`relative h-auto p-4 flex flex-col items-center gap-3 bg-slate-800/50 border-slate-700/50 hover:scale-105 transition-all duration-500 rounded-2xl group overflow-hidden ${
-                      isSelected 
-                        ? `bg-gradient-to-br ${mood.gradient} text-white border-transparent shadow-2xl shadow-current/20` 
+                    className={`relative h-auto p-4 flex flex-col items-center gap-3 bg-slate-800/50 border-slate-700/50 hover:scale-105 transition-all duration-500 rounded-2xl group overflow-hidden ${isSelected
+                        ? `bg-gradient-to-br ${mood.gradient} text-white border-transparent shadow-2xl shadow-current/20`
                         : "hover:bg-slate-700/50 hover:border-slate-600/50"
-                    }`}
+                      }`}
                     style={{ animationDelay: `${index * 100}ms` }}
                   >
                     {/* Background gradient overlay */}
                     <div className={`absolute inset-0 bg-gradient-to-br ${mood.gradient} opacity-0 group-hover:opacity-10 transition-opacity duration-500`}></div>
-                    
-                    <Icon className={`h-6 w-6 transition-all duration-300 ${
-                      isSelected ? "text-white" : "text-slate-300 group-hover:text-white"
-                    }`} />
-                    
+
+                    <Icon className={`h-6 w-6 transition-all duration-300 ${isSelected ? "text-white" : "text-slate-300 group-hover:text-white"
+                      }`} />
+
                     <div className="text-center space-y-1 relative z-10">
-                      <div className={`text-sm font-semibold transition-colors duration-300 ${
-                        isSelected ? "text-white" : "text-slate-300 group-hover:text-white"
-                      }`}>
+                      <div className={`text-sm font-semibold transition-colors duration-300 ${isSelected ? "text-white" : "text-slate-300 group-hover:text-white"
+                        }`}>
                         {mood.label}
                       </div>
-                      <div className={`text-xs transition-colors duration-300 ${
-                        isSelected ? "text-white/80" : "text-slate-400 group-hover:text-slate-300"
-                      }`}>
+                      <div className={`text-xs transition-colors duration-300 ${isSelected ? "text-white/80" : "text-slate-400 group-hover:text-slate-300"
+                        }`}>
                         {mood.count} shows
                       </div>
                     </div>
-                    
+
                     {isSelected && (
                       <div className="absolute inset-0 ring-2 ring-white/30 rounded-2xl"></div>
                     )}
@@ -440,18 +435,17 @@ export default function ModernDiscover() {
             <div className="flex items-center justify-between">
               <h2 className="text-3xl font-bold text-white flex items-center gap-4">
                 {TitleIcon && (
-                  <div className={`w-10 h-10 bg-gradient-to-br ${
-                    selectedMood ? moodFilters.find(m => m.id === selectedMood)?.gradient : 'from-orange-500 to-red-500'
-                  } rounded-xl flex items-center justify-center shadow-lg`}>
+                  <div className={`w-10 h-10 bg-gradient-to-br ${selectedMood ? moodFilters.find(m => m.id === selectedMood)?.gradient : 'from-orange-500 to-red-500'
+                    } rounded-xl flex items-center justify-center shadow-lg`}>
                     <TitleIcon className="h-5 w-5 text-white" />
                   </div>
                 )}
                 {title}
               </h2>
-              
+
               {!debouncedSearchQuery && !selectedMood && (
-                <Button 
-                  variant="ghost" 
+                <Button
+                  variant="ghost"
                   className="text-teal-400 hover:text-teal-300 transition-colors duration-200 flex items-center gap-2"
                 >
                   View All
@@ -459,7 +453,7 @@ export default function ModernDiscover() {
                 </Button>
               )}
             </div>
-            
+
             {/* Content Grid */}
             <div className="space-y-6">
               {isLoading ? (
@@ -476,15 +470,15 @@ export default function ModernDiscover() {
                       {debouncedSearchQuery ? `No results found for "${debouncedSearchQuery}"` : "No content available"}
                     </h3>
                     <p className="text-slate-400 max-w-md mx-auto">
-                      {debouncedSearchQuery 
-                        ? "Try adjusting your search terms or browse our trending content below" 
+                      {debouncedSearchQuery
+                        ? "Try adjusting your search terms or browse our trending content below"
                         : "Check back later for new recommendations"
                       }
                     </p>
                   </div>
                   {debouncedSearchQuery && (
-                    <Button 
-                      onClick={clearSearch} 
+                    <Button
+                      onClick={clearSearch}
                       className="bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white px-8 py-3 rounded-xl transition-all duration-300 hover:scale-105"
                     >
                       Clear Search
@@ -493,10 +487,10 @@ export default function ModernDiscover() {
                 </div>
               ) : (
                 content.slice(0, 6).map((show: any, index: number) => (
-                  <Card 
-                    key={show.id} 
+                  <Card
+                    key={show.id}
                     className="group bg-slate-800/30 backdrop-blur-sm border-slate-700/50 hover:border-teal-400/50 hover:bg-slate-800/50 transition-all duration-500 rounded-2xl overflow-hidden hover:shadow-2xl hover:shadow-teal-400/10"
-                    style={{ 
+                    style={{
                       animationDelay: `${index * 150}ms`,
                       animation: 'fadeInUp 0.6s ease-out both'
                     }}
@@ -518,7 +512,7 @@ export default function ModernDiscover() {
                               </div>
                             )}
                           </div>
-                          
+
                           {/* Trending badge */}
                           <div className="absolute -top-2 -right-2">
                             <Badge className="bg-gradient-to-r from-orange-500 to-red-500 text-white border-0 shadow-lg animate-pulse px-2 py-1">
@@ -527,67 +521,67 @@ export default function ModernDiscover() {
                             </Badge>
                           </div>
                         </div>
-                        
+
                         {/* Enhanced Content Info */}
                         <div className="flex-1 space-y-4">
                           <div className="space-y-3">
                             <h3 className="font-bold text-white text-2xl group-hover:text-teal-300 transition-colors duration-300 leading-tight">
                               {show.name || show.title}
                             </h3>
-                            
+
                             <div className="flex items-center gap-4 flex-wrap">
                               <span className="text-slate-400 font-medium">
-                                {show.first_air_date ? new Date(show.first_air_date).getFullYear() : 
-                                 show.release_date ? new Date(show.release_date).getFullYear() : ''}
+                                {show.first_air_date ? new Date(show.first_air_date).getFullYear() :
+                                  show.release_date ? new Date(show.release_date).getFullYear() : ''}
                               </span>
-                              
+
                               <div className="flex items-center gap-1 bg-yellow-400/10 px-3 py-1 rounded-full border border-yellow-400/20">
                                 <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
                                 <span className="font-semibold text-yellow-400">{show.vote_average?.toFixed(1)}</span>
                               </div>
-                              
+
                               <Badge variant="outline" className="border-slate-600 text-slate-300 bg-slate-800/50">
                                 {show.media_type || 'TV Series'}
                               </Badge>
                             </div>
                           </div>
-                          
+
                           <p className="text-slate-300 text-base leading-relaxed line-clamp-3">
                             {show.overview}
                           </p>
-                          
+
                           {/* Streaming Availability */}
                           <div className="py-3">
-                            <StreamingAvailability 
-                              title={show.title || show.name} 
+                            <StreamingAvailability
+                              title={show.title || show.name}
                               compact={false}
                               className="space-y-2"
                             />
                           </div>
-                          
+
                           {/* Enhanced Action Buttons */}
                           <div className="flex items-center gap-3 pt-4">
-                            <Button 
-                              size="default" 
+                            <Button
+                              size="default"
                               className="bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 px-6"
                               onClick={() => window.open(`https://www.youtube.com/results?search_query=${encodeURIComponent((show.title || show.name) + ' trailer')}`, '_blank')}
                             >
                               <Play className="h-4 w-4 mr-2" />
                               Watch Trailer
                             </Button>
-                            
-                            <Button 
-                              size="default" 
+
+                            <Button
+                              size="default"
                               className="bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 px-6"
                               onClick={() => handleAddToWatchlist(show)}
                             >
                               <Plus className="h-4 w-4 mr-2" />
                               Add to List
                             </Button>
-                            
-                            <Button 
-                              variant="outline" 
-                              size="default" 
+
+                            <Button
+                              variant="outline"
+                              size="default"
                               className="border-slate-600 text-slate-300 hover:bg-slate-700 hover:border-slate-500 transition-all duration-300 hover:scale-105 px-6"
                               onClick={() => handleWatchNow(show)}
                             >
@@ -617,20 +611,20 @@ export default function ModernDiscover() {
                     AI Curated
                   </Badge>
                 </h2>
-                <Button 
-                  variant="ghost" 
+                <Button
+                  variant="ghost"
                   className="text-teal-400 hover:text-teal-300 transition-colors duration-200 flex items-center gap-2"
                 >
                   View All
                   <ArrowRight className="h-4 w-4" />
                 </Button>
               </div>
-              
+
               {/* Horizontal scrolling content cards */}
               <div className="flex gap-6 overflow-x-auto pb-4 scrollbar-hide">
                 {mockTrendingData.map((show, index) => (
-                  <Card 
-                    key={`hidden-${show.id}`} 
+                  <Card
+                    key={`hidden-${show.id}`}
                     className="flex-shrink-0 w-80 bg-slate-800/30 backdrop-blur-sm border-slate-700/50 hover:border-purple-400/50 hover:bg-slate-800/50 transition-all duration-300 rounded-2xl overflow-hidden group"
                   >
                     <CardContent className="p-4">
@@ -649,18 +643,18 @@ export default function ModernDiscover() {
                             <span className="text-sm text-yellow-400 font-medium">{show.vote_average}</span>
                           </div>
                           <p className="text-sm text-slate-300 line-clamp-2">{show.overview}</p>
-                          
+
                           {/* Streaming Availability */}
                           <div className="py-2">
-                            <StreamingAvailability 
-                              title={show.name} 
+                            <StreamingAvailability
+                              title={show.name}
                               compact={true}
                               className="text-xs"
                             />
                           </div>
-                          
-                          <Button 
-                            size="sm" 
+
+                          <Button
+                            size="sm"
                             className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white w-full mt-2"
                             onClick={() => handleAddToWatchlist(show)}
                           >

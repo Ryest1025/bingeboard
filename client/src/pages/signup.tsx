@@ -5,9 +5,9 @@ import { Input } from "../components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { SiGoogle, SiFacebook } from "react-icons/si";
 import { Eye, EyeOff, Mail, Lock, Loader2, User, CheckCircle, Sparkles } from "lucide-react";
-import { 
-  signInWithGoogle, 
-  signInWithFacebook, 
+import {
+  signInWithGoogle,
+  signInWithFacebook,
   signUpWithEmail
 } from "../lib/auth";
 import { fetchSignInMethodsForEmail } from "firebase/auth";
@@ -51,12 +51,12 @@ export default function Signup() {
     setIsLoading(true);
     setError(null);
     setPreventRedirect(true);
-    
+
     try {
       console.log("🚀 Starting Google signup...");
       const user = await signInWithGoogle();
       showSuccess(`Welcome ${user.displayName || user.email}! 🎉`);
-      
+
       // Add delay to show success message then go to onboarding
       setTimeout(() => {
         console.log("🎯 Moving to onboarding after Google signup...");
@@ -76,12 +76,12 @@ export default function Signup() {
     setIsLoading(true);
     setError(null);
     setPreventRedirect(true);
-    
+
     try {
       console.log("🚀 Starting Facebook signup...");
       const user = await signInWithFacebook();
       showSuccess(`Welcome ${user.displayName || user.email}! 🎉`);
-      
+
       // Add delay to show success message then go to onboarding
       setTimeout(() => {
         console.log("🎯 Moving to onboarding after Facebook signup...");
@@ -107,25 +107,25 @@ export default function Signup() {
       console.log("🚀 Starting email signup process...");
       const displayName = `${formData.firstName} ${formData.lastName}`.trim();
       const user = await signUpWithEmail(
-        formData.email, 
-        formData.password, 
+        formData.email,
+        formData.password,
         displayName || undefined
       );
-      
+
       console.log("✅ Signup successful, showing onboarding...");
       showSuccess(`Account created for ${user.email}! Welcome to BingeBoard! 🎉`);
-      
+
       // Add a small delay to ensure the success message shows
       setTimeout(() => {
         console.log("🎯 Moving to onboarding step...");
         setStep(2);
         setPreventRedirect(false);
       }, 1000);
-      
+
     } catch (err: any) {
       console.error("❌ Signup error:", err);
       setPreventRedirect(false);
-      
+
       // Enhanced error handling for account conflicts
       if (err.message.includes('already registered') || err.message.includes('already exists')) {
         try {
@@ -134,12 +134,12 @@ export default function Signup() {
           if (methods.length > 0) {
             const hasGoogle = methods.some(method => method.includes('google'));
             const hasFacebook = methods.some(method => method.includes('facebook'));
-            
+
             if (hasGoogle || hasFacebook) {
               const providers = [];
               if (hasGoogle) providers.push('Google');
               if (hasFacebook) providers.push('Facebook');
-              
+
               showError(`This email is already registered with ${providers.join(' and ')}. Please use the "${providers[0]} Sign-in" button above instead.`);
             } else {
               showError('This email is already registered. Please use the login page instead.');
@@ -161,11 +161,11 @@ export default function Signup() {
   const handleOnboardingSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    
+
     try {
       // Initialize user data manager (using localStorage fallback for now)
       await userDataManager.initialize();
-      
+
       // Save onboarding preferences
       const success = await userDataManager.updatePreferences({
         favoriteGenres: formData.favoriteGenres,
@@ -176,7 +176,7 @@ export default function Signup() {
       if (success) {
         console.log("💾 Saved onboarding data to user profile");
         showSuccess("Profile setup complete! Welcome to BingeBoard! 🚀");
-        
+
         // Add a nice completion animation delay
         setTimeout(() => {
           console.log("🎯 Navigating to dashboard...");
@@ -198,7 +198,7 @@ export default function Signup() {
   };
 
   const genres = [
-    "Action", "Adventure", "Comedy", "Drama", "Horror", "Sci-Fi", 
+    "Action", "Adventure", "Comedy", "Drama", "Horror", "Sci-Fi",
     "Fantasy", "Romance", "Thriller", "Documentary", "Animation", "Crime"
   ];
 
@@ -241,7 +241,7 @@ export default function Signup() {
               Let's personalize your experience
             </p>
           </CardHeader>
-          
+
           <CardContent>
             <form onSubmit={handleOnboardingSubmit} className="space-y-6">
               {/* Favorite Genres */}
@@ -255,11 +255,10 @@ export default function Signup() {
                       key={genre}
                       type="button"
                       variant={formData.favoriteGenres.includes(genre) ? "default" : "outline"}
-                      className={`text-sm ${
-                        formData.favoriteGenres.includes(genre)
+                      className={`text-sm ${formData.favoriteGenres.includes(genre)
                           ? "bg-gradient-to-r from-teal-600 to-blue-600 text-white"
                           : "border-slate-700 text-gray-300 hover:text-white"
-                      }`}
+                        }`}
                       onClick={() => toggleGenre(genre)}
                     >
                       {genre}
@@ -285,11 +284,10 @@ export default function Signup() {
                       key={goal}
                       type="button"
                       variant={formData.watchingGoals === goal ? "default" : "outline"}
-                      className={`w-full justify-start text-left ${
-                        formData.watchingGoals === goal
+                      className={`w-full justify-start text-left ${formData.watchingGoals === goal
                           ? "bg-gradient-to-r from-teal-600 to-blue-600 text-white"
                           : "border-slate-700 text-gray-300 hover:text-white"
-                      }`}
+                        }`}
                       onClick={() => setFormData(prev => ({ ...prev, watchingGoals: goal }))}
                     >
                       {formData.watchingGoals === goal && <CheckCircle className="h-4 w-4 mr-2" />}
@@ -315,11 +313,10 @@ export default function Signup() {
                       key={exp}
                       type="button"
                       variant={formData.experience === exp ? "default" : "outline"}
-                      className={`w-full justify-start text-left ${
-                        formData.experience === exp
+                      className={`w-full justify-start text-left ${formData.experience === exp
                           ? "bg-gradient-to-r from-teal-600 to-blue-600 text-white"
                           : "border-slate-700 text-gray-300 hover:text-white"
-                      }`}
+                        }`}
                       onClick={() => setFormData(prev => ({ ...prev, experience: exp }))}
                     >
                       {formData.experience === exp && <CheckCircle className="h-4 w-4 mr-2" />}
@@ -329,8 +326,8 @@ export default function Signup() {
                 </div>
               </div>
 
-              <Button 
-                type="submit" 
+              <Button
+                type="submit"
                 className="w-full bg-gradient-to-r from-teal-600 via-cyan-600 to-blue-600 hover:from-teal-700 hover:via-cyan-700 hover:to-blue-700"
                 size="lg"
               >
@@ -372,7 +369,7 @@ export default function Signup() {
             Start tracking your entertainment journey
           </p>
         </CardHeader>
-        
+
         <CardContent className="space-y-6">
           {/* Premium Error/Success Messages */}
           {error && (
@@ -395,8 +392,8 @@ export default function Signup() {
 
           {/* Premium Social Signup Buttons */}
           <div className="space-y-3">
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               className="w-full border-slate-700 bg-white/5 hover:bg-white/10 text-white transition-all duration-200 hover:scale-105 hover:shadow-lg group"
               onClick={handleGoogleSignup}
               disabled={isLoading}
@@ -408,8 +405,8 @@ export default function Signup() {
               )}
               Sign up with Google
             </Button>
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               className="w-full border-slate-700 bg-blue-600/10 hover:bg-blue-600/20 text-white transition-all duration-200 hover:scale-105 hover:shadow-lg group"
               onClick={handleFacebookSignup}
               disabled={isLoading}
@@ -442,7 +439,7 @@ export default function Signup() {
                   type="text"
                   placeholder="First name"
                   value={formData.firstName}
-                  onChange={(e) => setFormData({...formData, firstName: e.target.value})}
+                  onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
                   className="pl-10 bg-slate-800/50 border-slate-700 text-white placeholder:text-gray-400"
                   required
                 />
@@ -452,32 +449,32 @@ export default function Signup() {
                   type="text"
                   placeholder="Last name"
                   value={formData.lastName}
-                  onChange={(e) => setFormData({...formData, lastName: e.target.value})}
+                  onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
                   className="bg-slate-800/50 border-slate-700 text-white placeholder:text-gray-400"
                   required
                 />
               </div>
             </div>
-            
+
             <div className="relative">
               <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
               <Input
                 type="email"
                 placeholder="Email address"
                 value={formData.email}
-                onChange={(e) => setFormData({...formData, email: e.target.value})}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 className="pl-10 bg-slate-800/50 border-slate-700 text-white placeholder:text-gray-400"
                 required
               />
             </div>
-            
+
             <div className="relative">
               <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
               <Input
                 type={showPassword ? "text" : "password"}
                 placeholder="Password (min 6 characters)"
                 value={formData.password}
-                onChange={(e) => setFormData({...formData, password: e.target.value})}
+                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                 className="pl-10 pr-10 bg-slate-800/50 border-slate-700 text-white placeholder:text-gray-400"
                 required
                 minLength={6}
@@ -491,8 +488,8 @@ export default function Signup() {
               </button>
             </div>
 
-            <Button 
-              type="submit" 
+            <Button
+              type="submit"
               className="w-full bg-gradient-to-r from-teal-600 via-cyan-600 to-blue-600 hover:from-teal-700 hover:via-cyan-700 hover:to-blue-700"
               disabled={isLoading}
             >

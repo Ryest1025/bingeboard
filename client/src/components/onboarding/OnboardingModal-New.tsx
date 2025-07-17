@@ -50,15 +50,15 @@ export default function OnboardingModal({ isOpen, onComplete, userDisplayName }:
   ];
 
   const contentTypes = [
-    "TV Series", "Movies", "Documentaries", "Anime", "Reality TV", 
+    "TV Series", "Movies", "Documentaries", "Anime", "Reality TV",
     "Talk Shows", "News", "Sports", "Kids Content", "International"
   ];
 
   const viewingTimes = ["Morning", "Afternoon", "Evening", "Late Night"];
-  
+
   const bingingStyles = [
     "Marathon viewer (watch entire seasons)",
-    "Episode-by-episode (one at a time)", 
+    "Episode-by-episode (one at a time)",
     "Weekend binger (save up for weekends)",
     "Casual viewer (whenever I have time)"
   ];
@@ -70,7 +70,7 @@ export default function OnboardingModal({ isOpen, onComplete, userDisplayName }:
 
   const goals = [
     "Track what I watch", "Discover new content", "Connect with friends",
-    "Get personalized recommendations", "Complete my watchlist", 
+    "Get personalized recommendations", "Complete my watchlist",
     "Track viewing time", "Rate shows/movies", "Share reviews"
   ];
 
@@ -135,7 +135,7 @@ export default function OnboardingModal({ isOpen, onComplete, userDisplayName }:
             </p>
             <div className="bg-gradient-to-r from-purple-500/20 to-pink-500/20 p-6 rounded-lg">
               <p className="text-gray-300">
-                We'll help you set up your profile to get the best recommendations 
+                We'll help you set up your profile to get the best recommendations
                 and connect with friends who share your taste in shows and movies.
               </p>
             </div>
@@ -150,7 +150,7 @@ export default function OnboardingModal({ isOpen, onComplete, userDisplayName }:
               <h2 className="text-2xl font-bold text-white mb-2">What genres do you love? 🎭</h2>
               <p className="text-gray-300">Select your favorite genres (choose at least 3)</p>
             </div>
-            
+
             <div className="w-full">
               <p className="text-sm text-gray-400 mb-3 text-center">
                 👆 Scroll to see all genres 👇
@@ -161,11 +161,10 @@ export default function OnboardingModal({ isOpen, onComplete, userDisplayName }:
                     <Badge
                       key={genre}
                       variant={formData.favoriteGenres.includes(genre) ? "default" : "secondary"}
-                      className={`cursor-pointer transition-all duration-200 text-center py-3 px-4 hover:scale-105 ${
-                        formData.favoriteGenres.includes(genre)
+                      className={`cursor-pointer transition-all duration-200 text-center py-3 px-4 hover:scale-105 ${formData.favoriteGenres.includes(genre)
                           ? 'bg-gradient-to-r from-teal-600 to-blue-600 hover:from-teal-700 hover:to-blue-700 text-white'
                           : 'bg-slate-700 hover:bg-slate-600 text-gray-300 hover:text-white'
-                      }`}
+                        }`}
                       onClick={() => toggleSelection(genre, 'favoriteGenres')}
                     >
                       {genre}
@@ -193,11 +192,10 @@ export default function OnboardingModal({ isOpen, onComplete, userDisplayName }:
                 <Badge
                   key={type}
                   variant={formData.contentTypes.includes(type) ? "default" : "secondary"}
-                  className={`cursor-pointer p-4 text-center transition-all hover:scale-105 ${
-                    formData.contentTypes.includes(type)
+                  className={`cursor-pointer p-4 text-center transition-all hover:scale-105 ${formData.contentTypes.includes(type)
                       ? "bg-purple-600 text-white"
                       : "bg-slate-700 hover:bg-purple-600/20"
-                  }`}
+                    }`}
                   onClick={() => toggleSelection(type, 'contentTypes')}
                 >
                   {type}
@@ -223,7 +221,7 @@ export default function OnboardingModal({ isOpen, onComplete, userDisplayName }:
                     <Button
                       key={time}
                       variant={formData.viewingTime === time ? "default" : "outline"}
-                      onClick={() => setFormData(prev => ({...prev, viewingTime: time}))}
+                      onClick={() => setFormData(prev => ({ ...prev, viewingTime: time }))}
                       className="transition-all hover:scale-105"
                     >
                       {time}
@@ -238,7 +236,7 @@ export default function OnboardingModal({ isOpen, onComplete, userDisplayName }:
                     <Button
                       key={style}
                       variant={formData.bingingStyle === style ? "default" : "outline"}
-                      onClick={() => setFormData(prev => ({...prev, bingingStyle: style}))}
+                      onClick={() => setFormData(prev => ({ ...prev, bingingStyle: style }))}
                       className="w-full text-left justify-start transition-all hover:scale-105"
                     >
                       {style}
@@ -263,11 +261,10 @@ export default function OnboardingModal({ isOpen, onComplete, userDisplayName }:
                 <Badge
                   key={platform}
                   variant={formData.streamingPlatforms.includes(platform) ? "default" : "secondary"}
-                  className={`cursor-pointer p-4 text-center transition-all hover:scale-105 ${
-                    formData.streamingPlatforms.includes(platform)
+                  className={`cursor-pointer p-4 text-center transition-all hover:scale-105 ${formData.streamingPlatforms.includes(platform)
                       ? "bg-blue-600 text-white"
                       : "bg-slate-700 hover:bg-blue-600/20"
-                  }`}
+                    }`}
                   onClick={() => toggleSelection(platform, 'streamingPlatforms')}
                 >
                   {platform}
@@ -297,7 +294,7 @@ export default function OnboardingModal({ isOpen, onComplete, userDisplayName }:
                     <Button
                       key={option.value}
                       variant={formData.privacy === option.value ? "default" : "outline"}
-                      onClick={() => setFormData(prev => ({...prev, privacy: option.value}))}
+                      onClick={() => setFormData(prev => ({ ...prev, privacy: option.value }))}
                       className="w-full text-left justify-start transition-all hover:scale-105"
                     >
                       {option.label}
@@ -310,7 +307,7 @@ export default function OnboardingModal({ isOpen, onComplete, userDisplayName }:
                   <input
                     type="checkbox"
                     checked={formData.shareActivity}
-                    onChange={(e) => setFormData(prev => ({...prev, shareActivity: e.target.checked}))}
+                    onChange={(e) => setFormData(prev => ({ ...prev, shareActivity: e.target.checked }))}
                     className="rounded text-teal-600"
                   />
                   <span className="text-white">Share my watching activity with friends</span>
@@ -319,7 +316,7 @@ export default function OnboardingModal({ isOpen, onComplete, userDisplayName }:
                   <input
                     type="checkbox"
                     checked={formData.findFriends}
-                    onChange={(e) => setFormData(prev => ({...prev, findFriends: e.target.checked}))}
+                    onChange={(e) => setFormData(prev => ({ ...prev, findFriends: e.target.checked }))}
                     className="rounded text-teal-600"
                   />
                   <span className="text-white">Help me find friends who like similar content</span>
@@ -380,11 +377,10 @@ export default function OnboardingModal({ isOpen, onComplete, userDisplayName }:
                     <Badge
                       key={goal}
                       variant={formData.watchingGoals.includes(goal) ? "default" : "secondary"}
-                      className={`cursor-pointer p-4 text-left transition-all hover:scale-105 ${
-                        formData.watchingGoals.includes(goal)
+                      className={`cursor-pointer p-4 text-left transition-all hover:scale-105 ${formData.watchingGoals.includes(goal)
                           ? "bg-red-600 text-white"
                           : "bg-slate-700 hover:bg-red-600/20"
-                      }`}
+                        }`}
                       onClick={() => toggleSelection(goal, 'watchingGoals')}
                     >
                       {goal}
@@ -399,11 +395,10 @@ export default function OnboardingModal({ isOpen, onComplete, userDisplayName }:
                     <Badge
                       key={option}
                       variant={formData.trackingPreferences.includes(option) ? "default" : "secondary"}
-                      className={`cursor-pointer p-3 text-center transition-all hover:scale-105 ${
-                        formData.trackingPreferences.includes(option)
+                      className={`cursor-pointer p-3 text-center transition-all hover:scale-105 ${formData.trackingPreferences.includes(option)
                           ? "bg-teal-600 text-white"
                           : "bg-slate-700 hover:bg-teal-600/20"
-                      }`}
+                        }`}
                       onClick={() => toggleSelection(option, 'trackingPreferences')}
                     >
                       {option}
@@ -478,20 +473,19 @@ export default function OnboardingModal({ isOpen, onComplete, userDisplayName }:
               {[...Array(9)].map((_, i) => (
                 <div
                   key={i}
-                  className={`w-3 h-3 rounded-full transition-all ${
-                    i + 1 <= currentStep ? 'bg-purple-600' : 'bg-gray-600'
-                  }`}
+                  className={`w-3 h-3 rounded-full transition-all ${i + 1 <= currentStep ? 'bg-purple-600' : 'bg-gray-600'
+                    }`}
                 />
               ))}
             </div>
           </div>
         </div>
-        
+
         {/* Scrollable Content */}
         <div className="flex-1 overflow-y-auto p-6">
           {renderStep()}
         </div>
-        
+
         {/* Fixed Footer */}
         <div className="flex-shrink-0 p-6 border-t border-slate-700">
           <div className="flex justify-between">
@@ -503,7 +497,7 @@ export default function OnboardingModal({ isOpen, onComplete, userDisplayName }:
             >
               Previous
             </Button>
-            
+
             {currentStep < 9 ? (
               <Button
                 onClick={handleNext}

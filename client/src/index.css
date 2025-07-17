@@ -11,6 +11,7 @@
     opacity: 0;
     transform: translateY(-10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -22,6 +23,7 @@
     opacity: 0;
     transform: translateX(100%);
   }
+
   to {
     opacity: 1;
     transform: translateX(0);
@@ -33,6 +35,7 @@
     opacity: 0;
     transform: translateY(20px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -83,7 +86,8 @@
 
 /* Mobile-specific button improvements */
 .mobile-device button {
-  min-height: 44px; /* Apple's recommended minimum touch target */
+  min-height: 44px;
+  /* Apple's recommended minimum touch target */
   min-width: 44px;
   cursor: pointer;
 }
@@ -98,7 +102,8 @@
 .mobile-device input,
 .mobile-device textarea,
 .mobile-device select {
-  font-size: 16px; /* Prevents zoom on iOS */
+  font-size: 16px;
+  /* Prevents zoom on iOS */
 }
 
 /* Mobile-optimized loading states */
@@ -108,8 +113,15 @@
 }
 
 @keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.5;
+  }
 }
 
 /* Font Standards */
@@ -125,88 +137,125 @@ body {
 }
 
 /* Text Color Standards */
-.text-primary { color: hsl(210, 40%, 98%); }
-.text-secondary { color: hsl(215, 25%, 70%); }
-.text-muted { color: hsl(215, 20%, 60%); }
-.text-accent { color: hsl(172, 66%, 50%); }
+.text-primary {
+  color: hsl(210, 40%, 98%);
+}
+
+.text-secondary {
+  color: hsl(215, 25%, 70%);
+}
+
+.text-muted {
+  color: hsl(215, 20%, 60%);
+}
+
+.text-accent {
+  color: hsl(172, 66%, 50%);
+}
 
 /* Heading Standards */
-h1, .text-h1 { 
-  font-size: 2rem; 
-  font-weight: 700; 
+h1,
+.text-h1 {
+  font-size: 2rem;
+  font-weight: 700;
   color: hsl(210, 40%, 98%);
   line-height: 1.2;
 }
 
-h2, .text-h2 { 
-  font-size: 1.5rem; 
-  font-weight: 600; 
+h2,
+.text-h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
   color: hsl(210, 40%, 98%);
   line-height: 1.3;
 }
 
-h3, .text-h3 { 
-  font-size: 1.25rem; 
-  font-weight: 600; 
+h3,
+.text-h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
   color: hsl(210, 40%, 98%);
   line-height: 1.4;
 }
 
 /* Body Text Standards */
-p, .text-body { 
-  font-size: 1rem; 
-  font-weight: 400; 
+p,
+.text-body {
+  font-size: 1rem;
+  font-weight: 400;
   color: hsl(215, 25%, 70%);
   line-height: 1.6;
 }
 
 /* Small Text Standards */
-.text-small { 
-  font-size: 0.875rem; 
+.text-small {
+  font-size: 0.875rem;
   color: hsl(215, 20%, 60%);
   line-height: 1.5;
 }
 
 /* Icon Color Standards */
-.icon-primary { color: hsl(172, 66%, 50%); }
-.icon-secondary { color: hsl(215, 25%, 70%); }
-.icon-muted { color: hsl(215, 20%, 60%); }
+.icon-primary {
+  color: hsl(172, 66%, 50%);
+}
+
+.icon-secondary {
+  color: hsl(215, 25%, 70%);
+}
+
+.icon-muted {
+  color: hsl(215, 20%, 60%);
+}
 
 :root {
   /* Premium Brand Colors - Blue/Cyan/Teal Palette */
-  --brand-blue: hsl(217, 91%, 60%);        /* Primary Blue #3B82F6 */
-  --brand-cyan: hsl(186, 85%, 55%);        /* Sophisticated Cyan #3DD4DD */
-  --brand-teal: hsl(172, 66%, 50%);        /* Rich Teal #14B8A6 */
-  --brand-emerald: hsl(160, 84%, 39%);     /* Emerald Accent #10B981 */
-  --brand-indigo: hsl(231, 48%, 48%);      /* Deep Indigo #4F46E5 */
-  --brand-sky: hsl(199, 89%, 48%);         /* Sky Blue #0EA5E9 */
-  
+  --brand-blue: hsl(217, 91%, 60%);
+  /* Primary Blue #3B82F6 */
+  --brand-cyan: hsl(186, 85%, 55%);
+  /* Sophisticated Cyan #3DD4DD */
+  --brand-teal: hsl(172, 66%, 50%);
+  /* Rich Teal #14B8A6 */
+  --brand-emerald: hsl(160, 84%, 39%);
+  /* Emerald Accent #10B981 */
+  --brand-indigo: hsl(231, 48%, 48%);
+  /* Deep Indigo #4F46E5 */
+  --brand-sky: hsl(199, 89%, 48%);
+  /* Sky Blue #0EA5E9 */
+
   /* Sophisticated Dark Theme */
-  --background: hsl(228, 25%, 3%);         /* Deep Charcoal #080B14 */
-  --surface: hsl(226, 22%, 6%);            /* Rich Black #0F1419 */
-  --surface-elevated: hsl(224, 20%, 8%);   /* Elevated Surface #161B26 */
-  --surface-hover: hsl(222, 18%, 12%);     /* Hover Surface #1F2937 */
-  
-  --foreground: hsl(210, 40%, 98%);        /* Pure White Text */
+  --background: hsl(228, 25%, 3%);
+  /* Deep Charcoal #080B14 */
+  --surface: hsl(226, 22%, 6%);
+  /* Rich Black #0F1419 */
+  --surface-elevated: hsl(224, 20%, 8%);
+  /* Elevated Surface #161B26 */
+  --surface-hover: hsl(222, 18%, 12%);
+  /* Hover Surface #1F2937 */
+
+  --foreground: hsl(210, 40%, 98%);
+  /* Pure White Text */
   --muted: hsl(224, 20%, 12%);
-  --muted-foreground: hsl(215, 25%, 70%);  /* Muted Text #9CA3AF */
+  --muted-foreground: hsl(215, 25%, 70%);
+  /* Muted Text #9CA3AF */
   --popover: hsl(224, 20%, 8%);
   --popover-foreground: hsl(210, 40%, 98%);
   --card: hsl(226, 22%, 6%);
   --card-foreground: hsl(210, 40%, 98%);
   --border: hsl(222, 18%, 15%);
   --input: hsl(222, 18%, 15%);
-  --primary: hsl(217, 91%, 60%);           /* Blue Primary */
+  --primary: hsl(217, 91%, 60%);
+  /* Blue Primary */
   --primary-foreground: hsl(228, 25%, 3%);
   --secondary: hsl(224, 20%, 12%);
   --secondary-foreground: hsl(210, 40%, 98%);
-  --accent: hsl(186, 85%, 55%);            /* Cyan Accent */
+  --accent: hsl(186, 85%, 55%);
+  /* Cyan Accent */
   --accent-foreground: hsl(228, 25%, 3%);
   --destructive: hsl(0, 84%, 60%);
   --destructive-foreground: hsl(210, 40%, 98%);
   --ring: hsl(186, 85%, 55%);
   --radius: 0.75rem;
-  
+
   /* Legacy BingeBoard colors (updated to blue palette) */
   --binge-dark: hsl(228, 25%, 3%);
   --binge-charcoal: hsl(226, 22%, 6%);
@@ -215,7 +264,7 @@ p, .text-body {
   --binge-cyan: hsl(186, 85%, 55%);
   --binge-teal: hsl(172, 66%, 50%);
   --binge-sky: hsl(199, 89%, 48%);
-  
+
   /* Streaming Platform Colors */
   --netflix-red: hsl(0, 78%, 48%);
 }
@@ -440,14 +489,19 @@ p, .text-body {
 
 /* Hidden Scrollbar - Complete removal with smooth scrolling */
 .scrollbar-hide {
-  -ms-overflow-style: none;  /* Internet Explorer 10+ */
-  scrollbar-width: none;  /* Firefox */
-  overflow-y: hidden;  /* Prevent vertical scrollbar */
-  scroll-behavior: smooth; /* Smooth scrolling */
+  -ms-overflow-style: none;
+  /* Internet Explorer 10+ */
+  scrollbar-width: none;
+  /* Firefox */
+  overflow-y: hidden;
+  /* Prevent vertical scrollbar */
+  scroll-behavior: smooth;
+  /* Smooth scrolling */
 }
 
 .scrollbar-hide::-webkit-scrollbar {
-  display: none;  /* Safari and Chrome */
+  display: none;
+  /* Safari and Chrome */
   width: 0px;
   height: 0px;
   background: transparent;

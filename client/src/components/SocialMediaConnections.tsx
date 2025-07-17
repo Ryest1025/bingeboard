@@ -37,7 +37,7 @@ interface FriendSuggestion {
 export default function SocialMediaConnections() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  
+
   // Form states
   const [facebookToken, setFacebookToken] = useState("");
   const [instagramToken, setInstagramToken] = useState("");
@@ -167,7 +167,7 @@ export default function SocialMediaConnections() {
   });
 
   const disconnectMutation = useMutation({
-    mutationFn: async (platform: string) => 
+    mutationFn: async (platform: string) =>
       apiRequest(`/api/social/connections/${platform}`, {
         method: 'DELETE'
       }),
@@ -188,7 +188,7 @@ export default function SocialMediaConnections() {
   });
 
   const sendFriendRequestMutation = useMutation({
-    mutationFn: async (friendId: string) => 
+    mutationFn: async (friendId: string) =>
       apiRequest('/api/friends/request', {
         method: 'POST',
         body: { friendId }
@@ -258,7 +258,7 @@ export default function SocialMediaConnections() {
               <Users className="h-4 w-4 text-red-600" />
               <span className="font-medium">Google</span>
             </div>
-            <Button 
+            <Button
               onClick={() => googleMutation.mutate()}
               disabled={googleMutation.isPending}
               className="w-full"
@@ -275,7 +275,7 @@ export default function SocialMediaConnections() {
               <Facebook className="h-4 w-4 text-blue-600" />
               <span className="font-medium">Facebook</span>
             </div>
-            <Button 
+            <Button
               onClick={() => facebookMutation.mutate()}
               disabled={facebookMutation.isPending}
               className="w-full"
@@ -293,7 +293,7 @@ export default function SocialMediaConnections() {
               <span className="font-medium">Instagram</span>
               <Badge variant="secondary" className="text-xs">Coming Soon</Badge>
             </div>
-            <Button 
+            <Button
               onClick={() => instagramMutation.mutate()}
               disabled={instagramMutation.isPending}
               className="w-full"
@@ -312,7 +312,7 @@ export default function SocialMediaConnections() {
               <span className="font-medium">Snapchat</span>
               <Badge variant="secondary" className="text-xs">Coming Soon</Badge>
             </div>
-            <Button 
+            <Button
               onClick={() => snapchatMutation.mutate()}
               disabled={snapchatMutation.isPending}
               className="w-full"
@@ -331,7 +331,7 @@ export default function SocialMediaConnections() {
               <span className="font-medium">TikTok</span>
               <Badge variant="secondary" className="text-xs">Coming Soon</Badge>
             </div>
-            <Button 
+            <Button
               onClick={() => tiktokMutation.mutate()}
               disabled={tiktokMutation.isPending}
               className="w-full"

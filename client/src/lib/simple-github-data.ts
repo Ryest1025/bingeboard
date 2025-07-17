@@ -74,8 +74,8 @@ class SimpleGitHubUserDataService {
       }
 
       const gists = await response.json();
-      const bingeboardGist = gists.find((gist: any) => 
-        gist.description === 'BingeBoard User Data' && 
+      const bingeboardGist = gists.find((gist: any) =>
+        gist.description === 'BingeBoard User Data' &&
         gist.files['bingeboard-data.json']
       );
 
@@ -140,7 +140,7 @@ class SimpleGitHubUserDataService {
 
       const gist = await response.json();
       const fileContent = gist.files['bingeboard-data.json']?.content;
-      
+
       if (!fileContent) {
         console.log('No data file found in gist');
         return null;
@@ -238,7 +238,7 @@ class SimpleGitHubUserDataService {
 
       const gist = await response.json();
       const fileContent = gist.files['bingeboard-data.json']?.content;
-      
+
       if (!fileContent) return true;
 
       const allUserData: Record<string, UserData> = JSON.parse(fileContent);

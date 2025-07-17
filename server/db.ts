@@ -51,10 +51,10 @@ if (isSQLite) {
   // SQLite setup
   const dbPath = process.env.DATABASE_URL.replace('sqlite:', '');
   const sqlite = new Database(dbPath);
-  
+
   // Enable foreign keys
   sqlite.pragma('foreign_keys = ON');
-  
+
   db = drizzleSQLite(sqlite, { schema: schemaSQLite });
   console.log('📁 Using SQLite database:', dbPath);
 } else {

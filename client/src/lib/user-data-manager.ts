@@ -102,7 +102,7 @@ class UserDataManager {
 
     await this.saveUserData(userData);
     this.currentUser = userData;
-    
+
     console.log('👤 Created new user profile');
     return userData;
   }
@@ -111,7 +111,7 @@ class UserDataManager {
   async saveUserData(userData: UserData): Promise<boolean> {
     try {
       userData.lastUpdated = new Date().toISOString();
-      
+
       // Try GitHub first
       if (this.githubService) {
         const success = await this.githubService.saveUserData(userData);
@@ -147,7 +147,7 @@ class UserDataManager {
     }
 
     let userData = await this.getUserData(firebaseUser.uid);
-    
+
     if (!userData) {
       // Create user if doesn't exist
       userData = await this.createUserFromFirebase(firebaseUser);
@@ -175,7 +175,7 @@ class UserDataManager {
     }
 
     let userData = await this.getUserData(firebaseUser.uid);
-    
+
     if (!userData) {
       userData = await this.createUserFromFirebase(firebaseUser);
     }

@@ -6,12 +6,12 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/hooks/useAuth";
-import { 
-  Users, 
-  Plus, 
-  Search, 
-  Star, 
-  Heart, 
+import {
+  Users,
+  Plus,
+  Search,
+  Star,
+  Heart,
   MessageCircle,
   Share2,
   UserPlus,
@@ -56,7 +56,7 @@ const mockUsers: User[] = [
     isFollowing: false
   },
   {
-    id: "2", 
+    id: "2",
     name: "Sarah Kim",
     avatar: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=100&h=100&fit=crop&crop=face",
     username: "@sarahk",
@@ -65,7 +65,7 @@ const mockUsers: User[] = [
   {
     id: "3",
     name: "Mike Johnson",
-    avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face", 
+    avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face",
     username: "@mikej",
     isFollowing: true
   }
@@ -147,7 +147,7 @@ export default function Social() {
       {/* Mobile-first layout */}
       <div className="pb-6 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto space-y-6">
-          
+
           {/* Header */}
           <div className="text-center space-y-4">
             <h1 className="text-3xl sm:text-4xl font-bold text-white">Social</h1>
@@ -166,11 +166,10 @@ export default function Social() {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id as any)}
-                  className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-md transition-all ${
-                    activeTab === tab.id
-                      ? "bg-teal-600 text-white"
-                      : "text-gray-400 hover:text-white hover:bg-slate-700/50"
-                  }`}
+                  className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-md transition-all ${activeTab === tab.id
+                    ? "bg-teal-600 text-white"
+                    : "text-gray-400 hover:text-white hover:bg-slate-700/50"
+                    }`}
                 >
                   <Icon className="w-4 h-4" />
                   <span className="text-sm font-medium">{tab.label}</span>
@@ -265,21 +264,20 @@ function FeedTab({ activities }: { activities: Activity[] }) {
                     onClick={() => toggleLike(activity.id)}
                     className="flex items-center gap-1 hover:text-red-400 transition-colors"
                   >
-                    <Heart 
-                      className={`w-4 h-4 ${
-                        likedPosts.has(activity.id) || activity.isLiked 
-                          ? "fill-red-400 text-red-400" 
-                          : ""
-                      }`} 
+                    <Heart
+                      className={`w-4 h-4 ${likedPosts.has(activity.id) || activity.isLiked
+                        ? "fill-red-400 text-red-400"
+                        : ""
+                        }`}
                     />
                     <span className="text-sm">{activity.likes}</span>
                   </button>
-                  
+
                   <button className="flex items-center gap-1 hover:text-blue-400 transition-colors">
                     <MessageCircle className="w-4 h-4" />
                     <span className="text-sm">{activity.comments}</span>
                   </button>
-                  
+
                   <button className="flex items-center gap-1 hover:text-green-400 transition-colors">
                     <Share2 className="w-4 h-4" />
                   </button>
@@ -293,10 +291,10 @@ function FeedTab({ activities }: { activities: Activity[] }) {
   );
 }
 
-function DiscoverTab({ users, searchTerm, setSearchTerm }: { 
-  users: User[], 
-  searchTerm: string, 
-  setSearchTerm: (term: string) => void 
+function DiscoverTab({ users, searchTerm, setSearchTerm }: {
+  users: User[],
+  searchTerm: string,
+  setSearchTerm: (term: string) => void
 }) {
   const [followingUsers, setFollowingUsers] = useState(new Set<string>());
 
@@ -335,12 +333,12 @@ function DiscoverTab({ users, searchTerm, setSearchTerm }: {
                   <AvatarImage src={user.avatar} alt={user.name} />
                   <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
                 </Avatar>
-                
+
                 <div className="flex-1 min-w-0">
                   <h4 className="text-white font-medium truncate">{user.name}</h4>
                   <p className="text-gray-400 text-sm truncate">{user.username}</p>
                 </div>
-                
+
                 <Button
                   size="sm"
                   variant={followingUsers.has(user.id) || user.isFollowing ? "outline" : "default"}
@@ -385,13 +383,13 @@ function FriendsTab({ users }: { users: User[] }) {
                   <AvatarImage src={user.avatar} alt={user.name} />
                   <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
                 </Avatar>
-                
+
                 <div className="flex-1 min-w-0">
                   <h4 className="text-white font-medium truncate">{user.name}</h4>
                   <p className="text-gray-400 text-sm truncate">{user.username}</p>
                   <p className="text-teal-400 text-xs">Following</p>
                 </div>
-                
+
                 <Button
                   size="sm"
                   variant="outline"

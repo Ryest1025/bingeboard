@@ -5,11 +5,10 @@ export const LoadingSkeleton = ({ className = "", lines = 3 }: { className?: str
   return (
     <div className={`animate-pulse ${className}`}>
       {Array.from({ length: lines }).map((_, i) => (
-        <div 
-          key={i} 
-          className={`bg-slate-700/50 rounded-lg h-4 mb-3 ${
-            i === lines - 1 ? 'w-3/4' : 'w-full'
-          }`} 
+        <div
+          key={i}
+          className={`bg-slate-700/50 rounded-lg h-4 mb-3 ${i === lines - 1 ? 'w-3/4' : 'w-full'
+            }`}
         />
       ))}
     </div>
@@ -17,14 +16,14 @@ export const LoadingSkeleton = ({ className = "", lines = 3 }: { className?: str
 };
 
 // Premium Button with Loading State
-export const PremiumButton = ({ 
-  children, 
-  isLoading = false, 
+export const PremiumButton = ({
+  children,
+  isLoading = false,
   variant = 'primary',
   size = 'md',
   className = '',
   disabled = false,
-  ...props 
+  ...props
 }: {
   children: React.ReactNode;
   isLoading?: boolean;
@@ -35,7 +34,7 @@ export const PremiumButton = ({
   [key: string]: any;
 }) => {
   const baseClasses = "relative overflow-hidden transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-95 disabled:hover:scale-100 disabled:opacity-50 disabled:cursor-not-allowed";
-  
+
   const variants = {
     primary: "bg-gradient-to-r from-teal-600 via-cyan-600 to-blue-600 hover:from-teal-700 hover:via-cyan-700 hover:to-blue-700 text-white font-semibold shadow-lg hover:shadow-xl",
     secondary: "bg-slate-700 hover:bg-slate-600 text-white font-medium shadow-md hover:shadow-lg",
@@ -45,12 +44,12 @@ export const PremiumButton = ({
 
   const sizes = {
     sm: "px-4 py-2 text-sm rounded-lg",
-    md: "px-6 py-3 text-base rounded-lg", 
+    md: "px-6 py-3 text-base rounded-lg",
     lg: "px-8 py-4 text-lg rounded-xl"
   };
 
   return (
-    <button 
+    <button
       className={`${baseClasses} ${variants[variant]} ${sizes[size]} ${className}`}
       disabled={disabled || isLoading}
       {...props}
@@ -68,11 +67,11 @@ export const PremiumButton = ({
 };
 
 // Premium Card with Glass Effect
-export const PremiumCard = ({ 
-  children, 
+export const PremiumCard = ({
+  children,
   className = '',
   hover = true,
-  ...props 
+  ...props
 }: {
   children: React.ReactNode;
   className?: string;
@@ -80,7 +79,7 @@ export const PremiumCard = ({
   [key: string]: any;
 }) => {
   return (
-    <div 
+    <div
       className={`
         bg-slate-900/60 backdrop-blur-xl border border-slate-700/50 rounded-2xl
         shadow-2xl shadow-slate-900/20
@@ -95,12 +94,12 @@ export const PremiumCard = ({
 };
 
 // Premium Input with Floating Label
-export const PremiumInput = ({ 
-  label, 
-  error, 
+export const PremiumInput = ({
+  label,
+  error,
   icon: Icon,
   className = '',
-  ...props 
+  ...props
 }: {
   label: string;
   error?: string;
@@ -147,10 +146,10 @@ export const PremiumInput = ({
 };
 
 // Premium Toast Notification
-export const PremiumToast = ({ 
-  message, 
+export const PremiumToast = ({
+  message,
   type = 'info',
-  onClose 
+  onClose
 }: {
   message: string;
   type?: 'success' | 'error' | 'info' | 'warning';
@@ -173,7 +172,7 @@ export const PremiumToast = ({
     `}>
       <div className="flex items-center justify-between">
         <span className="font-medium">{message}</span>
-        <button 
+        <button
           onClick={onClose}
           className="ml-4 text-current hover:opacity-70 transition-opacity"
         >

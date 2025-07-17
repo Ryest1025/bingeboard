@@ -1,6 +1,6 @@
 // Authentication service using Firebase v9 modular syntax
-import { 
-  signInWithPopup, 
+import {
+  signInWithPopup,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   signOut,
@@ -45,15 +45,15 @@ export const signInWithGoogle = async (): Promise<AuthUser> => {
   try {
     console.log('Starting Google sign-in...');
     const result = await signInWithPopup(auth, googleProvider);
-    
+
     // Get the signed-in user info
     const user = result.user;
     console.log('Google sign-in successful:', user.email);
-    
+
     return mapFirebaseUser(user);
   } catch (error: any) {
     console.error('Google sign-in error:', error);
-    
+
     // Handle specific error codes
     if (error.code === 'auth/popup-closed-by-user') {
       throw new Error('Sign-in was cancelled');
@@ -62,7 +62,7 @@ export const signInWithGoogle = async (): Promise<AuthUser> => {
     } else if (error.code === 'auth/cancelled-popup-request') {
       throw new Error('Sign-in was cancelled');
     }
-    
+
     throw new Error(error.message || 'Google sign-in failed');
   }
 };
@@ -72,15 +72,15 @@ export const signInWithFacebook = async (): Promise<AuthUser> => {
   try {
     console.log('Starting Facebook sign-in...');
     const result = await signInWithPopup(auth, facebookProvider);
-    
+
     // Get the signed-in user info
     const user = result.user;
     console.log('Facebook sign-in successful:', user.email);
-    
+
     return mapFirebaseUser(user);
   } catch (error: any) {
     console.error('Facebook sign-in error:', error);
-    
+
     // Handle specific error codes
     if (error.code === 'auth/popup-closed-by-user') {
       throw new Error('Sign-in was cancelled');
@@ -89,7 +89,7 @@ export const signInWithFacebook = async (): Promise<AuthUser> => {
     } else if (error.code === 'auth/account-exists-with-different-credential') {
       throw new Error('An account already exists with the same email address but different sign-in credentials.');
     }
-    
+
     throw new Error(error.message || 'Facebook sign-in failed');
   }
 };
@@ -99,28 +99,28 @@ export const signInWithEmail = async (email: string, password: string): Promise<
   try {
     console.log('🔐 Starting email sign-in for:', email);
     console.log('🔐 Password length:', password.length);
-    
+
     if (!email || !password) {
       throw new Error('Email and password are required');
     }
-    
+
     if (!email.includes('@')) {
       throw new Error('Please enter a valid email address');
     }
-    
+
     if (password.length < 6) {
       throw new Error('Password must be at least 6 characters');
     }
-    
+
     const result = await signInWithEmailAndPassword(auth, email, password);
-    
+
     console.log('✅ Email sign-in successful:', result.user.email);
     return mapFirebaseUser(result.user);
   } catch (error: any) {
     console.error('❌ Email sign-in error:', error);
     console.error('❌ Error code:', error.code);
     console.error('❌ Error message:', error.message);
-    
+
     // Handle specific error codes
     if (error.code === 'auth/user-not-found') {
       // Check if user exists with social login
@@ -169,49 +169,49 @@ export const signInWithEmail = async (email: string, password: string): Promise<
     } else if (error.code === 'auth/operation-not-allowed') {
       throw new Error('Email/password sign-in is not enabled for this project');
     }
-    
+
     throw new Error(error.message || 'Sign-in failed');
   }
 };
 
 // Email/Password Sign Up
 export const signUpWithEmail = async (
-  email: string, 
-  password: string, 
+  email: string,
+  password: string,
   displayName?: string
 ): Promise<AuthUser> => {
   try {
     console.log('📝 Starting email sign-up for:', email);
     console.log('📝 Password length:', password.length);
     console.log('📝 Display name:', displayName);
-    
+
     if (!email || !password) {
       throw new Error('Email and password are required');
     }
-    
+
     if (!email.includes('@')) {
       throw new Error('Please enter a valid email address');
     }
-    
+
     if (password.length < 6) {
       throw new Error('Password must be at least 6 characters');
     }
-    
+
     const result = await createUserWithEmailAndPassword(auth, email, password);
-    
+
     // TODO: Update user profile with displayName if provided
     // import { updateProfile } from 'firebase/auth';
     // if (displayName) {
     //   await updateProfile(result.user, { displayName });
     // }
-    
+
     console.log('✅ Email sign-up successful:', result.user.email);
     return mapFirebaseUser(result.user);
   } catch (error: any) {
     console.error('❌ Email sign-up error:', error);
     console.error('❌ Error code:', error.code);
     console.error('❌ Error message:', error.message);
-    
+
     // Handle specific error codes
     if (error.code === 'auth/email-already-in-use') {
       // Check what sign-in methods are available for this email
@@ -237,7 +237,7 @@ export const signUpWithEmail = async (
     } else if (error.code === 'auth/weak-password') {
       throw new Error('Password should be at least 6 characters');
     }
-    
+
     throw new Error(error.message || 'Sign-up failed');
   }
 };
@@ -267,17 +267,17 @@ export const isAuthenticated = (): boolean => {
 export const sendPasswordReset = async (email: string): Promise<void> => {
   try {
     console.log('📧 Sending password reset email to:', email);
-    
+
     if (!email || !email.includes('@')) {
       throw new Error('Please enter a valid email address');
     }
-    
+
     await sendPasswordResetEmail(auth, email);
     console.log('✅ Password reset email sent successfully');
   } catch (error: any) {
     console.error('❌ Password reset error:', error);
     console.error('❌ Error code:', error.code);
-    
+
     if (error.code === 'auth/user-not-found') {
       throw new Error('No account found with this email address');
     } else if (error.code === 'auth/invalid-email') {
@@ -285,7 +285,7 @@ export const sendPasswordReset = async (email: string): Promise<void> => {
     } else if (error.code === 'auth/too-many-requests') {
       throw new Error('Too many requests. Please try again later.');
     }
-    
+
     throw new Error(error.message || 'Failed to send password reset email');
   }
 };
@@ -307,11 +307,11 @@ export const checkSignInMethods = async (email: string): Promise<string[]> => {
 export const handleAccountLinking = async (email: string, password: string, socialProvider: 'google' | 'facebook'): Promise<AuthUser> => {
   try {
     console.log('🔗 Attempting to link account for:', email);
-    
+
     // First, sign in with email/password
     const emailResult = await signInWithEmailAndPassword(auth, email, password);
     const user = emailResult.user;
-    
+
     // Create credential for the social provider
     let credential;
     if (socialProvider === 'google') {
@@ -323,13 +323,13 @@ export const handleAccountLinking = async (email: string, password: string, soci
       const result = await signInWithPopup(auth, provider);
       credential = FacebookAuthProvider.credentialFromResult(result);
     }
-    
+
     if (credential) {
       // Link the credential to the current user
       await linkWithCredential(user, credential);
       console.log('✅ Account linked successfully');
     }
-    
+
     return mapFirebaseUser(user);
   } catch (error: any) {
     console.error('❌ Account linking error:', error);

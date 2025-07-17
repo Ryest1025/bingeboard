@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
@@ -11,7 +12,7 @@
             box-sizing: border-box;
             -webkit-tap-highlight-color: transparent;
         }
-        
+
         body {
             background: linear-gradient(135deg, #000000 0%, #0f1419 25%, #1a1f2e 50%, #0f172a 75%, #000000 100%);
             background-size: 400% 400%;
@@ -23,13 +24,21 @@
             overflow-x: hidden;
             position: relative;
         }
-        
+
         @keyframes gradientShift {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
         }
-        
+
         /* Floating particles background */
         body::before {
             content: '';
@@ -38,7 +47,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-image: 
+            background-image:
                 radial-gradient(2px 2px at 20px 30px, rgba(6, 182, 212, 0.3), transparent),
                 radial-gradient(2px 2px at 40px 70px, rgba(20, 184, 166, 0.2), transparent),
                 radial-gradient(1px 1px at 90px 40px, rgba(14, 165, 233, 0.4), transparent),
@@ -49,13 +58,21 @@
             pointer-events: none;
             z-index: 0;
         }
-        
+
         @keyframes float {
-            0% { transform: translateY(0px) translateX(0px); }
-            50% { transform: translateY(-10px) translateX(5px); }
-            100% { transform: translateY(0px) translateX(0px); }
+            0% {
+                transform: translateY(0px) translateX(0px);
+            }
+
+            50% {
+                transform: translateY(-10px) translateX(5px);
+            }
+
+            100% {
+                transform: translateY(0px) translateX(0px);
+            }
         }
-        
+
         .container {
             max-width: 400px;
             margin: 0 auto;
@@ -64,20 +81,20 @@
             display: flex;
             flex-direction: column;
         }
-        
+
         .header {
             text-align: center;
             margin-bottom: 30px;
             padding: 20px 0;
         }
-        
+
         .logo {
             display: flex;
             align-items: center;
             justify-content: center;
             margin-bottom: 20px;
         }
-        
+
         .logo-icon {
             width: 64px;
             height: 64px;
@@ -91,19 +108,28 @@
             margin-bottom: 15px;
             animation: pulse 2s infinite;
         }
-        
+
         @keyframes pulse {
-            0%, 100% { transform: scale(1); box-shadow: 0 8px 32px rgba(14, 165, 233, 0.3); }
-            50% { transform: scale(1.05); box-shadow: 0 12px 40px rgba(14, 165, 233, 0.5); }
+
+            0%,
+            100% {
+                transform: scale(1);
+                box-shadow: 0 8px 32px rgba(14, 165, 233, 0.3);
+            }
+
+            50% {
+                transform: scale(1.05);
+                box-shadow: 0 12px 40px rgba(14, 165, 233, 0.5);
+            }
         }
-        
+
         .logo-text {
             color: #fff;
             font-size: 20px;
             font-weight: 900;
             letter-spacing: -1px;
         }
-        
+
         .brand-name {
             font-size: 32px;
             font-weight: 900;
@@ -113,38 +139,38 @@
             -webkit-text-fill-color: transparent;
             margin-bottom: 8px;
         }
-        
+
         .tagline {
             font-size: 16px;
             color: #94a3b8;
             margin-bottom: 30px;
         }
-        
+
         .step-container {
             flex: 1;
             display: none;
         }
-        
+
         .step-container.active {
             display: block;
         }
-        
+
         .step-header {
             text-align: center;
             margin-bottom: 30px;
         }
-        
+
         .step-title {
             font-size: 24px;
             font-weight: 700;
             margin-bottom: 8px;
         }
-        
+
         .step-subtitle {
             color: #94a3b8;
             font-size: 16px;
         }
-        
+
         .progress-bar {
             height: 4px;
             background: #334155;
@@ -152,25 +178,25 @@
             margin: 20px 0;
             overflow: hidden;
         }
-        
+
         .progress-fill {
             height: 100%;
             background: linear-gradient(90deg, #06b6d4, #14b8a6);
             transition: width 0.3s ease;
             border-radius: 2px;
         }
-        
+
         .form-group {
             margin-bottom: 20px;
         }
-        
+
         .form-label {
             display: block;
             font-weight: 600;
             margin-bottom: 8px;
             color: #e2e8f0;
         }
-        
+
         .form-input {
             width: 100%;
             padding: 16px;
@@ -181,21 +207,21 @@
             font-size: 16px;
             transition: all 0.3s ease;
         }
-        
+
         .form-input:focus {
             outline: none;
             border-color: #06b6d4;
             background: rgba(51, 65, 85, 0.7);
             box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.1);
         }
-        
+
         .selection-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
             gap: 12px;
             margin-bottom: 20px;
         }
-        
+
         .selection-item {
             padding: 16px;
             background: rgba(51, 65, 85, 0.3);
@@ -206,25 +232,25 @@
             transition: all 0.3s ease;
             font-weight: 500;
         }
-        
+
         .selection-item:hover {
             background: rgba(51, 65, 85, 0.6);
             transform: translateY(-2px);
         }
-        
+
         .selection-item.selected {
             background: linear-gradient(135deg, #06b6d4, #14b8a6);
             border-color: #06b6d4;
             color: #fff;
             box-shadow: 0 4px 16px rgba(6, 182, 212, 0.3);
         }
-        
+
         .button-group {
             display: flex;
             gap: 12px;
             margin-top: 30px;
         }
-        
+
         .btn {
             flex: 1;
             padding: 16px;
@@ -240,38 +266,38 @@
             justify-content: center;
             gap: 8px;
         }
-        
+
         .btn-primary {
             background: linear-gradient(135deg, #06b6d4, #14b8a6);
             color: #fff;
         }
-        
+
         .btn-primary:hover:not(:disabled) {
             transform: translateY(-2px);
             box-shadow: 0 8px 25px rgba(6, 182, 212, 0.3);
         }
-        
+
         .btn-secondary {
             background: rgba(51, 65, 85, 0.5);
             color: #94a3b8;
             border: 2px solid #475569;
         }
-        
+
         .btn-secondary:hover {
             background: rgba(51, 65, 85, 0.7);
             color: #e2e8f0;
         }
-        
+
         .btn:disabled {
             opacity: 0.5;
             cursor: not-allowed;
         }
-        
+
         .welcome-content {
             text-align: center;
             padding: 40px 0;
         }
-        
+
         .welcome-features {
             text-align: left;
             margin-top: 30px;
@@ -279,21 +305,21 @@
             border-radius: 16px;
             padding: 24px;
         }
-        
+
         .feature-item {
             display: flex;
             align-items: center;
             margin-bottom: 16px;
             color: #e2e8f0;
         }
-        
+
         .feature-icon {
             width: 24px;
             height: 24px;
             margin-right: 12px;
             color: #06b6d4;
         }
-        
+
         .notification-toggle {
             display: flex;
             align-items: center;
@@ -303,7 +329,7 @@
             border-radius: 12px;
             margin-bottom: 12px;
         }
-        
+
         .toggle-switch {
             width: 48px;
             height: 24px;
@@ -313,11 +339,11 @@
             cursor: pointer;
             transition: background 0.3s ease;
         }
-        
+
         .toggle-switch.active {
             background: #06b6d4;
         }
-        
+
         .toggle-knob {
             width: 20px;
             height: 20px;
@@ -328,16 +354,16 @@
             left: 2px;
             transition: transform 0.3s ease;
         }
-        
+
         .toggle-switch.active .toggle-knob {
             transform: translateX(24px);
         }
-        
+
         .completion-screen {
             text-align: center;
             padding: 60px 20px;
         }
-        
+
         .success-icon {
             width: 80px;
             height: 80px;
@@ -349,13 +375,26 @@
             margin: 0 auto 30px;
             animation: bounce 1s ease-in-out;
         }
-        
+
         @keyframes bounce {
-            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
-            40% { transform: translateY(-10px); }
-            60% { transform: translateY(-5px); }
+
+            0%,
+            20%,
+            50%,
+            80%,
+            100% {
+                transform: translateY(0);
+            }
+
+            40% {
+                transform: translateY(-10px);
+            }
+
+            60% {
+                transform: translateY(-5px);
+            }
         }
-        
+
         .step-counter {
             position: absolute;
             top: 20px;
@@ -366,18 +405,18 @@
             font-size: 14px;
             font-weight: 600;
         }
-        
+
         .loading {
             display: none;
             justify-content: center;
             align-items: center;
             padding: 20px;
         }
-        
+
         .loading.active {
             display: flex;
         }
-        
+
         .spinner {
             width: 32px;
             height: 32px;
@@ -386,12 +425,17 @@
             border-radius: 50%;
             animation: spin 1s linear infinite;
         }
-        
+
         @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
         }
-        
+
         .badge {
             display: inline-block;
             background: linear-gradient(135deg, #f59e0b, #d97706);
@@ -402,16 +446,17 @@
             font-weight: 600;
             margin-left: 8px;
         }
-        
+
         .premium-badge {
             background: linear-gradient(135deg, #8b5cf6, #7c3aed);
         }
     </style>
 </head>
+
 <body>
     <div class="container">
         <div class="step-counter" id="stepCounter">Step 1 of 6</div>
-        
+
         <div class="header">
             <div class="logo">
                 <div class="logo-icon">
@@ -421,7 +466,7 @@
             <h1 class="brand-name">BingeBoard</h1>
             <p class="tagline">Your ultimate streaming companion</p>
         </div>
-        
+
         <div class="progress-bar">
             <div class="progress-fill" id="progressFill" style="width: 16.67%"></div>
         </div>
@@ -433,29 +478,31 @@
                     <h2 class="step-title">Welcome to BingeBoard! 🎬</h2>
                     <p class="step-subtitle">Let's personalize your streaming experience</p>
                 </div>
-                
+
                 <div class="welcome-features">
                     <div class="feature-item">
                         <svg class="feature-icon" fill="currentColor" viewBox="0 0 20 20">
-                            <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                         Track what you watch across all platforms
                     </div>
                     <div class="feature-item">
                         <svg class="feature-icon" fill="currentColor" viewBox="0 0 20 20">
-                            <path d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
+                            <path
+                                d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
                         </svg>
                         Get personalized recommendations
                     </div>
                     <div class="feature-item">
                         <svg class="feature-icon" fill="currentColor" viewBox="0 0 20 20">
-                            <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3z"/>
+                            <path
+                                d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3z" />
                         </svg>
                         Connect with friends and share favorites
                     </div>
                     <div class="feature-item">
                         <svg class="feature-icon" fill="currentColor" viewBox="0 0 20 20">
-                            <path d="M15 17h5l-5 5-5-5h5v-13h0v13z"/>
+                            <path d="M15 17h5l-5 5-5-5h5v-13h0v13z" />
                         </svg>
                         Never miss new episodes or releases
                     </div>
@@ -469,17 +516,17 @@
                 <h2 class="step-title">Tell us about yourself 👋</h2>
                 <p class="step-subtitle">This helps us personalize your experience</p>
             </div>
-            
+
             <div class="form-group">
                 <label class="form-label">First Name</label>
                 <input type="text" class="form-input" id="firstName" placeholder="Enter your first name">
             </div>
-            
+
             <div class="form-group">
                 <label class="form-label">Last Name</label>
                 <input type="text" class="form-input" id="lastName" placeholder="Enter your last name">
             </div>
-            
+
             <div class="form-group">
                 <label class="form-label">Email</label>
                 <input type="email" class="form-input" id="email" placeholder="Enter your email">
@@ -492,7 +539,7 @@
                 <h2 class="step-title">What genres do you love? 🎭</h2>
                 <p class="step-subtitle">Choose your favorite genres (select at least 3)</p>
             </div>
-            
+
             <div class="selection-grid" id="genreGrid">
                 <div class="selection-item" data-genre="Action">Action</div>
                 <div class="selection-item" data-genre="Comedy">Comedy</div>
@@ -515,7 +562,7 @@
                 <h2 class="step-title">Which platforms do you use? 📱</h2>
                 <p class="step-subtitle">Select your streaming services</p>
             </div>
-            
+
             <div class="selection-grid" id="platformGrid">
                 <div class="selection-item" data-platform="Netflix">Netflix</div>
                 <div class="selection-item" data-platform="Disney+">Disney+</div>
@@ -536,7 +583,7 @@
                 <h2 class="step-title">Notification Preferences 🔔</h2>
                 <p class="step-subtitle">Choose what you'd like to be notified about</p>
             </div>
-            
+
             <div class="notification-toggle">
                 <div>
                     <strong>New episodes available</strong>
@@ -546,7 +593,7 @@
                     <div class="toggle-knob"></div>
                 </div>
             </div>
-            
+
             <div class="notification-toggle">
                 <div>
                     <strong>Personalized recommendations</strong>
@@ -556,7 +603,7 @@
                     <div class="toggle-knob"></div>
                 </div>
             </div>
-            
+
             <div class="notification-toggle">
                 <div>
                     <strong>Friend activity</strong>
@@ -566,7 +613,7 @@
                     <div class="toggle-knob"></div>
                 </div>
             </div>
-            
+
             <div class="notification-toggle">
                 <div>
                     <strong>Weekly recap</strong>
@@ -583,18 +630,23 @@
             <div class="completion-screen">
                 <div class="success-icon">
                     <svg width="40" height="40" fill="white" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                        <path fill-rule="evenodd"
+                            d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                            clip-rule="evenodd" />
                     </svg>
                 </div>
-                
+
                 <h2 class="step-title">Welcome to BingeBoard! 🎉</h2>
-                <p class="step-subtitle">Your account has been set up successfully.<br>Let's start discovering your next binge!</p>
-                
+                <p class="step-subtitle">Your account has been set up successfully.<br>Let's start discovering your next
+                    binge!</p>
+
                 <div style="margin-top: 40px;">
                     <button class="btn btn-primary" onclick="completeOnboarding()">
                         Start Exploring
                         <svg width="20" height="20" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                            <path fill-rule="evenodd"
+                                d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z"
+                                clip-rule="evenodd" />
                         </svg>
                     </button>
                 </div>
@@ -613,14 +665,18 @@
         <div class="button-group" id="navigationButtons">
             <button class="btn btn-secondary" id="prevBtn" onclick="previousStep()" style="display: none;">
                 <svg width="20" height="20" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd"/>
+                    <path fill-rule="evenodd"
+                        d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z"
+                        clip-rule="evenodd" />
                 </svg>
                 Back
             </button>
             <button class="btn btn-primary" id="nextBtn" onclick="nextStep()">
                 Get Started
                 <svg width="20" height="20" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                    <path fill-rule="evenodd"
+                        d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z"
+                        clip-rule="evenodd" />
                 </svg>
             </button>
         </div>
@@ -629,7 +685,7 @@
     <script>
         let currentStep = 1;
         const totalSteps = 6;
-        
+
         // User data storage
         let userData = {
             profile: {
@@ -662,15 +718,15 @@
             document.querySelectorAll('.step-container').forEach(container => {
                 container.classList.remove('active');
             });
-            
+
             // Show current step
             document.getElementById(`step${step}`).classList.add('active');
-            
+
             // Update navigation buttons
             const prevBtn = document.getElementById('prevBtn');
             const nextBtn = document.getElementById('nextBtn');
             const navButtons = document.getElementById('navigationButtons');
-            
+
             if (step === 1) {
                 prevBtn.style.display = 'none';
                 nextBtn.innerHTML = `
@@ -690,7 +746,7 @@
             } else {
                 navButtons.style.display = 'none';
             }
-            
+
             updateProgress();
         }
 
@@ -721,18 +777,18 @@
                     const firstName = document.getElementById('firstName').value.trim();
                     const lastName = document.getElementById('lastName').value.trim();
                     const email = document.getElementById('email').value.trim();
-                    
+
                     if (!firstName || !lastName || !email) {
                         alert('Please fill in all required fields');
                         return false;
                     }
-                    
+
                     if (!email.includes('@')) {
                         alert('Please enter a valid email address');
                         return false;
                     }
                     break;
-                    
+
                 case 3: // Genres
                     const selectedGenres = document.querySelectorAll('#genreGrid .selection-item.selected');
                     if (selectedGenres.length < 3) {
@@ -740,7 +796,7 @@
                         return false;
                     }
                     break;
-                    
+
                 case 4: // Platforms
                     const selectedPlatforms = document.querySelectorAll('#platformGrid .selection-item.selected');
                     if (selectedPlatforms.length === 0) {
@@ -760,19 +816,19 @@
                     userData.profile.lastName = document.getElementById('lastName').value.trim();
                     userData.profile.email = document.getElementById('email').value.trim();
                     break;
-                    
+
                 case 3: // Genres
                     userData.preferences.genres = Array.from(
                         document.querySelectorAll('#genreGrid .selection-item.selected')
                     ).map(item => item.dataset.genre);
                     break;
-                    
+
                 case 4: // Platforms
                     userData.preferences.platforms = Array.from(
                         document.querySelectorAll('#platformGrid .selection-item.selected')
                     ).map(item => item.dataset.platform);
                     break;
-                    
+
                 case 5: // Notifications
                     document.querySelectorAll('.toggle-switch').forEach(toggle => {
                         const notification = toggle.dataset.notification;
@@ -780,7 +836,7 @@
                     });
                     break;
             }
-            
+
             console.log('Step', step, 'data saved:', userData);
         }
 
@@ -788,27 +844,27 @@
         async function completeOnboarding() {
             const loadingScreen = document.getElementById('loadingScreen');
             const step6 = document.getElementById('step6');
-            
+
             // Show loading
             step6.style.display = 'none';
             loadingScreen.classList.add('active');
-            
+
             try {
                 console.log('🎉 MOBILE ONBOARDING COMPLETED! Collected data:', userData);
-                
+
                 // Save to database (simulate API call)
                 await saveOnboardingData(userData);
-                
+
                 // Simulate delay
                 await new Promise(resolve => setTimeout(resolve, 2000));
-                
+
                 // Redirect to main app
                 window.location.href = '/mobile-working.html';
-                
+
             } catch (error) {
                 console.error('Error completing onboarding:', error);
                 alert('There was an error saving your data. Please try again.');
-                
+
                 // Show step 6 again
                 loadingScreen.classList.remove('active');
                 step6.style.display = 'block';
@@ -818,44 +874,45 @@
         // Save onboarding data to backend
         async function saveOnboardingData(data) {
             console.log('💾 Saving onboarding data to database...');
-            
+
             // In a real app, this would make actual API calls
             // For now, we'll just log the data and store in localStorage
-            
+
             localStorage.setItem('bingeboard_onboarding_data', JSON.stringify(data));
             localStorage.setItem('bingeboard_onboarding_completed', 'true');
-            
+
             console.log('✅ Mobile onboarding data saved successfully');
-            
+
             return { success: true };
         }
 
         // Initialize event listeners
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             // Genre selection
             document.querySelectorAll('#genreGrid .selection-item').forEach(item => {
-                item.addEventListener('click', function() {
+                item.addEventListener('click', function () {
                     this.classList.toggle('selected');
                 });
             });
-            
+
             // Platform selection
             document.querySelectorAll('#platformGrid .selection-item').forEach(item => {
-                item.addEventListener('click', function() {
+                item.addEventListener('click', function () {
                     this.classList.toggle('selected');
                 });
             });
-            
+
             // Notification toggles
             document.querySelectorAll('.toggle-switch').forEach(toggle => {
-                toggle.addEventListener('click', function() {
+                toggle.addEventListener('click', function () {
                     this.classList.toggle('active');
                 });
             });
-            
+
             // Initialize first step
             showStep(1);
         });
     </script>
 </body>
+
 </html>

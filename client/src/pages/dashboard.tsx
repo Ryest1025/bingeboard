@@ -207,8 +207,8 @@ export default function Dashboard() {
                   )}
                   <div className="flex justify-between items-center">
                     <span className={`text-xs px-2 py-1 rounded-full ${item.status === 'Watching' ? 'bg-green-500/20 text-green-400' :
-                        item.status === 'Completed' ? 'bg-blue-500/20 text-blue-400' :
-                          'bg-yellow-500/20 text-yellow-400'
+                      item.status === 'Completed' ? 'bg-blue-500/20 text-blue-400' :
+                        'bg-yellow-500/20 text-yellow-400'
                       }`}>
                       {item.status}
                     </span>

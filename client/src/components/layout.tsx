@@ -16,12 +16,12 @@ export function Layout({ children, className = "", showNavigation = true }: Layo
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
       {/* Persistent Top Navigation */}
       {showNavigation && <TopNav />}
-      
+
       {/* Main Content */}
       <main className={`${showNavigation && isAuthenticated ? 'pt-16' : ''} ${className}`}>
         {children}
       </main>
-      
+
       {/* Persistent Mobile Navigation */}
       {showNavigation && <MobileNav />}
     </div>

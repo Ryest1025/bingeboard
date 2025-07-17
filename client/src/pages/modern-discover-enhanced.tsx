@@ -72,73 +72,73 @@ interface ContentItem {
 
 // Enhanced mood filters with better categorization and icons
 const moodFilters = [
-  { 
-    id: "feelgood", 
-    label: "Feel Good", 
-    icon: Heart, 
+  {
+    id: "feelgood",
+    label: "Feel Good",
+    icon: Heart,
     color: "from-pink-500 to-rose-500",
     bgColor: "bg-pink-500/10",
     borderColor: "border-pink-500/20",
     textColor: "text-pink-400"
   },
-  { 
-    id: "comedy", 
-    label: "Comedy", 
-    icon: Laugh, 
+  {
+    id: "comedy",
+    label: "Comedy",
+    icon: Laugh,
     color: "from-yellow-500 to-orange-500",
     bgColor: "bg-yellow-500/10",
     borderColor: "border-yellow-500/20",
     textColor: "text-yellow-400"
   },
-  { 
-    id: "action", 
-    label: "Action", 
-    icon: Swords, 
+  {
+    id: "action",
+    label: "Action",
+    icon: Swords,
     color: "from-red-500 to-red-600",
     bgColor: "bg-red-500/10",
     borderColor: "border-red-500/20",
     textColor: "text-red-400"
   },
-  { 
-    id: "drama", 
-    label: "Drama", 
-    icon: Drama, 
+  {
+    id: "drama",
+    label: "Drama",
+    icon: Drama,
     color: "from-blue-500 to-blue-600",
     bgColor: "bg-blue-500/10",
     borderColor: "border-blue-500/20",
     textColor: "text-blue-400"
   },
-  { 
-    id: "scifi", 
-    label: "Sci-Fi", 
-    icon: Rocket, 
+  {
+    id: "scifi",
+    label: "Sci-Fi",
+    icon: Rocket,
     color: "from-purple-500 to-indigo-500",
     bgColor: "bg-purple-500/10",
     borderColor: "border-purple-500/20",
     textColor: "text-purple-400"
   },
-  { 
-    id: "dark", 
-    label: "Dark & Intense", 
-    icon: Moon, 
+  {
+    id: "dark",
+    label: "Dark & Intense",
+    icon: Moon,
     color: "from-gray-700 to-gray-900",
     bgColor: "bg-gray-500/10",
     borderColor: "border-gray-500/20",
     textColor: "text-gray-400"
   },
-  { 
-    id: "bingeable", 
-    label: "Binge-worthy", 
-    icon: Zap, 
+  {
+    id: "bingeable",
+    label: "Binge-worthy",
+    icon: Zap,
     color: "from-emerald-500 to-teal-500",
     bgColor: "bg-emerald-500/10",
     borderColor: "border-emerald-500/20",
     textColor: "text-emerald-400"
   },
-  { 
-    id: "chill", 
-    label: "Chill Vibes", 
-    icon: Sun, 
+  {
+    id: "chill",
+    label: "Chill Vibes",
+    icon: Sun,
     color: "from-cyan-500 to-blue-400",
     bgColor: "bg-cyan-500/10",
     borderColor: "border-cyan-500/20",
@@ -238,11 +238,11 @@ export default function ModernDiscoverEnhanced() {
     if (searchQuery.trim() && searchData?.results) {
       return searchData.results.slice(0, 8);
     }
-    
+
     if (selectedMood && moodSpecificData?.results) {
       return moodSpecificData.results.slice(0, 8);
     }
-    
+
     return (trendingData as any)?.results?.slice(0, 8) || [];
   }, [searchQuery, searchData, selectedMood, moodSpecificData, trendingData]);
 
@@ -252,9 +252,9 @@ export default function ModernDiscoverEnhanced() {
       ...((trendingData as any)?.results || []),
       ...((popularData as any)?.results || [])
     ];
-    
+
     if (!allContent.length) return [];
-    
+
     return allContent
       .filter(show => {
         const rating = show.vote_average || 0;
@@ -270,7 +270,7 @@ export default function ModernDiscoverEnhanced() {
     setSelectedMood(selectedMood === moodId ? null : moodId);
     setActiveFilter(moodId);
     setSearchQuery("");
-    
+
     // Smooth scroll to content
     setTimeout(() => {
       const contentSection = document.getElementById('filtered-content');
@@ -337,10 +337,10 @@ export default function ModernDiscoverEnhanced() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
       <TopNav />
-      
+
       <div className="pt-20 pb-24">
         <div className="container mx-auto px-4 space-y-8">
-          
+
           {/* Enhanced Header with Animation */}
           <div className="text-center space-y-6 mb-12">
             <div className="flex items-center justify-center gap-3">
@@ -373,9 +373,8 @@ export default function ModernDiscoverEnhanced() {
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onFocus={handleSearchFocus}
                   onBlur={handleSearchBlur}
-                  className={`pl-12 pr-20 bg-slate-800/50 backdrop-blur-sm border-slate-600 text-white placeholder-slate-400 h-14 text-lg rounded-2xl transition-all duration-300 ${
-                    isSearchFocused ? 'border-teal-400 bg-slate-800/70 shadow-lg shadow-teal-400/20' : 'hover:border-slate-500'
-                  }`}
+                  className={`pl-12 pr-20 bg-slate-800/50 backdrop-blur-sm border-slate-600 text-white placeholder-slate-400 h-14 text-lg rounded-2xl transition-all duration-300 ${isSearchFocused ? 'border-teal-400 bg-slate-800/70 shadow-lg shadow-teal-400/20' : 'hover:border-slate-500'
+                    }`}
                 />
                 <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex items-center gap-2">
                   {searchQuery && (
@@ -392,9 +391,8 @@ export default function ModernDiscoverEnhanced() {
                     variant="ghost"
                     size="sm"
                     onClick={handleVoiceSearch}
-                    className={`h-8 w-8 p-0 rounded-full transition-colors ${
-                      isVoiceSearch ? "text-teal-400 bg-teal-400/20" : "text-slate-400 hover:text-white hover:bg-slate-700/50"
-                    }`}
+                    className={`h-8 w-8 p-0 rounded-full transition-colors ${isVoiceSearch ? "text-teal-400 bg-teal-400/20" : "text-slate-400 hover:text-white hover:bg-slate-700/50"
+                      }`}
                   >
                     <Mic className="h-4 w-4" />
                   </Button>
@@ -450,7 +448,7 @@ export default function ModernDiscoverEnhanced() {
                 </Button>
               )}
             </div>
-            
+
             {trendingLoading ? (
               <MoodFilterSkeleton />
             ) : (
@@ -458,17 +456,16 @@ export default function ModernDiscoverEnhanced() {
                 {moodFilters.map((mood) => {
                   const Icon = mood.icon;
                   const isSelected = selectedMood === mood.id;
-                  
+
                   return (
                     <Button
                       key={mood.id}
                       variant="outline"
                       onClick={() => handleMoodFilter(mood.id)}
-                      className={`relative overflow-hidden border-2 transition-all duration-300 hover:scale-105 h-12 ${
-                        isSelected 
-                          ? `bg-gradient-to-r ${mood.color} border-transparent text-white shadow-lg` 
+                      className={`relative overflow-hidden border-2 transition-all duration-300 hover:scale-105 h-12 ${isSelected
+                          ? `bg-gradient-to-r ${mood.color} border-transparent text-white shadow-lg`
                           : `${mood.bgColor} ${mood.borderColor} ${mood.textColor} hover:${mood.bgColor} hover:border-opacity-50`
-                      }`}
+                        }`}
                     >
                       <Icon className="h-4 w-4 mr-2" />
                       {mood.label}
@@ -487,15 +484,15 @@ export default function ModernDiscoverEnhanced() {
             <div className="flex items-center justify-between">
               <h2 className="text-2xl font-bold text-white flex items-center gap-3">
                 <div className="w-8 h-8 bg-gradient-to-br from-orange-500 to-red-500 rounded-lg flex items-center justify-center">
-                  {searchQuery.trim() ? <Search className="h-4 w-4 text-white" /> : 
-                   selectedMood ? <Sparkles className="h-4 w-4 text-white" /> : 
-                   <TrendingUp className="h-4 w-4 text-white" />}
+                  {searchQuery.trim() ? <Search className="h-4 w-4 text-white" /> :
+                    selectedMood ? <Sparkles className="h-4 w-4 text-white" /> :
+                      <TrendingUp className="h-4 w-4 text-white" />}
                 </div>
-                {searchQuery.trim() ? `Results for "${searchQuery}"` : 
-                 selectedMood ? `${moodFilters.find(m => m.id === selectedMood)?.label} Picks` : 
-                 "Trending Now"}
+                {searchQuery.trim() ? `Results for "${searchQuery}"` :
+                  selectedMood ? `${moodFilters.find(m => m.id === selectedMood)?.label} Picks` :
+                    "Trending Now"}
               </h2>
-              
+
               {!searchQuery && (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -513,7 +510,7 @@ export default function ModernDiscoverEnhanced() {
                 </DropdownMenu>
               )}
             </div>
-            
+
             {/* Enhanced Content Grid */}
             <div className="space-y-4 content-grid">
               {(searchLoading || moodLoading) ? (
@@ -553,7 +550,7 @@ export default function ModernDiscoverEnhanced() {
                             </div>
                           )}
                           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                          
+
                           {/* Floating rating badge */}
                           <div className="absolute top-2 right-2 bg-black/70 backdrop-blur-sm rounded-full px-2 py-1 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                             <Star className="h-3 w-3 text-yellow-400 fill-current" />
@@ -576,8 +573,8 @@ export default function ModernDiscoverEnhanced() {
                               </h3>
                               <div className="flex items-center gap-3 mt-1">
                                 <span className="text-sm text-slate-400">
-                                  {show.first_air_date ? new Date(show.first_air_date).getFullYear() : 
-                                   show.release_date ? new Date(show.release_date).getFullYear() : ''}
+                                  {show.first_air_date ? new Date(show.first_air_date).getFullYear() :
+                                    show.release_date ? new Date(show.release_date).getFullYear() : ''}
                                 </span>
                                 <div className="flex items-center gap-1 text-yellow-400">
                                   <Star className="h-4 w-4 fill-current" />
@@ -586,23 +583,23 @@ export default function ModernDiscoverEnhanced() {
                               </div>
                             </div>
                           </div>
-                          
+
                           <p className="text-slate-300 text-sm line-clamp-2 leading-relaxed">
                             {show.overview}
                           </p>
-                          
+
                           {/* Enhanced Action Buttons */}
                           <div className="flex items-center gap-2 pt-2">
-                            <Button 
-                              size="sm" 
+                            <Button
+                              size="sm"
                               className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white border-0 shadow-lg enhanced-button transition-all duration-300 hover:scale-105"
                               onClick={() => window.open(`https://www.youtube.com/results?search_query=${encodeURIComponent((show.title || show.name) + ' trailer')}`, '_blank')}
                             >
                               <Play className="h-3 w-3 mr-2" />
                               Trailer
                             </Button>
-                            <Button 
-                              size="sm" 
+                            <Button
+                              size="sm"
                               className="bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white border-0 shadow-lg enhanced-button transition-all duration-300 hover:scale-105"
                               onClick={() => handleAddToWatchlist(show)}
                             >
@@ -651,7 +648,7 @@ export default function ModernDiscoverEnhanced() {
                   <ArrowRight className="h-4 w-4 ml-2" />
                 </Button>
               </div>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {trendingLoading ? (
                   Array.from({ length: 6 }).map((_, i) => <ContentSkeleton key={i} />)
@@ -710,7 +707,7 @@ export default function ModernDiscoverEnhanced() {
                   <ArrowRight className="h-4 w-4 ml-2" />
                 </Button>
               </div>
-              
+
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {hiddenGems.map((show: any) => (
                   <Card key={show.id} className="group bg-slate-800/20 border-slate-700/30 hover:border-emerald-500/50 transition-all duration-300 hover:bg-slate-800/40">

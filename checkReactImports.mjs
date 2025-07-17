@@ -12,11 +12,11 @@ files.forEach(file => {
   if (file.endsWith('.tsx') || file.endsWith('.jsx')) {
     const filePath = path.join(componentsDir, file);
     const content = fs.readFileSync(filePath, 'utf8');
-    
+
     // Check for React import
-    const hasReactImport = content.includes('import React') || 
-                           content.includes('import * as React');
-    
+    const hasReactImport = content.includes('import React') ||
+      content.includes('import * as React');
+
     if (!hasReactImport) {
       missingReactImports.push(file);
       console.log(`❌ Missing React import in: ${file}`);
