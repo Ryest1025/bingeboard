@@ -12,9 +12,9 @@
  */
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Button } from "../components/ui/button";
+import { Card, CardContent } from "../components/ui/card";
+import { Badge } from "../components/ui/badge";
 import { 
   Star, 
   Users, 
@@ -29,8 +29,13 @@ import {
   Sparkles
 } from "lucide-react";
 import { SiGoogle, SiFacebook } from "react-icons/si";
+<<<<<<< HEAD
 import { useToast } from "@/hooks/use-toast";
 import { isMobileDevice } from "@/lib/deviceUtils";
+=======
+import { signInWithGoogle, signInWithFacebook } from "../lib/auth";
+// import { useToast } from "../hooks/use-toast";
+>>>>>>> ad00a93 (🚀 Major Mobile-First Redesign & Persistent Navigation Implementation)
 
 
 interface Show {
@@ -157,12 +162,13 @@ function ShowCard({ show }: { show: Show }) {
 
 export default function Landing() {
   const [, setLocation] = useLocation();
-  const { toast } = useToast();
+  // const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   
   // State for trending shows
   const [trendingShows, setTrendingShows] = useState<{ results: Show[] } | null>(null);
   
+<<<<<<< HEAD
   // Handle redirect results for mobile social login
   useEffect(() => {
     const handleRedirectResult = async () => {
@@ -245,6 +251,8 @@ export default function Landing() {
     return auth;
   };
   
+=======
+>>>>>>> ad00a93 (🚀 Major Mobile-First Redesign & Persistent Navigation Implementation)
   const createBackendSession = async (user: any) => {
     try {
       console.log('🔐 Creating backend session for:', user.email);
@@ -294,6 +302,7 @@ export default function Landing() {
     setLoading(true);
     
     try {
+<<<<<<< HEAD
       console.log("🔄 Starting Google login process...");
       console.log("🔍 Current URL:", window.location.href);
       console.log("🔍 Firebase config check:");
@@ -353,12 +362,23 @@ export default function Landing() {
       
       // Wait a moment for session to settle
       await new Promise(resolve => setTimeout(resolve, 1000));
+=======
+      const user = await signInWithGoogle();
       
-      toast({
+      // Create backend session - optional for now
+      try {
+        await createBackendSession(user);
+      } catch (backendError) {
+        console.warn('Backend session creation failed, but login succeeded:', backendError);
+      }
+>>>>>>> ad00a93 (🚀 Major Mobile-First Redesign & Persistent Navigation Implementation)
+      
+      console.log({
         title: "Welcome to BingeBoard!",
-        description: "Successfully signed in with Google",
+        description: `Successfully signed in as ${user.displayName || user.email}`,
       });
       
+<<<<<<< HEAD
       // Force a page reload to refresh auth state
       console.log("🔄 Forcing page reload to refresh auth state...");
       window.location.href = '/';
@@ -386,6 +406,11 @@ export default function Landing() {
       }
       
       toast({
+=======
+      setLocation('/dashboard');
+    } catch (err: any) {
+      console.log({
+>>>>>>> ad00a93 (🚀 Major Mobile-First Redesign & Persistent Navigation Implementation)
         title: "Sign-in Failed",
         description: errorMessage,
         variant: "destructive",
@@ -401,6 +426,7 @@ export default function Landing() {
     setLoading(true);
     
     try {
+<<<<<<< HEAD
       console.log("🔄 Starting Facebook login process...");
       console.log("🔍 Current URL:", window.location.href);
       console.log("🔍 Firebase config check:");
@@ -459,12 +485,23 @@ export default function Landing() {
       
       // Wait a moment for session to settle
       await new Promise(resolve => setTimeout(resolve, 1000));
+=======
+      const user = await signInWithFacebook();
       
-      toast({
+      // Create backend session - optional for now
+      try {
+        await createBackendSession(user);
+      } catch (backendError) {
+        console.warn('Backend session creation failed, but login succeeded:', backendError);
+      }
+>>>>>>> ad00a93 (🚀 Major Mobile-First Redesign & Persistent Navigation Implementation)
+      
+      console.log({
         title: "Welcome to BingeBoard!",
-        description: "Successfully signed in with Facebook",
+        description: `Successfully signed in as ${user.displayName || user.email}`,
       });
       
+<<<<<<< HEAD
       // Force a page reload to refresh auth state
       console.log("🔄 Forcing page reload to refresh auth state...");
       window.location.href = '/';
@@ -492,6 +529,11 @@ export default function Landing() {
       }
       
       toast({
+=======
+      setLocation('/dashboard');
+    } catch (err: any) {
+      console.log({
+>>>>>>> ad00a93 (🚀 Major Mobile-First Redesign & Persistent Navigation Implementation)
         title: "Sign-in Failed",
         description: errorMessage,
         variant: "destructive",
@@ -557,7 +599,11 @@ export default function Landing() {
                   Log In
                 </Button>
               </Link>
+<<<<<<< HEAD
               <Link href="/login-simple">
+=======
+              <Link href="/signup">
+>>>>>>> ad00a93 (🚀 Major Mobile-First Redesign & Persistent Navigation Implementation)
                 <Button 
                   className="bg-gradient-to-r from-teal-600 via-cyan-600 to-blue-600 hover:from-teal-700 hover:via-cyan-700 hover:to-blue-700 text-white text-sm px-3 sm:px-4 py-2"
                 >
@@ -603,7 +649,7 @@ export default function Landing() {
                   className="border-slate-700 bg-white/5 hover:bg-white/10 text-white px-6 py-4 w-full"
                 >
                   <SiGoogle className="h-5 w-5 mr-3" />
-                  Continue with Google
+                  Join Now with Google
                 </Button>
                 <Button 
                   onClick={handleFacebookLogin}
@@ -613,7 +659,7 @@ export default function Landing() {
                   className="border-slate-700 bg-blue-600/20 hover:bg-blue-600/30 text-white px-6 py-4 w-full"
                 >
                   <SiFacebook className="h-5 w-5 mr-3" />
-                  Continue with Facebook
+                  Join Now with Facebook
                 </Button>
               </div>
               
@@ -629,7 +675,11 @@ export default function Landing() {
               
               {/* Email Login Options */}
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
+<<<<<<< HEAD
                 <Link href="/login-simple">
+=======
+                <Link href="/signup">
+>>>>>>> ad00a93 (🚀 Major Mobile-First Redesign & Persistent Navigation Implementation)
                   <Button 
                     size="lg" 
                     className="bg-gradient-to-r from-teal-600 via-cyan-600 to-blue-600 hover:from-teal-700 hover:via-cyan-700 hover:to-blue-700 text-white px-8 py-4 text-lg font-semibold w-full sm:w-auto"

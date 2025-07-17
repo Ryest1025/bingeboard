@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import { Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -42,27 +42,84 @@ import {
   Tv,
   Film,
   ChevronLeft,
-  ChevronRight
-} from "lucide-react";
-
-// Universal Components for BingeBoard Rules
+  ChevronRight,
+  X,
+  Loader2,
+  ArrowRight,
+  Flame,
+  Crown
+} from "lucide-react";// Universal Components for BingeBoard Rules
 import { HorizontalScrollContainer } from "@/components/ui/HorizontalScrollContainer";
 import { ContentCard } from "@/components/ui/ContentCard";
 import { StreamingLogos } from "@/components/ui/StreamingLogos";
 import { StreamingPlatformSelector } from "@/components/ui/StreamingPlatformSelector";
 
-// CRITICAL: Mood filters use official TMDB genre IDs for authentic results
-// These 8 mood options are displayed in responsive grid layout
-// Genre mapping documented below - DO NOT change without updating documentation
+// Enhanced mood filters with better visual hierarchy
 const moodFilters = [
-  { id: "light", label: "Light & Fun", icon: Sun, color: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30" }, // TMDB Genre IDs: 35, 10751 (Comedy/Family)
-  { id: "bingeable", label: "Bingeable", icon: Zap, color: "bg-orange-500/20 text-orange-400 border-orange-500/30" }, // TMDB Rating: >7.5 stars
-  { id: "feelgood", label: "Feel-Good", icon: Heart, color: "bg-pink-500/20 text-pink-400 border-pink-500/30" }, // TMDB Genre IDs: 35, 10751, 10749 (Comedy/Family/Romance)
-  { id: "dark", label: "Dark & Intense", icon: Moon, color: "bg-purple-500/20 text-purple-400 border-purple-500/30" }, // TMDB Genre IDs: 18, 9648, 80 (Drama/Mystery/Crime)
-  { id: "comedy", label: "Comedy", icon: Laugh, color: "bg-green-500/20 text-green-400 border-green-500/30" }, // TMDB Genre ID: 35 (Comedy)
-  { id: "drama", label: "Drama", icon: Drama, color: "bg-blue-500/20 text-blue-400 border-blue-500/30" }, // TMDB Genre ID: 18 (Drama)
-  { id: "action", label: "Action", icon: Swords, color: "bg-red-500/20 text-red-400 border-red-500/30" }, // TMDB Genre IDs: 10759, 28 (Action & Adventure/Action)
-  { id: "scifi", label: "Sci-Fi", icon: Rocket, color: "bg-indigo-500/20 text-indigo-400 border-indigo-500/30" }, // TMDB Genre IDs: 10765, 878 (Sci-Fi & Fantasy/Science Fiction)
+  { 
+    id: "light", 
+    label: "Light & Fun", 
+    icon: Sun, 
+    gradient: "from-yellow-400 to-orange-500",
+    description: "Comedy & feel-good shows",
+    count: "2.1k shows"
+  },
+  { 
+    id: "bingeable", 
+    label: "Bingeable", 
+    icon: Zap, 
+    gradient: "from-orange-500 to-red-500",
+    description: "Can't-stop-watching series",
+    count: "850 shows"
+  },
+  { 
+    id: "feelgood", 
+    label: "Feel-Good", 
+    icon: Heart, 
+    gradient: "from-pink-500 to-rose-500",
+    description: "Uplifting & heartwarming",
+    count: "1.5k shows"
+  },
+  { 
+    id: "dark", 
+    label: "Dark & Intense", 
+    icon: Moon, 
+    gradient: "from-purple-600 to-indigo-600",
+    description: "Thrillers & dark dramas",
+    count: "920 shows"
+  },
+  { 
+    id: "comedy", 
+    label: "Comedy", 
+    icon: Laugh, 
+    gradient: "from-green-400 to-emerald-500",
+    description: "Laugh-out-loud moments",
+    count: "1.8k shows"
+  },
+  { 
+    id: "drama", 
+    label: "Drama", 
+    icon: Drama, 
+    gradient: "from-blue-500 to-cyan-500",
+    description: "Emotional storytelling",
+    count: "2.5k shows"
+  },
+  { 
+    id: "action", 
+    label: "Action", 
+    icon: Swords, 
+    gradient: "from-red-500 to-pink-500",
+    description: "High-octane adventures",
+    count: "1.2k shows"
+  },
+  { 
+    id: "scifi", 
+    label: "Sci-Fi", 
+    icon: Rocket, 
+    gradient: "from-indigo-500 to-purple-500",
+    description: "Future & beyond",
+    count: "680 shows"
+  },
 ];
 
 const trendingSearches = [
@@ -82,12 +139,42 @@ const trendingSearches = [
 
 // Removed duplicate ContentCard component - now imported from @/components/ui/ContentCard
 
+// Skeleton loading component
+const ContentSkeleton = () => (
+  <div className="animate-pulse">
+    <div className="flex gap-4 p-4">
+      <div className="w-20 h-28 bg-slate-700 rounded-lg"></div>
+      <div className="flex-1 space-y-3">
+        <div className="h-6 bg-slate-700 rounded w-3/4"></div>
+        <div className="h-4 bg-slate-700 rounded w-1/2"></div>
+        <div className="h-4 bg-slate-700 rounded w-full"></div>
+        <div className="flex gap-2">
+          <div className="h-8 bg-slate-700 rounded w-20"></div>
+          <div className="h-8 bg-slate-700 rounded w-24"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
 export default function ModernDiscover() {
   const [selectedMood, setSelectedMood] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [isVoiceSearch, setIsVoiceSearch] = useState(false);
   const [showTrending, setShowTrending] = useState(false);
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
+  const [showQuickFilters, setShowQuickFilters] = useState(false);
   const { user } = useAuth();
+
+  // Enhanced search with debouncing
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState(searchQuery);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   // Fetch trending shows from TMDB (more reliable than Watchmode)
   const { data: trendingData } = useQuery({
@@ -146,7 +233,7 @@ export default function ModernDiscover() {
     : [];
 
   const topPicksToday = trendingData?.results?.slice(0, 4) || [];
-  
+
   // Fetch user preferences for AI-powered recommendations
   const { data: userPreferences } = useQuery({
     queryKey: ["/api/user-preferences"],
@@ -160,17 +247,17 @@ export default function ModernDiscover() {
       ...(trendingData?.results || []),
       ...(popularData?.results || [])
     ];
-    
+
     if (!allContent.length) return [];
-    
+
     // Filter by user's favorite genres if available
     let filtered = allContent.filter(show => {
       const rating = show.vote_average || 0;
       const popularity = show.popularity || 0;
-      
+
       // Base quality filter: good ratings but not super mainstream
       const qualityFilter = rating >= 7.0 && popularity > 20 && popularity < 500;
-      
+
       // AI Enhancement: Match user's preferred genres from onboarding
       if (userPreferences?.favoriteGenres?.length) {
         const showGenres = show.genre_ids || [];
@@ -185,13 +272,13 @@ export default function ModernDiscover() {
           };
           return showGenres.includes(genreMap[genre]);
         });
-        
+
         return qualityFilter && genreMatch;
       }
-      
+
       return qualityFilter;
     });
-    
+
     // If no genre matches found, fall back to quality-based filtering
     if (filtered.length === 0) {
       filtered = allContent.filter(show => {
@@ -200,12 +287,12 @@ export default function ModernDiscover() {
         return rating >= 7.0 && popularity > 20 && popularity < 500;
       });
     }
-    
+
     return filtered
       .sort((a, b) => (b.vote_average || 0) - (a.vote_average || 0))
       .slice(0, 4);
   }, [trendingData, popularData, userPreferences]);
-  
+
   const searchResults = searchData?.results || [];
 
   const handleMoodFilter = (moodId: string) => {
@@ -250,13 +337,13 @@ export default function ModernDiscover() {
   const handleAddCalendarReminder = (show: any) => {
     const releaseDate = new Date(show.releaseDate || show.first_air_date);
     const showTitle = show.title || show.name;
-    
+
     // Create calendar event URL (Google Calendar)
     const startDate = releaseDate.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
     const endDate = new Date(releaseDate.getTime() + 60 * 60 * 1000).toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
-    
+
     const calendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(`${showTitle} - New Episode`)}&dates=${startDate}/${endDate}&details=${encodeURIComponent(`New episode of ${showTitle} releases today!`)}&location=Streaming`;
-    
+
     window.open(calendarUrl, '_blank');
     console.log("Opening calendar reminder for:", showTitle);
   };
@@ -264,7 +351,7 @@ export default function ModernDiscover() {
   // Handle text notification opt-in for upcoming shows
   const handleTextReminders = async (show: any) => {
     const showTitle = show.title || show.name;
-    
+
     try {
       // Add to release reminders in database
       const response = await fetch('/api/release-reminders', {
@@ -278,7 +365,7 @@ export default function ModernDiscover() {
           notificationMethods: ['push', 'email'] // Can add SMS later
         })
       });
-      
+
       if (response.ok) {
         console.log("Text reminders enabled for:", showTitle);
         // Could show a toast notification here
@@ -295,19 +382,19 @@ export default function ModernDiscover() {
       console.log("Showing search results for:", searchQuery);
       return searchResults.slice(0, 4);
     }
-    
+
     // If mood filter is selected, use mood-specific API data
     if (selectedMood && moodSpecificData?.results) {
       console.log(`Using latest ${selectedMood} releases:`, moodSpecificData.results.length, "shows");
       return moodSpecificData.results.slice(0, 4);
     }
-    
+
     // If trending view is active, show trending content
     if (showTrending && trendingData?.results) {
       console.log("Showing What's Trending content");
       return trendingData.results.slice(0, 4);
     }
-    
+
     // Default: show top picks (trending subset)
     return topPicksToday;
   })();
@@ -315,10 +402,10 @@ export default function ModernDiscover() {
   return (
     <div className="min-h-screen bg-black">
       <TopNav />
-      
+
       <div className="pt-20 pb-24">
         <div className="container mx-auto px-4 space-y-8">
-          
+
           {/* Header */}
           <div className="text-center space-y-4 mb-8">
             <div className="flex items-center justify-center gap-2">
@@ -344,7 +431,7 @@ export default function ModernDiscover() {
               </span>
             </div>
           </div>
-          
+
           {/* Search Section */}
           <div className="space-y-4">
             <div className="relative">
@@ -359,14 +446,13 @@ export default function ModernDiscover() {
                 variant="ghost"
                 size="sm"
                 onClick={handleVoiceSearch}
-                className={`absolute right-2 top-1/2 transform -translate-y-1/2 p-2 ${
-                  isVoiceSearch ? "text-teal-400" : "text-gray-400 hover:text-white"
-                }`}
+                className={`absolute right-2 top-1/2 transform -translate-y-1/2 p-2 ${isVoiceSearch ? "text-teal-400" : "text-gray-400 hover:text-white"
+                  }`}
               >
                 <Mic className="h-5 w-5" />
               </Button>
             </div>
-            
+
             {/* Trending terms removed as requested */}
           </div>
 
@@ -376,21 +462,20 @@ export default function ModernDiscover() {
               <Sparkles className="h-5 w-5 text-teal-400" />
               What's Your Mood?
             </h2>
-            
+
             <div className="w-full">
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-8 gap-3">
                 {moodFilters.map((mood) => {
                   const Icon = mood.icon;
                   const isSelected = selectedMood === mood.id;
-                  
+
                   return (
                     <Button
                       key={mood.id}
                       variant="outline"
                       onClick={() => handleMoodFilter(mood.id)}
-                      className={`${mood.color} ${
-                        isSelected ? "ring-2 ring-teal-400" : ""
-                      } flex items-center gap-2 whitespace-nowrap transition-all duration-200 hover:scale-105 text-sm`}
+                      className={`${mood.color} ${isSelected ? "ring-2 ring-teal-400" : ""
+                        } flex items-center gap-2 whitespace-nowrap transition-all duration-200 hover:scale-105 text-sm`}
                     >
                       <Icon className="h-4 w-4" />
                       {mood.label}
@@ -406,13 +491,13 @@ export default function ModernDiscover() {
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-bold text-white flex items-center gap-2">
                 <TrendingUp className="h-5 w-5 text-orange-400" />
-                {searchQuery.trim() ? `Search Results for "${searchQuery}"` : 
-                 selectedMood ? `${moodFilters.find(m => m.id === selectedMood)?.label} Picks` : 
-                 "Top Picks Today"}
+                {searchQuery.trim() ? `Search Results for "${searchQuery}"` :
+                  selectedMood ? `${moodFilters.find(m => m.id === selectedMood)?.label} Picks` :
+                    "Top Picks Today"}
               </h2>
-              <Button 
-                variant="ghost" 
-                size="sm" 
+              <Button
+                variant="ghost"
+                size="sm"
                 className="text-gray-400 hover:text-white"
                 onClick={handleMoreFilters}
               >
@@ -420,7 +505,7 @@ export default function ModernDiscover() {
                 More Filters
               </Button>
             </div>
-            
+
             <div className="grid gap-4">
               {searchLoading && searchQuery.trim() ? (
                 <div className="flex items-center justify-center py-8">
@@ -432,126 +517,126 @@ export default function ModernDiscover() {
                 </div>
               ) : (
                 filteredContent.slice(0, 4).map((show: any) => (
-                <Card key={show.id} className="glass-effect border-slate-700/50 hover:border-teal-500/50 transition-all duration-300 group">
-                  <CardContent className="p-4">
-                    <div className="flex gap-4 items-start">
-                      <div className="w-20 h-28 bg-slate-700 rounded-lg flex-shrink-0 overflow-hidden group-hover:ring-2 group-hover:ring-teal-400 transition-all">
-                        {show.poster_path ? (
-                          <img
-                            src={`https://image.tmdb.org/t/p/w185${show.poster_path}`}
-                            alt={show.name || show.title}
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center">
-                            <Play className="h-8 w-8 text-slate-500 group-hover:text-white transition-colors" />
-                          </div>
-                        )}
-                      </div>
-                      <div className="flex-1 space-y-3">
-                        <div className="flex items-start justify-between">
-                          <div>
-                            <h3 className="font-bold text-white text-lg flex items-center gap-2">
-                              {show.name || show.title}
-                              <Badge className="bg-orange-500/20 text-orange-400 border-orange-500/30">
-                                <TrendingUp className="h-3 w-3 mr-1" />
-                                Trending
-                              </Badge>
-                            </h3>
-                            <div className="flex items-center gap-2 mt-1">
-                              <span className="text-sm text-gray-400">{show.first_air_date ? new Date(show.first_air_date).getFullYear() : show.release_date ? new Date(show.release_date).getFullYear() : ''}</span>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-1 text-yellow-400">
-                            <Star className="h-4 w-4 fill-current" />
-                            <span className="font-medium">{show.vote_average?.toFixed(1)}</span>
-                          </div>
-                        </div>
-                        
-                        <p className="text-gray-300 text-sm line-clamp-2">{show.overview}</p>
-                        
-                        {/* Display streaming platforms with logos */}
-                        {show.streamingPlatforms && show.streamingPlatforms.length > 0 ? (
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs text-gray-400">Available on:</span>
-                            <div className="flex gap-1">
-                              {show.streamingPlatforms.slice(0, 4).map((platform: any, index: number) => (
-                                <div key={index} className="flex items-center gap-1">
-                                  {platform.logo_path ? (
-                                    <img
-                                      src={`https://image.tmdb.org/t/p/w45${platform.logo_path}`}
-                                      alt={platform.provider_name}
-                                      className="w-6 h-6 rounded-sm object-cover"
-                                      onError={(e) => {
-                                        // Fallback to text badge if logo fails
-                                        e.currentTarget.style.display = 'none';
-                                        e.currentTarget.nextElementSibling!.style.display = 'block';
-                                      }}
-                                    />
-                                  ) : null}
-                                  <div className="bg-teal-500/20 text-teal-400 px-2 py-1 rounded text-xs font-medium border border-teal-500/30" style={{ display: platform.logo_path ? 'none' : 'block' }}>
-                                    {platform.provider_name}
-                                  </div>
-                                </div>
-                              ))}
-                              {show.streamingPlatforms.length > 4 && (
-                                <span className="text-xs text-gray-400">+{show.streamingPlatforms.length - 4} more</span>
-                              )}
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs text-gray-400">Streaming info loading...</span>
-                          </div>
-                        )}
-                        
-                        <div className="flex items-center gap-2">
-                          <Button 
-                            size="sm" 
-                            className="bg-red-500/20 text-red-400 hover:bg-red-500/30 border-red-500/50"
-                            onClick={() => window.open(`https://www.youtube.com/results?search_query=${encodeURIComponent((show.title || show.name) + ' trailer')}`, '_blank')}
-                          >
-                            <Play className="h-3 w-3 mr-2" />
-                            Trailer
-                          </Button>
-                          <Button 
-                            size="sm" 
-                            className="bg-teal-500/20 text-teal-400 hover:bg-teal-500/30 border-teal-500/50"
-                            onClick={() => handleAddToWatchlist(show)}
-                          >
-                            <Plus className="h-3 w-3 mr-2" />
-                            Add to List
-                          </Button>
-                          {show.streamingPlatforms && show.streamingPlatforms.length > 0 ? (
-                            <Button 
-                              variant="outline" 
-                              size="sm" 
-                              className="border-slate-600 text-gray-300 hover:bg-slate-700"
-                              onClick={() => handleWatchNow(show, show.streamingPlatforms[0])}
-                            >
-                              <Eye className="h-3 w-3 mr-2" />
-                              Watch on {show.streamingPlatforms[0].provider_name}
-                            </Button>
+                  <Card key={show.id} className="glass-effect border-slate-700/50 hover:border-teal-500/50 transition-all duration-300 group">
+                    <CardContent className="p-4">
+                      <div className="flex gap-4 items-start">
+                        <div className="w-20 h-28 bg-slate-700 rounded-lg flex-shrink-0 overflow-hidden group-hover:ring-2 group-hover:ring-teal-400 transition-all">
+                          {show.poster_path ? (
+                            <img
+                              src={`https://image.tmdb.org/t/p/w185${show.poster_path}`}
+                              alt={show.name || show.title}
+                              className="w-full h-full object-cover"
+                            />
                           ) : (
-                            <Button 
-                              variant="outline" 
-                              size="sm" 
-                              className="border-slate-600 text-gray-300 hover:bg-slate-700"
-                              onClick={() => {
-                                console.log("No streaming data available for:", show.name || show.title);
-                                // Fallback search on Google
-                                window.open(`https://www.google.com/search?q=where+to+watch+${encodeURIComponent(show.name || show.title)}`, '_blank');
-                              }}
-                            >
-                              <Eye className="h-3 w-3 mr-2" />
-                              Find Streaming
-                            </Button>
+                            <div className="w-full h-full flex items-center justify-center">
+                              <Play className="h-8 w-8 text-slate-500 group-hover:text-white transition-colors" />
+                            </div>
                           )}
                         </div>
+                        <div className="flex-1 space-y-3">
+                          <div className="flex items-start justify-between">
+                            <div>
+                              <h3 className="font-bold text-white text-lg flex items-center gap-2">
+                                {show.name || show.title}
+                                <Badge className="bg-orange-500/20 text-orange-400 border-orange-500/30">
+                                  <TrendingUp className="h-3 w-3 mr-1" />
+                                  Trending
+                                </Badge>
+                              </h3>
+                              <div className="flex items-center gap-2 mt-1">
+                                <span className="text-sm text-gray-400">{show.first_air_date ? new Date(show.first_air_date).getFullYear() : show.release_date ? new Date(show.release_date).getFullYear() : ''}</span>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-1 text-yellow-400">
+                              <Star className="h-4 w-4 fill-current" />
+                              <span className="font-medium">{show.vote_average?.toFixed(1)}</span>
+                            </div>
+                          </div>
+
+                          <p className="text-gray-300 text-sm line-clamp-2">{show.overview}</p>
+
+                          {/* Display streaming platforms with logos */}
+                          {show.streamingPlatforms && show.streamingPlatforms.length > 0 ? (
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs text-gray-400">Available on:</span>
+                              <div className="flex gap-1">
+                                {show.streamingPlatforms.slice(0, 4).map((platform: any, index: number) => (
+                                  <div key={index} className="flex items-center gap-1">
+                                    {platform.logo_path ? (
+                                      <img
+                                        src={`https://image.tmdb.org/t/p/w45${platform.logo_path}`}
+                                        alt={platform.provider_name}
+                                        className="w-6 h-6 rounded-sm object-cover"
+                                        onError={(e) => {
+                                          // Fallback to text badge if logo fails
+                                          e.currentTarget.style.display = 'none';
+                                          e.currentTarget.nextElementSibling!.style.display = 'block';
+                                        }}
+                                      />
+                                    ) : null}
+                                    <div className="bg-teal-500/20 text-teal-400 px-2 py-1 rounded text-xs font-medium border border-teal-500/30" style={{ display: platform.logo_path ? 'none' : 'block' }}>
+                                      {platform.provider_name}
+                                    </div>
+                                  </div>
+                                ))}
+                                {show.streamingPlatforms.length > 4 && (
+                                  <span className="text-xs text-gray-400">+{show.streamingPlatforms.length - 4} more</span>
+                                )}
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs text-gray-400">Streaming info loading...</span>
+                            </div>
+                          )}
+
+                          <div className="flex items-center gap-2">
+                            <Button
+                              size="sm"
+                              className="bg-red-500/20 text-red-400 hover:bg-red-500/30 border-red-500/50"
+                              onClick={() => window.open(`https://www.youtube.com/results?search_query=${encodeURIComponent((show.title || show.name) + ' trailer')}`, '_blank')}
+                            >
+                              <Play className="h-3 w-3 mr-2" />
+                              Trailer
+                            </Button>
+                            <Button
+                              size="sm"
+                              className="bg-teal-500/20 text-teal-400 hover:bg-teal-500/30 border-teal-500/50"
+                              onClick={() => handleAddToWatchlist(show)}
+                            >
+                              <Plus className="h-3 w-3 mr-2" />
+                              Add to List
+                            </Button>
+                            {show.streamingPlatforms && show.streamingPlatforms.length > 0 ? (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="border-slate-600 text-gray-300 hover:bg-slate-700"
+                                onClick={() => handleWatchNow(show, show.streamingPlatforms[0])}
+                              >
+                                <Eye className="h-3 w-3 mr-2" />
+                                Watch on {show.streamingPlatforms[0].provider_name}
+                              </Button>
+                            ) : (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="border-slate-600 text-gray-300 hover:bg-slate-700"
+                                onClick={() => {
+                                  console.log("No streaming data available for:", show.name || show.title);
+                                  // Fallback search on Google
+                                  window.open(`https://www.google.com/search?q=where+to+watch+${encodeURIComponent(show.name || show.title)}`, '_blank');
+                                }}
+                              >
+                                <Eye className="h-3 w-3 mr-2" />
+                                Find Streaming
+                              </Button>
+                            )}
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                    </CardContent>
+                  </Card>
                 ))
               )}
             </div>
@@ -568,21 +653,21 @@ export default function ModernDiscover() {
                   What's Trending
                 </h2>
               </div>
-              <Button 
-                variant="ghost" 
+              <Button
+                variant="ghost"
                 className="text-teal-400 hover:text-teal-300"
                 onClick={handleTrendingView}
               >
                 View All
               </Button>
             </div>
-            
+
             <HorizontalScrollContainer scrollId="whats-trending">
               {trendingData?.results?.slice(0, 4).map((show: any) => (
-                <ContentCard 
-                  key={show.id} 
-                  item={show} 
-                  type="grid" 
+                <ContentCard
+                  key={show.id}
+                  item={show}
+                  type="grid"
                   onWatchNow={handleWatchNow}
                   onAddToWatchlist={handleAddToWatchlist}
                 />
@@ -606,7 +691,7 @@ export default function ModernDiscover() {
                   </Button>
                 </Link>
               </div>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {upcomingShows.slice(0, 6).map((show: any) => (
                   <Card key={show.id} className="glass-effect border-slate-700/50 hover:border-teal-500/50 transition-all duration-300">
@@ -626,7 +711,7 @@ export default function ModernDiscover() {
                             }}
                           />
                         </div>
-                        
+
                         <div className="flex-1 min-w-0">
                           <h3 className="font-semibold text-white text-sm mb-1 truncate">
                             {show.title || show.name}
@@ -634,16 +719,16 @@ export default function ModernDiscover() {
                           <div className="text-xs text-gray-400 mb-2 flex items-center gap-2">
                             <span>{show.releaseDate ? new Date(show.releaseDate).toLocaleDateString() : 'TBA'}</span>
                             <Badge className="bg-teal-500 text-xs">
-                              {show.releaseType === 'movie' ? 'Movie' : 
-                               show.releaseType?.includes('season') ? show.releaseType.replace('_', ' ') : 
-                               show.releaseType?.includes('premiere') ? show.releaseType.replace('_', ' ') :
-                               'Series'}
+                              {show.releaseType === 'movie' ? 'Movie' :
+                                show.releaseType?.includes('season') ? show.releaseType.replace('_', ' ') :
+                                  show.releaseType?.includes('premiere') ? show.releaseType.replace('_', ' ') :
+                                    'Series'}
                             </Badge>
                           </div>
                           <p className="text-xs text-gray-300 mb-2 line-clamp-2">
                             {show.description || show.overview || 'New episode coming soon!'}
                           </p>
-                          
+
                           {/* Streaming Platform Logos */}
                           {show.streamingProviders && show.streamingProviders.length > 0 && (
                             <div className="flex items-center gap-1 mb-2">
@@ -661,7 +746,7 @@ export default function ModernDiscover() {
                               ))}
                             </div>
                           )}
-                          
+
                           <div className="flex gap-1 flex-wrap">
                             <Button
                               size="sm"
@@ -725,7 +810,7 @@ export default function ModernDiscover() {
                   </Button>
                 </Link>
               </div>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {upcomingMovies.slice(0, 4).map((movie: any) => (
                   <Card key={movie.id} className="glass-effect border-slate-700/50 hover:border-teal-500/50 transition-all duration-300">
@@ -748,7 +833,7 @@ export default function ModernDiscover() {
                             Movie
                           </Badge>
                         </div>
-                        
+
                         <div className="flex-1 min-w-0">
                           <h3 className="font-semibold text-white text-sm mb-1 truncate">
                             {movie.title || movie.name}
@@ -756,16 +841,16 @@ export default function ModernDiscover() {
                           <div className="text-xs text-gray-400 mb-2 flex items-center gap-2">
                             <span>{movie.releaseDate ? new Date(movie.releaseDate).toLocaleDateString() : 'TBA'}</span>
                             <Badge className="bg-teal-500 text-xs">
-                              {movie.releaseType === 'movie' ? 'Movie' : 
-                               movie.releaseType?.includes('season') ? movie.releaseType.replace('_', ' ') : 
-                               movie.releaseType?.includes('premiere') ? movie.releaseType.replace('_', ' ') :
-                               'Movie'}
+                              {movie.releaseType === 'movie' ? 'Movie' :
+                                movie.releaseType?.includes('season') ? movie.releaseType.replace('_', ' ') :
+                                  movie.releaseType?.includes('premiere') ? movie.releaseType.replace('_', ' ') :
+                                    'Movie'}
                             </Badge>
                           </div>
                           <p className="text-xs text-gray-300 mb-2 line-clamp-2">
                             {movie.description || movie.overview || 'New movie coming soon!'}
                           </p>
-                          
+
                           {/* Streaming Platform Logos */}
                           {movie.streamingProviders && movie.streamingProviders.length > 0 && (
                             <div className="flex items-center gap-1 mb-2">
@@ -783,7 +868,7 @@ export default function ModernDiscover() {
                               ))}
                             </div>
                           )}
-                          
+
                           <div className="flex gap-1 flex-wrap">
                             <Button
                               size="sm"
@@ -843,21 +928,21 @@ export default function ModernDiscover() {
                     Coming Soon - Movies
                   </h2>
                 </div>
-                <Button 
-                  variant="ghost" 
+                <Button
+                  variant="ghost"
                   className="text-teal-400 hover:text-teal-300"
                   onClick={() => window.location.href = '/upcoming-releases'}
                 >
                   View All
                 </Button>
               </div>
-              
+
               <HorizontalScrollContainer scrollId="upcoming-movies">
                 {upcomingMoviesData?.results?.slice(0, 4).map((movie: any) => (
-                  <ContentCard 
-                    key={movie.id} 
-                    item={movie} 
-                    type="grid" 
+                  <ContentCard
+                    key={movie.id}
+                    item={movie}
+                    type="grid"
                     onWatchNow={handleWatchNow}
                     onAddToWatchlist={handleAddToWatchlist}
                   />
@@ -881,13 +966,13 @@ export default function ModernDiscover() {
                 View All
               </Button>
             </div>
-            
+
             <HorizontalScrollContainer scrollId="hidden-gems">
               {hiddenGems.slice(0, 4).map((show: any) => (
-                <ContentCard 
-                  key={show.id} 
-                  item={show} 
-                  type="compact" 
+                <ContentCard
+                  key={show.id}
+                  item={show}
+                  type="compact"
                   onWatchNow={handleWatchNow}
                   onAddToWatchlist={handleAddToWatchlist}
                 />

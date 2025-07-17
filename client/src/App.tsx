@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import { Switch, Route, useLocation } from "wouter";
 import React, { Suspense, useState, useEffect, lazy } from "react";
 import { queryClient } from "./lib/queryClient";
@@ -94,15 +95,48 @@ function Router() {
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-500 mx-auto"></div>
           <p className="text-gray-400 mt-4">Loading BingeBoard...</p>
+=======
+import React from "react";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { queryClient } from "./lib/queryClient";
+import { Route, Switch } from "wouter";
+import Layout from "./components/layout";
+import Landing from "./pages/landing";
+import SimpleLogin from "./pages/simple-login";
+import Signup from "./pages/signup";
+import WorkingDashboard from "./pages/working-dashboard";
+import EnhancedDiscover from "./pages/enhanced-discover";
+import Watchlist from "./pages/watchlist";
+import ListsPage from "./pages/lists";
+import Social from "./pages/social";
+import SettingsPage from "./pages/settings";
+
+// Simple components for now until we fix ModernHome imports
+function SimpleDashboard() {
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center">
+      <div className="text-center text-white">
+        <h1 className="text-4xl font-bold mb-4">🎉 Welcome to BingeBoard!</h1>
+        <p className="text-xl text-gray-300 mb-8">Your Dashboard is Loading...</p>
+        <p className="text-gray-400 mb-8">Authentication successful! ✅</p>
+        <div className="space-x-4">
+          <a href="/" className="text-teal-400 hover:text-teal-300 text-lg">
+            ← Back to Home
+          </a>
+          <a href="/social" className="text-blue-400 hover:text-blue-300 text-lg">
+            Social →
+          </a>
+>>>>>>> ad00a93 (🚀 Major Mobile-First Redesign & Persistent Navigation Implementation)
         </div>
       </div>
-    );
-  }
+    </div>
+  );
+}
 
-  // Add debug information to see what's happening
-  console.log('App render state:', { isLoading, showApp, isAuthenticated });
-
+// Simple social component for now
+function SimpleSocial() {
   return (
+<<<<<<< HEAD
     <div className="min-h-screen flex flex-col bg-black">
       {/* Add TopNav for authenticated users only */}
       {isAuthenticated && <TopNav />}
@@ -191,19 +225,83 @@ function Router() {
           }
         }}
       />
+=======
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center">
+      <div className="text-center text-white">
+        <h1 className="text-4xl font-bold mb-4">👥 Social Feed</h1>
+        <p className="text-xl text-gray-300 mb-8">Connect with fellow bingers</p>
+        <p className="text-gray-400 mb-8">Coming Soon: Friend activity, shared lists, and more!</p>
+        <div className="space-x-4">
+          <a href="/dashboard" className="text-teal-400 hover:text-teal-300 text-lg">
+            ← Dashboard
+          </a>
+          <a href="/" className="text-blue-400 hover:text-blue-300 text-lg">
+            Home →
+          </a>
+        </div>
+      </div>
+>>>>>>> ad00a93 (🚀 Major Mobile-First Redesign & Persistent Navigation Implementation)
     </div>
   );
 }
 
 export default function App() {
+  console.log("🚀 App with authentication and social");
+  
   return (
     <QueryClientProvider client={queryClient}>
+<<<<<<< HEAD
       <TooltipProvider>
         <ErrorBoundary>
           <Router />
           {/* <Toaster /> */}
         </ErrorBoundary>
       </TooltipProvider>
+=======
+      <Switch>
+        {/* Public routes without persistent navigation */}
+        <Route path="/" component={Landing} />
+        <Route path="/login" component={SimpleLogin} />
+        <Route path="/signup" component={Signup} />
+        
+        {/* Authenticated routes with persistent navigation */}
+        <Route path="/dashboard">
+          <Layout>
+            <WorkingDashboard />
+          </Layout>
+        </Route>
+        <Route path="/discover">
+          <Layout>
+            <EnhancedDiscover />
+          </Layout>
+        </Route>
+        <Route path="/watchlist">
+          <Layout>
+            <Watchlist />
+          </Layout>
+        </Route>
+        <Route path="/lists">
+          <Layout>
+            <ListsPage />
+          </Layout>
+        </Route>
+        <Route path="/social">
+          <Layout>
+            <Social />
+          </Layout>
+        </Route>
+        <Route path="/settings">
+          <Layout>
+            <SettingsPage />
+          </Layout>
+        </Route>
+        
+        {/* Default route */}
+        <Route>
+          <Landing />
+        </Route>
+      </Switch>
+>>>>>>> ad00a93 (🚀 Major Mobile-First Redesign & Persistent Navigation Implementation)
     </QueryClientProvider>
   );
 }

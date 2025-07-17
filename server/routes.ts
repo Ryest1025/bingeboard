@@ -636,6 +636,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+<<<<<<< HEAD
   // Debug endpoint to check users (remove in production)
   app.get('/api/debug/users', async (req, res) => {
     try {
@@ -664,6 +665,65 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error: any) {
       console.error('❌ Debug users error:', error);
       res.status(500).json({ error: error.message });
+=======
+  // Mark onboarding as completed with comprehensive data saving
+  app.post('/api/user/onboarding/complete', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims?.sub || req.user.id;
+      const { onboardingData } = req.body;
+      
+      console.log('🎯 Onboarding completion request for user:', userId);
+      console.log('📋 Onboarding data received:', JSON.stringify(onboardingData, null, 2));
+      
+      // Update user with onboarding completion flag
+      const user = await storage.updateUser(userId, { 
+        onboardingCompleted: true,
+        firstName: onboardingData?.profile?.firstName || user?.firstName,
+        lastName: onboardingData?.profile?.lastName || user?.lastName,
+        phoneNumber: onboardingData?.profile?.phone,
+        updatedAt: new Date()
+      });
+      
+      // Save user preferences if provided
+      if (onboardingData?.preferences) {
+        try {
+          await storage.updateUserPreferences(userId, {
+            preferredGenres: onboardingData.preferences.genres || [],
+            preferredNetworks: onboardingData.preferences.platforms || [],
+            favoriteSports: onboardingData.preferences.teams ? ["Sports"] : [],
+            favoriteTeams: onboardingData.preferences.teams || [],
+            watchingHabits: JSON.stringify({
+              theme: onboardingData.preferences.theme || "dark",
+              contentTypes: onboardingData.preferences.contentTypes || []
+            }),
+            contentRating: "All",
+            languagePreferences: ["English"],
+            aiPersonality: "balanced",
+            notificationFrequency: "weekly",
+            sportsNotifications: true,
+            onboardingCompleted: true
+          });
+          console.log('✅ User preferences saved successfully');
+        } catch (prefError) {
+          console.error('❌ Error saving preferences:', prefError);
+        }
+      }
+      
+      console.log('🎊 Onboarding completed successfully for user:', userId);
+      res.json({ 
+        success: true, 
+        user,
+        message: "Onboarding completed successfully",
+        savedData: {
+          profile: !!onboardingData?.profile,
+          preferences: !!onboardingData?.preferences,
+          settings: !!onboardingData?.settings
+        }
+      });
+    } catch (error) {
+      console.error("❌ Error marking onboarding as complete:", error);
+      res.status(500).json({ message: "Failed to complete onboarding" });
+>>>>>>> ad00a93 (🚀 Major Mobile-First Redesign & Persistent Navigation Implementation)
     }
   });
 

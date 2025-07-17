@@ -1,16 +1,36 @@
 import { useState } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
+impo  const { data: user } = useQuery<UserData>({
+    queryKey: ["/api/auth/user"],
+    staleTime: 5 * 60 * 1000,
+    refetchInterval: false,
+    refetchOnWindowFocus: false,
+  });
+
+  const { data: integrations = [] } = useQuery<Integration[]>({
+    queryKey: ["/api/integrations"],
+    staleTime: 5 * 60 * 1000,
+  });, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
-import { TopNav } from "@/components/top-nav";
-import MobileNav from "@/components/mobile-nav";
 import { Settings, Bell, Shield, Smartphone, Monitor, Users, Star, CreditCard, Link, Trash2, Download, Info, FileText, Lock, Upload } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+
+interface UserData {
+  email?: string;
+  createdAt?: string;
+  [key: string]: any;
+}
+
+interface Integration {
+  name: string;
+  connected: boolean;
+  [key: string]: any;
+}
 
 export default function SettingsPage() {
   const { toast } = useToast();
@@ -40,29 +60,30 @@ export default function SettingsPage() {
     refetchOnWindowFocus: false,
   });
 
-  const updatePreferences = useMutation({
+  const updatePreferencesMutation = useMutation({
     mutationFn: async (data: any) => {
-      return await apiRequest('/api/user/preferences', {
-        method: 'POST',
-        body: JSON.stringify(data),
-        headers: { 'Content-Type': 'application/json' }
-      });
+      return await apiRequest('POST', '/api/user/preferences', data);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/user/preferences'] });
       toast({
         title: "Settings Updated",
         description: "Your preferences have been saved successfully.",
       });
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
     },
-    onError: () => {
+    onError: (error) => {
       toast({
-        title: "Error",
-        description: "Failed to update settings. Please try again.",
+        title: "Update Failed",
+        description: `Failed to update settings: ${error.message}`,
         variant: "destructive",
       });
-    },
+    }
   });
+
+  const deleteAccountMutation = useMutation({
+    mutationFn: async () => {
+      return await apiRequest('DELETE', '/api/user/delete');
+    },
 
   const deleteAccount = useMutation({
     mutationFn: async () => {
@@ -114,9 +135,7 @@ export default function SettingsPage() {
 
   return (
     <div className="min-h-screen bg-black">
-      <TopNav />
-      
-      <div className="pt-20 p-4 pb-24">
+      <div className="p-4 pb-24">
         <div className="container mx-auto max-w-4xl space-y-6">
           
           {/* Header */}
@@ -242,7 +261,7 @@ export default function SettingsPage() {
             <CardContent className="space-y-4">
               <div className="space-y-3">
                 {integrations.length > 0 ? (
-                  integrations.map((integration: any) => (
+                  integrations.map((integration: Integration) => (
                     <div key={integration.id} className="flex items-center justify-between p-3 bg-gray-800 rounded-lg">
                       <div className="flex items-center space-x-3">
                         <div className="w-8 h-8 bg-teal-500 rounded-full flex items-center justify-center">
@@ -508,8 +527,6 @@ export default function SettingsPage() {
           </div>
         </div>
       </div>
-      
-      <MobileNav />
     </div>
   );
 }

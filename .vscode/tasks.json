@@ -2,12 +2,20 @@
 	"version": "2.0.0",
 	"tasks": [
 		{
+<<<<<<< HEAD
 			"label": "Start Dev Server",
 			"type": "shell",
 			"command": "npm run dev",
 			"group": "build",
 			"isBackground": true,
 			"problemMatcher": []
+=======
+			"command": "cd client && vite --host 0.0.0.0 --port 3000",
+			"group": "build",
+			"isBackground": true,
+			"label": "Start Client Dev Server",
+			"type": "shell"
+>>>>>>> ad00a93 (🚀 Major Mobile-First Redesign & Persistent Navigation Implementation)
 		}
 	]
 }

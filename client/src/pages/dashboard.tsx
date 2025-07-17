@@ -1,600 +1,282 @@
-import { useQuery } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { 
-  TrendingUp, Users, Clock, Star, Play, Eye, Calendar, 
-  BarChart3, Activity, Zap, Target, Award, Heart,
-  ChevronRight, Plus, Filter
-} from "lucide-react";
-import { useAuth } from "@/hooks/useAuth";
+import React, { useState, useEffect } from "react";
 import { Link } from "wouter";
-
-interface WatchTime {
-  date: string;
-  hours: number;
-}
-
-interface UserStats {
-  totalShows: number;
-  totalHours: number;
-  averageRating: number;
-  completedShows: number;
-  watchingShows: number;
-  plannedShows: number;
-  droppedShows: number;
-  weeklyHours: WatchTime[];
-  monthlyHours: WatchTime[];
-  topGenres: { genre: string; count: number; hours: number }[];
-  recentActivity: any[];
-  streakDays: number;
-  personalBests: {
-    mostWatchedDay: { date: string; hours: number };
-    longestStreak: number;
-    mostShowsInMonth: number;
-    favoriteYear: string;
-  };
-}
-
-function StatCard({ 
-  title, 
-  value, 
-  subtitle, 
-  icon: Icon, 
-  trend, 
-  color = "teal" 
-}: {
-  title: string;
-  value: string | number;
-  subtitle?: string;
-  icon: any;
-  trend?: { value: number; label: string };
-  color?: string;
-}) {
-  const colorClasses = {
-    purple: "text-purple-400 bg-purple-500/10",
-    blue: "text-blue-400 bg-blue-500/10",
-    green: "text-green-400 bg-green-500/10",
-    orange: "text-orange-400 bg-orange-500/10",
-    pink: "text-pink-400 bg-pink-500/10",
-    yellow: "text-yellow-400 bg-yellow-500/10",
-    teal: "text-teal-400 bg-teal-500/10"
-  };
-
-  return (
-    <Card className="bg-gray-900/50 border-gray-800">
-      <CardContent className="p-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm font-medium text-gray-400">{title}</p>
-            <p className="text-2xl font-bold text-white">{value}</p>
-            {subtitle && (
-              <p className="text-xs text-gray-500">{subtitle}</p>
-            )}
-            {trend && (
-              <div className="flex items-center mt-1">
-                <TrendingUp className="h-3 w-3 text-green-400 mr-1" />
-                <span className="text-xs text-green-400">
-                  {trend.value > 0 ? '+' : ''}{trend.value}% {trend.label}
-                </span>
-              </div>
-            )}
-          </div>
-          <div className={`p-3 rounded-lg ${colorClasses[color as keyof typeof colorClasses]}`}>
-            <Icon className="h-6 w-6" />
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
-function WatchingProgress({ watchlist }: { watchlist: any[] }) {
-  const watchingShows = watchlist?.filter(item => item.status === 'watching') || [];
-  
-  return (
-    <Card className="bg-gray-900/50 border-gray-800">
-      <CardHeader>
-        <CardTitle className="flex items-center text-white">
-          <Play className="h-5 w-5 mr-2 text-green-400" />
-          Currently Watching
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {watchingShows.slice(0, 5).map((item: any) => (
-          <div key={item.id} className="space-y-2">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <img 
-                  src={item.show?.posterPath ? `https://image.tmdb.org/t/p/w92${item.show.posterPath}` : "/api/placeholder/40/60"}
-                  alt={item.show?.title}
-                  className="w-10 h-15 object-cover rounded"
-                />
-                <div>
-                  <p className="font-medium text-white text-sm">{item.show?.title}</p>
-                  <p className="text-xs text-gray-400">
-                    S{item.currentSeason} E{item.currentEpisode}
-                  </p>
-                </div>
-              </div>
-              <Button size="sm" variant="outline" className="border-gray-600">
-                <Play className="h-3 w-3 mr-1" />
-                Continue
-              </Button>
-            </div>
-            <Progress 
-              value={(item.totalEpisodesWatched / (item.show?.numberOfEpisodes || 1)) * 100} 
-              className="h-2"
-            />
-            <div className="flex justify-between text-xs text-gray-500">
-              <span>{item.totalEpisodesWatched} / {item.show?.numberOfEpisodes || 0} episodes</span>
-              <span>{Math.round((item.totalEpisodesWatched / (item.show?.numberOfEpisodes || 1)) * 100)}%</span>
-            </div>
-          </div>
-        ))}
-        
-        {watchingShows.length === 0 && (
-          <div className="text-center py-8">
-            <Eye className="h-12 w-12 text-gray-600 mx-auto mb-3" />
-            <p className="text-gray-400 mb-4">You're not watching anything yet</p>
-            <Link href="/explore">
-              <Button className="bg-purple-600 hover:bg-purple-700">
-                <Plus className="h-4 w-4 mr-2" />
-                Find Something to Watch
-              </Button>
-            </Link>
-          </div>
-        )}
-      </CardContent>
-    </Card>
-  );
-}
-
-function GenreBreakdown({ stats }: { stats: UserStats }) {
-  const totalShows = stats.topGenres?.reduce((sum, genre) => sum + genre.count, 0) || 1;
-  
-  return (
-    <Card className="bg-gray-900/50 border-gray-800">
-      <CardHeader>
-        <CardTitle className="flex items-center text-white">
-          <BarChart3 className="h-5 w-5 mr-2 text-blue-400" />
-          Your Genre Preferences
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {stats.topGenres?.slice(0, 6).map((genre, index) => (
-          <div key={genre.genre} className="space-y-2">
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-medium text-white">{genre.genre}</span>
-              <div className="text-right">
-                <span className="text-sm text-gray-400">{genre.count} shows</span>
-                <p className="text-xs text-gray-500">{genre.hours}h watched</p>
-              </div>
-            </div>
-            <Progress value={(genre.count / totalShows) * 100} className="h-2" />
-          </div>
-        )) || (
-          <div className="text-center py-4">
-            <p className="text-gray-400">Start watching shows to see your preferences!</p>
-          </div>
-        )}
-      </CardContent>
-    </Card>
-  );
-}
-
-function RecentActivity({ activities }: { activities: any[] }) {
-  return (
-    <Card className="bg-gray-900/50 border-gray-800">
-      <CardHeader>
-        <CardTitle className="flex items-center text-white">
-          <Activity className="h-5 w-5 mr-2 text-pink-400" />
-          Recent Activity
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-3">
-        {activities?.slice(0, 8).map((activity) => (
-          <div key={activity.id} className="flex items-center space-x-3 p-2 rounded-lg bg-gray-800/30">
-            <div className="w-2 h-2 rounded-full bg-purple-400" />
-            <div className="flex-1">
-              <p className="text-sm text-white">
-                You {activity.activityType === 'added_to_watchlist' && 'added'}
-                {activity.activityType === 'finished_show' && 'finished'}
-                {activity.activityType === 'rated_show' && 'rated'}
-                {activity.activityType === 'updated_progress' && 'updated progress on'}
-                {activity.activityType === 'started_watching' && 'started watching'}
-                <span className="text-purple-400 font-semibold"> {activity.show?.title}</span>
-              </p>
-              <p className="text-xs text-gray-500">
-                {new Date(activity.createdAt).toLocaleDateString()}
-              </p>
-            </div>
-          </div>
-        )) || (
-          <div className="text-center py-4">
-            <p className="text-gray-400">Your activity will appear here</p>
-          </div>
-        )}
-      </CardContent>
-    </Card>
-  );
-}
-
-function Achievements({ stats }: { stats: UserStats }) {
-  const achievements = [
-    {
-      title: "First Steps",
-      description: "Added your first show to watchlist",
-      icon: Target,
-      earned: stats.totalShows > 0,
-      color: "green"
-    },
-    {
-      title: "Binge Watcher",
-      description: "Watched 24 hours in a week",
-      icon: Zap,
-      earned: stats.weeklyHours?.some(w => w.hours >= 24),
-      color: "yellow"
-    },
-    {
-      title: "Completionist",
-      description: "Finished 10 shows",
-      icon: Award,
-      earned: stats.completedShows >= 10,
-      color: "purple"
-    },
-    {
-      title: "Critic",
-      description: "Rated 50 shows",
-      icon: Star,
-      earned: stats.totalShows >= 50, // Simplified for demo
-      color: "orange"
-    },
-    {
-      title: "Social Butterfly",
-      description: "Added 5 friends",
-      icon: Heart,
-      earned: false, // Will check friend count when available
-      color: "pink"
-    },
-    {
-      title: "Streak Master",
-      description: "7-day watching streak",
-      icon: Calendar,
-      earned: stats.streakDays >= 7,
-      color: "blue"
-    }
-  ];
-
-  const earnedCount = achievements.filter(a => a.earned).length;
-
-  return (
-    <Card className="bg-gray-900/50 border-gray-800">
-      <CardHeader>
-        <CardTitle className="flex items-center justify-between text-white">
-          <div className="flex items-center">
-            <Award className="h-5 w-5 mr-2 text-yellow-400" />
-            Achievements
-          </div>
-          <Badge variant="secondary" className="bg-yellow-600/20 text-yellow-400">
-            {earnedCount}/{achievements.length}
-          </Badge>
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="grid grid-cols-2 gap-3">
-          {achievements.map((achievement) => (
-            <div 
-              key={achievement.title}
-              className={`p-3 rounded-lg border ${
-                achievement.earned 
-                  ? 'bg-yellow-500/10 border-yellow-500/30' 
-                  : 'bg-gray-800/30 border-gray-700'
-              }`}
-            >
-              <div className="flex items-center space-x-2 mb-2">
-                <achievement.icon className={`h-4 w-4 ${
-                  achievement.earned ? 'text-yellow-400' : 'text-gray-500'
-                }`} />
-                <h4 className={`font-medium text-sm ${
-                  achievement.earned ? 'text-white' : 'text-gray-400'
-                }`}>
-                  {achievement.title}
-                </h4>
-              </div>
-              <p className={`text-xs ${
-                achievement.earned ? 'text-gray-300' : 'text-gray-500'
-              }`}>
-                {achievement.description}
-              </p>
-            </div>
-          ))}
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
+import { Button } from "../components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
+import { Input } from "../components/ui/input";
+import {
+  Search,
+  Plus,
+  Star,
+  Clock,
+  TrendingUp,
+  Users,
+  Play,
+  Heart,
+  BookOpen,
+  Settings,
+  LogOut
+} from "lucide-react";
+import { auth } from "../firebase/config";
+import { onAuthStateChanged, signOut, User } from "firebase/auth";
 
 export default function Dashboard() {
-  const { user, isAuthenticated, isLoading } = useAuth();
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const { data: watchlist } = useQuery({
-    queryKey: ['/api/watchlist', user?.id],
-    enabled: !!user?.id,
-  });
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+      setLoading(false);
+    });
 
-  const { data: stats } = useQuery({
-    queryKey: ['/api/user/stats', user?.id],
-    enabled: !!user?.id,
-  });
+    return () => unsubscribe();
+  }, []);
 
-  const { data: activities } = useQuery({
-    queryKey: ['/api/activity', user?.id],
-    enabled: !!user?.id,
-  });
-
-  const { data: recommendations } = useQuery({
-    queryKey: ['/api/recommendations', user?.id],
-    enabled: !!user?.id,
-  });
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-purple-950 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-purple-500"></div>
-      </div>
-    );
-  }
-
-  if (!isAuthenticated || !user) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-purple-950 flex items-center justify-center">
-        <Card className="bg-gray-900/50 border-gray-800 p-8 text-center max-w-md">
-          <CardContent>
-            <h2 className="text-2xl font-bold text-white mb-4">Access Required</h2>
-            <p className="text-gray-400 mb-6">Please sign in to view your dashboard</p>
-            <Link href="/api/login">
-              <Button className="bg-purple-600 hover:bg-purple-700">Sign In</Button>
-            </Link>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  const watchlistArray = Array.isArray(watchlist) ? watchlist : [];
-  const userStats: UserStats = stats || {
-    totalShows: watchlistArray.length,
-    totalHours: 0,
-    averageRating: 0,
-    completedShows: watchlistArray.filter(item => item.status === 'finished').length,
-    watchingShows: watchlistArray.filter(item => item.status === 'watching').length,
-    plannedShows: watchlistArray.filter(item => item.status === 'want_to_watch').length,
-    droppedShows: watchlistArray.filter(item => item.status === 'dropped').length,
-    weeklyHours: [],
-    monthlyHours: [],
-    topGenres: [],
-    recentActivity: [],
-    streakDays: 0,
-    personalBests: {
-      mostWatchedDay: { date: '', hours: 0 },
-      longestStreak: 0,
-      mostShowsInMonth: 0,
-      favoriteYear: '2024'
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      window.location.href = '/';
+    } catch (error) {
+      console.error('Logout error:', error);
     }
   };
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-purple-950">
-      <div className="container mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-white">
-              Welcome back, {user.firstName || 'there'}!
-            </h1>
-            <p className="text-gray-400 mt-1">
-              Here's your entertainment dashboard
-            </p>
-          </div>
-          <div className="flex space-x-3">
-            <Link href="/explore">
-              <Button className="bg-purple-600 hover:bg-purple-700">
-                <Plus className="h-4 w-4 mr-2" />
-                Add Shows
-              </Button>
-            </Link>
-            <Button variant="outline" className="border-gray-600 text-gray-300">
-              <Filter className="h-4 w-4 mr-2" />
-              Filter
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center">
+        <div className="text-white text-xl">Loading...</div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center">
+        <div className="text-center text-white">
+          <h1 className="text-2xl font-bold mb-4">Please Sign In</h1>
+          <Link href="/login">
+            <Button className="bg-gradient-to-r from-teal-600 to-blue-600">
+              Go to Login
             </Button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  const mockContent = [
+    { title: "Breaking Bad", type: "TV Show", status: "Watching", episodes: "S3 E12", rating: 5, image: "🎭" },
+    { title: "The Dark Knight", type: "Movie", status: "Completed", rating: 5, image: "🦇" },
+    { title: "Stranger Things", type: "TV Show", status: "To Watch", episodes: "S4 E1", rating: 4, image: "🔦" },
+    { title: "Inception", type: "Movie", status: "To Watch", rating: 5, image: "🌀" },
+  ];
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
+      {/* Header */}
+      <header className="border-b border-slate-800/50 bg-slate-950/50 backdrop-blur-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            {/* Logo */}
+            <Link href="/">
+              <div className="flex items-center space-x-2">
+                <div className="w-8 h-6 bg-gradient-to-br from-slate-700 to-slate-900 rounded-lg shadow-xl border-2 border-slate-600 relative">
+                  <div className="absolute inset-1 bg-gradient-to-br from-teal-500 via-cyan-500 to-blue-500 rounded-sm flex items-center justify-center">
+                    <div className="text-xs font-black text-white">B</div>
+                  </div>
+                </div>
+                <span className="text-lg font-bold text-white">
+                  <span className="font-black">Binge</span>
+                  <span className="bg-gradient-to-r from-teal-400 to-cyan-400 bg-clip-text text-transparent font-light">Board</span>
+                </span>
+              </div>
+            </Link>
+
+            {/* Search */}
+            <div className="flex-1 max-w-lg mx-8">
+              <div className="relative">
+                <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                <Input
+                  placeholder="Search movies, TV shows..."
+                  className="pl-10 bg-slate-800/50 border-slate-700 text-white placeholder:text-gray-400"
+                />
+              </div>
+            </div>
+
+            {/* User Menu */}
+            <div className="flex items-center space-x-4">
+              <span className="text-sm text-gray-300">
+                Welcome, {user.displayName || user.email}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleLogout}
+                className="border-slate-700 text-gray-300 hover:text-white"
+              >
+                <LogOut className="h-4 w-4 mr-2" />
+                Logout
+              </Button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Welcome Section */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-white mb-2">
+            Welcome back, {user.displayName?.split(' ')[0] || 'Binger'}! 🎬
+          </h1>
+          <p className="text-gray-400">
+            Ready to discover your next favorite show or movie?
+          </p>
+        </div>
+
+        {/* Quick Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <Card className="glass-effect border-slate-700/50">
+            <CardContent className="p-6">
+              <div className="flex items-center">
+                <Play className="h-8 w-8 text-teal-400" />
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-400">Currently Watching</p>
+                  <p className="text-2xl font-bold text-white">12</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="glass-effect border-slate-700/50">
+            <CardContent className="p-6">
+              <div className="flex items-center">
+                <Heart className="h-8 w-8 text-red-400" />
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-400">Favorites</p>
+                  <p className="text-2xl font-bold text-white">47</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="glass-effect border-slate-700/50">
+            <CardContent className="p-6">
+              <div className="flex items-center">
+                <BookOpen className="h-8 w-8 text-blue-400" />
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-400">To Watch</p>
+                  <p className="text-2xl font-bold text-white">23</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="glass-effect border-slate-700/50">
+            <CardContent className="p-6">
+              <div className="flex items-center">
+                <Clock className="h-8 w-8 text-purple-400" />
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-400">Hours Watched</p>
+                  <p className="text-2xl font-bold text-white">184</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Continue Watching */}
+        <div className="mb-8">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-bold text-white">Continue Watching</h2>
+            <Button variant="outline" size="sm" className="border-slate-700 text-gray-300">
+              <Plus className="h-4 w-4 mr-2" />
+              Add Content
+            </Button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {mockContent.map((item, index) => (
+              <Card key={index} className="glass-effect border-slate-700/50 hover:border-teal-500/30 transition-colors cursor-pointer">
+                <CardContent className="p-4">
+                  <div className="text-4xl mb-3 text-center">{item.image}</div>
+                  <h3 className="font-semibold text-white mb-1">{item.title}</h3>
+                  <p className="text-sm text-gray-400 mb-2">{item.type}</p>
+                  {item.episodes && (
+                    <p className="text-sm text-teal-400 mb-2">{item.episodes}</p>
+                  )}
+                  <div className="flex justify-between items-center">
+                    <span className={`text-xs px-2 py-1 rounded-full ${item.status === 'Watching' ? 'bg-green-500/20 text-green-400' :
+                        item.status === 'Completed' ? 'bg-blue-500/20 text-blue-400' :
+                          'bg-yellow-500/20 text-yellow-400'
+                      }`}>
+                      {item.status}
+                    </span>
+                    <div className="flex">
+                      {[...Array(5)].map((_, i) => (
+                        <Star
+                          key={i}
+                          className={`h-3 w-3 ${i < item.rating ? 'text-yellow-400 fill-current' : 'text-gray-600'}`}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
           </div>
         </div>
 
-        <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="bg-gray-900/50 border-gray-800">
-            <TabsTrigger value="overview" className="data-[state=active]:bg-purple-600">
-              Overview
-            </TabsTrigger>
-            <TabsTrigger value="analytics" className="data-[state=active]:bg-purple-600">
-              Analytics
-            </TabsTrigger>
-            <TabsTrigger value="social" className="data-[state=active]:bg-purple-600">
-              Social
-            </TabsTrigger>
-          </TabsList>
+        {/* Quick Actions */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <Card className="glass-effect border-slate-700/50">
+            <CardHeader>
+              <CardTitle className="text-white flex items-center">
+                <TrendingUp className="h-5 w-5 mr-2 text-teal-400" />
+                Trending Now
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-gray-400 text-sm">See what's popular this week</p>
+              <Button className="w-full mt-4 bg-gradient-to-r from-teal-600 to-blue-600">
+                Explore Trending
+              </Button>
+            </CardContent>
+          </Card>
 
-          <TabsContent value="overview" className="space-y-6">
-            {/* Quick Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <StatCard
-                title="Total Shows"
-                value={userStats.totalShows}
-                subtitle="In your library"
-                icon={Eye}
-                trend={{ value: 12, label: "this month" }}
-                color="purple"
-              />
-              <StatCard
-                title="Hours Watched"
-                value={`${userStats.totalHours}h`}
-                subtitle="Total watch time"
-                icon={Clock}
-                trend={{ value: 8, label: "this week" }}
-                color="blue"
-              />
-              <StatCard
-                title="Completed"
-                value={userStats.completedShows}
-                subtitle="Shows finished"
-                icon={Award}
-                color="green"
-              />
-              <StatCard
-                title="Current Streak"
-                value={`${userStats.streakDays} days`}
-                subtitle="Daily watching"
-                icon={Zap}
-                color="orange"
-              />
-            </div>
+          <Card className="glass-effect border-slate-700/50">
+            <CardHeader>
+              <CardTitle className="text-white flex items-center">
+                <Users className="h-5 w-5 mr-2 text-purple-400" />
+                Social Feed
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-gray-400 text-sm">See what your friends are watching</p>
+              <Link href="/social">
+                <Button className="w-full mt-4 bg-gradient-to-r from-purple-600 to-pink-600">
+                  View Social Feed
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
 
-            {/* Main Content */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <div className="lg:col-span-2 space-y-6">
-                <WatchingProgress watchlist={watchlistArray} />
-                <RecentActivity activities={activities || []} />
-              </div>
-              
-              <div className="space-y-6">
-                <GenreBreakdown stats={userStats} />
-                <Achievements stats={userStats} />
-              </div>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="analytics" className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <Card className="bg-gray-900/50 border-gray-800">
-                <CardHeader>
-                  <CardTitle className="text-white">Watching Trends</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="h-64 flex items-center justify-center text-gray-400">
-                    <div className="text-center">
-                      <BarChart3 className="h-12 w-12 mx-auto mb-3" />
-                      <p>Analytics charts coming soon</p>
-                      <p className="text-sm text-gray-500">Track your viewing patterns over time</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="bg-gray-900/50 border-gray-800">
-                <CardHeader>
-                  <CardTitle className="text-white">Personal Bests</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-400">Most watched in a day</span>
-                    <span className="text-white font-semibold">
-                      {userStats.personalBests.mostWatchedDay.hours}h
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-400">Longest streak</span>
-                    <span className="text-white font-semibold">
-                      {userStats.personalBests.longestStreak} days
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-400">Shows added in a month</span>
-                    <span className="text-white font-semibold">
-                      {userStats.personalBests.mostShowsInMonth}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-400">Favorite year</span>
-                    <span className="text-white font-semibold">
-                      {userStats.personalBests.favoriteYear}
-                    </span>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="social" className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <Card className="bg-gray-900/50 border-gray-800">
-                <CardHeader>
-                  <CardTitle className="flex items-center justify-between text-white">
-                    Friends Activity
-                    <Link href="/friends">
-                      <Button variant="ghost" size="sm">
-                        View All <ChevronRight className="h-4 w-4 ml-1" />
-                      </Button>
-                    </Link>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-center py-8">
-                    <Users className="h-12 w-12 text-gray-600 mx-auto mb-3" />
-                    <p className="text-gray-400 mb-4">Connect with friends to see their activity</p>
-                    <Link href="/friends">
-                      <Button className="bg-purple-600 hover:bg-purple-700">
-                        Find Friends
-                      </Button>
-                    </Link>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="bg-gray-900/50 border-gray-800">
-                <CardHeader>
-                  <CardTitle className="text-white">Recommendations</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {recommendations && recommendations.length > 0 ? (
-                    <div className="space-y-3">
-                      {recommendations.slice(0, 3).map((rec: any) => (
-                        <div key={rec.id} className="flex items-center space-x-3 p-2 rounded-lg bg-gray-800/30">
-                          <img 
-                            src={rec.show?.posterPath ? `https://image.tmdb.org/t/p/w92${rec.show.posterPath}` : "/api/placeholder/40/60"}
-                            alt={rec.show?.title}
-                            className="w-10 h-15 object-cover rounded"
-                          />
-                          <div className="flex-1">
-                            <p className="text-sm font-medium text-white">{rec.show?.title}</p>
-                            <p className="text-xs text-gray-400">{rec.reason}</p>
-                          </div>
-                        </div>
-                      ))}
-                      <Link href="/recommendations">
-                        <Button variant="outline" className="w-full border-gray-600 text-gray-300">
-                          View All Recommendations
-                        </Button>
-                      </Link>
-                    </div>
-                  ) : (
-                    <div className="text-center py-8">
-                      <TrendingUp className="h-12 w-12 text-gray-600 mx-auto mb-3" />
-                      <p className="text-gray-400 mb-4">Add more shows to get personalized recommendations</p>
-                      <Link href="/explore">
-                        <Button className="bg-purple-600 hover:bg-purple-700">
-                          Explore Shows
-                        </Button>
-                      </Link>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-        </Tabs>
-      </div>
+          <Card className="glass-effect border-slate-700/50">
+            <CardHeader>
+              <CardTitle className="text-white flex items-center">
+                <Settings className="h-5 w-5 mr-2 text-gray-400" />
+                Settings
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-gray-400 text-sm">Customize your experience</p>
+              <Button variant="outline" className="w-full mt-4 border-slate-700 text-gray-300">
+                Manage Settings
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </main>
     </div>
   );
 }

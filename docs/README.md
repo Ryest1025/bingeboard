@@ -20,11 +20,9 @@ This directory contains all project documentation, guides, and technical referen
 - `DISCOVER_MOOD_FILTERING.md` - Mood-based content filtering
 
 ### Development & Testing
-- `SUPABASE_CONNECTION_TEST.md` - Database connection testing
 - `FILE_UPLOAD_TEST_SUMMARY.md` - File upload system testing
 
 ### Legal & Compliance
-- `REPLIT_INTEGRATIONS_GUIDE.md` - Replit platform integration
 - `SSL_CERTIFICATE_INFO.md` - SSL certificate configuration
 
 ## 🔧 Quick Start
@@ -38,7 +36,6 @@ This directory contains all project documentation, guides, and technical referen
 
 For mobile authentication issues, refer to:
 - `AUTHENTICATION_FINAL_SOLUTION.md` - Primary authentication guide
-- `OAUTH_SETUP_REQUIRED.md` - OAuth provider setup
 - `FIREBASE_CONFIG_GUIDE.md` - Firebase configuration
 
 ## 🏗️ Architecture

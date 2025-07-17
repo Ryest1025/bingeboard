@@ -1,5 +1,10 @@
 import { useEffect, useState } from "react";
+<<<<<<< HEAD
 // Remove static Firebase imports to prevent conflicts
+=======
+import { onAuthStateChanged, User as FirebaseUser } from "firebase/auth";
+import { auth } from "@/firebase/config";
+>>>>>>> ad00a93 (🚀 Major Mobile-First Redesign & Persistent Navigation Implementation)
 
 interface AuthState {
   user: any;

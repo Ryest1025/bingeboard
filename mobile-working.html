@@ -411,6 +411,16 @@
         document.addEventListener('DOMContentLoaded', () => {
             console.log('Mobile page fully loaded');
             
+            // Check if user needs onboarding
+            const onboardingCompleted = localStorage.getItem('bingeboard_onboarding_completed');
+            if (!onboardingCompleted) {
+                console.log('🎯 Redirecting to mobile onboarding...');
+                window.location.href = '/mobile-onboarding.html';
+                return;
+            }
+            
+            console.log('✅ User has completed onboarding, proceeding with app');
+            
             // Test backend connectivity
             fetch('/api/tmdb/trending')
                 .then(response => {

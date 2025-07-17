@@ -25,9 +25,13 @@ export function TopNav() {
     enabled: isAuthenticated,
   });
 
+<<<<<<< HEAD
   const unreadCount = notifications && Array.isArray(notifications) 
     ? notifications.filter((n: any) => !n.isRead).length 
     : 0;
+=======
+  const unreadCount = (notifications || []).filter((n: any) => !n.isRead).length;
+>>>>>>> ad00a93 (🚀 Major Mobile-First Redesign & Persistent Navigation Implementation)
 
   if (!isAuthenticated) {
     return (
@@ -74,7 +78,7 @@ export function TopNav() {
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
-          <Link href="/">
+          <Link href="/dashboard">
             <div className="flex items-center space-x-3 cursor-pointer group">
               <div className="relative">
                 {/* TV Frame */}

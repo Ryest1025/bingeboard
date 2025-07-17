@@ -26,20 +26,26 @@
 
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
-import { useToast } from "@/hooks/use-toast";
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
+import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
+import { Checkbox } from "../components/ui/checkbox";
+// import { useToast } from "../hooks/use-toast";
 import { Eye, EyeOff, Mail, Lock } from "lucide-react";
 import { SiGoogle, SiFacebook } from "react-icons/si";
+<<<<<<< HEAD
 import { signInWithPopup, getRedirectResult, linkWithCredential, fetchSignInMethodsForEmail, FacebookAuthProvider } from 'firebase/auth';
 import { auth, googleProvider, facebookProvider } from '@/firebase/config';
 import { signInWithEmail, registerWithEmail } from '@/lib/permanentAuth';
+=======
+import { signInWithRedirect, getRedirectResult, linkWithCredential, fetchSignInMethodsForEmail, FacebookAuthProvider } from 'firebase/auth';
+import { getAuth, GoogleAuthProvider } from "firebase/auth";
+// import { signInWithEmail, registerWithEmail } from '../lib/permanentAuth';
+>>>>>>> ad00a93 (🚀 Major Mobile-First Redesign & Persistent Navigation Implementation)
 
 export default function LoginSimple() {
   const [, setLocation] = useLocation();
-  const { toast } = useToast();
+  // const { toast } = useToast();
   const [isLogin, setIsLogin] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -51,6 +57,8 @@ export default function LoginSimple() {
     firstName: "",
     lastName: ""
   });
+
+  const auth = getAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -84,7 +92,7 @@ export default function LoginSimple() {
       const data = await response.json();
 
       if (response.ok) {
-        toast({
+        console.log({
           title: isLogin ? "Login successful" : "Registration successful",
           description: isLogin ? "Welcome back!" : "Account created successfully!",
         });
@@ -101,7 +109,7 @@ export default function LoginSimple() {
         // Force a full page reload to ensure proper session handling
         window.location.href = "/";
       } else {
-        toast({
+        console.log({
           title: "Error",
           description: data.message || "Authentication failed. Please try again.",
           variant: "destructive",
@@ -109,7 +117,7 @@ export default function LoginSimple() {
       }
     } catch (error: any) {
       console.error('Authentication error:', error);
-      toast({
+      console.log({
         title: "Error",
         description: "Network error. Please try again.",
         variant: "destructive",
@@ -121,7 +129,7 @@ export default function LoginSimple() {
 
   const handleForgotPassword = async () => {
     if (!formData.email) {
-      toast({
+      console.log({
         title: "Email required",
         description: "Please enter your email address first.",
         variant: "destructive",
@@ -142,20 +150,20 @@ export default function LoginSimple() {
       const data = await response.json();
 
       if (response.ok) {
-        toast({
+        console.log({
           title: "Password reset email sent",
           description: "Check your email for password reset instructions.",
         });
         setShowForgotPassword(false);
       } else {
-        toast({
+        console.log({
           title: "Error",
           description: data.message || "Failed to send password reset email",
           variant: "destructive",
         });
       }
     } catch (error) {
-      toast({
+      console.log({
         title: "Error",
         description: "Network error. Please try again.",
         variant: "destructive",
@@ -191,7 +199,7 @@ export default function LoginSimple() {
           
           if (response.ok) {
             console.log('✅ Backend session created successfully');
-            toast({
+            console.log({
               title: "Login successful",
               description: "Welcome to BingeBoard!",
             });
@@ -200,7 +208,7 @@ export default function LoginSimple() {
             window.location.href = '/';
           } else {
             console.error('❌ Failed to create backend session');
-            toast({
+            console.log({
               title: "Login failed",
               description: "Failed to complete authentication. Please try again.",
               variant: "destructive",
@@ -213,7 +221,7 @@ export default function LoginSimple() {
       } catch (error: any) {
         console.error('❌ OAuth redirect error:', error);
         if (!error.message.includes('popup-closed-by-user')) {
-          toast({
+          console.log({
             title: "Authentication error",
             description: error.message || "Failed to complete authentication",
             variant: "destructive",
@@ -279,6 +287,7 @@ export default function LoginSimple() {
     } catch (error: any) {
       console.error('❌ Google authentication error:', error);
       
+<<<<<<< HEAD
       if (error.code === 'auth/popup-closed-by-user') {
         toast({
           title: "Authentication cancelled",
@@ -300,6 +309,13 @@ export default function LoginSimple() {
       }
     } finally {
       setIsLoading(false);
+=======
+      console.log({
+        title: "Authentication Error",
+        description: "Failed to start Google authentication",
+        variant: "destructive",
+      });
+>>>>>>> ad00a93 (🚀 Major Mobile-First Redesign & Persistent Navigation Implementation)
     }
   };
 
@@ -349,6 +365,7 @@ export default function LoginSimple() {
     } catch (error: any) {
       console.error('❌ Facebook authentication error:', error);
       
+<<<<<<< HEAD
       if (error.code === 'auth/popup-closed-by-user') {
         toast({
           title: "Authentication cancelled",
@@ -370,6 +387,13 @@ export default function LoginSimple() {
       }
     } finally {
       setIsLoading(false);
+=======
+      console.log({
+        title: "Authentication Error",
+        description: "Failed to start Facebook authentication",
+        variant: "destructive",
+      });
+>>>>>>> ad00a93 (🚀 Major Mobile-First Redesign & Persistent Navigation Implementation)
     }
   };
 

@@ -7,6 +7,7 @@ import {
 } from "drizzle-orm/sqlite-core";
 import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
+<<<<<<< HEAD
 import { z } from "zod";
 
 // Session storage table (required for Express sessions)
@@ -21,12 +22,17 @@ export const sessions = sqliteTable(
 );
 
 // User storage table (required for Firebase Auth)
+=======
+
+// User storage table
+>>>>>>> ad00a93 (🚀 Major Mobile-First Redesign & Persistent Navigation Implementation)
 export const users = sqliteTable("users", {
   id: text("id").primaryKey().notNull(),
   email: text("email"),
   username: text("username"),
   firstName: text("first_name"),
   lastName: text("last_name"),
+<<<<<<< HEAD
   phoneNumber: text("phone_number"), // For SMS notifications and password reset
   profileImageUrl: text("profile_image_url"),
   passwordHash: text("password_hash"), // For email authentication
@@ -39,6 +45,20 @@ export const users = sqliteTable("users", {
   onboardingCompleted: integer("onboarding_completed").default(0), // Boolean as int
   createdAt: integer("created_at"), // Unix timestamp
   updatedAt: integer("updated_at"), // Unix timestamp
+=======
+  phoneNumber: text("phone_number"),
+  profileImageUrl: text("profile_image_url"),
+  passwordHash: text("password_hash"),
+  authProvider: text("auth_provider").default("firebase"),
+  facebookId: text("facebook_id"),
+  googleId: text("google_id"),
+  emailVerified: integer("email_verified").default(0),
+  resetToken: text("reset_token"),
+  resetTokenExpires: integer("reset_token_expires"),
+  onboardingCompleted: integer("onboarding_completed").default(0),
+  createdAt: integer("created_at"),
+  updatedAt: integer("updated_at"),
+>>>>>>> ad00a93 (🚀 Major Mobile-First Redesign & Persistent Navigation Implementation)
 });
 
 // TV Shows table
@@ -147,11 +167,39 @@ export const userPreferences = sqliteTable("user_preferences", {
   adultContent: integer("adult_content").default(0), // Boolean as int
   notificationSettings: text("notification_settings"), // JSON as text
   privacySettings: text("privacy_settings"), // JSON as text
+<<<<<<< HEAD
+=======
+  preferredNetworks: text("preferred_networks"), // JSON as text
+  watchingHabits: text("watching_habits"), // JSON as text
+  contentRating: text("content_rating").default("All"),
+  languagePreferences: text("language_preferences"), // JSON as text
+  aiPersonality: text("ai_personality").default("balanced"),
+  notificationFrequency: text("notification_frequency").default("weekly"),
+  favoriteSports: text("favorite_sports"), // JSON as text
+  favoriteTeams: text("favorite_teams"), // JSON as text
+  sportsNotifications: integer("sports_notifications").default(1), // Boolean as int
+  onboardingCompleted: integer("onboarding_completed").default(0), // Boolean as int
+>>>>>>> ad00a93 (🚀 Major Mobile-First Redesign & Persistent Navigation Implementation)
   createdAt: integer("created_at"),
   updatedAt: integer("updated_at"),
 });
 
+<<<<<<< HEAD
 // Password reset codes table (for SMS/email codes)
+=======
+// Sessions table
+export const sessions = sqliteTable(
+  "sessions",
+  {
+    sid: text("sid").primaryKey(),
+    sess: text("sess").notNull(), // JSON as text in SQLite
+    expire: integer("expire").notNull(), // Unix timestamp
+  },
+  (table) => [index("IDX_session_expire").on(table.expire)],
+);
+
+// Password reset codes table
+>>>>>>> ad00a93 (🚀 Major Mobile-First Redesign & Persistent Navigation Implementation)
 export const passwordResetCodes = sqliteTable("password_reset_codes", {
   id: integer("id").primaryKey(),
   userId: text("user_id").notNull(),
@@ -177,5 +225,40 @@ export type WatchHistory = typeof watchHistory.$inferSelect;
 export type NewWatchHistory = typeof watchHistory.$inferInsert;
 export type Watchlist = typeof watchlist.$inferSelect;
 export type NewWatchlist = typeof watchlist.$inferInsert;
+<<<<<<< HEAD
 export type PasswordResetCode = typeof passwordResetCodes.$inferSelect;
 export type NewPasswordResetCode = typeof passwordResetCodes.$inferInsert;
+=======
+export type UserPreferences = typeof userPreferences.$inferSelect;
+export type NewUserPreferences = typeof userPreferences.$inferInsert;
+export type PasswordResetCode = typeof passwordResetCodes.$inferSelect;
+export type NewPasswordResetCode = typeof passwordResetCodes.$inferInsert;
+
+// Relations
+export const usersRelations = relations(users, ({ many }) => ({
+  watchHistory: many(watchHistory),
+  watchlist: many(watchlist),
+  preferences: many(userPreferences),
+}));
+
+export const watchHistoryRelations = relations(watchHistory, ({ one }) => ({
+  user: one(users, {
+    fields: [watchHistory.userId],
+    references: [users.id],
+  }),
+}));
+
+export const watchlistRelations = relations(watchlist, ({ one }) => ({
+  user: one(users, {
+    fields: [watchlist.userId],
+    references: [users.id],
+  }),
+}));
+
+export const userPreferencesRelations = relations(userPreferences, ({ one }) => ({
+  user: one(users, {
+    fields: [userPreferences.userId],
+    references: [users.id],
+  }),
+}));
+>>>>>>> ad00a93 (🚀 Major Mobile-First Redesign & Persistent Navigation Implementation)
