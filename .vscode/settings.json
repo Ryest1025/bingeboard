@@ -1,0 +1,23 @@
+{
+<<<<<<< HEAD
+  "files.exclude": {
+    "**/.git": true,
+    "**/node_modules": true,
+    "**/dist": true
+  },
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/dist": true
+  },
+  "git.enabled": true,
+  "git.blame.editorDecoration.enabled": true,
+  "github.copilot.nextEditSuggestions.enabled": false,
+  "git.diagnosticsCommitHook.enabled": true,
+  "github.copilot.chat.codesearch.enabled": true,
+  "github.copilot.chat.languageContext.fix.typescript.enabled": true,
+  "github.copilot.chat.languageContext.inline.typescript.enabled": true
+}
+=======
+    "CodeGPT.apiKey": "OpenAI"
+}
+>>>>>>> ad00a93 (🚀 Major Mobile-First Redesign & Persistent Navigation Implementation)

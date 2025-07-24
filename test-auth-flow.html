@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BingeBoard Auth Flow Test</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            max-width: 800px; 
+            margin: 0 auto; 
+            padding: 20px;
+            background: #1a1a1a;
+            color: #fff;
+        }
+        button { 
+            margin: 10px; 
+            padding: 10px 20px; 
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .status { 
+            background: #2a2a2a; 
+            padding: 15px; 
+            margin: 10px 0; 
+            border-radius: 5px;
+            border-left: 4px solid #007bff;
+        }
+        .error { border-left-color: #dc3545; }
+        .success { border-left-color: #28a745; }
+        pre { 
+            background: #000; 
+            padding: 10px; 
+            overflow-x: auto;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 BingeBoard Authentication Flow Test</h1>
+    
+    <div class="status">
+        <h3>Current Status</h3>
+        <div id="current-status">Loading...</div>
+    </div>
+
+    <h3>🔍 Test Actions</h3>
+    <button onclick="checkAuthUser()">1. Check /api/auth/user</button>
+    <button onclick="testFirebaseConnection()">2. Test Firebase Connection</button>
+    <button onclick="clearAllAuth()">3. Clear All Auth</button>
+    <button onclick="goToLogin()">4. Go to Login Page</button>
+
+    <div id="test-results"></div>
+
+    <script type="module">
+        // Import Firebase
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+
+        // Firebase config (simplified)
+        const firebaseConfig = {
+            apiKey: "AIzaSyC8ZhCxv68DjN2kAXJf_7wRkqMhj8cD6AI",
+            authDomain: "bingeboardapp.firebaseapp.com",
+            projectId: "bingeboardapp"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+
+        window.firebaseAuth = auth;
+
+        function log(message, isError = false, isSuccess = false) {
+            const results = document.getElementById('test-results');
+            const div = document.createElement('div');
+            div.className = `status ${isError ? 'error' : isSuccess ? 'success' : ''}`;
+            div.innerHTML = `<pre>${typeof message === 'object' ? JSON.stringify(message, null, 2) : message}</pre>`;
+            results.appendChild(div);
+            results.scrollTop = results.scrollHeight;
+        }
+
+        // Check auth state changes
+        onAuthStateChanged(auth, (user) => {
+            const status = document.getElementById('current-status');
+            if (user) {
+                status.innerHTML = `
+                    <strong>✅ Firebase User Found:</strong><br>
+                    Email: ${user.email}<br>
+                    UID: ${user.uid}<br>
+                    Verified: ${user.emailVerified}
+                `;
+                log('✅ Firebase auth state changed - User logged in', false, true);
+            } else {
+                status.innerHTML = '<strong>❌ No Firebase User</strong>';
+                log('❌ Firebase auth state changed - No user');
+            }
+        });
+
+        // Test functions
+        window.checkAuthUser = async function() {
+            try {
+                log('🔍 Testing /api/auth/user endpoint...');
+                const response = await fetch('/api/auth/user', {
+                    credentials: 'include'
+                });
+                
+                if (response.ok) {
+                    const userData = await response.json();
+                    log('✅ /api/auth/user SUCCESS:', false, true);
+                    log(userData, false, true);
+                } else {
+                    log(`❌ /api/auth/user FAILED: ${response.status} ${response.statusText}`, true);
+                    const errorText = await response.text();
+                    log(`Response: ${errorText}`, true);
+                }
+            } catch (error) {
+                log(`❌ Network error: ${error.message}`, true);
+            }
+        };
+
+        window.testFirebaseConnection = async function() {
+            try {
+                log('🔍 Testing Firebase connection...');
+                const user = auth.currentUser;
+                
+                if (user) {
+                    log('✅ Firebase user found:', false, true);
+                    log({
+                        email: user.email,
+                        uid: user.uid,
+                        emailVerified: user.emailVerified
+                    }, false, true);
+                    
+                    // Test getting ID token
+                    try {
+                        const token = await user.getIdToken();
+                        log('✅ Firebase ID token obtained (truncated):', false, true);
+                        log(token.substring(0, 50) + '...', false, true);
+                    } catch (tokenError) {
+                        log(`❌ Failed to get ID token: ${tokenError.message}`, true);
+                    }
+                } else {
+                    log('❌ No Firebase user found. User needs to log in.', true);
+                }
+            } catch (error) {
+                log(`❌ Firebase test error: ${error.message}`, true);
+            }
+        };
+
+        window.clearAllAuth = function() {
+            log('🧹 Clearing all authentication data...');
+            
+            // Sign out from Firebase
+            auth.signOut().then(() => {
+                log('✅ Firebase sign out successful', false, true);
+            }).catch((error) => {
+                log(`❌ Firebase sign out error: ${error.message}`, true);
+            });
+            
+            // Clear session cookies
+            fetch('/api/auth/logout', { 
+                method: 'POST', 
+                credentials: 'include' 
+            }).then(() => {
+                log('✅ Backend session cleared', false, true);
+            }).catch((error) => {
+                log(`❌ Backend logout error: ${error.message}`, true);
+            });
+            
+            // Clear local storage
+            localStorage.clear();
+            sessionStorage.clear();
+            log('✅ Local storage cleared', false, true);
+            
+            setTimeout(() => {
+                location.reload();
+            }, 1000);
+        };
+
+        window.goToLogin = function() {
+            window.location.href = '/login';
+        };
+
+        // Auto-run initial status check
+        setTimeout(checkAuthUser, 1000);
+    </script>
+</body>
+</html>

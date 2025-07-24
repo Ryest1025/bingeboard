@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BingeBoard Authentication Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .button {
+            background: #4285f4;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 16px;
+        }
+        .button:hover {
+            background: #357ae8;
+        }
+        .status {
+            font-weight: bold;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .info { background: #d1ecf1; color: #0c5460; }
+    </style>
+</head>
+<body>
+    <h1>🔧 BingeBoard Authentication Test</h1>
+    
+    <div class="test-section">
+        <h2>Current Status</h2>
+        <div id="authStatus" class="status info">Checking authentication status...</div>
+        <div id="userInfo"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Test Login Options</h2>
+        <button class="button" onclick="openMainApp()">🚀 Open Main BingeBoard App</button>
+        <button class="button" onclick="testDirectAPI()">🧪 Test API Directly</button>
+        <button class="button" onclick="checkFirebaseStatus()">🔍 Check Firebase Status</button>
+    </div>
+    
+    <div class="test-section">
+        <h2>Instructions</h2>
+        <ol>
+            <li><strong>Click "Open Main BingeBoard App"</strong> to go to the main application</li>
+            <li><strong>Look for the debug panel</strong> in the top-right corner (black box with red border)</li>
+            <li><strong>Click the login button</strong> in that debug panel</li>
+            <li><strong>Complete Google OAuth</strong> when the popup appears</li>
+            <li><strong>Return here</strong> and click "Test API Directly" to verify authentication</li>
+        </ol>
+    </div>
+    
+    <div class="test-section">
+        <h2>Expected Results</h2>
+        <ul>
+            <li>✅ Before login: API returns <code>401 Unauthorized</code></li>
+            <li>✅ After login: API returns <code>200 OK</code> with user data</li>
+            <li>✅ Debug panel changes from "❌ NOT LOGGED IN" to "✅ LOGGED IN"</li>
+            <li>✅ Console shows Firebase user details and ID token</li>
+        </ul>
+    </div>
+
+    <script>
+        function openMainApp() {
+            window.open('/', '_blank');
+        }
+        
+        async function testDirectAPI() {
+            const statusDiv = document.getElementById('authStatus');
+            const userDiv = document.getElementById('userInfo');
+            
+            try {
+                statusDiv.textContent = 'Testing API...';
+                statusDiv.className = 'status info';
+                
+                const response = await fetch('/api/auth/user');
+                const data = await response.json();
+                
+                if (response.ok) {
+                    statusDiv.textContent = '✅ SUCCESS: User is authenticated!';
+                    statusDiv.className = 'status success';
+                    userDiv.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+                } else {
+                    statusDiv.textContent = `❌ Not authenticated: ${data.message || 'Unknown error'}`;
+                    statusDiv.className = 'status error';
+                    userDiv.textContent = 'Please complete login first.';
+                }
+            } catch (error) {
+                statusDiv.textContent = `❌ Error: ${error.message}`;
+                statusDiv.className = 'status error';
+                userDiv.textContent = '';
+            }
+        }
+        
+        function checkFirebaseStatus() {
+            if (window.firebaseAuth && window.firebaseAuth.currentUser) {
+                alert(`✅ Firebase user: ${window.firebaseAuth.currentUser.email}`);
+            } else {
+                alert('❌ No Firebase user found - please login first');
+            }
+        }
+        
+        // Initial status check
+        testDirectAPI();
+    </script>
+</body>
+</html>

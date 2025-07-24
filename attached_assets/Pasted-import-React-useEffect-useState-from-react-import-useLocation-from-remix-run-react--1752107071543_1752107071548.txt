@@ -1,0 +1,263 @@
+import React, { useEffect, useState } from "react";
+import { useLocation } from "@remix-run/react"; // or your router's useLocation
+import { useToast } from "@/components/ui/use-toast";
+import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { loginSchema, registerSchema } from "@/schemas/authSchemas";
+import { apiRequest } from "@/utils/apiRequest";
+import { queryClient } from "@/utils/queryClient";
+
+type LoginFormData = React.infer<typeof loginSchema>;
+type RegisterFormData = React.infer<typeof registerSchema>;
+
+export default function Login() {
+  const [, setLocation] = useLocation();
+  const { toast } = useToast();
+  const [isLogin, setIsLogin] = useState(true);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  const {
+    signInWithGoogle,
+    signInWithFacebook,
+    signInWithEmail,
+    signUpWithEmail,
+    user,
+    loading,
+  } = useSupabaseAuth();
+
+  useEffect(() => {
+    if (user) setLocation("/");
+  }, [user, setLocation]);
+
+  // Helper to handle Firebase ID token backend auth
+  async function handleFirebaseBackendAuth(firebaseUser: any) {
+    try {
+      const idToken = await firebaseUser.getIdToken();
+      const response = await apiRequest("POST", "/api/auth/firebase", { idToken });
+      const authData = await response.json();
+
+      toast({
+        title: "Success!",
+        description: "You've been logged in successfully.",
+      });
+
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+
+      setTimeout(() => {
+        setLocation("/");
+      }, 1000);
+    } catch (error: any) {
+      console.error("Backend authentication error:", error);
+      toast({
+        title: "Authentication Error",
+        description: "Failed to complete login process.",
+        variant: "destructive",
+      });
+    }
+  }
+
+  // Wrap social login calls to handle backend auth
+  async function onGoogleLogin() {
+    try {
+      const result = await signInWithGoogle();
+      if (result?.user) {
+        await handleFirebaseBackendAuth(result.user);
+      }
+    } catch (error: any) {
+      toast({
+        title: "Google Login Failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  }
+
+  async function onFacebookLogin() {
+    try {
+      const result = await signInWithFacebook();
+      if (result?.user) {
+        await handleFirebaseBackendAuth(result.user);
+      }
+    } catch (error: any) {
+      toast({
+        title: "Facebook Login Failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  }
+
+  const loginForm = useForm<LoginFormData>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: { email: "", password: "" },
+  });
+
+  const registerForm = useForm<RegisterFormData>({
+    resolver: zodResolver(registerSchema),
+    defaultValues: { email: "", password: "", confirmPassword: "" },
+  });
+
+  async function handleLogin(data: LoginFormData) {
+    try {
+      const result = await signInWithEmail(data.email, data.password);
+      if (result?.user) {
+        await handleFirebaseBackendAuth(result.user);
+      }
+      toast({ title: "Logged in!", variant: "success" });
+    } catch (error: any) {
+      toast({ title: "Login failed", description: error.message, variant: "destructive" });
+    }
+  }
+
+  async function handleRegister(data: RegisterFormData) {
+    if (data.password !== data.confirmPassword) {
+      toast({ title: "Error", description: "Passwords do not match", variant: "destructive" });
+      return;
+    }
+
+    try {
+      const result = await signUpWithEmail(data.email, data.password);
+      if (result?.user) {
+        await handleFirebaseBackendAuth(result.user);
+      }
+      toast({ title: "Account created!", variant: "success" });
+      setIsLogin(true);
+    } catch (error: any) {
+      toast({ title: "Registration failed", description: error.message, variant: "destructive" });
+    }
+  }
+
+  return (
+    <div className="max-w-md mx-auto p-6 bg-slate-900 rounded-lg text-white">
+      <h2 className="text-2xl font-bold mb-6">{isLogin ? "Login" : "Register"}</h2>
+
+      {/* Toggle */}
+      <button
+        onClick={() => setIsLogin(!isLogin)}
+        className="mb-6 underline text-cyan-400"
+        type="button"
+      >
+        {isLogin ? "Need to create an account? Register" : "Already have an account? Login"}
+      </button>
+
+      {isLogin ? (
+        <form onSubmit={loginForm.handleSubmit(handleLogin)} className="space-y-4">
+          <input
+            type="email"
+            placeholder="Email"
+            {...loginForm.register("email")}
+            className="w-full p-2 rounded bg-slate-800 text-white"
+          />
+          {loginForm.formState.errors.email && (
+            <p className="text-red-500">{loginForm.formState.errors.email.message}</p>
+          )}
+
+          <div className="relative">
+            <input
+              type={showPassword ? "text" : "password"}
+              placeholder="Password"
+              {...loginForm.register("password")}
+              className="w-full p-2 rounded bg-slate-800 text-white"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-2 top-2 text-cyan-400"
+            >
+              {showPassword ? "Hide" : "Show"}
+            </button>
+          </div>
+          {loginForm.formState.errors.password && (
+            <p className="text-red-500">{loginForm.formState.errors.password.message}</p>
+          )}
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-cyan-500 hover:bg-cyan-600 p-2 rounded"
+          >
+            {loading ? "Logging in..." : "Login"}
+          </button>
+        </form>
+      ) : (
+        <form onSubmit={registerForm.handleSubmit(handleRegister)} className="space-y-4">
+          <input
+            type="email"
+            placeholder="Email"
+            {...registerForm.register("email")}
+            className="w-full p-2 rounded bg-slate-800 text-white"
+          />
+          {registerForm.formState.errors.email && (
+            <p className="text-red-500">{registerForm.formState.errors.email.message}</p>
+          )}
+
+          <div className="relative">
+            <input
+              type={showPassword ? "text" : "password"}
+              placeholder="Password"
+              {...registerForm.register("password")}
+              className="w-full p-2 rounded bg-slate-800 text-white"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-2 top-2 text-cyan-400"
+            >
+              {showPassword ? "Hide" : "Show"}
+            </button>
+          </div>
+          {registerForm.formState.errors.password && (
+            <p className="text-red-500">{registerForm.formState.errors.password.message}</p>
+          )}
+
+          <div className="relative">
+            <input
+              type={showConfirmPassword ? "text" : "password"}
+              placeholder="Confirm Password"
+              {...registerForm.register("confirmPassword")}
+              className="w-full p-2 rounded bg-slate-800 text-white"
+            />
+            <button
+              type="button"
+              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+              className="absolute right-2 top-2 text-cyan-400"
+            >
+              {showConfirmPassword ? "Hide" : "Show"}
+            </button>
+          </div>
+          {registerForm.formState.errors.confirmPassword && (
+            <p className="text-red-500">{registerForm.formState.errors.confirmPassword.message}</p>
+          )}
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-cyan-500 hover:bg-cyan-600 p-2 rounded"
+          >
+            {loading ? "Registering..." : "Register"}
+          </button>
+        </form>
+      )}
+
+      {/* Social Login Buttons */}
+      <div className="mt-6 space-y-3">
+        <button
+          onClick={onGoogleLogin}
+          className="w-full bg-red-600 hover:bg-red-700 p-2 rounded"
+          type="button"
+        >
+          Continue with Google
+        </button>
+        <button
+          onClick={onFacebookLogin}
+          className="w-full bg-blue-700 hover:bg-blue-800 p-2 rounded"
+          type="button"
+        >
+          Continue with Facebook
+        </button>
+      </div>
+    </div>
+  );
+}

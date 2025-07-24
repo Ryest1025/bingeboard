@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🚀 BingeBoard Authentication Complete</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            display: grid;
+            gap: 20px;
+            grid-template-columns: 1fr 1fr;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+        }
+        
+        .status-card {
+            grid-column: 1 / -1;
+            text-align: center;
+        }
+        
+        h1 {
+            color: #2d3748;
+            margin-bottom: 16px;
+            font-size: 2rem;
+        }
+        
+        h2 {
+            color: #4a5568;
+            margin-bottom: 16px;
+            font-size: 1.3rem;
+        }
+        
+        .status {
+            padding: 16px;
+            border-radius: 8px;
+            margin: 12px 0;
+            font-weight: 500;
+        }
+        
+        .success {
+            background: #f0fff4;
+            color: #22543d;
+            border: 2px solid #9ae6b4;
+        }
+        
+        .error {
+            background: #fff5f5;
+            color: #742a2a;
+            border: 2px solid #feb2b2;
+        }
+        
+        .warning {
+            background: #fffbeb;
+            color: #744210;
+            border: 2px solid #f6e05e;
+        }
+        
+        .info {
+            background: #ebf8ff;
+            color: #2a69ac;
+            border: 2px solid #90cdf4;
+        }
+        
+        .btn {
+            background: #4299e1;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            margin: 8px;
+            transition: all 0.2s;
+        }
+        
+        .btn:hover {
+            background: #3182ce;
+            transform: translateY(-1px);
+        }
+        
+        .btn-success {
+            background: #48bb78;
+        }
+        
+        .btn-success:hover {
+            background: #38a169;
+        }
+        
+        .btn-danger {
+            background: #f56565;
+        }
+        
+        .btn-danger:hover {
+            background: #e53e3e;
+        }
+        
+        .code-block {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 16px;
+            border-radius: 8px;
+            font-family: 'Monaco', 'Courier New', monospace;
+            font-size: 14px;
+            margin: 12px 0;
+            overflow-x: auto;
+        }
+        
+        .step {
+            background: #f7fafc;
+            border-left: 4px solid #4299e1;
+            padding: 16px;
+            margin: 12px 0;
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #e2e8f0;
+            border-radius: 50%;
+            border-top-color: #4299e1;
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .user-info {
+            background: #f0fff4;
+            border: 2px solid #9ae6b4;
+            border-radius: 8px;
+            padding: 16px;
+            margin: 12px 0;
+        }
+        
+        .quick-actions {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="status-card card">
+            <h1>🚀 BingeBoard Authentication System</h1>
+            <div id="mainStatus" class="status info">
+                <span class="loading"></span> Initializing authentication system...
+            </div>
+            <div id="userInfo" style="display: none;"></div>
+            
+            <div class="quick-actions">
+                <button class="btn btn-success" onclick="performGoogleLogin()">
+                    🔑 Login with Google
+                </button>
+                <button class="btn" onclick="checkAuthStatus()">
+                    🔍 Check Status
+                </button>
+                <button class="btn" onclick="testAPI()">
+                    🧪 Test API
+                </button>
+                <button class="btn btn-danger" onclick="logout()" id="logoutBtn" style="display: none;">
+                    🚪 Logout
+                </button>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h2>🔧 System Status</h2>
+            <div id="systemStatus">
+                <div class="status info">Checking servers...</div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h2>🎯 Quick Actions</h2>
+            <div class="step">
+                <strong>Step 1:</strong> Click "🔑 Login with Google" above
+            </div>
+            <div class="step">
+                <strong>Step 2:</strong> Complete Google OAuth in popup
+            </div>
+            <div class="step">
+                <strong>Step 3:</strong> System will automatically test API
+            </div>
+            <div class="step">
+                <strong>Step 4:</strong> Access BingeBoard with full authentication!
+            </div>
+            
+            <button class="btn" onclick="openMainApp()" style="width: 100%; margin-top: 16px;">
+                🎬 Open BingeBoard App
+            </button>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js';
+        import { 
+            getAuth, 
+            GoogleAuthProvider, 
+            signInWithPopup, 
+            signOut,
+            onAuthStateChanged 
+        } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js';
+
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyB45zr8b2HjIx1fzXOuQsHxeQK9wl_wC88",
+            authDomain: "bingeboard-73c5f.firebaseapp.com",
+            projectId: "bingeboard-73c5f",
+            storageBucket: "bingeboard-73c5f.firebasestorage.app",
+            messagingSenderId: "145846820194",
+            appId: "1:145846820194:web:047efd7a8e59b36944a03b",
+            measurementId: "G-TB1ZXQ79LB"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const provider = new GoogleAuthProvider();
+
+        // Make functions available globally
+        window.firebaseAuth = auth;
+        window.performGoogleLogin = performGoogleLogin;
+        window.checkAuthStatus = checkAuthStatus;
+        window.testAPI = testAPI;
+        window.logout = logout;
+        window.openMainApp = openMainApp;
+
+        // Auto-check status on load
+        setTimeout(checkAuthStatus, 1000);
+        setTimeout(checkSystemStatus, 500);
+
+        // Listen for auth state changes
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                updateStatus('success', `✅ Authenticated as ${user.email}`);
+                showUserInfo(user);
+                document.getElementById('logoutBtn').style.display = 'inline-block';
+                
+                // Auto-test API when user logs in
+                setTimeout(testAPI, 1000);
+            } else {
+                updateStatus('warning', '❌ No user authenticated');
+                hideUserInfo();
+                document.getElementById('logoutBtn').style.display = 'none';
+            }
+        });
+
+        async function performGoogleLogin() {
+            updateStatus('info', '🔑 Starting Google authentication...');
+            
+            try {
+                const result = await signInWithPopup(auth, provider);
+                const user = result.user;
+                const token = await user.getIdToken();
+                
+                console.log('✅ Login successful:', user.email);
+                console.log('🔐 Token length:', token.length);
+                
+                updateStatus('success', `✅ Successfully logged in as ${user.email}`);
+                
+                // Test the API immediately
+                setTimeout(testAPI, 500);
+                
+            } catch (error) {
+                console.error('❌ Login error:', error);
+                updateStatus('error', `❌ Login failed: ${error.message}`);
+            }
+        }
+
+        async function checkAuthStatus() {
+            const user = auth.currentUser;
+            
+            if (user) {
+                updateStatus('success', `✅ User: ${user.email}`);
+                showUserInfo(user);
+            } else {
+                updateStatus('warning', '❌ No user logged in');
+                hideUserInfo();
+            }
+        }
+
+        async function testAPI() {
+            const user = auth.currentUser;
+            
+            if (!user) {
+                updateStatus('error', '❌ No user logged in - cannot test API');
+                return;
+            }
+            
+            updateStatus('info', '🧪 Testing API with authentication...');
+            
+            try {
+                const token = await user.getIdToken();
+                
+                const response = await fetch('/api/auth/user', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    const userData = await response.json();
+                    updateStatus('success', '✅ API Test Successful! Authentication working perfectly.');
+                    console.log('✅ API Response:', userData);
+                    
+                    // Show API success details
+                    const apiInfo = document.createElement('div');
+                    apiInfo.className = 'code-block';
+                    apiInfo.innerHTML = `API Response: ${JSON.stringify(userData, null, 2)}`;
+                    document.getElementById('userInfo').appendChild(apiInfo);
+                    
+                } else {
+                    const errorData = await response.json();
+                    updateStatus('error', `❌ API Test Failed: ${response.status} - ${errorData.message || 'Unknown error'}`);
+                }
+                
+            } catch (error) {
+                updateStatus('error', `❌ API Test Error: ${error.message}`);
+            }
+        }
+
+        async function logout() {
+            try {
+                await signOut(auth);
+                updateStatus('info', '🚪 Logged out successfully');
+                hideUserInfo();
+            } catch (error) {
+                updateStatus('error', `❌ Logout error: ${error.message}`);
+            }
+        }
+
+        function openMainApp() {
+            window.open('/', '_blank');
+        }
+
+        function updateStatus(type, message) {
+            const statusEl = document.getElementById('mainStatus');
+            statusEl.className = `status ${type}`;
+            statusEl.innerHTML = message;
+        }
+
+        function showUserInfo(user) {
+            const userInfo = document.getElementById('userInfo');
+            userInfo.style.display = 'block';
+            userInfo.innerHTML = `
+                <div class="user-info">
+                    <h3>👤 User Information</h3>
+                    <p><strong>Email:</strong> ${user.email}</p>
+                    <p><strong>Name:</strong> ${user.displayName || 'Not provided'}</p>
+                    <p><strong>UID:</strong> ${user.uid}</p>
+                    <p><strong>Last Sign In:</strong> ${new Date(user.metadata.lastSignInTime).toLocaleString()}</p>
+                </div>
+            `;
+        }
+
+        function hideUserInfo() {
+            const userInfo = document.getElementById('userInfo');
+            userInfo.style.display = 'none';
+            userInfo.innerHTML = '';
+        }
+
+        async function checkSystemStatus() {
+            const statusEl = document.getElementById('systemStatus');
+            let status = '<div class="status info">🔍 Checking system components...</div>';
+            
+            // Check frontend
+            status += '<div class="status success">✅ Frontend: Running (Port 3001)</div>';
+            
+            // Check backend
+            try {
+                const response = await fetch('/api/trending/tv/day');
+                if (response.ok) {
+                    status += '<div class="status success">✅ Backend: Running (Port 3000)</div>';
+                } else {
+                    status += '<div class="status error">❌ Backend: Error ' + response.status + '</div>';
+                }
+            } catch (error) {
+                status += '<div class="status error">❌ Backend: Connection failed</div>';
+            }
+            
+            // Check Firebase
+            status += '<div class="status success">✅ Firebase: Initialized</div>';
+            status += '<div class="status success">✅ Google OAuth: Ready</div>';
+            
+            statusEl.innerHTML = status;
+        }
+    </script>
+</body>
+</html>

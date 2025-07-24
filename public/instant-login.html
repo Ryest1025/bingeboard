@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>🚀 INSTANT LOGIN TEST</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            background: #000; 
+            color: #fff; 
+            padding: 40px;
+            text-align: center;
+        }
+        .btn { 
+            background: #4285f4; 
+            color: white; 
+            border: none; 
+            padding: 20px 40px; 
+            font-size: 18px;
+            border-radius: 8px; 
+            cursor: pointer; 
+            margin: 10px;
+        }
+        .btn:hover { background: #357abd; }
+        .status { 
+            background: #333; 
+            padding: 20px; 
+            margin: 20px 0; 
+            border-radius: 8px;
+            text-align: left;
+            font-family: monospace;
+        }
+        .success { border-left: 4px solid #10b981; }
+        .error { border-left: 4px solid #ef4444; }
+    </style>
+</head>
+<body>
+    <h1>🔥 INSTANT LOGIN TEST</h1>
+    <p>Click the button below to complete Google OAuth and test the API</p>
+    
+    <button class="btn" onclick="instantLogin()">🚀 COMPLETE LOGIN NOW</button>
+    
+    <div id="status" class="status">
+        <div>🔄 Ready to test authentication...</div>
+        <div>🎯 This will: Login → Get Token → Test API → Show Results</div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js';
+        import { getAuth, GoogleAuthProvider, signInWithPopup } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js';
+
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyB45zr8b2HjIx1fzXOuQsHxeQK9wl_wC88",
+            authDomain: "bingeboard-73c5f.firebaseapp.com",
+            projectId: "bingeboard-73c5f",
+            storageBucket: "bingeboard-73c5f.firebasestorage.app",
+            messagingSenderId: "145846820194",
+            appId: "1:145846820194:web:047efd7a8e59b36944a03b"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+
+        window.instantLogin = async function() {
+            const status = document.getElementById('status');
+            
+            function updateStatus(message, isError = false) {
+                status.innerHTML = message;
+                status.className = `status ${isError ? 'error' : 'success'}`;
+            }
+
+            try {
+                updateStatus('🚀 Starting Google OAuth login...');
+                
+                const provider = new GoogleAuthProvider();
+                provider.addScope('email');
+                provider.addScope('profile');
+                provider.setCustomParameters({ prompt: 'select_account' });
+
+                const result = await signInWithPopup(auth, provider);
+                const user = result.user;
+                
+                updateStatus(`✅ User authenticated: ${user.email}<br>🔐 Getting Firebase token...`);
+                
+                const token = await user.getIdToken(true);
+                
+                updateStatus(`✅ Token obtained (${token.length} chars)<br>📡 Testing /api/auth/user endpoint...`);
+                
+                const apiResponse = await fetch('/api/auth/user', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (apiResponse.ok) {
+                    const userData = await apiResponse.json();
+                    updateStatus(`
+                        🎉 <strong>SUCCESS! AUTHENTICATION COMPLETE!</strong><br><br>
+                        ✅ User: ${user.email}<br>
+                        ✅ API Status: ${apiResponse.status} OK<br>
+                        ✅ Response: ${JSON.stringify(userData, null, 2)}<br><br>
+                        🔥 <strong>401 → 200 TRANSFORMATION SUCCESSFUL!</strong><br><br>
+                        <button onclick="window.open('/', '_blank')" style="background: #10b981; color: white; padding: 15px 30px; border: none; border-radius: 5px; font-size: 16px; cursor: pointer;">
+                            🎬 OPEN BINGEBOARD APP
+                        </button>
+                    `);
+                } else {
+                    const errorText = await apiResponse.text();
+                    updateStatus(`
+                        ⚠️ Login successful but API failed<br>
+                        Status: ${apiResponse.status}<br>
+                        Error: ${errorText}<br>
+                        User: ${user.email}
+                    `, true);
+                }
+
+            } catch (error) {
+                console.error('Login failed:', error);
+                updateStatus(`
+                    ❌ Login failed:<br>
+                    ${error.message}<br><br>
+                    💡 Make sure popups are enabled and try again
+                `, true);
+            }
+        };
+
+        console.log('🚀 Instant login test page ready!');
+        console.log('👆 Click the button or run window.instantLogin()');
+    </script>
+</body>
+</html>

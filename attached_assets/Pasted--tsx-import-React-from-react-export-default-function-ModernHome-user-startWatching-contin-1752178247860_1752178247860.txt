@@ -1,0 +1,85 @@
+````tsx
+import React from "react";
+
+export default function ModernHome({ user, startWatching, continueWatching, stats, sections }) {
+  return (
+    <div className="bg-white min-h-screen px-4 py-8">
+      {/* Header */}
+      <header className="mb-10">
+        <h1 className="text-4xl font-bold text-gray-900 mb-2">
+          Welcome, {user?.name || "Binge Fan"}
+        </h1>
+        <p className="text-lg text-gray-500">
+          {new Date().getDay() === 0 ? "Here's your weekly summary!" : "What To Binge Next!"}
+        </p>
+      </header>
+
+      {/* Start Watching */}
+      <section className="mb-10">
+        <h2 className="text-2xl font-semibold text-gray-800 mb-4">Start Watching</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {startWatching.map(show => (
+            <div key={show.id} className="bg-gray-50 rounded-lg shadow p-6 flex flex-col">
+              <img src={show.thumbnail} alt={show.title} className="w-full h-40 object-cover rounded mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">{show.title}</h3>
+              <div className="flex-1" />
+              <button className="mt-4 px-4 py-2 border border-cyan-500 text-cyan-500 rounded hover:bg-cyan-50 transition">
+                Resume
+              </button>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Continue Watching */}
+      <section className="mb-10">
+        <h2 className="text-2xl font-semibold text-gray-800 mb-4">Continue Watching</h2>
+        <div className="flex space-x-6 overflow-x-auto pb-2">
+          {continueWatching.map(show => (
+            <div key={show.id} className="min-w-[180px] bg-gray-50 rounded-lg shadow p-4 flex-shrink-0">
+              <img src={show.thumbnail} alt={show.title} className="w-full h-32 object-cover rounded mb-2" />
+              <h3 className="text-md font-medium text-gray-900">{show.title}</h3>
+              <button className="mt-2 px-3 py-1 border border-cyan-500 text-cyan-500 rounded hover:bg-cyan-50 transition">
+                Resume
+              </button>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Quick Stats */}
+      <section className="mb-10">
+        <h2 className="text-2xl font-semibold text-gray-800 mb-4">Quick Stats</h2>
+        <div className="flex space-x-8">
+          <div>
+            <span className="text-2xl font-bold text-cyan-500">{stats.watchedCount}</span>
+            <span className="ml-2 text-gray-500">Watched</span>
+          </div>
+          <div>
+            <span className="text-2xl font-bold text-cyan-500">{stats.hoursSpent}</span>
+            <span className="ml-2 text-gray-500">Hours</span>
+          </div>
+        </div>
+      </section>
+
+      {/* Content Sections */}
+      {sections.map(section => (
+        <section key={section.title} className="mb-10">
+          <h2 className="text-2xl font-semibold text-gray-800 mb-4">{section.title}</h2>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            {section.items.map(item => (
+              <div key={item.id} className="bg-gray-50 rounded-lg shadow p-4">
+                <img src={item.thumbnail} alt={item.title} className="w-full h-32 object-cover rounded mb-2" />
+                <h3 className="text-md font-medium text-gray-900 mb-2">{item.title}</h3>
+                <button className="px-3 py-1 border border-cyan-500 text-cyan-500 rounded hover:bg-cyan-50 transition">
+                  Add to Watchlist
+                </button>
+              </div>
+            ))}
+          </div>
+        </section>
+      ))}
+    </div>
+  );
+}
+````

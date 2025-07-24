@@ -1,0 +1,61 @@
+This usually means your **session cookie isn’t being set or read correctly on mobile** after Firebase login.  
+Here’s how to fix it:
+
+---
+
+### **Checklist to Fix Mobile Login Loop**
+
+1. **Backend Cookie Settings**
+   - Set your session cookie with these flags:
+     ```
+     Set-Cookie: session=...; Path=/; Secure; SameSite=None
+     ```
+   - This is required for cross-origin and mobile browsers.
+
+2. **Frontend Fetch**
+   - Always use `credentials: 'include'` in fetch requests to your backend.
+
+3. **Test Cookie in Mobile Browser**
+   - After login, open browser dev tools (if possible) and check if the session cookie is present.
+   - If not, the backend isn’t setting it correctly.
+
+4. **Check `/api/auth/user` Endpoint**
+   - Make sure this endpoint returns the user if the session cookie is valid.
+   - If it returns 401/unauthenticated, the cookie isn’t being sent or read.
+
+5. **Redirect Only After Session Is Set**
+   - After login, wait for `/api/auth/user` to return a valid user before redirecting.
+
+---
+
+**Summary:**  
+- The issue is almost always cookie settings or session creation on the backend.
+- Fix your backend to set cookies with `Secure` and `SameSite=None`.
+- Use `credentials: 'include'` in all frontend fetches.
+- Test and confirm the cookie is present after login.
+
+Let me know if you want to review your backend session code for a targeted fix!   - This is required for cross-origin and mobile browsers.
+
+2. **Frontend Fetch**
+   - Always use `credentials: 'include'` in fetch requests to your backend.
+
+3. **Test Cookie in Mobile Browser**
+   - After login, open browser dev tools (if possible) and check if the session cookie is present.
+   - If not, the backend isn’t setting it correctly.
+
+4. **Check `/api/auth/user` Endpoint**
+   - Make sure this endpoint returns the user if the session cookie is valid.
+   - If it returns 401/unauthenticated, the cookie isn’t being sent or read.
+
+5. **Redirect Only After Session Is Set**
+   - After login, wait for `/api/auth/user` to return a valid user before redirecting.
+
+---
+
+**Summary:**  
+- The issue is almost always cookie settings or session creation on the backend.
+- Fix your backend to set cookies with `Secure` and `SameSite=None`.
+- Use `credentials: 'include'` in all frontend fetches.
+- Test and confirm the cookie is present after login.
+
+Let me know if you want to review your backend session code for a targeted fix!

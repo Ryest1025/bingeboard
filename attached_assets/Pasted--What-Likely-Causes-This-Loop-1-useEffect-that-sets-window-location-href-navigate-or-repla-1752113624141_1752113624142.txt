@@ -1,0 +1,103 @@
+🔍 What Likely Causes This Loop
+🔁 1. useEffect that sets window.location.href, navigate(), or replace() on every re-render
+If it's not properly guarded with a condition, it can redirect endlessly.
+
+🔁 2. Authentication logic that:
+Treats unauthenticated as not-logged-in
+
+And forces redirect to login
+
+But when login is hit, session restores → auth state updates → user gets redirected back → reruns auth → back to login...
+
+This happens if you're checking auth before it's done loading.
+
+🔁 3. React Query fetching /api/auth/user repeatedly and triggering a UI update that re-triggers the query.
+✅ How to Debug This
+✅ Step 1: Check Console and Network Panel
+Open DevTools → Console:
+
+Is there a redirect message or console log repeating every 2 seconds?
+
+Open Network tab:
+
+Are you seeing the same API requests repeating (e.g. /api/auth/user)?
+
+✅ Step 2: Look at Your useAuth() Hook
+Check that you're not doing something like:
+
+ts
+Copy
+Edit
+if (!user) {
+  window.location.href = "/login";
+}
+That will run every render if user is null — even when isLoading === true.
+
+✅ How to Fix It: Guard Redirects Properly
+Example: Correct redirect logic
+tsx
+Copy
+Edit
+const { user, isLoading, isAuthenticated } = useAuth();
+
+// ✅ ONLY redirect when loading is done AND user is not authenticated
+useEffect(() => {
+  if (!isLoading && !isAuthenticated) {
+    window.location.href = "/login";
+  }
+}, [isLoading, isAuthenticated]);
+You must wait for isLoading === false before deciding that someone isn’t authenticated.
+
+✅ Step-by-Step Fix Strategy
+✅ 1. Look for these patterns:
+ts
+Copy
+Edit
+window.location.href = ...
+router.replace("/login")
+navigate("/login")
+→ Make sure they're guarded by !isLoading or user !== null.
+
+✅ 2. In Your Router or App Shell
+If you do something like:
+
+tsx
+Copy
+Edit
+if (!isAuthenticated) {
+  return <Navigate to="/login" />;
+}
+Make sure it's behind a loading check:
+
+tsx
+Copy
+Edit
+if (isLoading) return <LoadingSpinner />;
+
+if (!isAuthenticated) {
+  return <Navigate to="/login" />;
+}
+✅ Optional Logging to Confirm the Cause
+Add this inside your app:
+
+tsx
+Copy
+Edit
+useEffect(() => {
+  console.log("Auth status:", { isLoading, isAuthenticated, user });
+}, [isLoading, isAuthenticated, user]);
+If you see it log every 2 seconds, you’ll know what’s retriggering the component.
+
+✅ Final Suggestion
+Your react-query staleTime, refetchOnWindowFocus, and refetchInterval should all be set to prevent refetching unless explicitly triggered.
+
+Your queryClient looks like it’s set up properly:
+
+ts
+Copy
+Edit
+staleTime: Infinity,
+refetchInterval: false,
+refetchOnWindowFocus: false,
+✅ So it’s likely not coming from React Query unless something's overriding that locally.
+

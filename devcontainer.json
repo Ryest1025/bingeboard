@@ -1,0 +1,22 @@
+{
+    "name": "BingeBoard Development",
+    "image": "mcr.microsoft.com/devcontainers/typescript-node:18",
+    "forwardPorts": [
+        3000,
+        5000
+    ],
+    "postCreateCommand": "npm install",
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "dbaeumer.vscode-eslint",
+                "esbenp.prettier-vscode",
+                "GitHub.copilot",
+                "GitHub.copilot-chat"
+            ],
+            "settings": {
+                "editor.formatOnSave": true
+            }
+        }
+    }
+}

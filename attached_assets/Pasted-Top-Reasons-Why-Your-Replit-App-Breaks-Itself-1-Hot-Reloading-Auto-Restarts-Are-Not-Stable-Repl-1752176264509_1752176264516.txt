@@ -1,0 +1,75 @@
+Top Reasons Why Your Replit App “Breaks Itself”
+1. Hot Reloading & Auto Restarts Are Not Stable
+Replit may automatically restart the server, rebuild, or reload dependencies — even if you didn’t change code.
+
+This can happen after being idle overnight.
+
+If your build is not reproducible (e.g. depends on runtime-only values or uncommitted code), it can fail silently.
+
+2. Dependencies Aren’t Locked or Persisted Reliably
+If you're missing a package-lock.json, or your node_modules isn’t cached, Replit may reinstall packages inconsistently on each restart.
+
+This causes mismatches like:
+
+Firebase SDK missing
+
+Wrong version of React
+
+Random Vite or plugin errors
+
+✅ Fix: Always commit a package-lock.json and avoid Replit’s “Run without install” behavior.
+
+3. Your Dev/Prod Logic Isn’t Isolated Cleanly
+Replit might be running in “dev” or “prod” inconsistently based on environment variables.
+
+If you have logic like this:
+
+ts
+Copy
+Edit
+if (process.env.NODE_ENV === "production") {
+  // Different auth/session/route behavior
+}
+But NODE_ENV isn’t set or changes, your app will behave differently on each boot.
+
+✅ Fix: Explicitly set NODE_ENV in your .env file or Replit Secrets.
+
+4. State (like Firebase Sessions) Gets Lost
+Session cookies might expire or get dropped by the browser or Replit’s proxy.
+
+Firebase Auth may require you to call getRedirectResult() on every load, but your redirect handler might be broken or skipped.
+
+When the session fails to restore, your app treats the user as logged out and goes into a refresh loop.
+
+✅ Fix: Build your auth flow to gracefully handle session loss and always re-check Firebase on page load.
+
+5. The Code Editor or Git Sync Isn’t Fully Saving
+You might change files and see it work, but Replit fails to persist changes if:
+
+You didn’t click "Commit to Git"
+
+You have multiple tabs open
+
+The build cache was wiped after a crash
+
+✅ Fix: Commit important working changes and download a local backup.
+
+6. Vite Plugin Glitches
+The [plugin:runtime-error-plugin] error you saw can come back if:
+
+You hot-reload while a request is in-flight
+
+Vite doesn't clear state properly
+
+You import something like firebase/auth before it's installed
+
+✅ Fix: Fully stop + restart the server after big changes, don’t rely on hot reload alone.
+
+✅ How to Prevent These Breakages
+✅ Action	💡 Why It Helps
+Commit a package-lock.json	Locks all dependency versions
+Always call getRedirectResult() on login redirect pages	Completes Firebase login
+Set NODE_ENV=development explicitly in .env	Ensures consistent behavior
+Handle missing sessions gracefully in useAuth()	Prevents crashes and loops
+Restart Replit manually before testing	Clears corrupted state
+Consider exporting the app to Railway or Vercel	More reliable builds

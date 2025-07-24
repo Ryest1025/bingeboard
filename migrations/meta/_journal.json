@@ -1,0 +1,25 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+<<<<<<< HEAD
+      "when": 1752265068181,
+      "tag": "0000_cheerful_meteorite",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1752285050062,
+      "tag": "0001_lethal_bloodstrike",
+=======
+      "when": 1752714784499,
+      "tag": "0000_milky_living_lightning",
+>>>>>>> ad00a93 (🚀 Major Mobile-First Redesign & Persistent Navigation Implementation)
+      "breakpoints": true
+    }
+  ]
+}

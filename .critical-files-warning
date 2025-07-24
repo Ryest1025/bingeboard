@@ -1,0 +1,29 @@
+# ⚠️ CRITICAL FILES PROTECTION ⚠️
+
+## 🔒 DO NOT MODIFY THESE FILES - THEY CONTROL UI/UX RENDERING
+
+### Core Configuration Files:
+- `server/vite.ts` - Vite middleware setup
+- `client/index.html` - HTML template  
+- `vite.config.ts` - Vite configuration
+- `tailwind.config.ts` - Tailwind content paths
+- `client/src/main.tsx` - CSS imports
+- `server/index.ts` - Environment detection
+
+### Why These Are Critical:
+These files control how CSS, JavaScript, and assets are served by Vite.
+Any modification could break the working UI/UX rendering.
+
+### Before Making Changes:
+1. Create a new git branch
+2. Read WORKING_CONFIG_LOCKDOWN.md
+3. Test changes in isolation
+4. Verify CSS loading still works
+
+### Recovery Command:
+```bash
+git checkout working-ui-backup
+NODE_ENV=development npm run dev
+```
+
+Last Working State: July 20, 2025 - Commit 768dd0d
