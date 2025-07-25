@@ -44,17 +44,17 @@ export default function UpcomingEnhanced() {
   const handleAddCalendarReminder = (release: UpcomingRelease) => {
     const releaseDate = new Date(release.releaseDate);
     const showTitle = release.title;
-    
+
     // Create calendar event URL (Google Calendar)
     const startDate = releaseDate.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
     const endDate = new Date(releaseDate.getTime() + 60 * 60 * 1000).toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
-    
-    const eventTitle = release.seasonInfo 
+
+    const eventTitle = release.seasonInfo
       ? `${showTitle} - Season ${release.seasonInfo.seasonNumber} Premiere`
       : `${showTitle} - New ${release.type}`;
-    
+
     const calendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(eventTitle)}&dates=${startDate}/${endDate}&details=${encodeURIComponent(`New ${release.type} of ${showTitle} releases today!`)}&location=Streaming`;
-    
+
     window.open(calendarUrl, '_blank');
     console.log("Opening calendar reminder for:", showTitle);
   };
@@ -62,7 +62,7 @@ export default function UpcomingEnhanced() {
   // Handle text notification opt-in for upcoming shows
   const handleTextReminders = async (release: UpcomingRelease) => {
     const showTitle = release.title;
-    
+
     try {
       // Add to release reminders in database
       const response = await fetch('/api/release-reminders', {
@@ -76,7 +76,7 @@ export default function UpcomingEnhanced() {
           notificationMethods: ['push', 'email'] // Can add SMS later
         })
       });
-      
+
       if (response.ok) {
         console.log("Text reminders enabled for:", showTitle);
         // Could show a toast notification here
@@ -88,8 +88,8 @@ export default function UpcomingEnhanced() {
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { 
-      month: 'short', 
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
       day: 'numeric',
       year: 'numeric'
     });
@@ -123,14 +123,14 @@ export default function UpcomingEnhanced() {
               <Play className="w-6 h-6 text-gray-400" />
             )}
           </div>
-          
+
           <div className="flex-1 space-y-2">
             <div className="flex items-start justify-between">
               <div>
                 <h3 className="font-semibold text-white">{release.title}</h3>
                 {release.seasonInfo && (
                   <p className="text-sm text-teal-400">
-                    Season {release.seasonInfo.seasonNumber} 
+                    Season {release.seasonInfo.seasonNumber}
                     {release.seasonInfo.episodeCount && ` • ${release.seasonInfo.episodeCount} Episodes`}
                   </p>
                 )}
@@ -146,11 +146,11 @@ export default function UpcomingEnhanced() {
                 )}
               </div>
             </div>
-            
+
             {release.overview && (
               <p className="text-gray-400 text-sm line-clamp-2">{release.overview}</p>
             )}
-            
+
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center space-x-4 text-sm text-gray-400">
                 <span className="flex items-center">
@@ -163,7 +163,7 @@ export default function UpcomingEnhanced() {
                   </Badge>
                 )}
               </div>
-              
+
               {release.streamingProviders && release.streamingProviders.length > 0 && (
                 <div className="flex items-center">
                   <span className="text-xs text-gray-400 mr-2">Available on:</span>
@@ -171,21 +171,21 @@ export default function UpcomingEnhanced() {
                 </div>
               )}
             </div>
-            
+
             <div className="flex justify-end">
               <div className="flex gap-2">
-                <Button 
-                  variant="outline" 
-                  size="sm" 
+                <Button
+                  variant="outline"
+                  size="sm"
                   className="border-teal-500 text-teal-400 hover:bg-teal-500 hover:text-white"
                   onClick={() => handleAddCalendarReminder(release)}
                 >
                   <Calendar className="w-4 h-4 mr-1" />
                   Calendar
                 </Button>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
+                <Button
+                  variant="outline"
+                  size="sm"
                   className="border-purple-500 text-purple-400 hover:bg-purple-500 hover:text-white"
                   onClick={() => handleTextReminders(release)}
                 >
@@ -211,7 +211,7 @@ export default function UpcomingEnhanced() {
                 <h1 className="text-3xl font-bold text-white">Upcoming Releases</h1>
                 <p className="text-gray-400">Stay up to date with new episodes and seasons</p>
               </div>
-              
+
               {/* Loading skeleton */}
               <div className="space-y-4">
                 {[...Array(6)].map((_, i) => (
@@ -240,10 +240,10 @@ export default function UpcomingEnhanced() {
   return (
     <div className="min-h-screen bg-black">
       <NavigationHeader />
-      
+
       <div className="pt-28 p-4 pb-24">
         <div className="container mx-auto max-w-4xl space-y-6">
-          
+
           {/* Header */}
           <div className="text-center space-y-2">
             <h1 className="text-3xl font-bold text-white">Upcoming Releases</h1>
@@ -307,7 +307,7 @@ export default function UpcomingEnhanced() {
           )}
         </div>
       </div>
-      
+
       <MobileNav />
     </div>
   );

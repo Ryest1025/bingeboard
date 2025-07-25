@@ -11,12 +11,12 @@ export default defineConfig({
     react(),
     runtimeErrorOverlay(),
     ...(process.env.NODE_ENV !== "production" &&
-    process.env.REPL_ID !== undefined
+      process.env.REPL_ID !== undefined
       ? [
-          await import("@replit/vite-plugin-cartographer").then((m) =>
-            m.cartographer(),
-          ),
-        ]
+        await import("@replit/vite-plugin-cartographer").then((m) =>
+          m.cartographer(),
+        ),
+      ]
       : []),
   ],
   resolve: {
@@ -43,7 +43,7 @@ export default defineConfig({
     cors: true, // Enable CORS for all origins
     allowedHosts: [
       '.app.github.dev',
-      '.codespaces.app', 
+      '.codespaces.app',
       '.github.dev',
       'fuzzy-xylophone-5g97jqp4vq9wf4jjr-3000.app.github.dev' // Match Express port
     ],

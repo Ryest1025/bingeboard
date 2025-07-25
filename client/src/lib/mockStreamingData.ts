@@ -39,7 +39,7 @@ const fallbackProviders = [
   },
   {
     provider_id: 384,
-    provider_name: "HBO Max", 
+    provider_name: "HBO Max",
     name: "HBO Max",
     logo_path: "/Ajqyt5aNxNGjmF9uOfxArGrdf3X.jpg",
     logoPath: "https://image.tmdb.org/t/p/w45/Ajqyt5aNxNGjmF9uOfxArGrdf3X.jpg"
@@ -65,13 +65,13 @@ const streamingCache = new Map<string, StreamingProvider[]>();
 
 // Fetch real streaming providers using comprehensive API
 async function fetchComprehensiveStreamingData(
-  mediaType: 'tv' | 'movie', 
+  mediaType: 'tv' | 'movie',
   id: number,
   title: string,
   imdbId?: string
 ): Promise<StreamingProvider[]> {
   const cacheKey = `${mediaType}-${id}`;
-  
+
   // Return cached data if available
   if (streamingCache.has(cacheKey)) {
     return streamingCache.get(cacheKey)!;
@@ -82,7 +82,7 @@ async function fetchComprehensiveStreamingData(
       title,
       ...(imdbId && { imdbId })
     });
-    
+
     const response = await fetch(`/api/streaming/comprehensive/${mediaType}/${id}?${params}`);
     if (!response.ok) {
       console.warn(`Failed to fetch comprehensive streaming data for ${mediaType} ${id}:`, response.statusText);
@@ -91,16 +91,16 @@ async function fetchComprehensiveStreamingData(
       streamingCache.set(cacheKey, fallback);
       return fallback;
     }
-    
+
     const data: ComprehensiveStreamingResponse = await response.json();
-    
+
     // Ensure compatibility with existing components
     const providers = data.platforms.map(provider => ({
       ...provider,
       name: provider.name || provider.provider_name,
       logoPath: provider.logo_path ? `https://image.tmdb.org/t/p/w45${provider.logo_path}` : undefined
     }));
-    
+
     // Cache the result
     streamingCache.set(cacheKey, providers);
     return providers;
@@ -119,29 +119,29 @@ export function addMockStreamingData(input: any): any {
   if (Array.isArray(input)) {
     return input.map(item => addMockStreamingData(item));
   }
-  
+
   // Handle single item input
   const item = input;
-  
+
   // Return the item immediately for synchronous compatibility
   // The streaming data will be added asynchronously
   const enrichedItem = { ...item };
-  
+
   // Add fallback data immediately for initial rendering
   const fallback = fallbackProviders.slice(0, Math.floor(Math.random() * 3) + 1);
   enrichedItem.watchProviders = fallback;
   enrichedItem.streamingProviders = fallback;
   enrichedItem.streamingPlatforms = fallback;
-  
+
   // Fetch real streaming data in the background and update
   if (item.id && (item.title || item.name)) {
     const mediaType = item.title ? 'movie' : 'tv';
     const title = item.title || item.name;
-    
+
     // Fetch real streaming data in the background
     fetchComprehensiveStreamingData(
-      mediaType, 
-      item.id, 
+      mediaType,
+      item.id,
       title,
       item.imdb_id || item.external_ids?.imdb_id
     ).then(providers => {
@@ -150,11 +150,11 @@ export function addMockStreamingData(input: any): any {
         enrichedItem.watchProviders = providers;
         enrichedItem.streamingProviders = providers;
         enrichedItem.streamingPlatforms = providers;
-        
+
         // Trigger a re-render if this is in a React context
         if (typeof window !== 'undefined' && window.dispatchEvent) {
-          window.dispatchEvent(new CustomEvent('streamingDataUpdated', { 
-            detail: { id: item.id, providers } 
+          window.dispatchEvent(new CustomEvent('streamingDataUpdated', {
+            detail: { id: item.id, providers }
           }));
         }
       }
@@ -163,7 +163,7 @@ export function addMockStreamingData(input: any): any {
       // Keep the fallback data we already set
     });
   }
-  
+
   return enrichedItem;
 }
 
@@ -171,25 +171,25 @@ export function addMockStreamingData(input: any): any {
 export async function addStreamingDataBatch(items: any[]): Promise<any[]> {
   const batchSize = 5;
   const results: any[] = [];
-  
+
   for (let i = 0; i < items.length; i += batchSize) {
     const batch = items.slice(i, i + batchSize);
     const batchPromises = batch.map(async (item) => {
       if (!item.id || (!item.title && !item.name)) {
         return item;
       }
-      
+
       const mediaType = item.title ? 'movie' : 'tv';
       const title = item.title || item.name;
-      
+
       try {
         const providers = await fetchComprehensiveStreamingData(
-          mediaType, 
-          item.id, 
+          mediaType,
+          item.id,
           title,
           item.imdb_id || item.external_ids?.imdb_id
         );
-        
+
         return {
           ...item,
           watchProviders: providers,
@@ -201,15 +201,15 @@ export async function addStreamingDataBatch(items: any[]): Promise<any[]> {
         return addMockStreamingData(item); // Fallback to sync version
       }
     });
-    
+
     const batchResults = await Promise.all(batchPromises);
     results.push(...batchResults);
-    
+
     // Small delay to be respectful to APIs
     if (i + batchSize < items.length) {
       await new Promise(resolve => setTimeout(resolve, 100));
     }
   }
-  
+
   return results;
 }

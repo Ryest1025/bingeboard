@@ -110,9 +110,9 @@ export default function Activity() {
                   <div className="flex items-start space-x-4">
                     {/* User Avatar */}
                     <Avatar className="h-12 w-12">
-                      <AvatarImage 
-                        src={item.user?.profileImageUrl || undefined} 
-                        alt={`${item.user?.firstName || 'User'}'s avatar`} 
+                      <AvatarImage
+                        src={item.user?.profileImageUrl || undefined}
+                        alt={`${item.user?.firstName || 'User'}'s avatar`}
                       />
                       <AvatarFallback className="bg-gradient-to-br from-teal-500 to-cyan-500 text-white">
                         {item.user?.firstName?.[0] || 'U'}
@@ -141,9 +141,9 @@ export default function Activity() {
                       {/* Timestamp */}
                       <p className="text-sm text-gray-500">
                         {new Date(item.createdAt).toLocaleDateString()} at{' '}
-                        {new Date(item.createdAt).toLocaleTimeString([], { 
-                          hour: '2-digit', 
-                          minute: '2-digit' 
+                        {new Date(item.createdAt).toLocaleTimeString([], {
+                          hour: '2-digit',
+                          minute: '2-digit'
                         })}
                       </p>
 

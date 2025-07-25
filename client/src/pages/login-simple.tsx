@@ -52,10 +52,10 @@ async function createFirebaseSession(firebaseToken: string) {
 export default function LoginSimple() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
-  
+
   // Import authentication hook
   const { isAuthenticated, user, isLoading: authLoading } = useAuth();
-  
+
   const [isLogin, setIsLogin] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -80,7 +80,7 @@ export default function LoginSimple() {
   useEffect(() => {
     const rememberedEmail = localStorage.getItem('userEmail');
     const wasRemembered = localStorage.getItem('rememberLogin') === 'true';
-    
+
     if (wasRemembered && rememberedEmail) {
       setRememberMe(true);
       setFormData(prev => ({ ...prev, email: rememberedEmail }));
@@ -92,7 +92,7 @@ export default function LoginSimple() {
   const createTestAccount = async () => {
     // Block test account creation in production
     if (process.env.NODE_ENV === "production") return;
-    
+
     try {
       const response = await fetch('/api/auth/register', {
         method: 'POST',
@@ -105,10 +105,10 @@ export default function LoginSimple() {
           lastName: 'User'
         })
       });
-      
+
       const result = await response.json();
       console.log('Test account creation:', response.ok ? '✅ Success' : '❌ Failed', result);
-      
+
       if (response.ok) {
         // Auto-fill the form with test credentials
         setFormData({
@@ -129,10 +129,10 @@ export default function LoginSimple() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Prevent multiple submissions
     if (isLoading) return;
-    
+
     // Client-side validation for better UX
     if (!formData.email.includes("@") || formData.password.length < 6) {
       toast({
@@ -142,24 +142,24 @@ export default function LoginSimple() {
       });
       return;
     }
-    
+
     setIsLoading(true);
 
     try {
       // For now, use server-side authentication endpoints
       const endpoint = isLogin ? "/api/auth/login" : "/api/auth/register";
-      const payload = isLogin 
-        ? { 
-            email: formData.email, 
-            password: formData.password,
-            rememberMe: rememberMe
-          }
-        : { 
-            email: formData.email.trim(), 
-            password: formData.password,
-            firstName: formData.firstName.trim(),
-            lastName: formData.lastName.trim()
-          };
+      const payload = isLogin
+        ? {
+          email: formData.email,
+          password: formData.password,
+          rememberMe: rememberMe
+        }
+        : {
+          email: formData.email.trim(),
+          password: formData.password,
+          firstName: formData.firstName.trim(),
+          lastName: formData.lastName.trim()
+        };
 
       // Enhanced debugging - log exact request details
       console.log('🚀 Login attempt:', {
@@ -188,7 +188,7 @@ export default function LoginSimple() {
       });
 
       const data = await response.json();
-      
+
       // Enhanced error logging for debugging
       if (!response.ok) {
         console.error(`❌ ${isLogin ? 'Login' : 'Registration'} failed:`, {
@@ -205,7 +205,7 @@ export default function LoginSimple() {
           title: isLogin ? "Login successful" : "Registration successful",
           description: isLogin ? "Welcome back!" : "Account created successfully!",
         });
-        
+
         // If remember me is checked, store login preference
         if (rememberMe && isLogin) {
           localStorage.setItem('rememberLogin', 'true');
@@ -215,17 +215,17 @@ export default function LoginSimple() {
           localStorage.removeItem('rememberLogin');
           localStorage.removeItem('userEmail');
         }
-        
+
         // Wait a moment for session to be fully saved before redirecting
         await new Promise(resolve => setTimeout(resolve, 1000));
-        
+
         // Force a page reload to ensure the useAuth hook detects the new session
         window.location.href = "/";
       } else {
         // Enhanced error messages based on status code
         let errorMessage = data.message || "Authentication failed. Please try again.";
         let errorTitle = "Error";
-        
+
         if (response.status === 401) {
           if (isLogin) {
             errorTitle = "Login Failed";
@@ -241,7 +241,7 @@ export default function LoginSimple() {
           errorTitle = "Invalid Input";
           errorMessage = data.message || "Please check your input and try again.";
         }
-        
+
         toast({
           title: errorTitle,
           description: errorMessage,
@@ -312,22 +312,22 @@ export default function LoginSimple() {
       try {
         console.log('🔍 Checking for OAuth redirect result on login page...');
         const result = await getRedirectResult(auth);
-        
+
         if (result && result.user) {
           console.log('✅ OAuth redirect result found:', result.user.email);
           setIsLoading(true);
-          
+
           // Create backend session with Firebase ID token
           const firebaseToken = await result.user.getIdToken();
           const sessionCreated = await createFirebaseSession(firebaseToken);
-          
+
           if (sessionCreated) {
             console.log('✅ Backend session created successfully');
             toast({
               title: "Login successful",
               description: "Welcome to BingeBoard!",
             });
-            
+
             // Wait for auth state to update, then redirect to home page
             setTimeout(() => {
               setLocation("/");
@@ -356,7 +356,7 @@ export default function LoginSimple() {
         setIsLoading(false);
       }
     };
-    
+
     handleRedirectResult();
   }, [toast]);
 
@@ -370,7 +370,7 @@ export default function LoginSimple() {
   // Handle remember me checkbox changes
   const handleRememberMeChange = (checked: boolean) => {
     setRememberMe(checked);
-    
+
     // If unchecked, clear stored credentials
     if (!checked) {
       localStorage.removeItem('rememberLogin');
@@ -383,34 +383,34 @@ export default function LoginSimple() {
     try {
       console.log('🚀 Starting Google authentication with popup...');
       setIsLoading(true);
-      
+
       // Set Firebase persistence based on remember me preference
       await setPersistence(auth, rememberMe ? browserLocalPersistence : browserSessionPersistence);
-      
+
       // Use popup instead of redirect to avoid storage partitioning issues
       const result = await signInWithPopup(auth, googleProvider);
-      
+
       if (result.user) {
         console.log('✅ Google popup authentication successful:', result.user.email);
-        
+
         // Create backend session using helper
         const firebaseToken = await result.user.getIdToken();
         const sessionCreated = await createFirebaseSession(firebaseToken);
-        
+
         if (sessionCreated) {
           console.log('✅ Backend session created successfully');
-          
+
           // Handle remember me for social login
           if (rememberMe && result.user.email) {
             localStorage.setItem('rememberLogin', 'true');
             localStorage.setItem('userEmail', result.user.email);
           }
-          
+
           toast({
             title: "Login successful",
             description: "Welcome to BingeBoard!",
           });
-          
+
           // Wait for auth state to update, then redirect to home page
           setTimeout(() => {
             setLocation("/");
@@ -424,10 +424,10 @@ export default function LoginSimple() {
           });
         }
       }
-      
+
     } catch (error: any) {
       console.error('❌ Google authentication error:', error);
-      
+
       if (error.code === 'auth/popup-closed-by-user') {
         toast({
           title: "Authentication cancelled",
@@ -456,34 +456,34 @@ export default function LoginSimple() {
     try {
       console.log('🚀 Starting Facebook authentication with popup...');
       setIsLoading(true);
-      
+
       // Set Firebase persistence based on remember me preference
       await setPersistence(auth, rememberMe ? browserLocalPersistence : browserSessionPersistence);
-      
+
       // Use popup instead of redirect to avoid storage partitioning issues  
       const result = await signInWithPopup(auth, facebookProvider);
-      
+
       if (result.user) {
         console.log('✅ Facebook popup authentication successful:', result.user.email);
-        
+
         // Create backend session using helper
         const firebaseToken = await result.user.getIdToken();
         const sessionCreated = await createFirebaseSession(firebaseToken);
-        
+
         if (sessionCreated) {
           console.log('✅ Backend session created successfully');
-          
+
           // Handle remember me for social login
           if (rememberMe && result.user.email) {
             localStorage.setItem('rememberLogin', 'true');
             localStorage.setItem('userEmail', result.user.email);
           }
-          
+
           toast({
             title: "Login successful",
             description: "Welcome to BingeBoard!",
           });
-          
+
           // Wait for auth state to update, then redirect to home page
           setTimeout(() => {
             setLocation("/");
@@ -497,10 +497,10 @@ export default function LoginSimple() {
           });
         }
       }
-      
+
     } catch (error: any) {
       console.error('❌ Facebook authentication error:', error);
-      
+
       if (error.code === 'auth/popup-closed-by-user') {
         toast({
           title: "Authentication cancelled",
@@ -544,7 +544,7 @@ export default function LoginSimple() {
                   <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-5 h-1 bg-slate-600 rounded-sm"></div>
                 </div>
               </div>
-              
+
               {/* Brand Name */}
               <div className="block">
                 <span className="text-xl sm:text-2xl select-none">
@@ -559,7 +559,7 @@ export default function LoginSimple() {
               </div>
             </div>
           </div>
-          
+
           {/* Mobile domain authorization warning */}
           {/iPhone|iPad|iPod|Android/i.test(navigator.userAgent) && (
             <div className="mb-6 p-3 bg-amber-900/20 border border-amber-500/30 rounded-lg">
@@ -615,153 +615,153 @@ export default function LoginSimple() {
                   {isLogin ? "Welcome back to your entertainment hub" : "Join the ultimate entertainment hub"}
                 </p>
               </div>
-              
+
               <form onSubmit={handleSubmit} className="space-y-4">
-              {/* Email Input */}
-              <div className="relative">
-                <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                <Input
-                  type="email"
-                  name="email"
-                  placeholder="Email address"
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  className="bg-gray-800/50 border-slate-600/50 text-white pl-10 focus:border-teal-500/50 focus:ring-teal-500/20"
-                  required
-                />
-              </div>
-
-              {/* Password Input */}
-              <div className="relative">
-                <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                <Input
-                  type={showPassword ? "text" : "password"}
-                  name="password"
-                  placeholder="Password"
-                  value={formData.password}
-                  onChange={handleInputChange}
-                  className="bg-gray-800/50 border-slate-600/50 text-white pl-10 pr-10 focus:border-teal-500/50 focus:ring-teal-500/20"
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-3 text-gray-400 hover:text-gray-300"
-                >
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                </button>
-              </div>
-
-              {/* First Name Input (Registration only) */}
-              {!isLogin && (
+                {/* Email Input */}
                 <div className="relative">
+                  <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                   <Input
-                    type="text"
-                    name="firstName"
-                    placeholder="First Name"
-                    value={formData.firstName}
+                    type="email"
+                    name="email"
+                    placeholder="Email address"
+                    value={formData.email}
                     onChange={handleInputChange}
-                    className="bg-gray-800/50 border-slate-600/50 text-white focus:border-teal-500/50 focus:ring-teal-500/20"
+                    className="bg-gray-800/50 border-slate-600/50 text-white pl-10 focus:border-teal-500/50 focus:ring-teal-500/20"
                     required
                   />
                 </div>
-              )}
 
-              {/* Last Name Input (Registration only) */}
-              {!isLogin && (
+                {/* Password Input */}
                 <div className="relative">
+                  <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                   <Input
-                    type="text"
-                    name="lastName"
-                    placeholder="Last Name"
-                    value={formData.lastName}
+                    type={showPassword ? "text" : "password"}
+                    name="password"
+                    placeholder="Password"
+                    value={formData.password}
                     onChange={handleInputChange}
-                    className="bg-gray-800/50 border-slate-600/50 text-white focus:border-teal-500/50 focus:ring-teal-500/20"
+                    className="bg-gray-800/50 border-slate-600/50 text-white pl-10 pr-10 focus:border-teal-500/50 focus:ring-teal-500/20"
                     required
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-3 text-gray-400 hover:text-gray-300"
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
                 </div>
-              )}
 
-              {/* Remember Me & Forgot Password */}
-              {isLogin && (
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="remember"
-                      checked={rememberMe}
-                      onCheckedChange={handleRememberMeChange}
-                      className="border-slate-600/50 data-[state=checked]:bg-teal-600 data-[state=checked]:border-teal-600"
+                {/* First Name Input (Registration only) */}
+                {!isLogin && (
+                  <div className="relative">
+                    <Input
+                      type="text"
+                      name="firstName"
+                      placeholder="First Name"
+                      value={formData.firstName}
+                      onChange={handleInputChange}
+                      className="bg-gray-800/50 border-slate-600/50 text-white focus:border-teal-500/50 focus:ring-teal-500/20"
+                      required
                     />
-                    <label htmlFor="remember" className="text-sm text-gray-300">
-                      Remember me
-                    </label>
                   </div>
+                )}
+
+                {/* Last Name Input (Registration only) */}
+                {!isLogin && (
+                  <div className="relative">
+                    <Input
+                      type="text"
+                      name="lastName"
+                      placeholder="Last Name"
+                      value={formData.lastName}
+                      onChange={handleInputChange}
+                      className="bg-gray-800/50 border-slate-600/50 text-white focus:border-teal-500/50 focus:ring-teal-500/20"
+                      required
+                    />
+                  </div>
+                )}
+
+                {/* Remember Me & Forgot Password */}
+                {isLogin && (
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="remember"
+                        checked={rememberMe}
+                        onCheckedChange={handleRememberMeChange}
+                        className="border-slate-600/50 data-[state=checked]:bg-teal-600 data-[state=checked]:border-teal-600"
+                      />
+                      <label htmlFor="remember" className="text-sm text-gray-300">
+                        Remember me
+                      </label>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="link"
+                      onClick={() => setShowForgotPassword(true)}
+                      className="text-teal-400 hover:text-teal-300 p-0 h-auto"
+                    >
+                      Forgot password?
+                    </Button>
+                  </div>
+                )}
+
+                {/* Submit Button */}
+                <Button
+                  type="submit"
+                  disabled={isLoading}
+                  className="w-full bg-gradient-to-r from-teal-600 to-blue-600 hover:from-teal-700 hover:to-blue-700 text-white font-semibold"
+                >
+                  {isLoading ? "Please wait..." : (isLogin ? "Log In" : "Create Account")}
+                </Button>
+
+                {/* Toggle Login/Register */}
+                <div className="text-center">
                   <Button
                     type="button"
                     variant="link"
-                    onClick={() => setShowForgotPassword(true)}
-                    className="text-teal-400 hover:text-teal-300 p-0 h-auto"
+                    onClick={() => setIsLogin(!isLogin)}
+                    className="text-teal-400 hover:text-teal-300"
                   >
-                    Forgot password?
+                    {isLogin ? "Need an account? Sign up" : "Already have an account? Log in"}
                   </Button>
                 </div>
-              )}
 
-              {/* Submit Button */}
-              <Button
-                type="submit"
-                disabled={isLoading}
-                className="w-full bg-gradient-to-r from-teal-600 to-blue-600 hover:from-teal-700 hover:to-blue-700 text-white font-semibold"
-              >
-                {isLoading ? "Please wait..." : (isLogin ? "Log In" : "Create Account")}
-              </Button>
-
-              {/* Toggle Login/Register */}
-              <div className="text-center">
-                <Button
-                  type="button"
-                  variant="link"
-                  onClick={() => setIsLogin(!isLogin)}
-                  className="text-teal-400 hover:text-teal-300"
-                >
-                  {isLogin ? "Need an account? Sign up" : "Already have an account? Log in"}
-                </Button>
-              </div>
-
-              {/* Divider */}
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t border-slate-600/50" />
+                {/* Divider */}
+                <div className="relative">
+                  <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t border-slate-600/50" />
+                  </div>
+                  <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-black px-2 text-gray-400">Or continue with</span>
+                  </div>
                 </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-black px-2 text-gray-400">Or continue with</span>
-                </div>
-              </div>
 
-              {/* Social Login Buttons */}
-              <div className="grid grid-cols-2 gap-4">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handleGoogleAuth}
-                  disabled={isLoading}
-                  className="bg-gray-800/50 border-slate-600/50 text-white hover:bg-gray-700/50"
-                >
-                  <SiGoogle className="h-4 w-4 mr-2" />
-                  Google
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handleFacebookAuth}
-                  disabled={isLoading}
-                  className="bg-gray-800/50 border-slate-600/50 text-white hover:bg-gray-700/50"
-                >
-                  <SiFacebook className="h-4 w-4 mr-2" />
-                  Facebook
-                </Button>
-              </div>
-            </form>
+                {/* Social Login Buttons */}
+                <div className="grid grid-cols-2 gap-4">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleGoogleAuth}
+                    disabled={isLoading}
+                    className="bg-gray-800/50 border-slate-600/50 text-white hover:bg-gray-700/50"
+                  >
+                    <SiGoogle className="h-4 w-4 mr-2" />
+                    Google
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleFacebookAuth}
+                    disabled={isLoading}
+                    className="bg-gray-800/50 border-slate-600/50 text-white hover:bg-gray-700/50"
+                  >
+                    <SiFacebook className="h-4 w-4 mr-2" />
+                    Facebook
+                  </Button>
+                </div>
+              </form>
             </div>
           )}
         </CardContent>

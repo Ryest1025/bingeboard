@@ -1,10 +1,10 @@
 import { TMDBService } from './tmdb.js';
 import { WatchmodeService } from './watchmodeService.js';
-import { 
-  searchStreamingAvailability, 
+import {
+  searchStreamingAvailability,
   getStreamingByImdbId,
   StreamingLocation,
-  UtellyResult 
+  UtellyResult
 } from '../clients/utellyClient.js';
 
 interface EnhancedStreamingPlatform {
@@ -39,7 +39,7 @@ interface StreamingAvailabilityResponse {
 
 export class MultiAPIStreamingService {
   private static tmdbService = new TMDBService();
-  
+
   // Affiliate commission rates for different platforms
   private static affiliateCommissions = {
     'Netflix': 8.5,
@@ -81,18 +81,18 @@ export class MultiAPIStreamingService {
       'Peacock Premium': 'Peacock',
       'YouTube TV': 'YouTube Premium'
     };
-    
+
     return normalizations[name] || name;
   }
 
   // Convert Utelly results to our enhanced format
   private static convertUtellyResults(utellyResults: UtellyResult[]): EnhancedStreamingPlatform[] {
     const platforms: EnhancedStreamingPlatform[] = [];
-    
+
     utellyResults.forEach((result, index) => {
       result.locations.forEach((location: StreamingLocation, locationIndex) => {
         const normalizedName = this.normalizePlatformName(location.display_name);
-        
+
         platforms.push({
           provider_id: 9000 + index * 100 + locationIndex, // Generate unique ID for Utelly
           provider_name: normalizedName,
@@ -105,14 +105,14 @@ export class MultiAPIStreamingService {
         });
       });
     });
-    
+
     return platforms;
   }
 
   // Get comprehensive streaming availability from all APIs
   static async getComprehensiveAvailability(
-    tmdbId: number, 
-    title: string, 
+    tmdbId: number,
+    title: string,
     mediaType: 'movie' | 'tv' = 'tv',
     imdbId?: string
   ): Promise<StreamingAvailabilityResponse> {
@@ -124,7 +124,7 @@ export class MultiAPIStreamingService {
       const tmdbData = await this.tmdbService.getWatchProviders(mediaType, tmdbId);
       if (tmdbData.results?.US?.flatrate || tmdbData.results?.US?.buy || tmdbData.results?.US?.rent) {
         sources.tmdb = true;
-        
+
         const tmdbProviders = [
           ...(tmdbData.results.US.flatrate || []),
           ...(tmdbData.results.US.buy || []),
@@ -153,7 +153,7 @@ export class MultiAPIStreamingService {
       const watchmodeData = await WatchmodeService.getStreamingAvailability(tmdbId, mediaType);
       if (watchmodeData.streamingPlatforms.length > 0) {
         sources.watchmode = true;
-        
+
         watchmodeData.streamingPlatforms.forEach(platform => {
           const normalizedName = this.normalizePlatformName(platform.provider_name);
           allPlatforms.push({
@@ -177,7 +177,7 @@ export class MultiAPIStreamingService {
       } else {
         utellyData = await searchStreamingAvailability(title);
       }
-      
+
       if (utellyData?.results?.length > 0) {
         sources.utelly = true;
         const utellyPlatforms = this.convertUtellyResults(utellyData.results);
@@ -189,11 +189,11 @@ export class MultiAPIStreamingService {
 
     // 4. Deduplicate platforms by name (keep the one with most data)
     const platformMap = new Map<string, EnhancedStreamingPlatform>();
-    
+
     allPlatforms.forEach(platform => {
       const key = platform.provider_name.toLowerCase();
       const existing = platformMap.get(key);
-      
+
       if (!existing || this.getPlatformScore(platform) > this.getPlatformScore(existing)) {
         platformMap.set(key, platform);
       }
@@ -221,19 +221,19 @@ export class MultiAPIStreamingService {
   // Score platforms based on data completeness for deduplication
   private static getPlatformScore(platform: EnhancedStreamingPlatform): number {
     let score = 0;
-    
+
     if (platform.logo_path) score += 2;
     if (platform.web_url) score += 3;
     if (platform.ios_url || platform.android_url) score += 1;
     if (platform.price !== undefined) score += 1;
     if (platform.format) score += 1;
     if (platform.affiliate_supported) score += 2;
-    
+
     // Prefer certain sources based on reliability
     if (platform.source === 'tmdb') score += 3;
     if (platform.source === 'watchmode') score += 2;
     if (platform.source === 'utelly') score += 1;
-    
+
     return score;
   }
 
@@ -248,7 +248,7 @@ export class MultiAPIStreamingService {
     const affiliatePlatforms = platforms.filter(p => p.affiliate_supported);
     const totalCommission = affiliatePlatforms.reduce((sum, p) => sum + (p.commission_rate || 0), 0);
     const averageCommission = affiliatePlatforms.length > 0 ? totalCommission / affiliatePlatforms.length : 0;
-    
+
     // Sort by commission rate for top platforms
     const topAffiliatePlatforms = affiliatePlatforms
       .sort((a, b) => (b.commission_rate || 0) - (a.commission_rate || 0))
@@ -269,7 +269,7 @@ export class MultiAPIStreamingService {
     titles: Array<{ tmdbId: number; title: string; mediaType: 'movie' | 'tv'; imdbId?: string }>
   ): Promise<Map<number, StreamingAvailabilityResponse>> {
     const results = new Map<number, StreamingAvailabilityResponse>();
-    
+
     // Process in batches to respect API rate limits
     const batchSize = 5;
     for (let i = 0; i < titles.length; i += batchSize) {
@@ -302,8 +302,8 @@ export class MultiAPIStreamingService {
 
   // Get platform-specific affiliate URL with tracking
   static generateAffiliateUrl(
-    platform: EnhancedStreamingPlatform, 
-    userId: string, 
+    platform: EnhancedStreamingPlatform,
+    userId: string,
     showId: number,
     showTitle: string
   ): string {
@@ -312,7 +312,7 @@ export class MultiAPIStreamingService {
     }
 
     const trackingId = this.generateTrackingId(userId, showId, platform.provider_name);
-    
+
     // Platform-specific affiliate URL generation
     const affiliateUrls: Record<string, (url: string, trackingId: string) => string> = {
       'Netflix': (url, id) => `${url}?trkid=BINGEBOARD_${id}`,
@@ -340,7 +340,7 @@ export class MultiAPIStreamingService {
     const userHash = btoa(userId).slice(0, 6);
     const showHash = showId.toString(36);
     const platformHash = platform.toLowerCase().replace(/\s+/g, '').slice(0, 4);
-    
+
     return `${userHash}_${showHash}_${platformHash}_${timestamp}`;
   }
 }

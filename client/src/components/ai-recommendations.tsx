@@ -7,14 +7,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { 
-  Brain, 
-  ThumbsUp, 
-  ThumbsDown, 
-  X, 
-  Sparkles, 
-  TrendingUp, 
-  Users, 
+import {
+  Brain,
+  ThumbsUp,
+  ThumbsDown,
+  X,
+  Sparkles,
+  TrendingUp,
+  Users,
   Zap,
   Eye,
   Heart,
@@ -124,10 +124,10 @@ export function AiRecommendations({ compact = false, horizontal = false }: { com
       // Clear all storage
       localStorage.clear();
       sessionStorage.clear();
-      
+
       // Call server logout
       await fetch('/api/logout', { method: 'GET', credentials: 'include' });
-      
+
       // Force navigation to landing
       window.location.href = '/landing';
     } catch (error) {
@@ -138,11 +138,11 @@ export function AiRecommendations({ compact = false, horizontal = false }: { com
   };
 
   // Fetch AI recommendations with error handling
-  const { 
-    data: apiResponse, 
-    isLoading, 
+  const {
+    data: apiResponse,
+    isLoading,
     refetch,
-    error 
+    error
   } = useQuery({
     queryKey: ["/api/ai-recommendations"],
     queryFn: async () => {
@@ -227,9 +227,9 @@ export function AiRecommendations({ compact = false, horizontal = false }: { com
           <div className="text-center text-slate-400">
             <Brain className="h-12 w-12 mx-auto mb-4 text-slate-500" />
             <p>Unable to load AI recommendations</p>
-            <Button 
-              onClick={() => refetch()} 
-              variant="outline" 
+            <Button
+              onClick={() => refetch()}
+              variant="outline"
               className="mt-4"
             >
               Try Again
@@ -262,7 +262,7 @@ export function AiRecommendations({ compact = false, horizontal = false }: { com
   // Handle trailer viewing with ads (monetization)
   const handleWatchTrailer = async (recommendation: AiRecommendation) => {
     const { show } = recommendation;
-    
+
     if (!show.hasTrailer || !show.trailerKey) {
       toast({
         title: "No Trailer Available",
@@ -295,10 +295,10 @@ export function AiRecommendations({ compact = false, horizontal = false }: { com
 
       // Open trailer in new tab after "ad"
       window.open(show.trailerUrl, '_blank');
-      
+
       // Mark as viewed for analytics
       handleShowView(recommendation.id);
-      
+
       toast({
         title: "Enjoy the Trailer!",
         description: "Thanks for supporting BingeBoard! Ad revenue helps keep our service free.",
@@ -309,7 +309,7 @@ export function AiRecommendations({ compact = false, horizontal = false }: { com
   // Handle watch button - direct to streaming platform
   const handleWatchNow = async (recommendation: AiRecommendation) => {
     const { show } = recommendation;
-    
+
     if (!show.streamingAvailable || !show.streamingPlatforms?.length) {
       toast({
         title: "Not Available",
@@ -322,7 +322,7 @@ export function AiRecommendations({ compact = false, horizontal = false }: { com
     // For now, open a search on the primary platform
     const primaryPlatform = show.streamingPlatforms[0];
     let searchUrl = "";
-    
+
     switch (primaryPlatform.provider_name) {
       case 'Netflix':
         searchUrl = `https://www.netflix.com/search?q=${encodeURIComponent(show.title)}`;
@@ -358,10 +358,10 @@ export function AiRecommendations({ compact = false, horizontal = false }: { com
     }
 
     window.open(searchUrl, '_blank');
-    
+
     // Mark as viewed for analytics
     handleShowView(recommendation.id);
-    
+
     toast({
       title: "Redirecting to Streaming Platform",
       description: `Opening ${primaryPlatform.provider_name} to watch ${show.title}`,
@@ -420,28 +420,28 @@ export function AiRecommendations({ compact = false, horizontal = false }: { com
                   Emergency Logout
                 </Button>
                 <Button
-                onClick={() => generateMutation.mutate()}
-                disabled={generateMutation.isPending}
-                size="sm"
-                className="whitespace-nowrap"
-              >
-                {generateMutation.isPending ? (
-                  <>
-                    <Zap className="h-4 w-4 mr-2 animate-pulse" />
-                    Generating...
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="h-4 w-4 mr-2" />
-                    Generate New
-                  </>
-                )}
-              </Button>
+                  onClick={() => generateMutation.mutate()}
+                  disabled={generateMutation.isPending}
+                  size="sm"
+                  className="whitespace-nowrap"
+                >
+                  {generateMutation.isPending ? (
+                    <>
+                      <Zap className="h-4 w-4 mr-2 animate-pulse" />
+                      Generating...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="h-4 w-4 mr-2" />
+                      Generate New
+                    </>
+                  )}
+                </Button>
+              </div>
             </div>
-          </div>
-        </CardHeader>
+          </CardHeader>
         )}
-        
+
         {recommendations.length === 0 ? (
           <CardContent className={compact ? "text-center py-6" : "text-center py-12"}>
             <div className="space-y-4">
@@ -459,7 +459,7 @@ export function AiRecommendations({ compact = false, horizontal = false }: { com
             {horizontal ? (
               // Horizontal Scrolling Layout
               <div className="space-y-3">
-                
+
                 <ScrollArea className="w-full whitespace-nowrap">
                   <div className="flex gap-4 pb-4">
                     {recommendations.map((recommendation: AiRecommendation) => (
@@ -471,17 +471,17 @@ export function AiRecommendations({ compact = false, horizontal = false }: { com
                             </Badge>
                           </div>
                         )}
-                        
+
                         <CardContent className="p-3">
                           <div className="space-y-3">
                             {/* Poster Image */}
                             <div className="relative">
-                              <div 
+                              <div
                                 className="cursor-pointer"
                                 onClick={() => handleShowView(recommendation.id)}
                               >
                                 <img
-                                  src={recommendation.show.posterPath 
+                                  src={recommendation.show.posterPath
                                     ? `https://image.tmdb.org/t/p/w200${recommendation.show.posterPath}`
                                     : "/placeholder-poster.jpg"
                                   }
@@ -537,30 +537,28 @@ export function AiRecommendations({ compact = false, horizontal = false }: { com
                                   >
                                     <Eye className="h-3.5 w-3.5" />
                                   </Button>
-                                  
+
                                   {/* Thumbs Up */}
                                   <Button
                                     size="sm"
                                     variant="ghost"
-                                    className={`h-7 w-7 p-0 transition-all ${
-                                      recommendation.feedback === 'like'
+                                    className={`h-7 w-7 p-0 transition-all ${recommendation.feedback === 'like'
                                         ? 'text-green-400 bg-green-400/10'
                                         : 'text-gray-400 hover:text-green-400'
-                                    }`}
+                                      }`}
                                     onClick={() => handleFeedback(recommendation.id, "like")}
                                   >
                                     <ThumbsUp className="h-3.5 w-3.5" />
                                   </Button>
-                                  
+
                                   {/* Thumbs Down */}
                                   <Button
                                     size="sm"
                                     variant="ghost"
-                                    className={`h-7 w-7 p-0 transition-all ${
-                                      recommendation.feedback === 'dislike'
+                                    className={`h-7 w-7 p-0 transition-all ${recommendation.feedback === 'dislike'
                                         ? 'text-red-400 bg-red-400/10'
                                         : 'text-gray-400 hover:text-red-400'
-                                    }`}
+                                      }`}
                                     onClick={() => handleFeedback(recommendation.id, "dislike")}
                                   >
                                     <ThumbsDown className="h-3.5 w-3.5" />
@@ -594,7 +592,7 @@ export function AiRecommendations({ compact = false, horizontal = false }: { com
                                     Trailer
                                   </Button>
                                 )}
-                                
+
                                 {recommendation.show.streamingAvailable && (
                                   <Button
                                     size="sm"
@@ -620,7 +618,7 @@ export function AiRecommendations({ compact = false, horizontal = false }: { com
                 {recommendations.slice(0, 3).map((recommendation: AiRecommendation) => (
                   <div key={recommendation.id} className="flex gap-3 p-3 rounded-lg hover:bg-slate-800/50 transition-colors group">
                     <img
-                      src={recommendation.show.posterPath 
+                      src={recommendation.show.posterPath
                         ? `https://image.tmdb.org/t/p/w92${recommendation.show.posterPath}`
                         : "/placeholder-poster.jpg"
                       }
@@ -656,7 +654,7 @@ export function AiRecommendations({ compact = false, horizontal = false }: { com
                             <TooltipContent>Mark as viewed</TooltipContent>
                           </Tooltip>
                         </TooltipProvider>
-                        
+
                         <TooltipProvider>
                           <Tooltip>
                             <TooltipTrigger asChild>
@@ -672,7 +670,7 @@ export function AiRecommendations({ compact = false, horizontal = false }: { com
                             <TooltipContent>Like this recommendation</TooltipContent>
                           </Tooltip>
                         </TooltipProvider>
-                        
+
                         <TooltipProvider>
                           <Tooltip>
                             <TooltipTrigger asChild>
@@ -701,306 +699,306 @@ export function AiRecommendations({ compact = false, horizontal = false }: { com
                 )}
               </div>
             ) : (
-            // Full Layout - Existing tabs and cards
-            <Tabs value={selectedTab} onValueChange={setSelectedTab}>
-              <TabsList className="w-full">
-                <TabsTrigger value="all" className="flex-1">
-                  All ({recommendations.length})
-                </TabsTrigger>
-                <TabsTrigger value="collaborative" className="flex-1">
-                  <Users className="h-4 w-4 mr-1" />
-                  Collaborative ({recommendationsByType.collaborative || 0})
-                </TabsTrigger>
-                <TabsTrigger value="content_based" className="flex-1">
-                  <Brain className="h-4 w-4 mr-1" />
-                  Similar ({recommendationsByType.content_based || 0})
-                </TabsTrigger>
-                <TabsTrigger value="trending" className="flex-1">
-                  <TrendingUp className="h-4 w-4 mr-1" />
-                  Trending ({recommendationsByType.trending || 0})
-                </TabsTrigger>
-              </TabsList>
+              // Full Layout - Existing tabs and cards
+              <Tabs value={selectedTab} onValueChange={setSelectedTab}>
+                <TabsList className="w-full">
+                  <TabsTrigger value="all" className="flex-1">
+                    All ({recommendations.length})
+                  </TabsTrigger>
+                  <TabsTrigger value="collaborative" className="flex-1">
+                    <Users className="h-4 w-4 mr-1" />
+                    Collaborative ({recommendationsByType.collaborative || 0})
+                  </TabsTrigger>
+                  <TabsTrigger value="content_based" className="flex-1">
+                    <Brain className="h-4 w-4 mr-1" />
+                    Similar ({recommendationsByType.content_based || 0})
+                  </TabsTrigger>
+                  <TabsTrigger value="trending" className="flex-1">
+                    <TrendingUp className="h-4 w-4 mr-1" />
+                    Trending ({recommendationsByType.trending || 0})
+                  </TabsTrigger>
+                </TabsList>
 
-              <TabsContent value={selectedTab} className="mt-6">
-                <ScrollArea className="h-[600px]">
-                  <div className="space-y-6">
-                    {filteredRecommendations.map((recommendation: AiRecommendation) => (
-                      <Card key={recommendation.id} className="group hover:shadow-xl transition-all duration-300 border-2 hover:border-primary/20 bg-gradient-to-br from-card to-muted/10 relative overflow-hidden">
-                        {!recommendation.isViewed && (
-                          <div className="absolute top-3 right-3 z-10">
-                            <Badge variant="destructive" className="text-xs shadow-lg">
-                              ✨ New
-                            </Badge>
-                          </div>
-                        )}
-                        
-                        <CardContent className="p-6">
-                          <div className="flex gap-5">
-                            {/* Poster Image */}
-                            <div className="flex-shrink-0">
-                              <div 
-                                className="cursor-pointer"
-                                onClick={() => handleShowView(recommendation.id)}
-                              >
-                                <img
-                                  src={recommendation.show.posterPath 
-                                    ? `https://image.tmdb.org/t/p/w200${recommendation.show.posterPath}`
-                                    : "/placeholder-poster.jpg"
-                                  }
-                                  alt={recommendation.show.title}
-                                  className="w-24 h-36 object-cover rounded-lg shadow-md hover:shadow-xl transition-all duration-300 group-hover:scale-105"
-                                />
-                              </div>
+                <TabsContent value={selectedTab} className="mt-6">
+                  <ScrollArea className="h-[600px]">
+                    <div className="space-y-6">
+                      {filteredRecommendations.map((recommendation: AiRecommendation) => (
+                        <Card key={recommendation.id} className="group hover:shadow-xl transition-all duration-300 border-2 hover:border-primary/20 bg-gradient-to-br from-card to-muted/10 relative overflow-hidden">
+                          {!recommendation.isViewed && (
+                            <div className="absolute top-3 right-3 z-10">
+                              <Badge variant="destructive" className="text-xs shadow-lg">
+                                ✨ New
+                              </Badge>
                             </div>
+                          )}
 
-                            {/* Main Content */}
-                            <div className="flex-1 space-y-4">
-                              {/* Header with Title and Score */}
-                              <div className="space-y-2">
-                                <div className="flex items-start justify-between gap-4">
-                                  <h3 className="font-bold text-xl leading-tight group-hover:text-primary transition-colors">
-                                    {recommendation.show.title}
-                                  </h3>
-                                  <div className="flex items-center gap-2 flex-shrink-0">
-                                    <div className="flex items-center gap-1 bg-primary/10 px-3 py-1 rounded-full">
-                                      <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
-                                      <span className="text-sm font-bold text-primary">
-                                        {Math.round(recommendation.score * 100)}%
+                          <CardContent className="p-6">
+                            <div className="flex gap-5">
+                              {/* Poster Image */}
+                              <div className="flex-shrink-0">
+                                <div
+                                  className="cursor-pointer"
+                                  onClick={() => handleShowView(recommendation.id)}
+                                >
+                                  <img
+                                    src={recommendation.show.posterPath
+                                      ? `https://image.tmdb.org/t/p/w200${recommendation.show.posterPath}`
+                                      : "/placeholder-poster.jpg"
+                                    }
+                                    alt={recommendation.show.title}
+                                    className="w-24 h-36 object-cover rounded-lg shadow-md hover:shadow-xl transition-all duration-300 group-hover:scale-105"
+                                  />
+                                </div>
+                              </div>
+
+                              {/* Main Content */}
+                              <div className="flex-1 space-y-4">
+                                {/* Header with Title and Score */}
+                                <div className="space-y-2">
+                                  <div className="flex items-start justify-between gap-4">
+                                    <h3 className="font-bold text-xl leading-tight group-hover:text-primary transition-colors">
+                                      {recommendation.show.title}
+                                    </h3>
+                                    <div className="flex items-center gap-2 flex-shrink-0">
+                                      <div className="flex items-center gap-1 bg-primary/10 px-3 py-1 rounded-full">
+                                        <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
+                                        <span className="text-sm font-bold text-primary">
+                                          {Math.round(recommendation.score * 100)}%
+                                        </span>
+                                      </div>
+                                      {recommendation.show.rating && (
+                                        <Badge variant="secondary" className="text-xs font-bold">
+                                          ⭐ {recommendation.show.rating}
+                                        </Badge>
+                                      )}
+                                    </div>
+                                  </div>
+
+                                  {/* Type Badge */}
+                                  <Badge
+                                    variant="outline"
+                                    className={`${getRecommendationTypeColor(recommendation.recommendationType)} font-medium`}
+                                  >
+                                    {getRecommendationTypeIcon(recommendation.recommendationType)}
+                                    <span className="ml-2">
+                                      {getRecommendationTypeLabel(recommendation.recommendationType)}
+                                    </span>
+                                  </Badge>
+                                </div>
+
+                                {/* Overview */}
+                                <p className="text-sm text-muted-foreground leading-relaxed line-clamp-3">
+                                  {recommendation.show.overview}
+                                </p>
+
+                                {/* AI Reasoning - Redesigned */}
+                                <div className="bg-gradient-to-r from-primary/5 to-secondary/5 border border-primary/10 rounded-lg p-4">
+                                  <div className="flex items-start gap-3">
+                                    <div className="p-2 bg-primary/10 rounded-full flex-shrink-0">
+                                      <Brain className="h-4 w-4 text-primary" />
+                                    </div>
+                                    <div className="flex-1">
+                                      <div className="text-sm font-semibold text-primary mb-1">
+                                        Why AI recommends this for you:
+                                      </div>
+                                      <div className="text-sm text-muted-foreground italic">
+                                        "{recommendation.reason}"
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+
+                                {/* Genres and Networks */}
+                                <div className="flex flex-wrap gap-2">
+                                  {recommendation.show.genres?.slice(0, 4).map((genre: any) => (
+                                    <Badge key={genre} variant="secondary" className="text-xs hover:bg-secondary/80 transition-colors">
+                                      {genre}
+                                    </Badge>
+                                  ))}
+                                  {recommendation.show.networks?.slice(0, 2).map((network: any) => (
+                                    <Badge key={network} variant="outline" className="text-xs border-primary/20">
+                                      📺 {network}
+                                    </Badge>
+                                  ))}
+                                </div>
+
+                                {/* Streaming Platforms - Redesigned */}
+                                {recommendation.show.streamingPlatforms && recommendation.show.streamingPlatforms.length > 0 && (
+                                  <div className="bg-muted/30 rounded-lg p-3 border">
+                                    <div className="flex items-center justify-between">
+                                      <div className="flex items-center gap-3">
+                                        <span className="text-sm font-medium text-green-600">
+                                          🎬 Watch on:
+                                        </span>
+                                        <StreamingLogos
+                                          providers={recommendation.show.streamingPlatforms}
+                                          size="sm"
+                                          maxDisplayed={5}
+                                        />
+                                      </div>
+                                      <span className="text-xs text-muted-foreground">
+                                        {recommendation.show.whereToWatch}
                                       </span>
                                     </div>
-                                    {recommendation.show.rating && (
-                                      <Badge variant="secondary" className="text-xs font-bold">
-                                        ⭐ {recommendation.show.rating}
+                                  </div>
+                                )}
+
+                                {/* Action Buttons - Redesigned Layout */}
+                                <div className="flex items-center justify-between pt-2">
+                                  {/* Left side - Primary action buttons */}
+                                  <div className="flex items-center gap-2">
+                                    {/* Watch Trailer Button with Ads */}
+                                    {recommendation.show.hasTrailer && (
+                                      <Button
+                                        size="sm"
+                                        onClick={() => handleWatchTrailer(recommendation)}
+                                        className="bg-red-600 hover:bg-red-700 text-white shadow-md hover:shadow-lg transition-all"
+                                      >
+                                        <Play className="h-4 w-4 mr-2" />
+                                        Trailer
+                                      </Button>
+                                    )}
+
+                                    {/* Watch Now Button */}
+                                    {recommendation.show.streamingAvailable && (
+                                      <Button
+                                        size="sm"
+                                        onClick={() => handleWatchNow(recommendation)}
+                                        className="bg-green-600 hover:bg-green-700 text-white shadow-md hover:shadow-lg transition-all"
+                                      >
+                                        <ExternalLink className="h-4 w-4 mr-2" />
+                                        Watch Now
+                                      </Button>
+                                    )}
+
+                                    {/* Add to List Button - Made much smaller as requested */}
+                                    <TooltipProvider>
+                                      <Tooltip>
+                                        <TooltipTrigger asChild>
+                                          <Button
+                                            size="sm"
+                                            variant="outline"
+                                            onClick={() => handleAddToList(recommendation.show)}
+                                            className="h-8 px-2 border-teal-600/20 hover:bg-teal-50 hover:border-teal-600/40 transition-all"
+                                          >
+                                            <Plus className="h-3 w-3" />
+                                          </Button>
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                          <p>Add to watchlist</p>
+                                        </TooltipContent>
+                                      </Tooltip>
+                                    </TooltipProvider>
+                                  </div>
+
+                                  {/* Right side - Feedback buttons */}
+                                  <div className="flex items-center gap-1">
+                                    {!recommendation.feedback ? (
+                                      <>
+                                        {/* Eye button with tooltip explaining its purpose */}
+                                        <TooltipProvider>
+                                          <Tooltip>
+                                            <TooltipTrigger asChild>
+                                              <Button
+                                                size="sm"
+                                                variant="ghost"
+                                                onClick={() => handleShowView(recommendation.id)}
+                                                className="h-8 w-8 p-0 hover:bg-blue-50 hover:text-blue-600 transition-all"
+                                              >
+                                                <Eye className="h-4 w-4" />
+                                              </Button>
+                                            </TooltipTrigger>
+                                            <TooltipContent>
+                                              <p>Mark as viewed (helps improve recommendations)</p>
+                                            </TooltipContent>
+                                          </Tooltip>
+                                        </TooltipProvider>
+
+                                        {/* Thumbs up - with better feedback handling */}
+                                        <TooltipProvider>
+                                          <Tooltip>
+                                            <TooltipTrigger asChild>
+                                              <Button
+                                                size="sm"
+                                                variant="ghost"
+                                                onClick={() => handleFeedback(recommendation.id, "like")}
+                                                disabled={feedbackMutation.isPending}
+                                                className="h-8 w-8 p-0 hover:bg-green-50 hover:text-green-600 transition-all"
+                                              >
+                                                <ThumbsUp className="h-4 w-4" />
+                                              </Button>
+                                            </TooltipTrigger>
+                                            <TooltipContent>
+                                              <p>I like this recommendation</p>
+                                            </TooltipContent>
+                                          </Tooltip>
+                                        </TooltipProvider>
+
+                                        {/* Thumbs down - with better feedback handling */}
+                                        <TooltipProvider>
+                                          <Tooltip>
+                                            <TooltipTrigger asChild>
+                                              <Button
+                                                size="sm"
+                                                variant="ghost"
+                                                onClick={() => handleFeedback(recommendation.id, "dislike")}
+                                                disabled={feedbackMutation.isPending}
+                                                className="h-8 w-8 p-0 hover:bg-red-50 hover:text-red-600 transition-all"
+                                              >
+                                                <ThumbsDown className="h-4 w-4" />
+                                              </Button>
+                                            </TooltipTrigger>
+                                            <TooltipContent>
+                                              <p>Not interested in this</p>
+                                            </TooltipContent>
+                                          </Tooltip>
+                                        </TooltipProvider>
+
+                                        {/* Dismiss button */}
+                                        <TooltipProvider>
+                                          <Tooltip>
+                                            <TooltipTrigger asChild>
+                                              <Button
+                                                size="sm"
+                                                variant="ghost"
+                                                onClick={() => handleDismiss(recommendation.id)}
+                                                disabled={dismissMutation.isPending}
+                                                className="h-8 w-8 p-0 hover:bg-gray-100 hover:text-gray-600 transition-all"
+                                              >
+                                                <X className="h-4 w-4" />
+                                              </Button>
+                                            </TooltipTrigger>
+                                            <TooltipContent>
+                                              <p>Hide this recommendation</p>
+                                            </TooltipContent>
+                                          </Tooltip>
+                                        </TooltipProvider>
+                                      </>
+                                    ) : (
+                                      <Badge
+                                        variant={recommendation.feedback === "like" ? "default" : "destructive"}
+                                        className="shadow-sm"
+                                      >
+                                        {recommendation.feedback === "like" ? (
+                                          <><ThumbsUp className="h-3 w-3 mr-1" /> Liked</>
+                                        ) : recommendation.feedback === "dislike" ? (
+                                          <><ThumbsDown className="h-3 w-3 mr-1" /> Disliked</>
+                                        ) : (
+                                          <><X className="h-3 w-3 mr-1" /> Dismissed</>
+                                        )}
                                       </Badge>
                                     )}
                                   </div>
                                 </div>
-                                
-                                {/* Type Badge */}
-                                <Badge 
-                                  variant="outline" 
-                                  className={`${getRecommendationTypeColor(recommendation.recommendationType)} font-medium`}
-                                >
-                                  {getRecommendationTypeIcon(recommendation.recommendationType)}
-                                  <span className="ml-2">
-                                    {getRecommendationTypeLabel(recommendation.recommendationType)}
-                                  </span>
-                                </Badge>
-                              </div>
-
-                              {/* Overview */}
-                              <p className="text-sm text-muted-foreground leading-relaxed line-clamp-3">
-                                {recommendation.show.overview}
-                              </p>
-
-                              {/* AI Reasoning - Redesigned */}
-                              <div className="bg-gradient-to-r from-primary/5 to-secondary/5 border border-primary/10 rounded-lg p-4">
-                                <div className="flex items-start gap-3">
-                                  <div className="p-2 bg-primary/10 rounded-full flex-shrink-0">
-                                    <Brain className="h-4 w-4 text-primary" />
-                                  </div>
-                                  <div className="flex-1">
-                                    <div className="text-sm font-semibold text-primary mb-1">
-                                      Why AI recommends this for you:
-                                    </div>
-                                    <div className="text-sm text-muted-foreground italic">
-                                      "{recommendation.reason}"
-                                    </div>
-                                  </div>
-                                </div>
-                              </div>
-
-                              {/* Genres and Networks */}
-                              <div className="flex flex-wrap gap-2">
-                                {recommendation.show.genres?.slice(0, 4).map((genre: any) => (
-                                  <Badge key={genre} variant="secondary" className="text-xs hover:bg-secondary/80 transition-colors">
-                                    {genre}
-                                  </Badge>
-                                ))}
-                                {recommendation.show.networks?.slice(0, 2).map((network: any) => (
-                                  <Badge key={network} variant="outline" className="text-xs border-primary/20">
-                                    📺 {network}
-                                  </Badge>
-                                ))}
-                              </div>
-
-                              {/* Streaming Platforms - Redesigned */}
-                              {recommendation.show.streamingPlatforms && recommendation.show.streamingPlatforms.length > 0 && (
-                                <div className="bg-muted/30 rounded-lg p-3 border">
-                                  <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-3">
-                                      <span className="text-sm font-medium text-green-600">
-                                        🎬 Watch on:
-                                      </span>
-                                      <StreamingLogos 
-                                        providers={recommendation.show.streamingPlatforms}
-                                        size="sm"
-                                        maxDisplayed={5}
-                                      />
-                                    </div>
-                                    <span className="text-xs text-muted-foreground">
-                                      {recommendation.show.whereToWatch}
-                                    </span>
-                                  </div>
-                                </div>
-                              )}
-
-                              {/* Action Buttons - Redesigned Layout */}
-                              <div className="flex items-center justify-between pt-2">
-                                {/* Left side - Primary action buttons */}
-                                <div className="flex items-center gap-2">
-                                  {/* Watch Trailer Button with Ads */}
-                                  {recommendation.show.hasTrailer && (
-                                    <Button 
-                                      size="sm" 
-                                      onClick={() => handleWatchTrailer(recommendation)}
-                                      className="bg-red-600 hover:bg-red-700 text-white shadow-md hover:shadow-lg transition-all"
-                                    >
-                                      <Play className="h-4 w-4 mr-2" />
-                                      Trailer
-                                    </Button>
-                                  )}
-
-                                  {/* Watch Now Button */}
-                                  {recommendation.show.streamingAvailable && (
-                                    <Button 
-                                      size="sm" 
-                                      onClick={() => handleWatchNow(recommendation)}
-                                      className="bg-green-600 hover:bg-green-700 text-white shadow-md hover:shadow-lg transition-all"
-                                    >
-                                      <ExternalLink className="h-4 w-4 mr-2" />
-                                      Watch Now
-                                    </Button>
-                                  )}
-                                  
-                                  {/* Add to List Button - Made much smaller as requested */}
-                                  <TooltipProvider>
-                                    <Tooltip>
-                                      <TooltipTrigger asChild>
-                                        <Button 
-                                          size="sm" 
-                                          variant="outline"
-                                          onClick={() => handleAddToList(recommendation.show)}
-                                          className="h-8 px-2 border-teal-600/20 hover:bg-teal-50 hover:border-teal-600/40 transition-all"
-                                        >
-                                          <Plus className="h-3 w-3" />
-                                        </Button>
-                                      </TooltipTrigger>
-                                      <TooltipContent>
-                                        <p>Add to watchlist</p>
-                                      </TooltipContent>
-                                    </Tooltip>
-                                  </TooltipProvider>
-                                </div>
-                                
-                                {/* Right side - Feedback buttons */}
-                                <div className="flex items-center gap-1">
-                                  {!recommendation.feedback ? (
-                                    <>
-                                      {/* Eye button with tooltip explaining its purpose */}
-                                      <TooltipProvider>
-                                        <Tooltip>
-                                          <TooltipTrigger asChild>
-                                            <Button 
-                                              size="sm" 
-                                              variant="ghost"
-                                              onClick={() => handleShowView(recommendation.id)}
-                                              className="h-8 w-8 p-0 hover:bg-blue-50 hover:text-blue-600 transition-all"
-                                            >
-                                              <Eye className="h-4 w-4" />
-                                            </Button>
-                                          </TooltipTrigger>
-                                          <TooltipContent>
-                                            <p>Mark as viewed (helps improve recommendations)</p>
-                                          </TooltipContent>
-                                        </Tooltip>
-                                      </TooltipProvider>
-                                      
-                                      {/* Thumbs up - with better feedback handling */}
-                                      <TooltipProvider>
-                                        <Tooltip>
-                                          <TooltipTrigger asChild>
-                                            <Button
-                                              size="sm"
-                                              variant="ghost"
-                                              onClick={() => handleFeedback(recommendation.id, "like")}
-                                              disabled={feedbackMutation.isPending}
-                                              className="h-8 w-8 p-0 hover:bg-green-50 hover:text-green-600 transition-all"
-                                            >
-                                              <ThumbsUp className="h-4 w-4" />
-                                            </Button>
-                                          </TooltipTrigger>
-                                          <TooltipContent>
-                                            <p>I like this recommendation</p>
-                                          </TooltipContent>
-                                        </Tooltip>
-                                      </TooltipProvider>
-                                      
-                                      {/* Thumbs down - with better feedback handling */}
-                                      <TooltipProvider>
-                                        <Tooltip>
-                                          <TooltipTrigger asChild>
-                                            <Button
-                                              size="sm"
-                                              variant="ghost"
-                                              onClick={() => handleFeedback(recommendation.id, "dislike")}
-                                              disabled={feedbackMutation.isPending}
-                                              className="h-8 w-8 p-0 hover:bg-red-50 hover:text-red-600 transition-all"
-                                            >
-                                              <ThumbsDown className="h-4 w-4" />
-                                            </Button>
-                                          </TooltipTrigger>
-                                          <TooltipContent>
-                                            <p>Not interested in this</p>
-                                          </TooltipContent>
-                                        </Tooltip>
-                                      </TooltipProvider>
-                                      
-                                      {/* Dismiss button */}
-                                      <TooltipProvider>
-                                        <Tooltip>
-                                          <TooltipTrigger asChild>
-                                            <Button
-                                              size="sm"
-                                              variant="ghost"
-                                              onClick={() => handleDismiss(recommendation.id)}
-                                              disabled={dismissMutation.isPending}
-                                              className="h-8 w-8 p-0 hover:bg-gray-100 hover:text-gray-600 transition-all"
-                                            >
-                                              <X className="h-4 w-4" />
-                                            </Button>
-                                          </TooltipTrigger>
-                                          <TooltipContent>
-                                            <p>Hide this recommendation</p>
-                                          </TooltipContent>
-                                        </Tooltip>
-                                      </TooltipProvider>
-                                    </>
-                                  ) : (
-                                    <Badge 
-                                      variant={recommendation.feedback === "like" ? "default" : "destructive"}
-                                      className="shadow-sm"
-                                    >
-                                      {recommendation.feedback === "like" ? (
-                                        <><ThumbsUp className="h-3 w-3 mr-1" /> Liked</>
-                                      ) : recommendation.feedback === "dislike" ? (
-                                        <><ThumbsDown className="h-3 w-3 mr-1" /> Disliked</>
-                                      ) : (
-                                        <><X className="h-3 w-3 mr-1" /> Dismissed</>
-                                      )}
-                                    </Badge>
-                                  )}
-                                </div>
                               </div>
                             </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                </ScrollArea>
-              </TabsContent>
-            </Tabs>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  </ScrollArea>
+                </TabsContent>
+              </Tabs>
             )}
           </CardContent>
         )}
@@ -1020,14 +1018,14 @@ export function AiRecommendations({ compact = false, horizontal = false }: { com
                 </div>
                 <div className="text-sm text-muted-foreground">Average Match Score</div>
               </div>
-              
+
               <div className="text-center p-4 bg-muted/50 rounded-lg">
                 <div className="text-2xl font-bold text-primary">
                   {recommendations.filter((rec: AiRecommendation) => !rec.isViewed).length}
                 </div>
                 <div className="text-sm text-muted-foreground">Unviewed Suggestions</div>
               </div>
-              
+
               <div className="text-center p-4 bg-muted/50 rounded-lg">
                 <div className="text-2xl font-bold text-primary">
                   {recommendations.filter((rec: AiRecommendation) => rec.feedback === "liked").length}
@@ -1035,19 +1033,19 @@ export function AiRecommendations({ compact = false, horizontal = false }: { com
                 <div className="text-sm text-muted-foreground">Liked Recommendations</div>
               </div>
             </div>
-            
+
             <Separator className="my-4" />
-            
+
             <div className="text-center text-sm text-muted-foreground">
-              AI recommendations improve based on your viewing history, ratings, and feedback. 
+              AI recommendations improve based on your viewing history, ratings, and feedback.
               The more you interact with the platform, the better our suggestions become.
             </div>
           </CardContent>
         </Card>
       )}
-      
+
       {/* List Selector Modal */}
-      <ListSelectorModal 
+      <ListSelectorModal
         isOpen={listSelectorOpen}
         onClose={() => setListSelectorOpen(false)}
         show={showToAddToList}

@@ -24,34 +24,34 @@ export function useWatchProviders(mediaType: 'tv' | 'movie', id: number, region 
     queryKey: ['watch-providers', mediaType, id, region],
     queryFn: async (): Promise<StreamingProvider[]> => {
       if (!id) return [];
-      
+
       try {
         const response = await fetch(`/api/tmdb/${mediaType}/${id}/watch/providers?region=${region}`);
         if (!response.ok) {
           console.warn(`Failed to fetch watch providers for ${mediaType} ${id}:`, response.statusText);
           return [];
         }
-        
+
         const data: WatchProvidersResponse = await response.json();
         const regionData = data.results[region];
-        
+
         if (!regionData) {
           return [];
         }
-        
+
         // Prioritize flatrate (subscription) providers, then rent/buy
         const providers = [
           ...(regionData.flatrate || []),
           ...(regionData.rent || []),
           ...(regionData.buy || [])
         ];
-        
+
         // Remove duplicates based on provider_id
         const uniqueProviders = providers.filter(
-          (provider, index, self) => 
+          (provider, index, self) =>
             self.findIndex(p => p.provider_id === provider.provider_id) === index
         );
-        
+
         return uniqueProviders;
       } catch (error) {
         console.error(`Error fetching watch providers for ${mediaType} ${id}:`, error);

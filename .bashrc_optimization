@@ -1,0 +1,46 @@
+# Performance optimization aliases
+alias dev="npm run dev"
+alias build="npm run build" 
+alias gs="git status"
+alias gp="git push origin main"
+alias gd="git diff"
+
+# Clean up functions
+cleanup() {
+  echo "🧹 Cleaning up workspace..."
+  npm cache clean --force 2>/dev/null
+  rm -rf node_modules/.cache 2>/dev/null
+  pkill -f "node" 2>/dev/null
+  echo "✅ Cleanup complete"
+}
+
+restart-dev() {
+  echo "🔄 Restarting dev server..."
+  pkill -f "npm run dev" 2>/dev/null
+  sleep 2
+  npm run dev
+}
+
+# Quick status check
+status() {
+  echo "📊 Workspace Status:"
+  echo "- Disk usage:"
+  df -h . | tail -1
+  echo "- Memory usage:"
+  free -h | grep Mem
+  echo "- Node processes:"
+  pgrep -fl node || echo "No node processes running"
+  echo "- Top 5 largest files in project:"
+  find . -type f -not -path "./.git/*" -exec du -h {} + | sort -hr | head -5
+  echo "- Git status:"
+  git status --short
+  echo "- Recent commits:"
+  git log --oneline -3
+  echo "Memory: $(free -h | grep Mem | awk '{print $3"/"$2}')"
+  echo "Disk: $(df -h / | tail -1 | awk '{print $3"/"$2" ("$5" used)"}')"
+  echo "Git: $(git status --porcelain | wc -l) changed files"
+  echo "Processes: $(ps aux | wc -l) running"
+}
+
+# Auto-cleanup on exit
+trap cleanup EXIT

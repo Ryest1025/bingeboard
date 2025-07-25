@@ -64,10 +64,10 @@ import MobileApp from "@/pages/mobile-app";
 
 function Router() {
   const { user, isAuthenticated, isLoading } = useAuth();
-  
+
   // Control Premium onboarding visibility
   const [showPremiumOnboarding, setShowPremiumOnboarding] = useState(false);
-  
+
   // DISABLE ONBOARDING COMPLETELY - User has already completed it
   useEffect(() => {
     setShowPremiumOnboarding(false); // Never show onboarding
@@ -114,30 +114,29 @@ function Router() {
 
   return (
     <div className="min-h-screen flex flex-col bg-black">
-            {/* Navigation bars:
+      {/* Navigation bars:
           - Main app pages (/, /discover, /upcoming, /activity, /friends) use NavigationHeader 
           - Other authenticated users get TopNav
           - Unauthenticated users get SimpleNav (except on landing page) */}
-      {location !== "/landing" && 
-       location !== "/" && 
-       location !== "/discover" && 
-       location !== "/upcoming" && 
-       location !== "/activity" && 
-       location !== "/friends" && (
-        isAuthenticated ? <TopNav /> : <SimpleNav />
-      )}
-      
-      <main className={`flex-1 ${
-        (isAuthenticated && 
-         location !== "/landing" && 
-         location !== "/" &&
-         location !== "/discover" && 
-         location !== "/upcoming" && 
-         location !== "/activity" && 
-         location !== "/friends") 
-          ? "pt-16 pb-20 md:pb-20" 
+      {location !== "/landing" &&
+        location !== "/" &&
+        location !== "/discover" &&
+        location !== "/upcoming" &&
+        location !== "/activity" &&
+        location !== "/friends" && (
+          isAuthenticated ? <TopNav /> : <SimpleNav />
+        )}
+
+      <main className={`flex-1 ${(isAuthenticated &&
+          location !== "/landing" &&
+          location !== "/" &&
+          location !== "/discover" &&
+          location !== "/upcoming" &&
+          location !== "/activity" &&
+          location !== "/friends")
+          ? "pt-16 pb-20 md:pb-20"
           : "pt-0 pb-0"
-      }`}>
+        }`}>
         <Switch>
           {/* Public routes - always accessible */}
           <Route path="/login" component={LoginSimple} />
@@ -156,10 +155,10 @@ function Router() {
           <Route path="/data-deletion" component={DataDeletion} />
           <Route path="/landing" component={Landing} />
           <Route path="/reset-password" component={ResetPassword} />
-          
+
           {/* Conditional home route based on authentication - MUST BE FIRST */}
           <Route path="/" component={isAuthenticated ? Home : Landing} />
-          
+
           {/* Protected routes - require authentication */}
           {isAuthenticated ? (
             <>
@@ -202,13 +201,13 @@ function Router() {
           <Route component={NotFound} />
         </Switch>
       </main>
-      
+
       {/* Mobile Bottom Navigation - only for authenticated users on mobile */}
       {isAuthenticated && <MobileNav />}
-      
+
       {/* Legal Footer - always visible for authenticated users */}
       {isAuthenticated && <LegalFooter />}
-      
+
       {/* Onboarding Modal - Premium version for authenticated users */}
       {isAuthenticated && (
         <OnboardingModalPremium
@@ -223,7 +222,7 @@ function Router() {
           userData={user}
         />
       )}
-      
+
       {/* Consent Banner for CCPA/GDPR Compliance */}
       <ConsentBanner
         onAccept={() => {

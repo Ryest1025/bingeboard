@@ -10,8 +10,8 @@ interface StreamingLogosProps {
   showAffiliateIndicator?: boolean;
 }
 
-export const StreamingLogos: React.FC<StreamingLogosProps> = ({ 
-  providers = [], 
+export const StreamingLogos: React.FC<StreamingLogosProps> = ({
+  providers = [],
   maxLogos = 4,
   size = 'sm',
   showNames = false,
@@ -28,7 +28,7 @@ export const StreamingLogos: React.FC<StreamingLogosProps> = ({
   // Universal consistent sizing for all streaming logos
   const sizeClasses = {
     sm: 'w-5 h-5',
-    md: 'w-5 h-5', 
+    md: 'w-5 h-5',
     lg: 'w-5 h-5'
   };
 
@@ -44,8 +44,8 @@ export const StreamingLogos: React.FC<StreamingLogosProps> = ({
       {providers.slice(0, maxLogos).map((provider: any, index: number) => (
         <div key={provider.provider_id || index} className="flex items-center relative">
           {showNames ? (
-            <Badge 
-              variant="outline" 
+            <Badge
+              variant="outline"
               className="text-xs bg-slate-800/50 border-slate-600 text-slate-300 hover:bg-slate-700/50 transition-colors h-6 px-2"
             >
               <img

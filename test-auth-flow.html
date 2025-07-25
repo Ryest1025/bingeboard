@@ -1,47 +1,58 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BingeBoard Auth Flow Test</title>
     <style>
-        body { 
-            font-family: Arial, sans-serif; 
-            max-width: 800px; 
-            margin: 0 auto; 
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
             padding: 20px;
             background: #1a1a1a;
             color: #fff;
         }
-        button { 
-            margin: 10px; 
-            padding: 10px 20px; 
+
+        button {
+            margin: 10px;
+            padding: 10px 20px;
             background: #007bff;
             color: white;
             border: none;
             border-radius: 5px;
             cursor: pointer;
         }
-        .status { 
-            background: #2a2a2a; 
-            padding: 15px; 
-            margin: 10px 0; 
+
+        .status {
+            background: #2a2a2a;
+            padding: 15px;
+            margin: 10px 0;
             border-radius: 5px;
             border-left: 4px solid #007bff;
         }
-        .error { border-left-color: #dc3545; }
-        .success { border-left-color: #28a745; }
-        pre { 
-            background: #000; 
-            padding: 10px; 
+
+        .error {
+            border-left-color: #dc3545;
+        }
+
+        .success {
+            border-left-color: #28a745;
+        }
+
+        pre {
+            background: #000;
+            padding: 10px;
             overflow-x: auto;
             border-radius: 3px;
         }
     </style>
 </head>
+
 <body>
     <h1>🧪 BingeBoard Authentication Flow Test</h1>
-    
+
     <div class="status">
         <h3>Current Status</h3>
         <div id="current-status">Loading...</div>
@@ -99,13 +110,13 @@
         });
 
         // Test functions
-        window.checkAuthUser = async function() {
+        window.checkAuthUser = async function () {
             try {
                 log('🔍 Testing /api/auth/user endpoint...');
                 const response = await fetch('/api/auth/user', {
                     credentials: 'include'
                 });
-                
+
                 if (response.ok) {
                     const userData = await response.json();
                     log('✅ /api/auth/user SUCCESS:', false, true);
@@ -120,11 +131,11 @@
             }
         };
 
-        window.testFirebaseConnection = async function() {
+        window.testFirebaseConnection = async function () {
             try {
                 log('🔍 Testing Firebase connection...');
                 const user = auth.currentUser;
-                
+
                 if (user) {
                     log('✅ Firebase user found:', false, true);
                     log({
@@ -132,7 +143,7 @@
                         uid: user.uid,
                         emailVerified: user.emailVerified
                     }, false, true);
-                    
+
                     // Test getting ID token
                     try {
                         const token = await user.getIdToken();
@@ -149,37 +160,37 @@
             }
         };
 
-        window.clearAllAuth = function() {
+        window.clearAllAuth = function () {
             log('🧹 Clearing all authentication data...');
-            
+
             // Sign out from Firebase
             auth.signOut().then(() => {
                 log('✅ Firebase sign out successful', false, true);
             }).catch((error) => {
                 log(`❌ Firebase sign out error: ${error.message}`, true);
             });
-            
+
             // Clear session cookies
-            fetch('/api/auth/logout', { 
-                method: 'POST', 
-                credentials: 'include' 
+            fetch('/api/auth/logout', {
+                method: 'POST',
+                credentials: 'include'
             }).then(() => {
                 log('✅ Backend session cleared', false, true);
             }).catch((error) => {
                 log(`❌ Backend logout error: ${error.message}`, true);
             });
-            
+
             // Clear local storage
             localStorage.clear();
             sessionStorage.clear();
             log('✅ Local storage cleared', false, true);
-            
+
             setTimeout(() => {
                 location.reload();
             }, 1000);
         };
 
-        window.goToLogin = function() {
+        window.goToLogin = function () {
             window.location.href = '/login';
         };
 
@@ -187,4 +198,5 @@
         setTimeout(checkAuthUser, 1000);
     </script>
 </body>
+
 </html>

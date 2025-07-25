@@ -14,12 +14,12 @@ export default function LoginMinimal() {
     try {
       setIsLoading(true);
       console.log('🚀 Starting Google authentication...');
-      
+
       const result = await signInWithPopup(auth, googleProvider);
-      
+
       if (result.user) {
         console.log('✅ Google authentication successful:', result.user.email);
-        
+
         // Create backend session
         const firebaseToken = await result.user.getIdToken();
         const response = await fetch('/api/auth/firebase-session', {
@@ -28,14 +28,14 @@ export default function LoginMinimal() {
           credentials: 'include',
           body: JSON.stringify({ firebaseToken }),
         });
-        
+
         if (response.ok) {
           console.log('✅ Backend session created');
           toast({
             title: "Login successful",
             description: "Welcome to BingeBoard!",
           });
-          
+
           // Redirect to home page
           window.location.href = '/';
         } else {
@@ -47,7 +47,7 @@ export default function LoginMinimal() {
           });
         }
       }
-      
+
     } catch (error: any) {
       console.error('❌ Google authentication error:', error);
       toast({
@@ -64,12 +64,12 @@ export default function LoginMinimal() {
     try {
       setIsLoading(true);
       console.log('🚀 Starting Facebook authentication...');
-      
+
       const result = await signInWithPopup(auth, facebookProvider);
-      
+
       if (result.user) {
         console.log('✅ Facebook authentication successful:', result.user.email);
-        
+
         // Create backend session
         const firebaseToken = await result.user.getIdToken();
         const response = await fetch('/api/auth/firebase-session', {
@@ -78,14 +78,14 @@ export default function LoginMinimal() {
           credentials: 'include',
           body: JSON.stringify({ firebaseToken }),
         });
-        
+
         if (response.ok) {
           console.log('✅ Backend session created');
           toast({
             title: "Login successful",
             description: "Welcome to BingeBoard!",
           });
-          
+
           // Redirect to home page
           window.location.href = '/';
         } else {
@@ -97,7 +97,7 @@ export default function LoginMinimal() {
           });
         }
       }
-      
+
     } catch (error: any) {
       console.error('❌ Facebook authentication error:', error);
       toast({
@@ -129,7 +129,7 @@ export default function LoginMinimal() {
                   <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-5 h-1 bg-slate-600 rounded-sm"></div>
                 </div>
               </div>
-              
+
               {/* Brand Name */}
               <div className="block">
                 <span className="text-2xl select-none">
@@ -164,7 +164,7 @@ export default function LoginMinimal() {
               <SiGoogle className="h-5 w-5 mr-3" />
               Sign in with Google
             </Button>
-            
+
             <Button
               type="button"
               onClick={handleFacebookAuth}
@@ -175,7 +175,7 @@ export default function LoginMinimal() {
               Sign in with Facebook
             </Button>
           </div>
-          
+
           {isLoading && (
             <div className="text-center mt-4">
               <p className="text-gray-400 text-sm">Please wait...</p>

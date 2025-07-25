@@ -1,44 +1,57 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <title>🚀 INSTANT LOGIN TEST</title>
     <style>
-        body { 
-            font-family: Arial, sans-serif; 
-            background: #000; 
-            color: #fff; 
+        body {
+            font-family: Arial, sans-serif;
+            background: #000;
+            color: #fff;
             padding: 40px;
             text-align: center;
         }
-        .btn { 
-            background: #4285f4; 
-            color: white; 
-            border: none; 
-            padding: 20px 40px; 
+
+        .btn {
+            background: #4285f4;
+            color: white;
+            border: none;
+            padding: 20px 40px;
             font-size: 18px;
-            border-radius: 8px; 
-            cursor: pointer; 
+            border-radius: 8px;
+            cursor: pointer;
             margin: 10px;
         }
-        .btn:hover { background: #357abd; }
-        .status { 
-            background: #333; 
-            padding: 20px; 
-            margin: 20px 0; 
+
+        .btn:hover {
+            background: #357abd;
+        }
+
+        .status {
+            background: #333;
+            padding: 20px;
+            margin: 20px 0;
             border-radius: 8px;
             text-align: left;
             font-family: monospace;
         }
-        .success { border-left: 4px solid #10b981; }
-        .error { border-left: 4px solid #ef4444; }
+
+        .success {
+            border-left: 4px solid #10b981;
+        }
+
+        .error {
+            border-left: 4px solid #ef4444;
+        }
     </style>
 </head>
+
 <body>
     <h1>🔥 INSTANT LOGIN TEST</h1>
     <p>Click the button below to complete Google OAuth and test the API</p>
-    
+
     <button class="btn" onclick="instantLogin()">🚀 COMPLETE LOGIN NOW</button>
-    
+
     <div id="status" class="status">
         <div>🔄 Ready to test authentication...</div>
         <div>🎯 This will: Login → Get Token → Test API → Show Results</div>
@@ -61,9 +74,9 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
 
-        window.instantLogin = async function() {
+        window.instantLogin = async function () {
             const status = document.getElementById('status');
-            
+
             function updateStatus(message, isError = false) {
                 status.innerHTML = message;
                 status.className = `status ${isError ? 'error' : 'success'}`;
@@ -71,7 +84,7 @@
 
             try {
                 updateStatus('🚀 Starting Google OAuth login...');
-                
+
                 const provider = new GoogleAuthProvider();
                 provider.addScope('email');
                 provider.addScope('profile');
@@ -79,13 +92,13 @@
 
                 const result = await signInWithPopup(auth, provider);
                 const user = result.user;
-                
+
                 updateStatus(`✅ User authenticated: ${user.email}<br>🔐 Getting Firebase token...`);
-                
+
                 const token = await user.getIdToken(true);
-                
+
                 updateStatus(`✅ Token obtained (${token.length} chars)<br>📡 Testing /api/auth/user endpoint...`);
-                
+
                 const apiResponse = await fetch('/api/auth/user', {
                     headers: {
                         'Authorization': `Bearer ${token}`,
@@ -129,4 +142,5 @@
         console.log('👆 Click the button or run window.instantLogin()');
     </script>
 </body>
+
 </html>

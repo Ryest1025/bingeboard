@@ -20,8 +20,8 @@ export interface WatchProvidersResponse {
 
 // Fetch real streaming providers for a specific show/movie
 export async function fetchWatchProviders(
-  mediaType: 'tv' | 'movie', 
-  id: number, 
+  mediaType: 'tv' | 'movie',
+  id: number,
   region = 'US'
 ): Promise<StreamingProvider[]> {
   try {
@@ -30,27 +30,27 @@ export async function fetchWatchProviders(
       console.warn(`Failed to fetch watch providers for ${mediaType} ${id}:`, response.statusText);
       return [];
     }
-    
+
     const data: WatchProvidersResponse = await response.json();
     const regionData = data.results[region];
-    
+
     if (!regionData) {
       return [];
     }
-    
+
     // Prioritize flatrate (subscription) providers, then rent/buy
     const providers = [
       ...(regionData.flatrate || []),
       ...(regionData.rent || []),
       ...(regionData.buy || [])
     ];
-    
+
     // Remove duplicates based on provider_id
     const uniqueProviders = providers.filter(
-      (provider, index, self) => 
+      (provider, index, self) =>
         self.findIndex(p => p.provider_id === provider.provider_id) === index
     );
-    
+
     return uniqueProviders;
   } catch (error) {
     console.error(`Error fetching watch providers for ${mediaType} ${id}:`, error);
@@ -63,13 +63,13 @@ export async function addRealStreamingData(item: any): Promise<any> {
   if (!item.id) {
     return item;
   }
-  
+
   // Determine media type
   const mediaType = item.title ? 'movie' : 'tv';
-  
+
   try {
     const providers = await fetchWatchProviders(mediaType, item.id);
-    
+
     return {
       ...item,
       watchProviders: providers,

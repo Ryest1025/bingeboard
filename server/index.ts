@@ -26,19 +26,19 @@ app.use(cors({
   origin: function (origin, callback) {
     // Allow requests with no origin (like mobile apps or curl requests)
     if (!origin) return callback(null, true);
-    
+
     // Allow all origins for development
     if (process.env.NODE_ENV === 'development') {
       return callback(null, true);
     }
-    
+
     // Allow specific origins in production
     const allowedOrigins = [
       'https://www.joinbingeboard.com',
       'https://joinbingeboard.com',
       /\.replit\.dev$/
     ];
-    
+
     const isAllowed = allowedOrigins.some(allowed => {
       if (typeof allowed === 'string') {
         return origin === allowed;
@@ -46,7 +46,7 @@ app.use(cors({
         return allowed.test(origin);
       }
     });
-    
+
     callback(null, isAllowed);
   },
   credentials: true,
@@ -103,10 +103,10 @@ app.use((req, res, next) => {
 (async () => {
   // Initialize Firebase Admin SDK
   initializeFirebaseAdmin();
-  
+
   // Create HTTP or HTTPS server based on environment
   let server;
-  
+
   if (process.env.HTTPS === 'true') {
     console.log('🔒 Creating HTTPS server...');
     try {
@@ -124,7 +124,7 @@ app.use((req, res, next) => {
     console.log('Creating HTTP server');
     server = http.createServer(app);
   }
-  
+
   // Register routes but ignore the returned server
   await registerRoutes(app);
 
@@ -146,7 +146,7 @@ app.use((req, res, next) => {
   console.log('  env === "development":', env === "development");
   console.log('  env.trim() === "development":', env.trim() === "development");
   console.log('  process.env.NODE_ENV:', JSON.stringify(process.env.NODE_ENV));
-  
+
   if (env === "development") {
     console.log('✅ Setting up Vite development server...');
     await setupVite(app, server);
@@ -157,9 +157,9 @@ app.use((req, res, next) => {
 
   // Use port 3000 for the full-stack app
   const port = parseInt(process.env.PORT || '3000');
-  
+
   let isRetrying = false;
-  
+
   server.on('error', (err: any) => {
     if (err.code === 'EADDRINUSE' && !isRetrying) {
       isRetrying = true;
@@ -176,7 +176,7 @@ app.use((req, res, next) => {
       process.exit(1);
     }
   });
-  
+
   server.listen(port, "0.0.0.0", () => {
     log(`serving on port ${port}`);
   });

@@ -9,11 +9,11 @@ export function DebugAiRecommendations() {
   const queryClient = useQueryClient();
 
   // Test query with detailed logging
-  const { 
-    data: recommendationsData, 
-    isLoading, 
+  const {
+    data: recommendationsData,
+    isLoading,
     error,
-    refetch 
+    refetch
   } = useQuery({
     queryKey: ["/api/ai-recommendations"],
     queryFn: async () => {
@@ -85,14 +85,14 @@ export function DebugAiRecommendations() {
   return (
     <div className="p-4 border rounded-lg bg-yellow-50 dark:bg-yellow-900/20">
       <h3 className="text-lg font-semibold mb-4">🔍 DEBUG: AI Recommendations</h3>
-      
+
       <div className="space-y-4">
         <div>
           <p><strong>Loading:</strong> {String(isLoading)}</p>
           <p><strong>Error:</strong> {error?.message || 'None'}</p>
           <p><strong>Data:</strong> {JSON.stringify(recommendationsData, null, 2)}</p>
         </div>
-        
+
         <div className="flex gap-2">
           <Button
             onClick={handleRefresh}
@@ -101,7 +101,7 @@ export function DebugAiRecommendations() {
           >
             {isLoading ? "Refreshing..." : "🔄 Refresh"}
           </Button>
-          
+
           <Button
             onClick={handleGenerate}
             disabled={generateMutation.isPending}

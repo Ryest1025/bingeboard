@@ -15,10 +15,10 @@ import { HorizontalScrollContainer } from "@/components/ui/HorizontalScrollConta
 import { ContentCard } from "@/components/ui/ContentCard";
 import { StreamingLogos } from "@/components/ui/StreamingLogos";
 import { StreamingPlatformSelector as UniversalStreamingPlatformSelector } from "@/components/ui/StreamingPlatformSelector";
-import { 
-  Play, 
-  Plus, 
-  Clock, 
+import {
+  Play,
+  Plus,
+  Clock,
   CheckCircle,
   List,
   Star,
@@ -88,7 +88,7 @@ export default function ModernLists() {
       },
       {
         provider_id: 384,
-        provider_name: "HBO Max", 
+        provider_name: "HBO Max",
         name: "HBO Max",
         logo_path: "/Ajqyt5aNxNGjmF9uOfxArGrdf3X.jpg"
       },
@@ -235,8 +235,8 @@ export default function ModernLists() {
   };
 
   const handleItemSelect = (itemId: number) => {
-    setSelectedItems(prev => 
-      prev.includes(itemId) 
+    setSelectedItems(prev =>
+      prev.includes(itemId)
         ? prev.filter(id => id !== itemId)
         : [...prev, itemId]
     );
@@ -279,10 +279,10 @@ export default function ModernLists() {
   return (
     <div className="min-h-screen bg-black">
       <TopNav />
-      
+
       <div className="pt-20 pb-24">
         <div className="container mx-auto px-4">
-          
+
           {/* Header */}
           <div className="text-center space-y-4 mb-8">
             <div className="flex flex-col items-center gap-2">
@@ -400,7 +400,7 @@ export default function ModernLists() {
 
               <HorizontalScrollContainer scrollId="plan-to-watch-list">
                 <div className="flex space-x-4 pb-4">
-                  {planToWatchList.filter(item => 
+                  {planToWatchList.filter(item =>
                     item.title.toLowerCase().includes(searchQuery.toLowerCase())
                   ).slice(0, 4).map((item) => (
                     <ContentCard
@@ -450,7 +450,7 @@ export default function ModernLists() {
 
               <HorizontalScrollContainer scrollId="completed-list">
                 <div className="flex space-x-4 pb-4">
-                  {completedList.filter(item => 
+                  {completedList.filter(item =>
                     item.title.toLowerCase().includes(searchQuery.toLowerCase())
                   ).slice(0, 4).map((item) => (
                     <ContentCard
@@ -522,14 +522,14 @@ export default function ModernLists() {
                           <h3 className="font-bold text-white text-lg">{list.name}</h3>
                           <p className="text-gray-400 text-sm line-clamp-2">{list.description}</p>
                         </div>
-                        
+
                         <div className="flex items-center justify-between text-sm">
                           <span className="text-gray-400">{list.itemCount} shows</span>
                           {list.isCollaborative && list.collaborators && (
                             <span className="text-gray-400">{list.collaborators} collaborators</span>
                           )}
                         </div>
-                        
+
                         <div className="flex items-center gap-2 pt-2">
                           <Button size="sm" variant="outline" className="border-slate-600 text-gray-300 hover:bg-slate-700 flex-1">
                             <Eye className="h-3 w-3 mr-2" />
@@ -552,7 +552,7 @@ export default function ModernLists() {
 
         </div>
       </div>
-      
+
       <MobileNav />
     </div>
   );

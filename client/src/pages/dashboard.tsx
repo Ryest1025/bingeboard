@@ -26,9 +26,9 @@ import StreamingLogos from "../components/streaming-logos";
 
 export default function Dashboard() {
   console.log('🏠 DASHBOARD COMPONENT RENDERED - User is authenticated!');
-  
+
   const { user, isLoading, isAuthenticated } = useAuth();
-  
+
   console.log('📊 Dashboard auth state:', { isLoading, isAuthenticated, userEmail: user?.email });
 
   // Add streaming data to shows
@@ -42,7 +42,7 @@ export default function Dashboard() {
       },
       {
         provider_id: 384,
-        provider_name: "HBO Max", 
+        provider_name: "HBO Max",
         name: "HBO Max",
         logo_path: "/Ajqyt5aNxNGjmF9uOfxArGrdf3X.jpg"
       },
@@ -205,10 +205,10 @@ export default function Dashboard() {
             {continueWatchingShows.map((show: any, index: number) => {
               const title = show.name || show.title;
               const year = show.first_air_date?.split('-')[0] || show.release_date?.split('-')[0];
-              const posterUrl = show.poster_path 
+              const posterUrl = show.poster_path
                 ? `https://image.tmdb.org/t/p/w300${show.poster_path}`
                 : "/placeholder-poster.jpg";
-              
+
               return (
                 <Card key={show.id} className="glass-effect border-slate-700/50 hover:border-teal-500/30 transition-colors cursor-pointer">
                   <CardContent className="p-4">
@@ -231,18 +231,18 @@ export default function Dashboard() {
                         </Badge>
                       </div>
                     </div>
-                    
+
                     <h3 className="font-semibold text-white mb-1 line-clamp-2">{title}</h3>
                     <p className="text-sm text-gray-400 mb-2">{year} • TV Show</p>
                     <p className="text-xs text-gray-500 line-clamp-2 mb-3">{show.overview}</p>
-                    
+
                     {/* Streaming Logos */}
                     {show.streaming && (
                       <div className="mb-3">
                         <StreamingLogos providers={show.streaming} />
                       </div>
                     )}
-                    
+
                     <div className="flex justify-between items-center">
                       <Badge className="bg-teal-500/20 text-teal-400 border-teal-400/20">
                         Trending #{index + 1}

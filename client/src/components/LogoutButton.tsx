@@ -10,11 +10,11 @@ export const LogoutButton = () => {
       console.log('🔄 Signing out from Firebase...');
       await signOut(auth);
       console.log('✅ Successfully logged out from Firebase');
-      
+
       // Clear any local storage tokens
       localStorage.removeItem('debugToken');
       localStorage.removeItem('devToken');
-      
+
       console.log('🔄 Reloading page to refresh auth state...');
       // Reload to refresh auth state
       window.location.reload();
@@ -25,10 +25,10 @@ export const LogoutButton = () => {
   };
 
   return (
-    <button 
-      onClick={handleLogout} 
-      style={{ 
-        margin: '20px', 
+    <button
+      onClick={handleLogout}
+      style={{
+        margin: '20px',
         padding: '15px 30px',
         fontSize: '18px',
         backgroundColor: '#dc3545',

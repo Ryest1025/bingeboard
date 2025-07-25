@@ -199,7 +199,7 @@ export default function ModernDiscover() {
 
   // Enrich trending data with comprehensive streaming info
   const { data: enrichedTrendingData } = useStreamingEnrichedContent(
-    (trendingData as any)?.results || [], 
+    (trendingData as any)?.results || [],
     !!(trendingData as any)?.results
   );
 
@@ -249,7 +249,7 @@ export default function ModernDiscover() {
 
   // Enrich upcoming movies with streaming info
   const { data: enrichedUpcomingMovies } = useStreamingEnrichedContent(
-    upcomingMoviesData?.results || [], 
+    upcomingMoviesData?.results || [],
     !!upcomingMoviesData?.results
   );
 
@@ -262,16 +262,16 @@ export default function ModernDiscover() {
 
   // Enrich upcoming shows with streaming info
   const { data: enrichedUpcomingShows } = useStreamingEnrichedContent(
-    upcomingData || [], 
+    upcomingData || [],
     !!upcomingData
   );
 
   // Separate upcoming releases into TV and movies with null safety
-  const upcomingShows = Array.isArray(upcomingData) 
-    ? upcomingData.filter((item: any) => item?.releaseType !== 'movie') 
+  const upcomingShows = Array.isArray(upcomingData)
+    ? upcomingData.filter((item: any) => item?.releaseType !== 'movie')
     : [];
-  const upcomingMovies = Array.isArray(upcomingData) 
-    ? upcomingData.filter((item: any) => item?.releaseType === 'movie') 
+  const upcomingMovies = Array.isArray(upcomingData)
+    ? upcomingData.filter((item: any) => item?.releaseType === 'movie')
     : [];
 
   const topPicksToday = (trendingData as any)?.results?.slice(0, 4) || [];
@@ -536,141 +536,141 @@ export default function ModernDiscover() {
               ) : (
                 filteredContent.slice(0, 4).map((show: any) => {
                   return (
-                  <Card key={show.id} className="glass-effect border-slate-700/50 hover:border-teal-500/50 transition-all duration-300 group"
-                    onClick={async () => {
-                      // Fetch real streaming data when card is interacted with
-                      if (!show.streamingProviders) {
-                        const mediaType = show.title ? 'movie' : 'tv';
-                        try {
-                          const response = await fetch(`/api/tmdb/${mediaType}/${show.id}/watch/providers?region=US`);
-                          if (response.ok) {
-                            const data = await response.json();
-                            const regionData = data.results?.US;
-                            if (regionData) {
-                              show.streamingProviders = [
-                                ...(regionData.flatrate || []),
-                                ...(regionData.rent || []),
-                                ...(regionData.buy || [])
-                              ].filter((provider, index, self) => 
-                                self.findIndex(p => p.provider_id === provider.provider_id) === index
-                              );
+                    <Card key={show.id} className="glass-effect border-slate-700/50 hover:border-teal-500/50 transition-all duration-300 group"
+                      onClick={async () => {
+                        // Fetch real streaming data when card is interacted with
+                        if (!show.streamingProviders) {
+                          const mediaType = show.title ? 'movie' : 'tv';
+                          try {
+                            const response = await fetch(`/api/tmdb/${mediaType}/${show.id}/watch/providers?region=US`);
+                            if (response.ok) {
+                              const data = await response.json();
+                              const regionData = data.results?.US;
+                              if (regionData) {
+                                show.streamingProviders = [
+                                  ...(regionData.flatrate || []),
+                                  ...(regionData.rent || []),
+                                  ...(regionData.buy || [])
+                                ].filter((provider, index, self) =>
+                                  self.findIndex(p => p.provider_id === provider.provider_id) === index
+                                );
+                              }
                             }
+                          } catch (error) {
+                            console.error('Error fetching streaming data:', error);
                           }
-                        } catch (error) {
-                          console.error('Error fetching streaming data:', error);
                         }
-                      }
-                    }}
-                  >
-                    <CardContent className="p-4">
-                      <div className="flex gap-4 items-start">
-                        <div className="w-20 h-28 bg-slate-700 rounded-lg flex-shrink-0 overflow-hidden group-hover:ring-2 group-hover:ring-teal-400 transition-all">
-                          {show.poster_path ? (
-                            <img
-                              src={`https://image.tmdb.org/t/p/w185${show.poster_path}`}
-                              alt={show.name || show.title}
-                              className="w-full h-full object-cover"
-                            />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center">
-                              <Play className="h-8 w-8 text-slate-500 group-hover:text-white transition-colors" />
-                            </div>
-                          )}
-                        </div>
-                        <div className="flex-1 space-y-3">
-                          <div className="flex items-start justify-between">
-                            <div>
-                              <h3 className="font-bold text-white text-lg flex items-center gap-2">
-                                {show.name || show.title}
-                                <Badge className="bg-orange-500/20 text-orange-400 border-orange-500/30">
-                                  <TrendingUp className="h-3 w-3 mr-1" />
-                                  Trending
-                                </Badge>
-                              </h3>
-                              <div className="flex items-center gap-2 mt-1">
-                                <span className="text-sm text-gray-400">{show.first_air_date ? new Date(show.first_air_date).getFullYear() : show.release_date ? new Date(show.release_date).getFullYear() : ''}</span>
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-1 text-yellow-400">
-                              <Star className="h-4 w-4 fill-current" />
-                              <span className="font-medium">{show.vote_average?.toFixed(1)}</span>
-                            </div>
-                          </div>
-
-                          <p className="text-gray-300 text-sm line-clamp-2">{show.overview}</p>
-
-                          {/* Display streaming platforms */}
-                          {show.streamingProviders && show.streamingProviders.length > 0 ? (
-                            <div className="flex items-center gap-2">
-                              <span className="text-xs text-gray-400">Available on:</span>
-                              <div className="flex gap-1.5">
-                                {show.streamingProviders.slice(0, 4).map((platform: any, index: number) => (
-                                  <div key={index} className="w-5 h-5 rounded bg-white p-0.5 flex-shrink-0 border border-gray-200">
-                                    <img
-                                      src={platform.logo_path ? `https://image.tmdb.org/t/p/w45${platform.logo_path}` : platform.logoPath}
-                                      alt={platform.provider_name || platform.name}
-                                      className="w-full h-full object-contain rounded"
-                                    />
-                                  </div>
-                                ))}
-                                {show.streamingProviders.length > 4 && (
-                                  <span className="text-xs text-gray-400">+{show.streamingProviders.length - 4} more</span>
-                                )}
-                              </div>
-                            </div>
-                          ) : (
-                            <div className="flex items-center gap-2">
-                              <span className="text-xs text-gray-400">Streaming info loading...</span>
-                            </div>
-                          )}
-
-                          <div className="flex items-center gap-2">
-                            <Button
-                              size="sm"
-                              className="bg-red-500/20 text-red-400 hover:bg-red-500/30 border-red-500/50"
-                              onClick={() => window.open(`https://www.youtube.com/results?search_query=${encodeURIComponent((show.title || show.name) + ' trailer')}`, '_blank')}
-                            >
-                              <Play className="h-3 w-3 mr-2" />
-                              Trailer
-                            </Button>
-                            <Button
-                              size="sm"
-                              className="bg-teal-500/20 text-teal-400 hover:bg-teal-500/30 border-teal-500/50"
-                              onClick={() => handleAddToWatchlist(show)}
-                            >
-                              <Plus className="h-3 w-3 mr-2" />
-                              Add to List
-                            </Button>
-                            {show.streamingProviders && show.streamingProviders.length > 0 ? (
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="border-slate-600 text-gray-300 hover:bg-slate-700"
-                                onClick={() => handleWatchNow(show, show.streamingProviders[0])}
-                              >
-                                <Eye className="h-3 w-3 mr-2" />
-                                Watch on {show.streamingProviders[0].provider_name || show.streamingProviders[0].name}
-                              </Button>
+                      }}
+                    >
+                      <CardContent className="p-4">
+                        <div className="flex gap-4 items-start">
+                          <div className="w-20 h-28 bg-slate-700 rounded-lg flex-shrink-0 overflow-hidden group-hover:ring-2 group-hover:ring-teal-400 transition-all">
+                            {show.poster_path ? (
+                              <img
+                                src={`https://image.tmdb.org/t/p/w185${show.poster_path}`}
+                                alt={show.name || show.title}
+                                className="w-full h-full object-cover"
+                              />
                             ) : (
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="border-slate-600 text-gray-300 hover:bg-slate-700"
-                                onClick={() => {
-                                  console.log("No streaming data available for:", show.name || show.title);
-                                  // Fallback search on Google
-                                  window.open(`https://www.google.com/search?q=where+to+watch+${encodeURIComponent(show.name || show.title)}`, '_blank');
-                                }}
-                              >
-                                <Eye className="h-3 w-3 mr-2" />
-                                Find Streaming
-                              </Button>
+                              <div className="w-full h-full flex items-center justify-center">
+                                <Play className="h-8 w-8 text-slate-500 group-hover:text-white transition-colors" />
+                              </div>
                             )}
                           </div>
+                          <div className="flex-1 space-y-3">
+                            <div className="flex items-start justify-between">
+                              <div>
+                                <h3 className="font-bold text-white text-lg flex items-center gap-2">
+                                  {show.name || show.title}
+                                  <Badge className="bg-orange-500/20 text-orange-400 border-orange-500/30">
+                                    <TrendingUp className="h-3 w-3 mr-1" />
+                                    Trending
+                                  </Badge>
+                                </h3>
+                                <div className="flex items-center gap-2 mt-1">
+                                  <span className="text-sm text-gray-400">{show.first_air_date ? new Date(show.first_air_date).getFullYear() : show.release_date ? new Date(show.release_date).getFullYear() : ''}</span>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-1 text-yellow-400">
+                                <Star className="h-4 w-4 fill-current" />
+                                <span className="font-medium">{show.vote_average?.toFixed(1)}</span>
+                              </div>
+                            </div>
+
+                            <p className="text-gray-300 text-sm line-clamp-2">{show.overview}</p>
+
+                            {/* Display streaming platforms */}
+                            {show.streamingProviders && show.streamingProviders.length > 0 ? (
+                              <div className="flex items-center gap-2">
+                                <span className="text-xs text-gray-400">Available on:</span>
+                                <div className="flex gap-1.5">
+                                  {show.streamingProviders.slice(0, 4).map((platform: any, index: number) => (
+                                    <div key={index} className="w-5 h-5 rounded bg-white p-0.5 flex-shrink-0 border border-gray-200">
+                                      <img
+                                        src={platform.logo_path ? `https://image.tmdb.org/t/p/w45${platform.logo_path}` : platform.logoPath}
+                                        alt={platform.provider_name || platform.name}
+                                        className="w-full h-full object-contain rounded"
+                                      />
+                                    </div>
+                                  ))}
+                                  {show.streamingProviders.length > 4 && (
+                                    <span className="text-xs text-gray-400">+{show.streamingProviders.length - 4} more</span>
+                                  )}
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="flex items-center gap-2">
+                                <span className="text-xs text-gray-400">Streaming info loading...</span>
+                              </div>
+                            )}
+
+                            <div className="flex items-center gap-2">
+                              <Button
+                                size="sm"
+                                className="bg-red-500/20 text-red-400 hover:bg-red-500/30 border-red-500/50"
+                                onClick={() => window.open(`https://www.youtube.com/results?search_query=${encodeURIComponent((show.title || show.name) + ' trailer')}`, '_blank')}
+                              >
+                                <Play className="h-3 w-3 mr-2" />
+                                Trailer
+                              </Button>
+                              <Button
+                                size="sm"
+                                className="bg-teal-500/20 text-teal-400 hover:bg-teal-500/30 border-teal-500/50"
+                                onClick={() => handleAddToWatchlist(show)}
+                              >
+                                <Plus className="h-3 w-3 mr-2" />
+                                Add to List
+                              </Button>
+                              {show.streamingProviders && show.streamingProviders.length > 0 ? (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="border-slate-600 text-gray-300 hover:bg-slate-700"
+                                  onClick={() => handleWatchNow(show, show.streamingProviders[0])}
+                                >
+                                  <Eye className="h-3 w-3 mr-2" />
+                                  Watch on {show.streamingProviders[0].provider_name || show.streamingProviders[0].name}
+                                </Button>
+                              ) : (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="border-slate-600 text-gray-300 hover:bg-slate-700"
+                                  onClick={() => {
+                                    console.log("No streaming data available for:", show.name || show.title);
+                                    // Fallback search on Google
+                                    window.open(`https://www.google.com/search?q=where+to+watch+${encodeURIComponent(show.name || show.title)}`, '_blank');
+                                  }}
+                                >
+                                  <Eye className="h-3 w-3 mr-2" />
+                                  Find Streaming
+                                </Button>
+                              )}
+                            </div>
+                          </div>
                         </div>
-                      </div>
-                    </CardContent>
-                  </Card>
+                      </CardContent>
+                    </Card>
                   );
                 })
               )}

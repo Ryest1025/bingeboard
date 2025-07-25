@@ -1,16 +1,18 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <title>🔥 LOGIN TEST - WORKS GUARANTEED</title>
     <style>
-        body { 
-            font-family: Arial, sans-serif; 
-            background: #111; 
-            color: #fff; 
+        body {
+            font-family: Arial, sans-serif;
+            background: #111;
+            color: #fff;
             padding: 20px;
             max-width: 800px;
             margin: 0 auto;
         }
+
         .section {
             background: #222;
             padding: 20px;
@@ -18,61 +20,82 @@
             border-radius: 8px;
             border-left: 4px solid #4285f4;
         }
-        .btn { 
-            background: #4285f4; 
-            color: white; 
-            border: none; 
-            padding: 15px 30px; 
+
+        .btn {
+            background: #4285f4;
+            color: white;
+            border: none;
+            padding: 15px 30px;
             font-size: 16px;
-            border-radius: 6px; 
-            cursor: pointer; 
+            border-radius: 6px;
+            cursor: pointer;
             margin: 8px;
             display: inline-block;
         }
-        .btn:hover { background: #357abd; }
-        .btn-success { background: #10b981; }
-        .btn-danger { background: #ef4444; }
-        .code { 
-            background: #000; 
-            padding: 15px; 
+
+        .btn:hover {
+            background: #357abd;
+        }
+
+        .btn-success {
+            background: #10b981;
+        }
+
+        .btn-danger {
+            background: #ef4444;
+        }
+
+        .code {
+            background: #000;
+            padding: 15px;
             border-radius: 6px;
             font-family: monospace;
             border: 1px solid #444;
             margin: 10px 0;
         }
-        .status-good { color: #10b981; }
-        .status-bad { color: #ef4444; }
-        .status-warning { color: #f59e0b; }
+
+        .status-good {
+            color: #10b981;
+        }
+
+        .status-bad {
+            color: #ef4444;
+        }
+
+        .status-warning {
+            color: #f59e0b;
+        }
     </style>
 </head>
+
 <body>
     <h1>🔥 GUARANTEED LOGIN TEST</h1>
     <p>This will definitely work. Let's test your authentication step by step.</p>
-    
+
     <div class="section">
         <h2>📊 Current Status</h2>
         <div id="currentStatus">⏳ Loading Firebase...</div>
     </div>
-    
+
     <div class="section">
         <h2>🚀 Step 1: Execute Login</h2>
         <button class="btn" onclick="executeLogin()">🔑 EXECUTE LOGIN NOW</button>
         <div id="loginResult" class="code" style="display:none;"></div>
     </div>
-    
+
     <div class="section">
         <h2>📡 Step 2: Test API</h2>
         <button class="btn btn-success" onclick="testAPI()" id="apiTestBtn" disabled>🧪 TEST /api/auth/user</button>
         <div id="apiResult" class="code" style="display:none;"></div>
     </div>
-    
+
     <div class="section">
         <h2>💻 Console Commands</h2>
         <p>You can also run these in the browser console:</p>
         <div class="code">
-            window.testLogin()  // Execute login<br>
-            window.testAPI()    // Test authenticated API<br>
-            window.firebaseAuth.currentUser  // Check user status
+            window.testLogin() // Execute login<br>
+            window.testAPI() // Test authenticated API<br>
+            window.firebaseAuth.currentUser // Check user status
         </div>
     </div>
 
@@ -98,13 +121,13 @@
 
         // Make available globally
         window.firebaseAuth = auth;
-        
+
         // Update status display
         function updateCurrentStatus() {
             const status = document.getElementById('currentStatus');
             const user = auth.currentUser;
             const apiBtn = document.getElementById('apiTestBtn');
-            
+
             if (user) {
                 status.innerHTML = `
                     <span class="status-good">✅ LOGGED IN</span><br>
@@ -132,30 +155,30 @@
         });
 
         // Login function
-        window.executeLogin = async function() {
+        window.executeLogin = async function () {
             const resultDiv = document.getElementById('loginResult');
             resultDiv.style.display = 'block';
-            
+
             try {
                 resultDiv.innerHTML = '🚀 Starting Google OAuth login...';
                 console.log('🚀 Starting login process...');
-                
+
                 const result = await signInWithPopup(auth, provider);
                 const user = result.user;
                 const token = await user.getIdToken(true);
-                
+
                 console.log('✅ Login successful:', user.email);
                 console.log('🔐 Token length:', token.length);
-                
+
                 resultDiv.innerHTML = `
                     <span class="status-good">✅ LOGIN SUCCESSFUL!</span><br>
                     👤 User: ${user.email}<br>
                     🔐 Token: ${token.substring(0, 50)}...<br>
                     📅 Login Time: ${new Date().toLocaleTimeString()}
                 `;
-                
+
                 return { user, token };
-                
+
             } catch (error) {
                 console.error('❌ Login failed:', error);
                 resultDiv.innerHTML = `
@@ -170,39 +193,39 @@
                 throw error;
             }
         };
-        
+
         // API test function  
-        window.testAPI = async function() {
+        window.testAPI = async function () {
             const resultDiv = document.getElementById('apiResult');
             resultDiv.style.display = 'block';
-            
+
             const user = auth.currentUser;
             if (!user) {
                 resultDiv.innerHTML = '<span class="status-bad">❌ No user logged in. Login first!</span>';
                 return;
             }
-            
+
             try {
                 resultDiv.innerHTML = '📡 Testing /api/auth/user endpoint...';
                 console.log('📡 Testing authenticated API call...');
-                
+
                 const token = await user.getIdToken(true);
                 console.log('🔐 Using token:', token.substring(0, 30) + '...');
-                
+
                 const response = await fetch('/api/auth/user', {
                     headers: {
                         'Authorization': `Bearer ${token}`,
                         'Content-Type': 'application/json'
                     }
                 });
-                
+
                 console.log('📡 Response status:', response.status);
                 console.log('📡 Response headers:', Object.fromEntries(response.headers.entries()));
-                
+
                 if (response.ok) {
                     const userData = await response.json();
                     console.log('✅ API Success:', userData);
-                    
+
                     resultDiv.innerHTML = `
                         <span class="status-good">✅ API SUCCESS! 401 → 200 TRANSFORMATION!</span><br>
                         📊 Status: ${response.status} OK<br>
@@ -213,7 +236,7 @@
                 } else {
                     const errorText = await response.text();
                     console.log('❌ API Error:', errorText);
-                    
+
                     resultDiv.innerHTML = `
                         <span class="status-bad">❌ API FAILED</span><br>
                         📊 Status: ${response.status}<br>
@@ -221,7 +244,7 @@
                         <span class="status-warning">⚠️ Token was valid but backend rejected it</span>
                     `;
                 }
-                
+
             } catch (error) {
                 console.error('❌ API test failed:', error);
                 resultDiv.innerHTML = `
@@ -230,13 +253,13 @@
                 `;
             }
         };
-        
+
         // Assign to window for console access
         window.testLogin = window.executeLogin;
-        
+
         // Initial status update
         setTimeout(updateCurrentStatus, 500);
-        
+
         console.log('🚀 LOGIN TEST PAGE READY!');
         console.log('📋 Available functions:');
         console.log('  - window.testLogin() or window.executeLogin()');
@@ -246,4 +269,5 @@
         console.log('👆 Click buttons above OR run commands in console');
     </script>
 </body>
+
 </html>

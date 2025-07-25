@@ -34,13 +34,13 @@ interface AuthState {
 
 export function useAuth(): AuthState {
   console.log('🔍🔍🔍 useAuth hook called - START');
-  
+
   const [authState, setAuthState] = useState<AuthState>({
     user: null,
     isLoading: true, // Start with loading to check session first
     isAuthenticated: false
   });
-  
+
   console.log('🔍🔍🔍 useAuth initial state:', authState);
 
   useEffect(() => {
@@ -51,7 +51,7 @@ export function useAuth(): AuthState {
     const userAgent = navigator.userAgent || '';
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|Windows Phone|Mobile/i.test(userAgent);
     const bypassMobile = window.location.search.includes('mobile=bypass');
-    
+
     if (isMobile && !bypassMobile && window.location.pathname === '/') {
       console.log('📱 Mobile device detected - redirecting to mobile version');
       window.location.href = '/mobile-app';
@@ -76,13 +76,13 @@ export function useAuth(): AuthState {
         // First priority: Check Firebase auth state
         const { getAuth } = await import('firebase/auth');
         const auth = getAuth();
-        
+
         // Check if user is already logged in to Firebase
         const currentUser = auth.currentUser;
         if (currentUser) {
           console.log('🔍 Firebase user found, getting token...');
           const token = await currentUser.getIdToken();
-          
+
           // Try to validate with backend using Firebase token
           try {
             console.log('🔍 Validating Firebase token with backend...');
@@ -92,10 +92,10 @@ export function useAuth(): AuthState {
               },
               credentials: 'include'
             });
-            
+
             console.log(`📡 Backend response: ${response.status} ${response.statusText}`);
             console.log(`📋 Content-Type: ${response.headers.get('content-type')}`);
-            
+
             if (response.ok) {
               const contentType = response.headers.get('content-type');
               if (contentType && contentType.includes('application/json')) {
@@ -119,7 +119,7 @@ export function useAuth(): AuthState {
           } catch (backendError) {
             console.warn('⚠️ Backend validation failed, using Firebase-only auth');
           }
-          
+
           // Fallback to Firebase-only authentication
           console.log('✅ Using Firebase-only authentication for:', currentUser.email);
           clearTimeout(loadingTimeout);
@@ -135,22 +135,22 @@ export function useAuth(): AuthState {
           });
           return;
         }
-        
+
         // If no current Firebase user, check for existing backend session
         console.log('🔍 No Firebase user, checking for existing local session...');
         console.log('🔍 Current URL:', window.location.href);
         console.log('🔍 Document cookies:', document.cookie);
-        
+
         try {
           console.log('🔍 Fetching /api/auth/user with credentials...');
           const sessionResponse = await fetch('/api/auth/user', {
             credentials: 'include'
           });
-          
+
           console.log(`📡 Session response: ${sessionResponse.status} ${sessionResponse.statusText}`);
           console.log(`📋 Content-Type: ${sessionResponse.headers.get('content-type')}`);
           console.log(`📋 Response URL: ${sessionResponse.url}`);
-          
+
           if (sessionResponse.ok) {
             const contentType = sessionResponse.headers.get('content-type');
             if (contentType && contentType.includes('application/json')) {
@@ -177,21 +177,21 @@ export function useAuth(): AuthState {
         } catch (sessionError) {
           console.log('⚠️ Local session check failed:', sessionError);
         }
-        
+
       } catch (error) {
         console.log('⚠️ Auth initialization error:', error);
       }
 
       // Set up Firebase auth state listener
       console.log('🔍 Setting up Firebase auth state listener...');
-      
+
       try {
         const { onAuthStateChanged } = await import('firebase/auth');
         const { auth } = await import('@/firebase/config');
-        
+
         const unsubscribe = onAuthStateChanged(auth, async (firebaseUser: any) => {
           if (!isMounted) return;
-          
+
           clearTimeout(loadingTimeout);
 
           if (firebaseUser) {
@@ -223,7 +223,7 @@ export function useAuth(): AuthState {
           unsubscribe();
           clearTimeout(loadingTimeout);
         };
-        
+
       } catch (error) {
         console.error('❌ Firebase auth setup error:', error);
         setAuthState({

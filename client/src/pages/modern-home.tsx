@@ -19,11 +19,11 @@ import { HorizontalScrollContainer } from "@/components/ui/HorizontalScrollConta
 import { ContentCard } from "@/components/ui/ContentCard";
 import { StreamingLogos } from "@/components/ui/StreamingLogos";
 import { StreamingPlatformSelector as UniversalStreamingPlatformSelector } from "@/components/ui/StreamingPlatformSelector";
-import { 
-  Play, 
-  Clock, 
-  Users, 
-  Star, 
+import {
+  Play,
+  Clock,
+  Users,
+  Star,
   Calendar,
   ChevronRight,
   Plus,
@@ -76,11 +76,11 @@ export default function ModernHome() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [location, setLocation] = useLocation();
-  
+
   // Platform selector modal state
   const [platformSelectorOpen, setPlatformSelectorOpen] = useState(false);
   const [selectedShow, setSelectedShow] = useState<any>(null);
-  
+
   // List selector modal state
   const [listSelectorOpen, setListSelectorOpen] = useState(false);
   const [showToAddToList, setShowToAddToList] = useState<any>(null);
@@ -88,7 +88,7 @@ export default function ModernHome() {
   // Enhanced platform URL generation with better deep linking
   const getEnhancedPlatformUrl = (platformName: string, showTitle: string) => {
     const encodedTitle = encodeURIComponent(showTitle);
-    
+
     switch (platformName.toLowerCase()) {
       case 'netflix':
         return `https://www.netflix.com/search?q=${encodedTitle}`;
@@ -145,7 +145,7 @@ export default function ModernHome() {
   // Open specific streaming platform
   const openStreamingPlatform = (platform: any, showTitle: string) => {
     console.log("Opening:", platform.provider_name, "for show:", showTitle);
-    
+
     // Use enhanced platform URLs with proper deep linking
     const platformUrl = getEnhancedPlatformUrl(platform.provider_name, showTitle);
     window.open(platformUrl, '_blank');
@@ -170,7 +170,7 @@ export default function ModernHome() {
       'Paramount Plus': `https://www.paramountplus.com/search/?query=${encodedTitle}`,
       'Peacock': `https://www.peacocktv.com/search?q=${encodedTitle}`
     };
-    
+
     return platformMap[platformName] || `https://www.google.com/search?q=watch+${encodedTitle}+online`;
   };
 
@@ -293,7 +293,7 @@ export default function ModernHome() {
   }, [user]);
 
   // Use real data from API calls - no more mock data
-  const continueWatching: ContinueWatchingItem[] = userWatchlist?.filter((item: any) => 
+  const continueWatching: ContinueWatchingItem[] = userWatchlist?.filter((item: any) =>
     item && item.status === 'watching'
   ).map((item: any) => ({
     id: item.tmdbId,
@@ -320,13 +320,13 @@ export default function ModernHome() {
 
   const friendsWatching: FriendActivity[] = friendActivities?.filter((activity: any) => activity && activity.show).slice(0, 5).map((activity: any, index: number) => ({
     id: activity.id,
-    friend: { 
-      name: activity.user?.firstName || `Friend ${index + 1}`, 
+    friend: {
+      name: activity.user?.firstName || `Friend ${index + 1}`,
       avatar: activity.user?.profileImageUrl || `https://ui-avatars.com/api/?name=Friend${index + 1}&background=0ea5e9&color=fff&size=40`
     },
     action: activity.actionType || "watched",
-    show: { 
-      title: activity.show?.title || 'Unknown Show', 
+    show: {
+      title: activity.show?.title || 'Unknown Show',
       posterPath: activity.show?.posterPath ? `https://image.tmdb.org/t/p/w300${activity.show.posterPath}` : '',
       streamingPlatforms: activity.show?.streamingPlatforms || []
     },
@@ -362,15 +362,15 @@ export default function ModernHome() {
   return (
     <div className="min-h-screen bg-black">
       <TopNav />
-      
+
       <div className="pt-20 pb-32">
         <div className="container mx-auto px-4 space-y-8">
-          
+
           {/* Dynamic Header - A/B Test: Sunday Weekly Summary vs Regular Welcome */}
           {(() => {
             const today = new Date();
             const isSunday = today.getDay() === 0;
-            
+
             if (isSunday) {
               // Your Week in TV Summary (Sunday variant)
               return (
@@ -426,8 +426,8 @@ export default function ModernHome() {
                 </div>
               );
             }
-          })()} 
-          
+          })()}
+
           {/* Context-Specific Smart Module 
               CRITICAL: This section determines "Start Watching" content selection
               - Primary source: TMDB trending API (trendingData.results[0])
@@ -442,7 +442,7 @@ export default function ModernHome() {
             const isWeekend = now.getDay() === 0 || now.getDay() === 6;
             const lastWatchedDaysAgo = 4; // Mock user data - would come from backend
             const friendRecentActivity = true; // Mock social data
-            
+
             // Check if user has actual viewing progress
             if (currentProgress?.currentShow) {
               const { currentShow } = currentProgress;
@@ -451,7 +451,7 @@ export default function ModernHome() {
                   <div className="flex items-center gap-4">
                     <div className="w-16 h-24 rounded-lg overflow-hidden bg-slate-700 flex-shrink-0">
                       {currentShow.show?.posterPath ? (
-                        <img 
+                        <img
                           src={`https://image.tmdb.org/t/p/w300${currentShow.show.posterPath}`}
                           alt={currentShow.show.title}
                           className="w-full h-full object-cover"
@@ -468,7 +468,7 @@ export default function ModernHome() {
                       <p className="text-sm text-gray-300 mb-3">
                         S{currentShow.nextEpisode.season} E{currentShow.nextEpisode.episode} • {currentShow.nextEpisode.timeRemaining}
                       </p>
-                      <Button 
+                      <Button
                         className="bg-teal-600 hover:bg-teal-700 text-white"
                         onClick={() => handleWatchNow(currentShow.show)}
                       >
@@ -480,7 +480,7 @@ export default function ModernHome() {
                 </div>
               );
             }
-            
+
             // Priority: Inactive user > Weekend > Friend activity
             if (lastWatchedDaysAgo >= 3) {
               // User hasn't watched in a while - show trending content as fallback
@@ -489,7 +489,7 @@ export default function ModernHome() {
                   <div className="flex items-center gap-4">
                     <div className="w-16 h-24 rounded-lg overflow-hidden bg-slate-700 flex-shrink-0">
                       {trendingData?.results?.[0]?.poster_path ? (
-                        <img 
+                        <img
                           src={`https://image.tmdb.org/t/p/w300${trendingData.results[0].poster_path}`}
                           alt={trendingData.results[0].name || trendingData.results[0].title}
                           className="w-full h-full object-cover"
@@ -504,7 +504,7 @@ export default function ModernHome() {
                       <h3 className="text-lg font-semibold text-white mb-1">Start watching</h3>
                       <h4 className="text-xl font-bold text-teal-400 mb-2">{trendingData?.results?.[0]?.name || trendingData?.results?.[0]?.title || 'Popular Shows'}</h4>
                       <p className="text-sm text-gray-300 mb-3">Trending now • Start from S1 E1</p>
-                      
+
                       {/* Streaming Platform Logos with Mock Data */}
                       {trendingData?.results?.[0] && (() => {
                         const heroShowWithStreaming = addMockStreamingData(trendingData.results[0]);
@@ -512,7 +512,7 @@ export default function ModernHome() {
                           <div className="flex items-center gap-1.5 mb-3">
                             {heroShowWithStreaming.streamingPlatforms.slice(0, 3).map((platform: any, index: number) => (
                               <div key={index} className="w-5 h-5 rounded bg-white p-0.5 flex-shrink-0 border border-gray-200">
-                                <img 
+                                <img
                                   src={platform.logoPath}
                                   alt={platform.name}
                                   className="w-full h-full object-contain rounded"
@@ -525,8 +525,8 @@ export default function ModernHome() {
                           </div>
                         );
                       })()}
-                      
-                      <Button 
+
+                      <Button
                         className="bg-teal-600 hover:bg-teal-700 text-white"
                         onClick={() => handleWatchNow(trendingData?.results?.[0])}
                       >
@@ -553,8 +553,8 @@ export default function ModernHome() {
                     ].map((show, index) => (
                       <div key={index} className="group cursor-pointer">
                         <div className="relative aspect-[2/3] rounded-lg overflow-hidden bg-slate-700 mb-2">
-                          <img 
-                            src={show.poster} 
+                          <img
+                            src={show.poster}
                             alt={show.title}
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                             onError={(e) => {
@@ -590,8 +590,8 @@ export default function ModernHome() {
                       </div>
                     </div>
                     <div className="w-16 h-24 rounded-lg overflow-hidden bg-slate-700 flex-shrink-0">
-                      <img 
-                        src="https://image.tmdb.org/t/p/w500/6YEhNKHuYIGg4vlXJfwt66RmXaI.jpg" 
+                      <img
+                        src="https://image.tmdb.org/t/p/w500/6YEhNKHuYIGg4vlXJfwt66RmXaI.jpg"
                         alt="Severance"
                         className="w-full h-full object-cover"
                         onError={(e) => {
@@ -614,7 +614,7 @@ export default function ModernHome() {
                 </div>
               );
             }
-            
+
             // Default: My Mood Picks widget
             return (
               <div className="bg-slate-800/50 rounded-xl p-4 border border-slate-700/50">
@@ -636,8 +636,8 @@ export default function ModernHome() {
                   ].map((show, index) => (
                     <div key={index} className="group cursor-pointer">
                       <div className="relative aspect-[2/3] rounded-lg overflow-hidden bg-slate-700">
-                        <img 
-                          src={show.poster} 
+                        <img
+                          src={show.poster}
                           alt={show.title}
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                           onError={(e) => {
@@ -701,7 +701,7 @@ export default function ModernHome() {
                 </Button>
               </Link>
             </div>
-            
+
             <HorizontalScrollContainer scrollId="continue-watching">
               <div className="flex space-x-4 pb-4">
                 {continueWatching.slice(0, 4).map((item) => (
@@ -741,7 +741,7 @@ export default function ModernHome() {
                 View All <ChevronRight className="h-4 w-4 ml-1" />
               </Button>
             </div>
-            
+
             <HorizontalScrollContainer scrollId="upcoming-today">
               {upcomingToday.slice(0, 4).map((item) => (
                 <ContentCard
@@ -782,7 +782,7 @@ export default function ModernHome() {
                 </Button>
               </Link>
             </div>
-            
+
             <HorizontalScrollContainer scrollId="friends-watching">
               <div className="flex space-x-4 pb-4">
                 {friendsWatching.slice(0, 4).map((activity) => (
@@ -814,7 +814,7 @@ export default function ModernHome() {
 
         </div>
       </div>
-      
+
       {/* Streaming Platform Selector Modal */}
       <StreamingPlatformSelector
         isOpen={platformSelectorOpen}
@@ -823,7 +823,7 @@ export default function ModernHome() {
         showTitle={selectedShow?.title || selectedShow?.name || ''}
         onPlatformSelect={handlePlatformSelect}
       />
-      
+
       {/* List Selector Modal */}
       <ListSelectorModal
         isOpen={listSelectorOpen}
@@ -834,7 +834,7 @@ export default function ModernHome() {
           queryClient.invalidateQueries({ queryKey: ['/api/watchlist'] });
         }}
       />
-      
+
       <MobileNav />
     </div>
   );

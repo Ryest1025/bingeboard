@@ -10,12 +10,12 @@ import { Switch } from '@/components/ui/switch';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
-import { 
-  Plus, 
-  Check, 
-  List, 
-  Lock, 
-  Globe, 
+import {
+  Plus,
+  Check,
+  List,
+  Lock,
+  Globe,
   Users,
   Star,
   Calendar,
@@ -38,11 +38,11 @@ interface UserList {
   createdAt: string;
 }
 
-export function ListSelectorModal({ 
-  isOpen, 
-  onClose, 
-  show, 
-  onSuccess 
+export function ListSelectorModal({
+  isOpen,
+  onClose,
+  show,
+  onSuccess
 }: ListSelectorModalProps) {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [newListName, setNewListName] = useState('');
@@ -199,7 +199,7 @@ export function ListSelectorModal({
             </p>
             <div className="flex items-center justify-center gap-2 mt-2">
               {show?.poster_path && (
-                <img 
+                <img
                   src={`https://image.tmdb.org/t/p/w92${show.poster_path}`}
                   alt={show.title || show.name}
                   className="w-8 h-12 object-cover rounded"
@@ -216,7 +216,7 @@ export function ListSelectorModal({
             </div>
           </div>
         </DialogHeader>
-        
+
         <div className="space-y-4">
           {/* Quick Actions */}
           <div className="space-y-2">
@@ -257,7 +257,7 @@ export function ListSelectorModal({
                 New List
               </Button>
             </div>
-            
+
             {isLoading ? (
               <div className="text-center text-gray-400 py-4">Loading your lists...</div>
             ) : !userLists || !Array.isArray(userLists) || userLists.length === 0 ? (
@@ -325,7 +325,7 @@ export function ListSelectorModal({
                     className="bg-slate-800 border-slate-600 text-white"
                   />
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label htmlFor="listDescription" className="text-white">Description (Optional)</Label>
                   <Input

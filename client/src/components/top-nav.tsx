@@ -46,8 +46,8 @@ export function TopNav() {
     enabled: isAuthenticated,
   });
 
-  const unreadCount = notifications && Array.isArray(notifications) 
-    ? notifications.filter((n: any) => !n.isRead).length 
+  const unreadCount = notifications && Array.isArray(notifications)
+    ? notifications.filter((n: any) => !n.isRead).length
     : 0;
 
   if (!isAuthenticated) {
@@ -136,9 +136,8 @@ export function TopNav() {
                   onKeyDown={handleSearchKeyDown}
                   onFocus={() => setIsSearchFocused(true)}
                   onBlur={() => setIsSearchFocused(false)}
-                  className={`pl-10 pr-4 py-2 bg-slate-800/50 border-slate-700 text-white placeholder-gray-400 focus:border-teal-500 focus:ring-1 focus:ring-teal-500 transition-all duration-200 ${
-                    isSearchFocused ? 'bg-slate-800/80 border-teal-500' : 'hover:bg-slate-800/70'
-                  }`}
+                  className={`pl-10 pr-4 py-2 bg-slate-800/50 border-slate-700 text-white placeholder-gray-400 focus:border-teal-500 focus:ring-1 focus:ring-teal-500 transition-all duration-200 ${isSearchFocused ? 'bg-slate-800/80 border-teal-500' : 'hover:bg-slate-800/70'
+                    }`}
                 />
               </div>
             </form>
@@ -148,9 +147,9 @@ export function TopNav() {
           <div className="flex items-center space-x-3">
             {/* Mobile Search Button */}
             <div className="md:hidden">
-              <Button 
-                variant="ghost" 
-                size="sm" 
+              <Button
+                variant="ghost"
+                size="sm"
                 className="text-gray-300 hover:text-white"
                 onClick={() => navigate('/discover')}
               >
@@ -163,8 +162,8 @@ export function TopNav() {
               <Button variant="ghost" size="sm" className="text-gray-300 hover:text-white relative">
                 <Bell className="h-5 w-5" />
                 {unreadCount > 0 && (
-                  <Badge 
-                    variant="destructive" 
+                  <Badge
+                    variant="destructive"
                     className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs min-w-0"
                   >
                     {unreadCount > 9 ? '9+' : unreadCount}
@@ -178,8 +177,8 @@ export function TopNav() {
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-10 w-10 rounded-full">
                   <Avatar className="h-10 w-10">
-                    <AvatarImage 
-                      src={user?.profileImageUrl || undefined} 
+                    <AvatarImage
+                      src={user?.profileImageUrl || undefined}
                       alt={user?.firstName || "User"}
                     />
                     <AvatarFallback className="bg-gradient-to-br from-cyan-500 to-blue-500 text-white">
@@ -188,9 +187,9 @@ export function TopNav() {
                   </Avatar>
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent 
-                className="w-56 bg-slate-800 border-slate-700 mr-4 z-[10000]" 
-                align="end" 
+              <DropdownMenuContent
+                className="w-56 bg-slate-800 border-slate-700 mr-4 z-[10000]"
+                align="end"
                 alignOffset={-8}
                 sideOffset={8}
                 forceMount
@@ -199,7 +198,7 @@ export function TopNav() {
                 <DropdownMenuLabel className="font-normal">
                   <div className="flex flex-col space-y-1">
                     <p className="text-sm font-medium leading-none text-white">
-                      {user?.firstName && user?.lastName 
+                      {user?.firstName && user?.lastName
                         ? `${user.firstName} ${user.lastName}`
                         : user?.email || "User"
                       }
@@ -211,38 +210,38 @@ export function TopNav() {
                     )}
                   </div>
                 </DropdownMenuLabel>
-                
+
                 <DropdownMenuSeparator className="bg-slate-700" />
-                
+
                 <DropdownMenuItem className="text-gray-300 hover:text-white hover:bg-slate-700 cursor-pointer">
                   <Link href="/profile" className="flex items-center w-full">
                     <User className="mr-2 h-4 w-4" />
                     <span>Profile</span>
                   </Link>
                 </DropdownMenuItem>
-                
+
                 <DropdownMenuItem className="text-gray-300 hover:text-white hover:bg-slate-700 cursor-pointer">
                   <Link href="/pricing" className="flex items-center w-full">
                     <Crown className="mr-2 h-4 w-4" />
                     <span>Upgrade to Premium</span>
                   </Link>
                 </DropdownMenuItem>
-                
+
                 <DropdownMenuItem className="text-gray-300 hover:text-white hover:bg-slate-700 cursor-pointer">
                   <Link href="/settings" className="flex items-center w-full">
                     <Settings className="mr-2 h-4 w-4" />
                     <span>Settings</span>
                   </Link>
                 </DropdownMenuItem>
-                
+
                 <DropdownMenuSeparator className="bg-slate-700" />
-                
-                <DropdownMenuItem 
+
+                <DropdownMenuItem
                   className="text-gray-300 hover:text-white hover:bg-slate-700 cursor-pointer"
                   onClick={async () => {
                     console.log('🔐 MANUAL LOGOUT BUTTON CLICKED - Starting logout process...');
                     console.trace('🔍 Stack trace for logout button click:');
-                    
+
                     try {
                       // Step 1: Sign out from Firebase client
                       const { signOut } = await import('firebase/auth');
@@ -252,7 +251,7 @@ export function TopNav() {
                     } catch (error) {
                       console.error('❌ Firebase signout error:', error);
                     }
-                    
+
                     try {
                       // Step 2: Clear backend session
                       const response = await fetch('/api/auth/logout', {
@@ -262,7 +261,7 @@ export function TopNav() {
                           'Content-Type': 'application/json',
                         },
                       });
-                      
+
                       if (response.ok) {
                         console.log('✅ Backend session cleared successfully');
                       } else {
@@ -271,7 +270,7 @@ export function TopNav() {
                     } catch (error) {
                       console.error('❌ Backend logout error:', error);
                     }
-                    
+
                     // Step 3: Force page reload to reset authentication state
                     console.log('🔄 Redirecting to home page...');
                     window.location.href = "/";

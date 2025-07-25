@@ -31,7 +31,7 @@ export function StreamingMarqueeSection() {
       {/* Background Effects */}
       <div className="absolute inset-0 bg-gradient-to-r from-blue-600/5 via-purple-600/5 to-teal-600/5"></div>
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-transparent via-slate-900/50 to-transparent"></div>
-      
+
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
         <div className="text-center mb-12">
@@ -51,7 +51,7 @@ export function StreamingMarqueeSection() {
           {/* Gradient Masks for Fade Effect */}
           <div className="absolute left-0 top-0 w-32 h-full bg-gradient-to-r from-slate-950 via-slate-950/80 to-transparent z-20 pointer-events-none"></div>
           <div className="absolute right-0 top-0 w-32 h-full bg-gradient-to-l from-slate-950 via-slate-950/80 to-transparent z-20 pointer-events-none"></div>
-          
+
           {/* Marquee Container */}
           <div className="flex overflow-hidden">
             <div className="flex animate-marquee-left space-x-16 py-8">
@@ -78,9 +78,9 @@ export function StreamingMarqueeSection() {
                         target.parentNode?.appendChild(fallback);
                       }}
                     />
-                    
+
                     {/* Hover Effect Glow */}
-                    <div 
+                    <div
                       className="absolute inset-0 rounded-lg opacity-0 group-hover:opacity-30 transition-opacity duration-300 blur-xl scale-150"
                       style={{ backgroundColor: platform.color }}
                     ></div>

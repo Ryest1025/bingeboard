@@ -1,9 +1,9 @@
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { 
-  Tv, 
-  Search, 
+import {
+  Tv,
+  Search,
   Calendar,
   Heart,
   UserCircle,
@@ -38,19 +38,18 @@ export default function DesktopFooter() {
         <div className="flex justify-center space-x-8 py-4">
           {navItems.map((item) => {
             const Icon = item.icon;
-            const isActive = location === item.path || 
+            const isActive = location === item.path ||
               (item.path === "/" && location === "/") ||
               (item.path === "/search" && location === "/discover");
-            
+
             return (
               <button
                 key={item.path}
                 onClick={() => setLocation(item.path === "/search" ? "/discover" : item.path)}
-                className={`flex flex-col items-center p-3 rounded-lg transition-all ${
-                  isActive 
-                    ? "text-teal-400 bg-teal-400/10" 
+                className={`flex flex-col items-center p-3 rounded-lg transition-all ${isActive
+                    ? "text-teal-400 bg-teal-400/10"
                     : "text-gray-400 hover:text-white hover:bg-gray-800"
-                }`}
+                  }`}
               >
                 <Icon className="w-5 h-5 mb-1" />
                 <span className="text-sm font-medium">{item.label}</span>
@@ -94,7 +93,7 @@ export default function DesktopFooter() {
                 </div>
               </div>
               <p className="text-gray-400 text-sm">
-                The premium platform for tracking your favorite TV shows and sporting events. 
+                The premium platform for tracking your favorite TV shows and sporting events.
                 Discover, track, and share your entertainment experience.
               </p>
             </div>

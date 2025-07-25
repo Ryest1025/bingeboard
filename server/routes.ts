@@ -11,8 +11,8 @@ import { storage } from "./storage";
 import { setupAuth, isAuthenticated, verifyPassword } from "./auth";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
-import { 
-  insertWatchlistSchema, insertActivitySchema, insertFriendshipSchema, 
+import {
+  insertWatchlistSchema, insertActivitySchema, insertFriendshipSchema,
   insertActivityLikeSchema, insertActivityCommentSchema, insertUpcomingReleaseSchema,
   insertReleaseReminderSchema, insertNotificationSchema, insertStreamingIntegrationSchema,
   insertViewingHistorySchema, insertUserBehaviorSchema, insertRecommendationTrainingSchema
@@ -33,10 +33,10 @@ import admin from "firebase-admin";
 // Utility function to convert data to CSV format
 function convertToCSV(data: any): string {
   const rows = [];
-  
+
   // Add headers
   rows.push('Category,Field,Value');
-  
+
   // Convert each data category to CSV rows
   Object.entries(data).forEach(([category, value]) => {
     if (Array.isArray(value)) {
@@ -57,7 +57,7 @@ function convertToCSV(data: any): string {
       rows.push(`"${category}","value","${String(value).replace(/"/g, '""')}"`);
     }
   });
-  
+
   return rows.join('\n');
 }
 
@@ -68,10 +68,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/health', (_req, res) => {
     res.json({ status: 'OK', timestamp: new Date().toISOString() });
   });
-  
+
   // Analytics routes for monetization tracking
   app.use('/api/analytics', analyticsRoutes);
-  
+
   // Auth middleware
   await setupAuth(app);
 
@@ -95,24 +95,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       console.log('🔐 Firebase session endpoint called');
       console.log('📥 Request body:', JSON.stringify(req.body, null, 2));
-      
+
       const authHeader = req.headers.authorization;
       const { firebaseToken, user: userFromBody } = req.body;
-      
+
       if (!authHeader?.startsWith('Bearer ') && !firebaseToken) {
         return res.status(401).json({ message: 'Authorization token required' });
       }
 
       let user;
-      
+
       // Check if Firebase Admin is available
       const firebaseAdmin = initializeFirebaseAdmin();
-      
+
       if (authHeader?.startsWith('Bearer ') && firebaseAdmin) {
         // Verify Firebase ID token using Admin SDK
         const idToken = authHeader.substring(7);
         console.log('🔐 Firebase token extracted, attempting verification...');
-        
+
         try {
           const decodedToken = await firebaseAdmin.auth().verifyIdToken(idToken);
           console.log('🔍 Firebase token decoded:', {
@@ -123,7 +123,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             picture: decodedToken.picture,
             provider_id: decodedToken.firebase?.identities
           });
-          
+
           user = {
             id: decodedToken.uid,
             email: decodedToken.email || null,
@@ -133,7 +133,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             profileImageUrl: decodedToken.picture || '',
             authProvider: 'firebase'
           };
-          
+
           console.log('✅ Firebase user object created:', {
             id: user.id,
             email: user.email,
@@ -147,13 +147,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } else if (firebaseToken || userFromBody) {
         // Decode the Firebase token to extract user data
         let decodedUser = null;
-        
+
         if (firebaseToken && typeof firebaseToken === 'string') {
           try {
             // Decode the JWT token (just parsing, not verifying for local dev)
             const base64Payload = firebaseToken.split('.')[1];
             const decodedPayload = JSON.parse(atob(base64Payload));
-            
+
             console.log('🔍 Decoded Firebase token payload:', {
               uid: decodedPayload.user_id || decodedPayload.sub,
               email: decodedPayload.email,
@@ -161,7 +161,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               picture: decodedPayload.picture,
               email_verified: decodedPayload.email_verified
             });
-            
+
             decodedUser = {
               uid: decodedPayload.user_id || decodedPayload.sub,
               email: decodedPayload.email,
@@ -173,17 +173,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
             console.error('❌ Failed to decode Firebase token:', error);
           }
         }
-        
+
         // Use decoded token data or provided user data
         const userData = userFromBody || decodedUser || {};
-        
+
         console.log('🔍 Using Firebase token data for local development:', {
           uid: userData.uid,
           email: userData.email,
           displayName: userData.displayName,
           photoURL: userData.photoURL
         });
-        
+
         user = {
           id: userData.uid || `firebase_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
           email: userData.email || null,
@@ -193,7 +193,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           profileImageUrl: userData.photoURL || '',
           authProvider: 'firebase'
         };
-        
+
         console.log('✅ Local Firebase user object created:', {
           id: user.id,
           email: user.email,
@@ -213,7 +213,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log('Storage: Upserting user with data:', user);
       const dbUser = await storage.upsertUser(user);
       console.log('Storage: User upserted successfully:', dbUser.id, dbUser.email);
-      
+
       console.log('User created/updated in database:', dbUser.id, dbUser.email);
 
       // Create session structure
@@ -234,29 +234,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Save session
       (req as any).session.user = sessionUser;
-      
+
       console.log('Session ID:', (req as any).sessionID);
       (req as any).session.save((err: any) => {
         if (err) {
           console.error('Session save error:', err);
           return res.status(500).json({ message: 'Session creation failed' });
         }
-        
+
         console.log('✅ Session saved successfully');
         console.log('📋 Session data after save:', JSON.stringify((req as any).session, null, 2));
         console.log('🍪 Session cookie should be set with name: bingeboard.session');
         console.log('🍪 Cookie settings: secure=false, httpOnly=true, sameSite=lax (development mode)');
         console.log('🌐 Response will include Set-Cookie header for domain:', req.get('host'));
-        
-        res.json({ 
-          success: true, 
-          user: { 
-            id: dbUser.id, 
+
+        res.json({
+          success: true,
+          user: {
+            id: dbUser.id,
             email: dbUser.email,
             firstName: dbUser.firstName,
             lastName: dbUser.lastName,
             profileImageUrl: dbUser.profileImageUrl
-          } 
+          }
         });
       });
 
@@ -285,9 +285,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { mediaType, timeWindow } = req.params;
       const includeStreaming = req.query.includeStreaming === 'true';
-      
+
       const result = await tmdbService.getTrending(mediaType as 'tv' | 'movie' | 'all', timeWindow as 'day' | 'week');
-      
+
       // Enrich with streaming data if requested
       if (includeStreaming && result.results) {
         const enrichedResults = await Promise.all(
@@ -300,7 +300,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 title,
                 itemMediaType
               );
-              
+
               return {
                 ...item,
                 watchProviders: streamingData.platforms,
@@ -313,10 +313,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
             }
           })
         );
-        
+
         result.results = enrichedResults;
       }
-      
+
       res.json(result);
     } catch (error) {
       console.error('TMDB trending error:', error);
@@ -409,7 +409,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { type, id } = req.params;
       const title = req.query.title as string;
       const imdbId = req.query.imdbId as string;
-      
+
       if (type !== 'tv' && type !== 'movie') {
         return res.status(400).json({ message: 'Type must be either "tv" or "movie"' });
       }
@@ -424,7 +424,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         type as 'movie' | 'tv',
         imdbId
       );
-      
+
       res.json(result);
     } catch (error) {
       console.error('Comprehensive streaming availability error:', error);
@@ -439,8 +439,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       fileSize: 10 * 1024 * 1024, // 10MB limit
     },
     fileFilter: (req, file, cb) => {
-      if (file.mimetype === 'text/csv' || file.mimetype === 'application/json' || 
-          file.originalname.endsWith('.csv') || file.originalname.endsWith('.json')) {
+      if (file.mimetype === 'text/csv' || file.mimetype === 'application/json' ||
+        file.originalname.endsWith('.csv') || file.originalname.endsWith('.json')) {
         cb(null, true);
       } else {
         cb(new Error('Only CSV and JSON files are allowed'));
@@ -465,11 +465,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       appId: process.env.VITE_FIREBASE_APP_ID ? 'Set' : 'Missing',
       currentDomain: req.get('host')
     };
-    
-    res.json({ 
+
+    res.json({
       message: 'Firebase configuration check',
       config: firebaseConfig,
-      timestamp: Date.now() 
+      timestamp: Date.now()
     });
   });
 
@@ -481,7 +481,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       console.log('User object in request:', JSON.stringify(req.user, null, 2));
       const userId = req.user?.claims?.sub || req.user?.id;
-      
+
       if (!userId) {
         console.error('No user ID found in session');
         return res.status(401).json({ message: "No user ID in session" });
@@ -504,7 +504,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
         throw dbError;
       }
-      
+
       if (!user) {
         console.error('User not found in database:', userId);
         // Fallback to session user data if database fails
@@ -518,7 +518,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
         return res.status(404).json({ message: "User not found" });
       }
-      
+
       console.log('User data from database:', JSON.stringify(user, null, 2));
       res.json(user);
     } catch (error) {
@@ -533,14 +533,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log('🔐 Firebase logout endpoint called');
       console.log('📋 Session ID before logout:', req.sessionID);
       console.log('📋 Session data:', JSON.stringify(req.session, null, 2));
-      
+
       // Clear the session
       req.session.destroy((err: any) => {
         if (err) {
           console.error('❌ Session destroy error:', err);
           return res.status(500).json({ message: 'Failed to logout' });
         }
-        
+
         console.log('✅ Session destroyed successfully');
         // Clear the custom session cookie (bingeboard.session)
         res.clearCookie('bingeboard.session', {
@@ -550,7 +550,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           httpOnly: true,
           sameSite: 'none'
         });
-        
+
         console.log('✅ Session cookie cleared');
         res.json({ success: true, message: 'Logged out successfully' });
       });
@@ -564,14 +564,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/logout', (req: any, res) => {
     try {
       console.log('🔐 GET Logout endpoint called (redirect method)');
-      
+
       // Clear the session
       req.session.destroy((err: any) => {
         if (err) {
           console.error('❌ Session destroy error:', err);
           return res.redirect('/?logout=error');
         }
-        
+
         console.log('✅ Session destroyed successfully');
         // Clear the custom session cookie (bingeboard.session)
         res.clearCookie('bingeboard.session', {
@@ -581,7 +581,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           httpOnly: true,
           sameSite: 'none'
         });
-        
+
         console.log('✅ Session cookie cleared, redirecting to home');
         res.redirect('/?logout=success');
       });
@@ -595,7 +595,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/auth/forgot-password', async (req, res) => {
     try {
       const { email, phoneNumber, method } = req.body;
-      
+
       if (!email && !phoneNumber) {
         return res.status(400).json({ message: 'Email or phone number is required' });
       }
@@ -611,7 +611,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         user = await storage.getUserByEmail(email);
         console.log(`🔍 User found:`, user ? `${user.id} (${user.email})` : 'No user found');
       }
-      
+
       if (!user) {
         console.log(`⚠️  No user found for email: ${email}`);
         // Don't reveal if email/phone exists for security
@@ -619,49 +619,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const currentTime = Math.floor(Date.now() / 1000);
-      
+
       if (method === 'email') {
         // Generate secure token for email reset (link-based)
         const crypto = await import('crypto');
         const token = crypto.randomBytes(32).toString('hex');
         const expiresAt = currentTime + (60 * 60); // 1 hour
-        
+
         await storage.createPasswordResetToken(user.id, token, expiresAt);
-        
+
         // Send email
         const { EmailService } = await import('./services/emailService');
         const emailService = new EmailService();
-        
+
         if (!emailService.isEmailConfigured()) {
           console.error('❌ Email service not configured - EMAIL_USER and EMAIL_PASS environment variables required');
-          return res.status(500).json({ 
-            message: 'Email service not configured. Please contact support or try SMS method.' 
+          return res.status(500).json({
+            message: 'Email service not configured. Please contact support or try SMS method.'
           });
         }
-        
+
         const emailSent = await emailService.sendPasswordResetEmail(email, token, false);
-        
+
         if (!emailSent) {
           return res.status(500).json({ message: 'Failed to send reset email' });
         }
-        
+
         console.log(`✅ Password reset email sent to ${email}`);
         res.json({ message: 'Password reset email sent successfully' });
-        
+
       } else if (method === 'sms') {
         // Use provided phone number or user's stored phone number
         const targetPhoneNumber = phoneNumber || user.phoneNumber;
-        
+
         if (!targetPhoneNumber) {
-          return res.status(400).json({ 
-            message: 'No phone number provided and none on file. Please provide a phone number or use email method.' 
+          return res.status(400).json({
+            message: 'No phone number provided and none on file. Please provide a phone number or use email method.'
           });
         }
-        
+
         // Generate 6-digit code for SMS
         const code = Math.floor(100000 + Math.random() * 900000).toString();
         const expiresAt = currentTime + (15 * 60); // 15 minutes
-        
+
         const resetCode = await storage.createPasswordResetCode({
           userId: user.id,
           code: code,
@@ -672,30 +672,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
           expiresAt: expiresAt,
           createdAt: currentTime
         });
-        
+
         // Send SMS
         const { SmsService } = await import('./services/smsService');
         const smsService = new SmsService();
-        
+
         if (!smsService.isConfigured()) {
-          return res.status(500).json({ 
-            message: 'SMS service not configured. Please use email method or contact support.' 
+          return res.status(500).json({
+            message: 'SMS service not configured. Please use email method or contact support.'
           });
         }
-        
+
         const smsSent = await smsService.sendPasswordResetCode(targetPhoneNumber, code);
-        
+
         if (!smsSent) {
           return res.status(500).json({ message: 'Failed to send reset code' });
         }
-        
+
         console.log(`✅ Password reset code sent via SMS to ${targetPhoneNumber}`);
-        res.json({ 
+        res.json({
           message: 'Password reset code sent successfully',
           codeId: resetCode.id // For verification
         });
       }
-      
+
     } catch (error) {
       console.error('❌ Forgot password error:', error);
       res.status(500).json({ message: 'Internal server error' });
@@ -705,56 +705,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/auth/reset-password', async (req, res) => {
     try {
       const { token, code, email, phoneNumber, password, codeId } = req.body;
-      
+
       if (!password || password.length < 6) {
         return res.status(400).json({ message: 'Password must be at least 6 characters long' });
       }
 
       let user;
-      
+
       if (token) {
         // Token-based reset (email link)
         user = await storage.verifyPasswordResetToken(token);
         if (!user) {
           return res.status(400).json({ message: 'Invalid or expired reset token' });
         }
-        
+
         // Update password using Firebase Admin (for Firebase users) or direct DB update
         const { hashPassword } = await import('./auth');
         const hashedPassword = await hashPassword(password);
-        
+
         await storage.updateUser(user.id, { passwordHash: hashedPassword });
         await storage.clearPasswordResetToken(user.id);
-        
+
         console.log(`✅ Password reset successful for user ${user.email} via token`);
         res.json({ message: 'Password reset successful' });
-        
+
       } else if (code) {
         // Code-based reset (SMS)
         const resetCode = await storage.verifyPasswordResetCode(code, email, phoneNumber);
         if (!resetCode) {
           return res.status(400).json({ message: 'Invalid or expired reset code' });
         }
-        
+
         user = await storage.getUser(resetCode.userId);
         if (!user) {
           return res.status(400).json({ message: 'User not found' });
         }
-        
+
         // Update password
         const { hashPassword } = await import('./auth');
         const hashedPassword = await hashPassword(password);
-        
+
         await storage.updateUser(user.id, { passwordHash: hashedPassword });
         await storage.clearPasswordResetCode(resetCode.id);
-        
+
         console.log(`✅ Password reset successful for user ${user.email} via code`);
         res.json({ message: 'Password reset successful' });
-        
+
       } else {
         return res.status(400).json({ message: 'Reset token or code is required' });
       }
-      
+
     } catch (error) {
       console.error('❌ Reset password error:', error);
       res.status(500).json({ message: 'Internal server error' });
@@ -766,7 +766,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user.claims?.sub || req.user.id;
       const updates = req.body;
-      
+
       const user = await storage.updateUser(userId, updates);
       res.json(user);
     } catch (error) {
@@ -780,7 +780,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userList = await db.select().from(users).limit(10);
       console.log('🔍 Debug: Users in database:', userList.length);
-      
+
       // Log each user individually for better debugging
       userList.forEach((user: any, index: number) => {
         console.log(`👤 User ${index + 1}:`, {
@@ -790,12 +790,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
           displayName: user.displayName
         });
       });
-      
+
       res.json({
         count: userList.length,
-        users: userList.map((u: any) => ({ 
-          id: u.id, 
-          email: u.email, 
+        users: userList.map((u: any) => ({
+          id: u.id,
+          email: u.email,
           authProvider: u.authProvider,
           displayName: u.displayName
         }))
@@ -810,18 +810,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/auth/force-complete-onboarding', async (req: any, res) => {
     try {
       const { email } = req.body;
-      
+
       if (email !== 'rachel.gubin@gmail.com') {
         return res.status(403).json({ message: 'Not authorized for this action' });
       }
-      
+
       console.log('🔧 Force completing onboarding for:', email);
-      
+
       // Update user in database
       const user = await storage.updateUser('manual_1752272712977_25fdy83s7', {
         onboardingCompleted: true
       });
-      
+
       console.log('✅ Onboarding force completed for user:', email);
       res.json({ success: true, user, message: 'Onboarding marked as complete' });
     } catch (error) {
@@ -835,7 +835,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user.claims?.sub || req.user.id;
       console.log('🔄 Refreshing session for user:', userId);
-      
+
       // Try to get user from database
       let user;
       try {
@@ -844,13 +844,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.error('Database error during session refresh:', dbError);
         return res.status(500).json({ message: 'Database error' });
       }
-      
+
       if (user) {
         // Update session with database user data
         req.user.onboardingCompleted = user.onboardingCompleted;
         req.user.firstName = user.firstName;
         req.user.lastName = user.lastName;
-        
+
         req.session.save((err: any) => {
           if (err) {
             console.error('Session save error during refresh:', err);
@@ -873,24 +873,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user.claims?.sub || req.user.id;
       const { onboardingData } = req.body;
-      
+
       console.log('🎯 Onboarding completion request for user:', userId);
       console.log('📋 Onboarding data received:', JSON.stringify(onboardingData, null, 2));
-      
+
       // Get current user first
       const currentUser = await storage.getUser(userId);
       if (!currentUser) {
         return res.status(404).json({ message: 'User not found' });
       }
-      
+
       // Update user with onboarding completion flag
-      const user = await storage.updateUser(userId, { 
+      const user = await storage.updateUser(userId, {
         onboardingCompleted: true,
         firstName: onboardingData?.profile?.firstName || currentUser?.firstName,
         lastName: onboardingData?.profile?.lastName || currentUser?.lastName,
         phoneNumber: onboardingData?.profile?.phone
       });
-      
+
       // Save user preferences if provided
       if (onboardingData?.preferences) {
         try {
@@ -915,9 +915,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           console.error('❌ Error saving preferences:', prefError);
         }
       }
-      
+
       console.log('🎊 Onboarding completed successfully for user:', userId);
-      
+
       // Update session user data to include onboardingCompleted flag
       if (req.user) {
         req.user.onboardingCompleted = true;
@@ -929,9 +929,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
         });
       }
-      
-      res.json({ 
-        success: true, 
+
+      res.json({
+        success: true,
         user,
         message: "Onboarding completed successfully",
         savedData: {
@@ -950,20 +950,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/debug/create-user', async (req, res) => {
     try {
       const { email, firstName = 'Rachel', lastName = 'Gubin', phoneNumber } = req.body;
-      
+
       if (!email) {
         return res.status(400).json({ error: 'Email is required' });
       }
-      
+
       console.log(`🔧 Manual user creation request for: ${email}`);
-      
+
       // Check if user already exists by email
       const existingByEmail = await storage.getUserByEmail(email);
       if (existingByEmail) {
         console.log(`✅ User already exists by email:`, existingByEmail.id, existingByEmail.email);
         return res.json({ message: 'User already exists', user: existingByEmail });
       }
-      
+
       // Create new user with manual ID
       const newUser = {
         id: `manual_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
@@ -974,13 +974,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         profileImageUrl: '',
         authProvider: 'email',
       };
-      
+
       console.log(`➕ Creating manual user:`, newUser);
       const createdUser = await storage.upsertUser(newUser);
-      
+
       console.log('✅ Manual user created successfully:', createdUser.id, createdUser.email);
       res.json({ message: 'User created successfully', user: createdUser });
-      
+
     } catch (error: any) {
       console.error('❌ Error creating manual user:', error);
       res.status(500).json({ error: error.message });
@@ -991,41 +991,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/debug/set-password', async (req, res) => {
     try {
       const { email, password = 'test123' } = req.body;
-      
+
       if (!email) {
         return res.status(400).json({ error: 'Email is required' });
       }
-      
+
       console.log(`🔧 Setting test password for: ${email}`);
-      
+
       // Find user by email
       const user = await storage.getUserByEmail(email);
       if (!user) {
         console.log(`❌ No user found for email: ${email}`);
         return res.status(404).json({ error: 'User not found' });
       }
-      
+
       // Hash the password
       const { hashPassword } = await import('./auth');
       const hashedPassword = await hashPassword(password);
-      
+
       // Update user with password hash
       const updatedUser = await storage.upsertUser({
         ...user,
         passwordHash: hashedPassword,
         authProvider: 'email' // Ensure it's set to email for password login
       });
-      
+
       console.log(`✅ Password set for user: ${email}`);
-      res.json({ 
-        message: 'Password set successfully', 
+      res.json({
+        message: 'Password set successfully',
         user: {
           id: updatedUser.id,
           email: updatedUser.email,
           hasPassword: !!updatedUser.passwordHash
         }
       });
-      
+
     } catch (error: any) {
       console.error('❌ Error setting password:', error);
       res.status(500).json({ error: error.message });
@@ -1036,28 +1036,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/auth/register', async (req, res) => {
     try {
       const { email, password, firstName, lastName } = req.body;
-      
+
       if (!email || !password) {
         return res.status(400).json({ message: 'Email and password are required' });
       }
-      
+
       if (password.length < 6) {
         return res.status(400).json({ message: 'Password must be at least 6 characters long' });
       }
-      
+
       console.log(`🔐 Registration attempt for email: ${email}`);
-      
+
       // Check if user already exists
       const existingUser = await storage.getUserByEmail(email);
       if (existingUser) {
         console.log(`❌ User already exists for email: ${email}`);
         return res.status(409).json({ message: 'User already exists with this email' });
       }
-      
+
       // Hash password
       const { hashPassword } = await import('./auth');
       const hashedPassword = await hashPassword(password);
-      
+
       // Create user with password hash - generate unique ID
       const userId = `email_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       const newUser = await storage.upsertUser({
@@ -1071,13 +1071,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         profileImageUrl: null,
         phoneNumber: null
       });
-      
+
       console.log(`✅ User created successfully:`, {
         id: newUser.id,
         email: newUser.email,
         authProvider: newUser.authProvider
       });
-      
+
       // Create session
       const sessionUser = {
         id: newUser.id,
@@ -1090,10 +1090,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           exp: Math.floor(Date.now() / 1000) + (7 * 24 * 60 * 60) // 7 days
         }
       };
-      
+
       (req as any).session.user = sessionUser;
-      
-      res.status(201).json({ 
+
+      res.status(201).json({
         message: 'Registration successful',
         user: {
           id: newUser.id,
@@ -1101,7 +1101,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           displayName: newUser.firstName && newUser.lastName ? `${newUser.firstName} ${newUser.lastName}` : newUser.username || newUser.email
         }
       });
-      
+
     } catch (error) {
       console.error('❌ Registration error:', error);
       res.status(500).json({ message: 'Internal server error' });
@@ -1115,7 +1115,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/auth/login', async (req, res) => {
     try {
       const { email, password } = req.body;
-      
+
       // Enhanced debugging
       console.log('🔐 Login request received:', {
         email,
@@ -1127,41 +1127,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
           'user-agent': req.headers['user-agent']?.substring(0, 50)
         }
       });
-      
+
       if (!email || !password) {
         console.log('❌ Missing credentials:', { email: !!email, password: !!password });
         return res.status(400).json({ message: 'Email and password are required' });
       }
-      
+
       console.log(`🔐 Login attempt for email: ${email}`);
-      
+
       // Find user by email
       const user = await storage.getUserByEmail(email);
       if (!user) {
         console.log(`❌ No user found for email: ${email}`);
         return res.status(401).json({ message: 'Invalid email or password' });
       }
-      
+
       console.log(`👤 Found user:`, {
         id: user.id,
         email: user.email,
         authProvider: user.authProvider,
         hasPasswordHash: !!user.passwordHash
       });
-      
+
       // Check if user has a password hash (manual/email accounts)
       if (!user.passwordHash) {
         console.log(`❌ User ${email} has no password hash - cannot login with password`);
         return res.status(401).json({ message: 'Invalid email or password' });
       }
-      
+
       // Verify password
       const isValidPassword = await verifyPassword(password, user.passwordHash);
       if (!isValidPassword) {
         console.log(`❌ Invalid password for user: ${email}`);
         return res.status(401).json({ message: 'Invalid email or password' });
       }
-      
+
       // 🔑 CRITICAL: Session creation - DO NOT MODIFY
       const sessionUser = {
         id: user.id,
@@ -1174,19 +1174,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
           exp: Math.floor(Date.now() / 1000) + (7 * 24 * 60 * 60) // 7 days
         }
       };
-      
+
       (req as any).session.user = sessionUser;
-      
+
       // 🚨 CRITICAL: Explicit session save - ESSENTIAL for persistence
       (req as any).session.save((err: any) => {
         if (err) {
           console.error('❌ Session save error:', err);
           return res.status(500).json({ message: 'Session save failed' });
         }
-        
+
         console.log(`✅ Login successful for user: ${email}`);
         console.log(`✅ Session saved with user data:`, sessionUser.email);
-        res.json({ 
+        res.json({
           message: 'Login successful',
           user: {
             id: user.id,
@@ -1195,7 +1195,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
         });
       });
-      
+
     } catch (error) {
       console.error('❌ Login error:', error);
       res.status(500).json({ message: 'Internal server error' });
@@ -1211,11 +1211,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/mobile-status', (req, res) => {
     res.sendFile(path.join(__dirname, '../mobile-status.html'));
   });
-  
+
   app.get('/api/mobile/status', (req, res) => {
     const userAgent = req.get('User-Agent') || '';
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|Windows Phone|Mobile/i.test(userAgent);
-    
+
     res.json({
       timestamp: new Date().toISOString(),
       isMobile,
@@ -1246,7 +1246,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/user/stats', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims?.sub || req.user.id;
-      
+
       // Get comprehensive user stats from storage
       const stats = await storage.getUserStats(userId);
 
@@ -1290,7 +1290,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user.claims?.sub || req.user.id;
       console.log('🔧 Setting up test AI preferences for user:', userId);
-      
+
       // Set up default preferences for testing
       const defaultPreferences = {
         preferredGenres: ['Action', 'Drama', 'Comedy', 'Sci-Fi'],
@@ -1308,16 +1308,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         sportsNotifications: true,
         onboardingCompleted: true
       };
-      
+
       await storage.updateUserPreferences(userId, defaultPreferences);
       console.log('✅ Test preferences set for user:', userId);
-      
-      res.json({ 
-        success: true, 
+
+      res.json({
+        success: true,
         message: 'Test AI preferences set successfully',
         preferences: defaultPreferences
       });
-      
+
     } catch (error) {
       console.error('❌ Error setting up test preferences:', error);
       res.status(500).json({ error: 'Failed to set up test preferences' });
@@ -1329,14 +1329,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user.claims?.sub || req.user.id;
       console.log('🤖 Generating hybrid AI recommendations for user:', userId);
-      
+
       // STEP 1: Get or create user preferences
       let userPreferences = await storage.getUserPreferences(userId);
-      
+
       // If no preferences, create smart defaults based on popular choices
       if (!userPreferences || !userPreferences.preferredGenres) {
         console.log('📋 Creating smart default preferences for new user');
-        
+
         const smartDefaults = {
           userId,
           preferredGenres: ['Action', 'Drama', 'Comedy', 'Thriller'],
@@ -1354,7 +1354,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           sportsNotifications: true,
           onboardingCompleted: false // Will prompt user to complete onboarding
         };
-        
+
         try {
           await storage.updateUserPreferences(userId, smartDefaults);
           userPreferences = smartDefaults as any;
@@ -1365,7 +1365,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           userPreferences = smartDefaults as any;
         }
       }
-      
+
       // If user has preferences, mark onboarding as completed
       if (userPreferences && userPreferences.preferredGenres?.length && !userPreferences.onboardingCompleted) {
         try {
@@ -1376,29 +1376,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
           console.error('❌ Error updating onboarding status:', error);
         }
       }
-      
+
       console.log('📊 Using preferences:', {
         genres: userPreferences?.preferredGenres,
         networks: userPreferences?.preferredNetworks,
         onboardingCompleted: userPreferences?.onboardingCompleted
       });
-      
+
       // STEP 2: Get real trending/popular content from TMDB API
       const recommendations = [];
-      
+
       try {
         // Get trending TV shows and movies
         const trendingTV = await tmdbService.getTrending('tv', 'week');
         const trendingMovies = await tmdbService.getTrending('movie', 'week');
-        
+
         // Combine and filter content based on user preferences
         const allContent = [
           ...(trendingTV.results || []).map((item: any) => ({ ...item, mediaType: 'tv' })),
           ...(trendingMovies.results || []).map((item: any) => ({ ...item, mediaType: 'movie' }))
         ];
-        
+
         console.log(`📺 Retrieved ${allContent.length} trending items from TMDB`);
-        
+
         // STEP 3: Smart filtering and scoring based on user preferences
         for (const item of allContent.slice(0, 20)) { // Process top 20 for performance
           try {
@@ -1409,28 +1409,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
             } else {
               details = await tmdbService.getMovieDetails(item.id);
             }
-            
+
             // Calculate AI score based on multiple factors
             let aiScore = 50; // Base score
-            
+
             // Genre matching (major factor)
             const itemGenres = (details as any).genres?.map((g: any) => g.name) || [];
-            const genreMatches = itemGenres.filter((genre: string) => 
-              userPreferences?.preferredGenres?.some((prefGenre: string) => 
-                prefGenre.toLowerCase().includes(genre.toLowerCase()) || 
+            const genreMatches = itemGenres.filter((genre: string) =>
+              userPreferences?.preferredGenres?.some((prefGenre: string) =>
+                prefGenre.toLowerCase().includes(genre.toLowerCase()) ||
                 genre.toLowerCase().includes(prefGenre.toLowerCase())
               )
             );
             aiScore += genreMatches.length * 15; // +15 per genre match
-            
+
             // Popularity boost
             const popularity = item.popularity || 0;
             aiScore += Math.min(popularity / 100, 20); // Up to +20 for popularity
-            
+
             // Rating boost  
             const rating = item.vote_average || 0;
             aiScore += rating; // Direct rating boost
-            
+
             // Recency boost (newer content gets slight preference)
             const releaseDate = item.first_air_date || item.release_date;
             if (releaseDate) {
@@ -1440,10 +1440,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 aiScore += 10; // Recent content bonus
               }
             }
-            
+
             // Only include if score is decent and we have space
             if (aiScore >= 60 && recommendations.length < 8) {
-              
+
               // Get streaming availability (fallback to mock data due to API limits)
               let streamingInfo: {
                 available: boolean;
@@ -1470,11 +1470,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 { provider_id: 15, provider_name: 'Hulu', logo_path: '/pqUTCYPVc8R8gQQBQRrJt5bY7dq.jpg' },
                 { provider_id: 350, provider_name: 'Apple TV Plus', logo_path: '/6uhKBfmtzFqOcLousHwZuzcrScK.jpg' }
               ];
-              
+
               const randomPlatforms = mockPlatforms
                 .sort(() => Math.random() - 0.5)
                 .slice(0, Math.floor(Math.random() * 3) + 1);
-              
+
               streamingInfo.platforms = randomPlatforms;
               streamingInfo.services = randomPlatforms.map(p => p.provider_name);
 
@@ -1491,10 +1491,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
               try {
                 const videos = await tmdbService.getVideos(item.mediaType as 'tv' | 'movie', item.id);
-                const trailer = (videos as any).results?.find((video: any) => 
+                const trailer = (videos as any).results?.find((video: any) =>
                   video.type === 'Trailer' && video.site === 'YouTube'
                 );
-                
+
                 if (trailer) {
                   trailerInfo = {
                     hasTrailer: true,
@@ -1505,7 +1505,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               } catch (videoError) {
                 console.warn(`⚠️ Could not get trailer for ${item.title || item.name}:`, (videoError as Error).message);
               }
-              
+
               // Disable Utelly for now due to API rate limits
               /*
               try {
@@ -1525,7 +1525,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 console.warn(`⚠️ Could not get streaming info for ${item.title || item.name}:`, (streamingError as Error).message);
               }
               */
-              
+
               // Generate personalized reason
               let reason = "Recommended for you";
               if (genreMatches.length > 0) {
@@ -1535,7 +1535,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               } else {
                 reason = `Popular ${item.mediaType === 'tv' ? 'series' : 'movie'} you might enjoy`;
               }
-              
+
               recommendations.push({
                 id: recommendations.length + 1,
                 showId: item.id,
@@ -1590,10 +1590,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
             continue;
           }
         }
-        
+
       } catch (apiError) {
         console.error('❌ TMDB API error, falling back to curated recommendations:', apiError);
-        
+
         // FALLBACK: Curated recommendations based on preferences
         const curatedShows = [
           { id: 94997, title: "House of the Dragon", genres: ["Action", "Adventure", "Drama"], networks: ["HBO"], rating: "8.4", mediaType: "tv" },
@@ -1603,19 +1603,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
           { id: 550, title: "Fight Club", genres: ["Drama", "Thriller"], networks: ["Streaming"], rating: "8.8", mediaType: "movie" },
           { id: 13, title: "Forrest Gump", genres: ["Drama", "Romance"], networks: ["Streaming"], rating: "8.8", mediaType: "movie" }
         ];
-        
+
         // Filter curated shows by user preferences
         for (const show of curatedShows) {
-          const genreMatches = show.genres.filter((genre: string) => 
+          const genreMatches = show.genres.filter((genre: string) =>
             userPreferences?.preferredGenres?.includes(genre)
           );
-          
+
           if (genreMatches.length > 0 || recommendations.length < 3) {
             recommendations.push({
               id: recommendations.length + 1,
               showId: show.id,
               score: 75 + genreMatches.length * 10,
-              reason: genreMatches.length > 0 
+              reason: genreMatches.length > 0
                 ? `Curated pick for your ${genreMatches.join(' and ')} preferences`
                 : `Highly recommended ${show.mediaType}`,
               recommendationType: "curated_pick",
@@ -1645,13 +1645,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
         }
       }
-      
+
       // STEP 4: Sort by AI score (highest first)
       recommendations.sort((a, b) => b.score - a.score);
-      
+
       console.log(`🎯 Generated ${recommendations.length} hybrid AI recommendations`);
       console.log('📈 Score distribution:', recommendations.map(r => `${r.show.title}: ${r.score}`));
-      
+
       // STEP 5: Return recommendations with proper messaging
       const response = {
         recommendations,
@@ -1661,9 +1661,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           ? `${recommendations.length} personalized recommendations with streaming availability`
           : "Complete onboarding for more personalized recommendations!"
       };
-      
+
       res.json(response);
-      
+
     } catch (error) {
       console.error('❌ Error generating AI recommendations:', error);
       res.status(500).json({ error: 'Failed to generate AI recommendations' });
@@ -1675,14 +1675,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user.claims?.sub || req.user.id;
       console.log('🔄 Regenerating AI recommendations for user:', userId);
-      
+
       // For now, just return success - the frontend will refetch the recommendations
       // In a real implementation, you might clear cached recommendations or trigger new generation
-      res.json({ 
-        success: true, 
-        message: 'New recommendations generated successfully' 
+      res.json({
+        success: true,
+        message: 'New recommendations generated successfully'
       });
-      
+
     } catch (error) {
       console.error('Error generating AI recommendations:', error);
       res.status(500).json({ error: 'Failed to generate new recommendations' });
@@ -1694,9 +1694,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user.claims?.sub || req.user.id;
       const recommendationId = parseInt(req.params.id);
-      
+
       console.log(`👁️ Marking recommendation ${recommendationId} as viewed for user:`, userId);
-      
+
       // Store view in database for analytics and improved recommendations
       try {
         // Mark recommendation as viewed in aiRecommendations table
@@ -1709,21 +1709,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
           actionType: 'recommendation_view',
           targetType: 'recommendation',
           targetId: recommendationId,
-          metadata: { 
+          metadata: {
             action: 'eye_button_click',
-            timestamp: new Date().toISOString() 
+            timestamp: new Date().toISOString()
           }
         });
 
         console.log('✅ Stored view interaction in user behavior analytics');
-        
+
       } catch (dbError) {
         console.error('❌ Database error storing view:', dbError);
         // Continue anyway - don't fail the request for analytics
       }
-      
+
       res.json({ success: true, message: 'Recommendation marked as viewed' });
-      
+
     } catch (error) {
       console.error('Error marking recommendation as viewed:', error);
       res.status(500).json({ error: 'Failed to mark recommendation as viewed' });
@@ -1736,9 +1736,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user.claims?.sub || req.user.id;
       const recommendationId = parseInt(req.params.id);
       const { feedback } = req.body;
-      
+
       console.log(`👍 Received feedback "${feedback}" for recommendation ${recommendationId} from user:`, userId);
-      
+
       // Store feedback in database for improving AI recommendations
       try {
         // Update the recommendation with feedback
@@ -1751,20 +1751,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
           actionType: 'recommendation_feedback',
           targetType: 'recommendation',
           targetId: recommendationId,
-          metadata: { 
+          metadata: {
             feedback,
             action: feedback === 'like' ? 'thumbs_up_click' : 'thumbs_down_click',
-            timestamp: new Date().toISOString() 
+            timestamp: new Date().toISOString()
           }
         });
 
         // Create training data for ML improvement
         const interactionScore = feedback === 'like' ? 0.8 : 0.2; // High score for likes, low for dislikes
-        
+
         // Get the show ID from the recommendation (we might need to query this)
         const userRecs = await storage.getUserRecommendations(userId);
         const targetRec = userRecs.find(rec => rec.id === recommendationId);
-        
+
         if (targetRec && targetRec.showId) {
           await storage.createRecommendationTraining({
             userId,
@@ -1782,14 +1782,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
 
         console.log('✅ Stored feedback interaction in user behavior analytics');
-        
+
       } catch (dbError) {
         console.error('❌ Database error storing feedback:', dbError);
         // Continue anyway - don't fail the request for analytics
       }
-      
+
       res.json({ success: true, message: 'Feedback recorded successfully' });
-      
+
     } catch (error) {
       console.error('Error recording recommendation feedback:', error);
       res.status(500).json({ error: 'Failed to record feedback' });
@@ -1801,15 +1801,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user.claims?.sub || req.user.id;
       const { recommendationId, showId, showTitle, trailerKey, adDuration = 3000 } = req.body;
-      
+
       console.log(`💰 Monetization: User ${userId} viewed trailer for ${showTitle} (${showId}) with ${adDuration}ms ad`);
-      
+
       // TODO: Store in analytics database for revenue tracking
       // This could include:
       // - User demographics for ad targeting
       // - Content preferences for better ad placement
       // - Revenue attribution per user/content
-      
+
       const monetizationData = {
         userId,
         recommendationId,
@@ -1821,16 +1821,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         revenue: 0.05, // Example: 5 cents per trailer view
         action: 'trailer_view_with_ad'
       };
-      
+
       // In a real app, save to analytics/monetization database
       console.log('💰 Monetization data:', monetizationData);
-      
-      res.json({ 
-        success: true, 
+
+      res.json({
+        success: true,
         message: 'Trailer view tracked for monetization',
-        revenue: monetizationData.revenue 
+        revenue: monetizationData.revenue
       });
-      
+
     } catch (error) {
       console.error('Error tracking monetization data:', error);
       res.status(500).json({ error: 'Failed to track monetization data' });
@@ -1842,9 +1842,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user.claims?.sub || req.user.id;
       const { recommendationId, showId, showTitle, platform, affiliateLink } = req.body;
-      
+
       console.log(`💰 Monetization: User ${userId} redirected to ${platform} for ${showTitle} (${showId})`);
-      
+
       // TODO: In a real app, this could include affiliate links for revenue sharing
       const monetizationData = {
         userId,
@@ -1857,15 +1857,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         revenue: 0.10, // Example: 10 cents per platform redirect
         action: 'platform_redirect'
       };
-      
+
       console.log('💰 Monetization data:', monetizationData);
-      
-      res.json({ 
-        success: true, 
+
+      res.json({
+        success: true,
         message: 'Platform redirect tracked for monetization',
-        revenue: monetizationData.revenue 
+        revenue: monetizationData.revenue
       });
-      
+
     } catch (error) {
       console.error('Error tracking platform redirect:', error);
       res.status(500).json({ error: 'Failed to track platform redirect' });

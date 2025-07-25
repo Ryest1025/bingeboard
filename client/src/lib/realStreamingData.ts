@@ -28,7 +28,7 @@ export interface ComprehensiveStreamingResponse {
 
 // Fetch real streaming providers using comprehensive API
 export async function fetchComprehensiveStreamingData(
-  mediaType: 'tv' | 'movie', 
+  mediaType: 'tv' | 'movie',
   id: number,
   title: string,
   imdbId?: string
@@ -38,15 +38,15 @@ export async function fetchComprehensiveStreamingData(
       title,
       ...(imdbId && { imdbId })
     });
-    
+
     const response = await fetch(`/api/streaming/comprehensive/${mediaType}/${id}?${params}`);
     if (!response.ok) {
       console.warn(`Failed to fetch comprehensive streaming data for ${mediaType} ${id}:`, response.statusText);
       return [];
     }
-    
+
     const data: ComprehensiveStreamingResponse = await response.json();
-    
+
     // Ensure compatibility with existing components
     return data.platforms.map(provider => ({
       ...provider,
@@ -64,19 +64,19 @@ export async function addRealStreamingData(item: any): Promise<any> {
   if (!item.id || (!item.title && !item.name)) {
     return item;
   }
-  
+
   // Determine media type and title
   const mediaType = item.title ? 'movie' : 'tv';
   const title = item.title || item.name;
-  
+
   try {
     const providers = await fetchComprehensiveStreamingData(
-      mediaType, 
-      item.id, 
+      mediaType,
+      item.id,
       title,
       item.imdb_id || item.external_ids?.imdb_id
     );
-    
+
     return {
       ...item,
       watchProviders: providers,
@@ -94,19 +94,19 @@ export async function addStreamingDataBatch(items: any[]): Promise<any[]> {
   // Process in smaller batches to avoid overwhelming the API
   const batchSize = 5;
   const results: any[] = [];
-  
+
   for (let i = 0; i < items.length; i += batchSize) {
     const batch = items.slice(i, i + batchSize);
     const batchPromises = batch.map(item => addRealStreamingData(item));
     const batchResults = await Promise.all(batchPromises);
     results.push(...batchResults);
-    
+
     // Small delay to be respectful to APIs
     if (i + batchSize < items.length) {
       await new Promise(resolve => setTimeout(resolve, 100));
     }
   }
-  
+
   return results;
 }
 

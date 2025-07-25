@@ -1,0 +1,45 @@
+# BingeBoard Development Aliases
+alias ll='ls -alF'
+alias la='ls -A'
+alias l='ls -CF'
+alias gs='git status'
+alias gp='git push origin main'
+alias gd='git diff'
+alias gc='git commit -m'
+alias dev='npm run dev'
+alias build='npm run build'
+alias size-check='du -sh .git && git count-objects -vH'
+
+# Function to clean restart dev server
+restart-dev() {
+  echo "🔄 Restarting development server..."
+  pkill -f "npm run dev" 2>/dev/null || true
+  pkill -f "tsx server" 2>/dev/null || true
+  sleep 2
+  npm run dev
+}
+
+# Function to clean git push
+clean-push() {
+  echo "🚀 Clean push to main..."
+  git add .
+  git commit -m "${1:-Quick update}"
+  git push origin main
+}
+
+# Function to check repository health
+repo-health() {
+  echo "📊 Repository Health Check:"
+  echo "Git size: $(du -sh .git)"
+  echo "Working directory size: $(du -sh . --exclude=.git --exclude=node_modules)"
+  echo "Node modules size: $(du -sh node_modules 2>/dev/null || echo 'Not installed')"
+  git count-objects -vH
+}
+
+# Performance optimization
+export NODE_OPTIONS="--max-old-space-size=4096"
+export FORCE_COLOR=1
+
+echo "🚀 BingeBoard development environment ready!"
+echo "💡 Use 'restart-dev' to restart the server cleanly"
+echo "📊 Use 'repo-health' to check repository status"

@@ -44,7 +44,7 @@ export default function LegalFooter() {
               </div>
             </div>
             <p className="text-gray-400 text-sm">
-              The premium platform for tracking your favorite TV shows and sporting events. 
+              The premium platform for tracking your favorite TV shows and sporting events.
               Discover, track, and share your entertainment experience.
             </p>
           </div>

@@ -1,7 +1,7 @@
 // Import core tables from SQLite schema for compatibility
-import { 
-  users, 
-  shows, 
+import {
+  users,
+  shows,
   watchlist,
   userPreferences,
   passwordResetCodes
@@ -9,11 +9,11 @@ import {
 
 // Import all other tables from PostgreSQL schema (they will use fallback behavior)
 import {
-  watchlists, 
-  friendships, 
-  activities, 
-  activityLikes, 
-  activityComments, 
+  watchlists,
+  friendships,
+  activities,
+  activityLikes,
+  activityComments,
   recommendations,
   upcomingReleases,
   releaseReminders,
@@ -32,7 +32,7 @@ import {
   episodeProgress,
   customLists,
   customListItems,
-  type User, 
+  type User,
   type UpsertUser,
   type Show,
   type InsertShow,
@@ -129,7 +129,7 @@ interface IStorage {
   getUserRecommendations(userId: string): Promise<Recommendation[]>;
   createRecommendation(recommendation: InsertRecommendation): Promise<Recommendation>;
   generateRecommendations(userId: string): Promise<Recommendation[]>;
-  
+
   // Stats methods
   getUserStats(userId: string): Promise<any>;
 
@@ -138,13 +138,13 @@ interface IStorage {
   getUpcomingReleasesForUser(userId: string): Promise<UpcomingRelease[]>;
   createUpcomingRelease(release: InsertUpcomingRelease): Promise<UpcomingRelease>;
   updateUpcomingRelease(id: number, updates: Partial<InsertUpcomingRelease>): Promise<UpcomingRelease>;
-  
+
   // Release reminder methods
   getUserReminders(userId: string): Promise<ReleaseReminder[]>;
   createReleaseReminder(reminder: InsertReleaseReminder): Promise<ReleaseReminder>;
   updateReleaseReminder(id: number, userId: string, updates: Partial<InsertReleaseReminder>): Promise<ReleaseReminder>;
   deleteReleaseReminder(id: number, userId: string): Promise<void>;
-  
+
   // Notification methods
   getUserNotifications(userId: string): Promise<Notification[]>;
   createNotification(notification: InsertNotification): Promise<Notification>;
@@ -237,17 +237,17 @@ export class DatabaseStorage implements IStorage {
 
   async createUser(insertUser: UpsertUser): Promise<User> {
     console.log('Storage: Creating user with data:', JSON.stringify(insertUser, null, 2));
-    
+
     try {
       // SQLite expects Unix timestamps (numbers), not Date objects
       const timestamp = Math.floor(Date.now() / 1000);
-      
+
       const newUser = {
         ...insertUser,
         createdAt: timestamp,
         updatedAt: timestamp,
       };
-      
+
       const [user] = await db
         .insert(users)
         .values(newUser)
@@ -263,7 +263,7 @@ export class DatabaseStorage implements IStorage {
   async updateUser(id: string, updates: Partial<UpsertUser>): Promise<User> {
     // SQLite expects Unix timestamps (numbers), not Date objects
     const timestamp = Math.floor(Date.now() / 1000);
-    
+
     const [user] = await db
       .update(users)
       .set({ ...updates, updatedAt: timestamp })
@@ -274,25 +274,25 @@ export class DatabaseStorage implements IStorage {
 
   async upsertUser(user: UpsertUser): Promise<User> {
     console.log('🔄 Storage: Upserting user with data:', JSON.stringify(user, null, 2));
-    
+
     try {
       const timestamp = Math.floor(Date.now() / 1000);
-      
+
       // Account merging strategy:
       // 1. Look for existing user by Firebase ID (exact ID match)
       // 2. If no ID match and user has email, look for existing user by email
       // 3. If found by email, merge the accounts (update the existing user with new auth provider info)
       // 4. If not found by either, create new user
-      
+
       let existingUser: User | null = null;
-      
+
       // Strategy 1: Look for exact ID match (for returning Firebase users)
       try {
         const foundUser = await this.getUser(user.id);
         if (foundUser) {
           existingUser = foundUser;
           console.log('📍 Found existing user by ID:', existingUser.id, existingUser.email);
-          
+
           // Update existing user with any new information
           const [updatedUser] = await db
             .update(users)
@@ -306,21 +306,21 @@ export class DatabaseStorage implements IStorage {
             })
             .where(eq(users.id, user.id))
             .returning();
-          
+
           console.log('✅ Storage: User updated by ID:', updatedUser.id, updatedUser.email);
           return updatedUser;
         }
       } catch (error) {
         console.log('🔍 No existing user found by ID, checking by email...');
       }
-      
+
       // Strategy 2: Look for user by email (for account merging)
       if (user.email && !existingUser) {
         const foundByEmail = await this.getUserByEmail(user.email);
         if (foundByEmail) {
           existingUser = foundByEmail;
           console.log('🔗 Found existing user by email - merging accounts:', existingUser.id, 'with', user.id);
-          
+
           // This is account merging! Update the existing user with Firebase ID and other info
           const [updatedUser] = await db
             .update(users)
@@ -334,26 +334,26 @@ export class DatabaseStorage implements IStorage {
             })
             .where(eq(users.email, user.email))
             .returning();
-          
+
           console.log('✅ Storage: Accounts merged successfully:', updatedUser.id, updatedUser.email);
           return updatedUser;
         }
       }
-      
+
       // Strategy 3: Create new user
       const newUser = {
         ...user,
         createdAt: timestamp,
         updatedAt: timestamp,
       };
-      
+
       console.log('➕ Creating new user:', newUser);
-      
+
       const [insertedUser] = await db
         .insert(users)
         .values(newUser)
         .returning();
-      
+
       console.log('✅ Storage: New user created:', insertedUser.id, insertedUser.email);
       return insertedUser;
     } catch (error) {
@@ -383,7 +383,7 @@ export class DatabaseStorage implements IStorage {
 
   async upsertShow(show: InsertShow): Promise<Show> {
     const existingShow = await this.getShowByTmdbId(show.tmdbId);
-    
+
     if (existingShow) {
       const [updatedShow] = await db
         .update(shows)
@@ -414,9 +414,9 @@ export class DatabaseStorage implements IStorage {
         eq(watchlists.status, status as "want_to_watch" | "watching" | "finished" | "dropped")
       ));
     }
-    
+
     const results = await baseQuery.orderBy(desc(watchlists.updatedAt));
-    
+
     // Transform results to include show data
     return results.map(result => ({
       ...result.watchlists,
@@ -594,7 +594,7 @@ export class DatabaseStorage implements IStorage {
     if (friendIds.length === 0) {
       return [];
     }
-    
+
     return await db
       .select()
       .from(activities)
@@ -666,9 +666,9 @@ export class DatabaseStorage implements IStorage {
     try {
       // First, clear existing recommendations for this user
       await db.delete(recommendations).where(eq(recommendations.userId, userId));
-      
+
       console.log('Generating AI-powered recommendations for user:', userId);
-      
+
       // Get comprehensive user preferences from onboarding
       const userPrefs = await this.getUserPreferences(userId);
       const favoriteGenres = userPrefs?.preferredGenres || [];
@@ -676,7 +676,7 @@ export class DatabaseStorage implements IStorage {
       const watchingHabits = userPrefs?.watchingHabits || [];
       const contentRating = userPrefs?.contentRating || 'All';
       const languagePreferences = userPrefs?.languagePreferences || ['English'];
-      
+
       console.log('User onboarding preferences:', {
         favoriteGenres,
         preferredNetworks,
@@ -684,27 +684,27 @@ export class DatabaseStorage implements IStorage {
         contentRating,
         languagePreferences
       });
-      
+
       // Get user's viewing history and watchlist to avoid duplicates
       const viewingHistory = await this.getUserViewingHistory(userId, 100);
       const watchlist = await this.getUserWatchlist(userId);
       const watchedShowIds = viewingHistory.map(vh => vh.showId);
       const watchlistShowIds = watchlist.map(w => w.showId);
       const avoidShowIds = [...watchedShowIds, ...watchlistShowIds];
-      
+
       console.log('User preferences:', { favoriteGenres, preferredNetworks, watchingHabits });
       console.log('Avoiding shows already in watchlist/history:', avoidShowIds.length);
-      
+
       // Get trending shows from TMDB as potential recommendations
       const trendingResponse = await fetch(
         `https://api.themoviedb.org/3/trending/tv/week?api_key=${process.env.TMDB_API_KEY}&page=1`
       );
       const trendingData = await trendingResponse.json();
       const availableShows = trendingData.results || [];
-      
+
       // Get dynamic recommendations from multiple sources
       const recommendationSources = [];
-      
+
       // 1. Genre-based recommendations from TMDB
       if (favoriteGenres.length > 0) {
         // Map user preferences to TMDB genre IDs
@@ -716,7 +716,7 @@ export class DatabaseStorage implements IStorage {
           'Romance': 10749, 'Sci-Fi': 10765,
           'Thriller': 9648, 'Western': 37
         };
-        
+
         for (const genre of favoriteGenres.slice(0, 2)) { // Limit to 2 genres
           const genreId = genreMapping[genre];
           if (genreId) {
@@ -728,7 +728,7 @@ export class DatabaseStorage implements IStorage {
           }
         }
       }
-      
+
       // 2. Similar shows based on viewing history
       if (viewingHistory.length > 0) {
         // Get the most recently watched shows
@@ -746,7 +746,7 @@ export class DatabaseStorage implements IStorage {
           }
         }
       }
-      
+
       // 3. Fallback to trending content if no preferences
       if (recommendationSources.length === 0) {
         recommendationSources.push({
@@ -754,15 +754,15 @@ export class DatabaseStorage implements IStorage {
           source: 'popular'
         });
       }
-      
+
       const newRecommendations = [];
       const seenTmdbIds = new Set();
-      
+
       // Process each recommendation source
       for (const source of recommendationSources) {
         try {
           let apiResults = [];
-          
+
           if (source.type === 'genre') {
             // Get shows by genre from TMDB
             const response = await fetch(
@@ -785,18 +785,18 @@ export class DatabaseStorage implements IStorage {
             const data = await response.json();
             apiResults = data.results || [];
           }
-          
+
           // Process results from this source
           for (const tmdbShow of apiResults.slice(0, 3)) { // Limit per source
             if (seenTmdbIds.has(tmdbShow.id)) continue;
             seenTmdbIds.add(tmdbShow.id);
-            
+
             // Check if show already exists in database
             let show = await this.getShowByTmdbId(tmdbShow.id);
             if (show && avoidShowIds.includes(show.id)) {
               continue; // Skip if already in user's watchlist/history
             }
-            
+
             // Create or update show record
             if (!show) {
               show = await this.upsertShow({
@@ -810,7 +810,7 @@ export class DatabaseStorage implements IStorage {
                 status: 'Released'
               });
             }
-            
+
             // Generate personalized reason
             let reason = 'Recommended for you';
             if (source.type === 'genre') {
@@ -820,10 +820,10 @@ export class DatabaseStorage implements IStorage {
             } else if (source.type === 'trending') {
               reason = 'Currently trending';
             }
-            
+
             // Calculate score based on ratings and preferences
             let score = (tmdbShow.vote_average || 5) / 10;
-            
+
             // Boost score for preferred genres
             if (tmdbShow.genre_ids && favoriteGenres.length > 0) {
               const genreMapping: Record<number, string> = {
@@ -831,14 +831,14 @@ export class DatabaseStorage implements IStorage {
                 80: 'Crime', 99: 'Documentary', 10751: 'Family',
                 9648: 'Horror', 10749: 'Romance', 10765: 'Sci-Fi'
               };
-              
+
               const showGenres = tmdbShow.genre_ids.map((id: number) => genreMapping[id]).filter(Boolean);
               const matchingGenres = showGenres.filter((g: string) => favoriteGenres.includes(g));
               if (matchingGenres.length > 0) {
                 score = Math.min(1.0, score + 0.2); // Boost for genre match
               }
             }
-            
+
             // Create recommendation
             const rec = await this.createRecommendation({
               userId,
@@ -846,21 +846,21 @@ export class DatabaseStorage implements IStorage {
               reason,
               score: score.toFixed(2)
             });
-            
+
             newRecommendations.push(rec);
-            
+
             if (newRecommendations.length >= 8) break; // Limit total recommendations
           }
-          
+
           if (newRecommendations.length >= 8) break;
         } catch (error) {
           console.error(`Error processing recommendation source ${source.type}:`, error);
         }
       }
-      
+
       console.log(`Generated ${newRecommendations.length} dynamic recommendations for user ${userId}`);
       return newRecommendations;
-      
+
     } catch (error) {
       console.error('Error generating dynamic recommendations:', error);
       return [];
@@ -872,11 +872,11 @@ export class DatabaseStorage implements IStorage {
     try {
       // Get user's watchlist
       const watchlist = await this.getUserWatchlist(userId);
-      
+
       const currentlyWatching = watchlist.filter(item => item.status === 'watching').length;
       const favorites = watchlist.filter(item => item.rating && parseFloat(item.rating) >= 4.5).length;
       const toWatch = watchlist.filter(item => item.status === 'want_to_watch').length;
-      
+
       // Calculate hours watched based on episodes watched
       const hoursWatched = watchlist.reduce((total, item) => {
         // Assume 45 minutes per episode on average
@@ -891,11 +891,11 @@ export class DatabaseStorage implements IStorage {
         hoursWatched,
         watchlistCount: watchlist.length,
         totalShows: watchlist.length,
-        avgRating: watchlist.length > 0 
+        avgRating: watchlist.length > 0
           ? (watchlist
-              .filter(item => item.rating)
-              .reduce((sum, item) => sum + parseFloat(item.rating || '0'), 0) / 
-             watchlist.filter(item => item.rating).length) || 0
+            .filter(item => item.rating)
+            .reduce((sum, item) => sum + parseFloat(item.rating || '0'), 0) /
+            watchlist.filter(item => item.rating).length) || 0
           : 0
       };
     } catch (error) {
@@ -928,9 +928,9 @@ export class DatabaseStorage implements IStorage {
       .select({ showId: watchlists.showId })
       .from(watchlists)
       .where(eq(watchlists.userId, userId));
-    
+
     const watchlistShowIds = userWatchlist.map(w => w.showId);
-    
+
     if (watchlistShowIds.length === 0) {
       return [];
     }
@@ -945,7 +945,7 @@ export class DatabaseStorage implements IStorage {
         )
       )
       .orderBy(desc(upcomingReleases.releaseDate));
-    
+
     return releases;
   }
 
@@ -1106,11 +1106,11 @@ export class DatabaseStorage implements IStorage {
       .from(viewingHistory)
       .where(eq(viewingHistory.userId, userId))
       .orderBy(desc(viewingHistory.watchedAt));
-    
+
     if (limit) {
       query.limit(limit);
     }
-    
+
     return await query;
   }
 
@@ -1184,7 +1184,7 @@ export class DatabaseStorage implements IStorage {
         )
       )
       .limit(20);
-    
+
     return searchResults;
   }
 
@@ -1221,7 +1221,7 @@ export class DatabaseStorage implements IStorage {
       .leftJoin(users, eq(contactImports.matchedUserId, users.id))
       .where(eq(contactImports.userId, userId))
       .orderBy(desc(contactImports.createdAt));
-    
+
     return contacts.map(contact => ({
       ...contact,
       matchedUser: contact.matchedUser.id ? contact.matchedUser : undefined,
@@ -1241,7 +1241,7 @@ export class DatabaseStorage implements IStorage {
       );
 
     const matchedContacts = [];
-    
+
     for (const contact of unmatchedContacts) {
       const [matchedUser] = await db
         .select()
@@ -1258,7 +1258,7 @@ export class DatabaseStorage implements IStorage {
           })
           .where(eq(contactImports.id, contact.id))
           .returning();
-        
+
         matchedContacts.push(updated);
       }
     }
@@ -1319,7 +1319,7 @@ export class DatabaseStorage implements IStorage {
   async generateMutualFriendSuggestions(userId: string): Promise<FriendSuggestion[]> {
     // This is a simplified implementation
     // In a real app, you'd have more sophisticated algorithms
-    
+
     // Generate suggestions based on contacts
     const matchedContacts = await db
       .select()
@@ -1332,7 +1332,7 @@ export class DatabaseStorage implements IStorage {
       );
 
     const suggestions = [];
-    
+
     for (const contact of matchedContacts) {
       if (contact.matchedUserId) {
         // Check if suggestion already exists or if they're already friends
@@ -1529,7 +1529,7 @@ export class DatabaseStorage implements IStorage {
       .select()
       .from(passwordResetCodes)
       .where(and(...conditions));
-    
+
     return resetCode || undefined;
   }
 
@@ -1544,9 +1544,9 @@ export class DatabaseStorage implements IStorage {
   async markRecommendationAsViewed(id: number, userId: string): Promise<void> {
     await db
       .update(aiRecommendations)
-      .set({ 
-        isViewed: true, 
-        isInteracted: true 
+      .set({
+        isViewed: true,
+        isInteracted: true
       })
       .where(and(
         eq(aiRecommendations.id, id),
@@ -1557,8 +1557,8 @@ export class DatabaseStorage implements IStorage {
   async markRecommendationAsInteracted(id: number, userId: string): Promise<void> {
     await db
       .update(aiRecommendations)
-      .set({ 
-        isInteracted: true 
+      .set({
+        isInteracted: true
       })
       .where(and(
         eq(aiRecommendations.id, id),
@@ -1569,16 +1569,16 @@ export class DatabaseStorage implements IStorage {
   async updateRecommendationFeedback(id: number, userId: string, feedback: string): Promise<AiRecommendation> {
     const [updatedRec] = await db
       .update(aiRecommendations)
-      .set({ 
+      .set({
         feedback,
-        isInteracted: true 
+        isInteracted: true
       })
       .where(and(
         eq(aiRecommendations.id, id),
         eq(aiRecommendations.userId, userId)
       ))
       .returning();
-    
+
     return updatedRec;
   }
 

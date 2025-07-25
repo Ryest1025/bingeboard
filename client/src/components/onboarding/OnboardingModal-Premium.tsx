@@ -28,7 +28,7 @@ interface OnboardingModalProps {
 
 export default function OnboardingModal({ isOpen, onComplete, userDisplayName, userData }: OnboardingModalProps) {
   console.log('🎯 PREMIUM ONBOARDING MODAL RENDERED', { isOpen, userDisplayName, userData: userData?.email });
-  
+
   const [currentStep, setCurrentStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -304,8 +304,8 @@ export default function OnboardingModal({ isOpen, onComplete, userDisplayName, u
                         userProfile: { ...prev.userProfile, firstName: e.target.value }
                       }))}
                       className={`w-full px-4 py-3 border rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${formData.userProfile.firstName
-                          ? 'bg-blue-500/10 border-blue-500/40'
-                          : 'bg-slate-800/50 border-slate-600'
+                        ? 'bg-blue-500/10 border-blue-500/40'
+                        : 'bg-slate-800/50 border-slate-600'
                         }`}
                       placeholder="Enter your first name"
                     />
@@ -323,8 +323,8 @@ export default function OnboardingModal({ isOpen, onComplete, userDisplayName, u
                         userProfile: { ...prev.userProfile, lastName: e.target.value }
                       }))}
                       className={`w-full px-4 py-3 border rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${formData.userProfile.lastName
-                          ? 'bg-blue-500/10 border-blue-500/40'
-                          : 'bg-slate-800/50 border-slate-600'
+                        ? 'bg-blue-500/10 border-blue-500/40'
+                        : 'bg-slate-800/50 border-slate-600'
                         }`}
                       placeholder="Enter your last name"
                     />
@@ -347,8 +347,8 @@ export default function OnboardingModal({ isOpen, onComplete, userDisplayName, u
                       userProfile: { ...prev.userProfile, email: e.target.value }
                     }))}
                     className={`w-full px-4 py-3 border rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${formData.userProfile.email
-                        ? 'bg-blue-500/10 border-blue-500/40'
-                        : 'bg-slate-800/50 border-slate-600'
+                      ? 'bg-blue-500/10 border-blue-500/40'
+                      : 'bg-slate-800/50 border-slate-600'
                       }`}
                     placeholder="Enter your email address"
                   />
@@ -447,8 +447,8 @@ export default function OnboardingModal({ isOpen, onComplete, userDisplayName, u
                         variant={formData.favoriteGenres.includes(genre) ? "default" : "outline"}
                         onClick={() => toggleSelection(genre, 'favoriteGenres')}
                         className={`h-14 text-base font-medium transition-all duration-300 ${formData.favoriteGenres.includes(genre)
-                            ? 'bg-gradient-to-r from-teal-500 to-cyan-500 text-white shadow-lg'
-                            : 'glass-effect hover:bg-white/10 hover:border-teal-400/40'
+                          ? 'bg-gradient-to-r from-teal-500 to-cyan-500 text-white shadow-lg'
+                          : 'glass-effect hover:bg-white/10 hover:border-teal-400/40'
                           }`}
                       >
                         {genre}
@@ -497,8 +497,8 @@ export default function OnboardingModal({ isOpen, onComplete, userDisplayName, u
                           variant={formData.favoriteTeams.includes(team) ? "default" : "outline"}
                           onClick={() => toggleSelection(team, 'favoriteTeams')}
                           className={`h-12 text-sm font-medium transition-all duration-300 ${formData.favoriteTeams.includes(team)
-                              ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg'
-                              : 'glass-effect hover:bg-white/10 hover:border-green-400/40'
+                            ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg'
+                            : 'glass-effect hover:bg-white/10 hover:border-green-400/40'
                             }`}
                         >
                           {team}
@@ -536,8 +536,8 @@ export default function OnboardingModal({ isOpen, onComplete, userDisplayName, u
                   variant={formData.streamingPlatforms.includes(platform) ? "default" : "outline"}
                   onClick={() => toggleSelection(platform, 'streamingPlatforms')}
                   className={`h-16 text-base font-medium transition-all duration-300 ${formData.streamingPlatforms.includes(platform)
-                      ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white shadow-lg'
-                      : 'glass-effect hover:bg-white/10 hover:border-blue-400/40'
+                    ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white shadow-lg'
+                    : 'glass-effect hover:bg-white/10 hover:border-blue-400/40'
                     }`}
                 >
                   {platform}
@@ -565,8 +565,8 @@ export default function OnboardingModal({ isOpen, onComplete, userDisplayName, u
                   variant={formData.contentTypes.includes(type) ? "default" : "outline"}
                   onClick={() => toggleSelection(type, 'contentTypes')}
                   className={`h-16 text-base font-medium transition-all duration-300 ${formData.contentTypes.includes(type)
-                      ? 'bg-gradient-to-r from-red-500 to-pink-500 text-white shadow-lg scale-105'
-                      : 'glass-effect hover:bg-white/10 hover:border-red-400/40 hover:scale-105'
+                    ? 'bg-gradient-to-r from-red-500 to-pink-500 text-white shadow-lg scale-105'
+                    : 'glass-effect hover:bg-white/10 hover:border-red-400/40 hover:scale-105'
                     }`}
                 >
                   {type}
@@ -1025,8 +1025,8 @@ export default function OnboardingModal({ isOpen, onComplete, userDisplayName, u
                       variant={formData.privacy === option.value ? "default" : "outline"}
                       onClick={() => setFormData(prev => ({ ...prev, privacy: option.value }))}
                       className={`w-full h-16 justify-start text-left transition-all duration-300 ${formData.privacy === option.value
-                          ? 'bg-gradient-to-r from-teal-500 to-emerald-500 text-white shadow-lg'
-                          : 'glass-effect hover:bg-white/10'
+                        ? 'bg-gradient-to-r from-teal-500 to-emerald-500 text-white shadow-lg'
+                        : 'glass-effect hover:bg-white/10'
                         }`}
                     >
                       <option.icon className="h-5 w-5 mr-3" />
@@ -1107,8 +1107,8 @@ export default function OnboardingModal({ isOpen, onComplete, userDisplayName, u
                 <Card
                   key={theme.value}
                   className={`cursor-pointer transition-all duration-300 ${formData.theme === theme.value
-                      ? 'ring-2 ring-violet-500 bg-gradient-to-br from-violet-500/20 to-purple-500/20'
-                      : 'glass-effect hover:bg-white/10'
+                    ? 'ring-2 ring-violet-500 bg-gradient-to-br from-violet-500/20 to-purple-500/20'
+                    : 'glass-effect hover:bg-white/10'
                     }`}
                   onClick={() => setFormData(prev => ({ ...prev, theme: theme.value }))}
                 >
@@ -1204,8 +1204,8 @@ export default function OnboardingModal({ isOpen, onComplete, userDisplayName, u
                             contentFilters: { ...prev.contentFilters, maxRating: rating }
                           }))}
                           className={`h-10 transition-all duration-300 ${formData.contentFilters.maxRating === rating
-                              ? 'bg-gradient-to-r from-violet-500 to-indigo-500 text-white'
-                              : 'glass-effect hover:bg-white/10'
+                            ? 'bg-gradient-to-r from-violet-500 to-indigo-500 text-white'
+                            : 'glass-effect hover:bg-white/10'
                             }`}
                         >
                           {rating}

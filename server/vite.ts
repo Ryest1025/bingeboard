@@ -28,7 +28,7 @@ export async function setupVite(app: Express, server: Server) {
     hmr: { server },
     allowedHosts: [
       '.app.github.dev',
-      '.codespaces.app', 
+      '.codespaces.app',
       '.github.dev',
       'fuzzy-xylophone-5g97jqp4vq9wf4jjr-3000.app.github.dev'
     ] as string[],

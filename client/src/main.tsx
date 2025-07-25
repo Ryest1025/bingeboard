@@ -25,7 +25,7 @@ const setupGlobalFirebase = async () => {
   try {
     const { getAuth, GoogleAuthProvider, signInWithPopup } = await import('firebase/auth');
     const auth = getAuth();
-    
+
     // Make Firebase easily accessible in console
     (window as any).firebaseAuth = auth;
     (window as any).testLogin = async () => {
@@ -36,17 +36,17 @@ const setupGlobalFirebase = async () => {
       provider.setCustomParameters({
         prompt: 'select_account'
       });
-      
+
       try {
         console.log('🔐 Starting Google OAuth...');
         const result = await signInWithPopup(auth, provider);
         const user = result.user;
         const token = await user.getIdToken(true); // Force refresh
-        
+
         console.log("✅ Console login success:", user.email);
         console.log("🔐 Token length:", token.length);
         console.log("🔐 Token preview:", token.substring(0, 50) + "...");
-        
+
         // Test the API immediately
         console.log('📡 Testing /api/auth/user endpoint...');
         const apiResponse = await fetch('/api/auth/user', {
@@ -55,9 +55,9 @@ const setupGlobalFirebase = async () => {
             'Content-Type': 'application/json'
           }
         });
-        
+
         console.log('📡 API Status:', apiResponse.status);
-        
+
         if (apiResponse.ok) {
           const userData = await apiResponse.json();
           console.log('✅ API SUCCESS - User data:', userData);
@@ -66,16 +66,16 @@ const setupGlobalFirebase = async () => {
           const errorText = await apiResponse.text();
           console.log('❌ API Error:', errorText);
         }
-        
+
         return { user, token, apiResponse };
-        
+
       } catch (error) {
         console.error("❌ Console login failed:", error);
         console.log('💡 Make sure popups are allowed and try again');
         throw error;
       }
     };
-    
+
     // Quick API test function
     (window as any).testAPI = async () => {
       const user = auth.currentUser;
@@ -83,7 +83,7 @@ const setupGlobalFirebase = async () => {
         console.log('❌ No user signed in. Run window.testLogin() first.');
         return;
       }
-      
+
       console.log('📡 Testing API with current user...');
       const token = await user.getIdToken(true);
       const response = await fetch('/api/auth/user', {
@@ -92,7 +92,7 @@ const setupGlobalFirebase = async () => {
           'Content-Type': 'application/json'
         }
       });
-      
+
       console.log('📡 API Status:', response.status);
       if (response.ok) {
         const data = await response.json();
@@ -102,13 +102,13 @@ const setupGlobalFirebase = async () => {
         console.log('❌ API Error:', error);
       }
     };
-    
+
     console.log('🧪 Firebase debug helpers available:');
     console.log('  - window.firebaseAuth.currentUser (check login status)');
     console.log('  - window.testLogin() (complete OAuth + API test)');
     console.log('  - window.testAPI() (test current user\'s API access)');
     console.log('🚀 Current user:', auth.currentUser?.email || 'None logged in');
-    
+
   } catch (error) {
     console.warn('⚠️ Could not set up Firebase debug helpers:', error);
   }
@@ -135,9 +135,9 @@ window.addEventListener('unhandledrejection', (e) => {
 if (typeof window !== 'undefined') {
   const userAgent = navigator.userAgent || '';
   const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|Windows Phone|Mobile/i.test(userAgent);
-  
+
   console.log('📱 Device detection:', { userAgent: userAgent.substring(0, 50), isMobile });
-  
+
   if (isMobile) {
     document.documentElement.classList.add('mobile-device');
     console.log("📱 Mobile device detected - optimizations applied");
@@ -148,7 +148,7 @@ try {
   const root = document.getElementById("root");
   if (root) {
     console.log("✅ Root element found, creating React app");
-    
+
     // Add timeout to detect stuck loading states
     const loadingTimeout = setTimeout(() => {
       console.error("❌ React app took too long to load - showing fallback");
@@ -165,10 +165,10 @@ try {
         </div>
       `;
     }, 10000); // 10 second timeout
-    
+
     createRoot(root).render(<App />);
     console.log("✅ React app rendered successfully");
-    
+
     // Clear timeout if app loads successfully
     clearTimeout(loadingTimeout);
   } else {
