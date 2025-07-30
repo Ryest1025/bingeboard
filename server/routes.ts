@@ -473,39 +473,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
-  // 🔐 CRITICAL AUTHENTICATION ENDPOINT - Session Validation
-  // 🚨 PROTECTED: This endpoint validates local sessions and is ESSENTIAL
-  // for the useAuth hook's local session check (first priority)
-  // Status: ✅ LOCKED - Session validation working perfectly
-  app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
+// 🔐 CRITICAL AUTHENTICATION ENDPOINT - Session Validation
+// 🚨 PROTECTED: This endpoint validates local sessions and is ESSENTIAL
+// for the useAuth hook's local session check (first priority)
+// Status: ✅ LOCKED - Session validation working perfectly
+app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
+  try {
+    console.log('🔒 Session validation: User object in request:', JSON.stringify(req.user, null, 2));
+    const userId = req.user?.claims?.sub || req.user?.id;
+
+    if (!userId) {
+      console.error('❌ No user ID found in session');
+      return res.status(401).json({ message: "No user ID in session" });
+    }
+
+    console.log('🔍 Fetching user data for userId:', userId);
+    let user;
     try {
-      console.log('User object in request:', JSON.stringify(req.user, null, 2));
-      const userId = req.user?.claims?.sub || req.user?.id;
-
-      if (!userId) {
-        console.error('No user ID found in session');
-        return res.status(401).json({ message: "No user ID in session" });
-      }
-
-      console.log('Fetching user data for userId:', userId);
-      let user;
-      try {
-        user = await storage.getUser(userId);
-      } catch (dbError) {
-        console.error('Database error when fetching user:', dbError);
-        // Fallback to session user data if database fails
-        if (req.user) {
-          console.log('🔄 Database failed, falling back to session user data');
-          // Ensure Rachel's onboarding is marked complete
-          if (req.user.email === 'rachel.gubin@gmail.com') {
-            req.user.onboardingCompleted = true;
-          }
-          return res.json(req.user);
+      user = await storage.getUser(userId);
+    } catch (dbError) {
+      console.error('❌ Database error when fetching user:', dbError);
+      // Fallback to session user data if database fails
+      if (req.user) {
+        console.log('🔄 Database failed, falling back to session user data');
+        // Ensure Rachel's onboarding is marked complete
+        if (req.user.email === 'rachel.gubin@gmail.com') {
+          req.user.onboardingCompleted = true;
         }
-        throw dbError;
+        return res.json(req.user);
       }
-
-      if (!user) {
+      throw dbError;
+    }      if (!user) {
         console.error('User not found in database:', userId);
         // Fallback to session user data if database fails
         if (req.user) {
@@ -1125,8 +1123,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
           'content-type': req.headers['content-type'],
           'origin': req.headers['origin'],
           'user-agent': req.headers['user-agent']?.substring(0, 50)
-        }
+        },
+        sessionId: (req as any).sessionID,
+        hasSessionUser: !!(req as any).session?.user
       });
+      
+      // Debug request body parsing
+      console.log('🔍 Raw request body:', req.body);
+      console.log('🔍 Request body type:', typeof req.body);
 
       if (!email || !password) {
         console.log('❌ Missing credentials:', { email: !!email, password: !!password });
@@ -1156,7 +1160,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Verify password
+      console.log(`🔐 Verifying password for user: ${email}`);
+      console.log(`🔍 Password hash from DB:`, user.passwordHash?.substring(0, 10) + '...');
+      
       const isValidPassword = await verifyPassword(password, user.passwordHash);
+      console.log(`🔐 Password verification result:`, isValidPassword);
+      
       if (!isValidPassword) {
         console.log(`❌ Invalid password for user: ${email}`);
         return res.status(401).json({ message: 'Invalid email or password' });
@@ -1175,17 +1184,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       };
 
+      console.log('🔑 Creating session for user:', sessionUser.email);
+      console.log('🔍 Session object before assignment:', (req as any).session);
+      
       (req as any).session.user = sessionUser;
+      console.log('🔍 Session object after assignment:', (req as any).session);
 
       // 🚨 CRITICAL: Explicit session save - ESSENTIAL for persistence
       (req as any).session.save((err: any) => {
         if (err) {
           console.error('❌ Session save error:', err);
+          console.error('❌ Error details:', JSON.stringify(err, Object.getOwnPropertyNames(err)));
           return res.status(500).json({ message: 'Session save failed' });
         }
 
         console.log(`✅ Login successful for user: ${email}`);
         console.log(`✅ Session saved with user data:`, sessionUser.email);
+        console.log('🔍 Final session state:', (req as any).session);
+        
         res.json({
           message: 'Login successful',
           user: {
@@ -1274,11 +1290,149 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // User lists endpoint
   app.get('/api/lists', isAuthenticated, async (req: any, res) => {
     try {
-      // TODO: Implement actual user lists from database
-      res.json({
-        lists: [],
-        message: "Custom lists feature coming soon"
-      });
+      const type = req.query.type || 'my';
+      console.log(`📋 Fetching lists of type: ${type}`);
+      
+      // Mock data for different list types
+      const mockLists = {
+        my: [
+          {
+            id: 1,
+            name: "My Watchlist",
+            shows: [
+              {
+                id: 101,
+                title: "Stranger Things",
+                poster: "https://image.tmdb.org/t/p/w500/49WJfeN0moxb9IPfGn8AIqMGskD.jpg",
+                description: "When a young boy disappears, his mother, a police chief, and his friends must confront terrifying supernatural forces in order to get him back.",
+                trailerUrl: "https://www.youtube.com/watch?v=b9EkMc79ZSU",
+                affiliateUrl: "https://www.netflix.com/title/80057281"
+              },
+              {
+                id: 102,
+                title: "The Mandalorian",
+                poster: "https://image.tmdb.org/t/p/w500/sWgBv7LV2PRoQgkxwlibdGXKz1S.jpg",
+                description: "After the fall of the Galactic Empire, lawlessness has spread throughout the galaxy. A lone gunfighter makes his way through the outer reaches, earning his keep as a bounty hunter.",
+                trailerUrl: "https://www.youtube.com/watch?v=aOC8E8z_ifw",
+                affiliateUrl: "https://www.disneyplus.com/series/the-mandalorian/3jLIGMDYINqD"
+              }
+            ]
+          },
+          {
+            id: 2,
+            name: "Recently Watched",
+            shows: [
+              {
+                id: 103,
+                title: "The Witcher",
+                poster: "https://image.tmdb.org/t/p/w500/7vjaCdMw15FEbXyLQTVa04URsPm.jpg",
+                description: "Geralt of Rivia, a solitary monster hunter, struggles to find his place in a world where people often prove more wicked than beasts.",
+                trailerUrl: "https://www.youtube.com/watch?v=ndl1W4ltcmg",
+                affiliateUrl: "https://www.netflix.com/title/80189685"
+              },
+              {
+                id: 104,
+                title: "The Boys",
+                poster: "https://image.tmdb.org/t/p/w500/stTEycfG9928HYGEISBFaG1ngjM.jpg",
+                description: "A group of vigilantes set out to take down corrupt superheroes who abuse their superpowers.",
+                trailerUrl: "https://www.youtube.com/watch?v=tcrNsIaQkb4",
+                affiliateUrl: "https://www.primevideo.com/detail/The-Boys/0KRGHGZCHKS920ZQGY5LBRF7MA"
+              }
+            ]
+          }
+        ],
+        genre: [
+          {
+            id: 3,
+            name: "Sci-Fi",
+            shows: [
+              {
+                id: 105,
+                title: "Foundation",
+                poster: "https://image.tmdb.org/t/p/w500/A1fXGFxDUue4dJ7lUSnesr6DbMO.jpg",
+                description: "A complex saga of humans scattered on planets throughout the galaxy all living under the rule of the Galactic Empire.",
+                trailerUrl: "https://www.youtube.com/watch?v=X4QYV5GTz7c",
+                affiliateUrl: "https://tv.apple.com/us/show/foundation/umc.cmc.5983fipzqbicvrve6jdfep4x3"
+              },
+              {
+                id: 106,
+                title: "Dune",
+                poster: "https://image.tmdb.org/t/p/w500/d5NXSklXo0qyIYkgV94XAgMIckC.jpg",
+                description: "Feature adaptation of Frank Herbert's science fiction novel, about the son of a noble family entrusted with the protection of the most valuable asset and most vital element in the galaxy.",
+                trailerUrl: "https://www.youtube.com/watch?v=8g18jFHCLXk",
+                affiliateUrl: "https://www.hbomax.com/feature/urn:hbo:feature:GYeipNQIquaXCPQEAAACY"
+              }
+            ]
+          }
+        ],
+        network: [
+          {
+            id: 4,
+            name: "Netflix Originals",
+            shows: [
+              {
+                id: 107,
+                title: "Squid Game",
+                poster: "https://image.tmdb.org/t/p/w500/dDlEmu3EZ0Pgg93K2SVNLCjCSvE.jpg",
+                description: "Hundreds of cash-strapped players accept a strange invitation to compete in children's games. Inside, a tempting prize awaits — with deadly high stakes.",
+                trailerUrl: "https://www.youtube.com/watch?v=oqxAJKy0ii4",
+                affiliateUrl: "https://www.netflix.com/title/81040344"
+              },
+              {
+                id: 108,
+                title: "Dark",
+                poster: "https://image.tmdb.org/t/p/w500/apbrbWs8M9lyTqt9nm4Cvpk0mb9.jpg",
+                description: "A missing child sets four families on a frantic hunt for answers as they unearth a mind-bending mystery that spans three generations.",
+                trailerUrl: "https://www.youtube.com/watch?v=rrwycJ08PSA",
+                affiliateUrl: "https://www.netflix.com/title/80100172"
+              }
+            ]
+          }
+        ],
+        coming: [
+          {
+            id: 5,
+            name: "Coming Soon",
+            shows: [
+              {
+                id: 109,
+                title: "House of the Dragon",
+                poster: "https://image.tmdb.org/t/p/w500/z2yahl2uefxDCl0nogcRBstwruJ.jpg",
+                description: "The prequel series finds the Targaryen dynasty at the absolute apex of its power, with more than 15 dragons under their yoke.",
+                trailerUrl: "https://www.youtube.com/watch?v=DotnJ7tTA34",
+                affiliateUrl: "https://www.hbomax.com/series/urn:hbo:series:GYsYeoAxKH8LCwgEAAAOR"
+              }
+            ]
+          }
+        ],
+        custom: [
+          {
+            id: 6,
+            name: "My Custom List",
+            shows: [
+              {
+                id: 110,
+                title: "Breaking Bad",
+                poster: "https://image.tmdb.org/t/p/w500/ggFHVNu6YYI5L9pCfOacjizRGt.jpg",
+                description: "A high school chemistry teacher diagnosed with inoperable lung cancer turns to manufacturing and selling methamphetamine in order to secure his family's future.",
+                trailerUrl: "https://www.youtube.com/watch?v=HhesaQXLuRY",
+                affiliateUrl: "https://www.netflix.com/title/70143836"
+              },
+              {
+                id: 111,
+                title: "The Office",
+                poster: "https://image.tmdb.org/t/p/w500/qWnJzyZhyy74gjpSjIXWmuk0ifX.jpg",
+                description: "A mockumentary on a group of typical office workers, where the workday consists of ego clashes, inappropriate behavior, and tedium.",
+                trailerUrl: "https://www.youtube.com/watch?v=LHOtME2DL4g",
+                affiliateUrl: "https://www.peacocktv.com/stream-tv/the-office"
+              }
+            ]
+          }
+        ]
+      };
+      
+      // Return the appropriate list based on the type
+      res.json(mockLists[type as keyof typeof mockLists] || []);
     } catch (error) {
       console.error('Error fetching lists:', error);
       res.status(500).json({ error: 'Failed to fetch lists' });
@@ -1666,7 +1820,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     } catch (error) {
       console.error('❌ Error generating AI recommendations:', error);
-      res.status(500).json({ error: 'Failed to generate AI recommendations' });
+      res.status(500).json({ error: 'Failed to generate recommendations' });
+    }
+  });
+
+  // Enhanced Multi-API recommendations endpoint - Uses TMDB, Watchmode, and Utelly
+  app.get('/api/multi-api-recommendations', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims?.sub || req.user.id;
+      console.log('🔥 Generating Multi-API recommendations for user:', userId);
+
+      // Generate recommendations using the multi-API service
+      const multiAPIRecommendations = await storage.generateRecommendations(userId, true);
+
+      // Get user preferences for response metadata
+      const userPreferences = await storage.getUserPreferences(userId);
+
+      const response = {
+        recommendations: multiAPIRecommendations,
+        source: 'multi-api',
+        apis_used: ['TMDB', 'Watchmode', 'Utelly'],
+        hasPreferences: !!(userPreferences?.preferredGenres?.length),
+        onboardingCompleted: userPreferences?.onboardingCompleted || false,
+        message: `${multiAPIRecommendations.length} recommendations from multiple streaming APIs with enhanced accuracy`,
+        features: {
+          streaming_availability: true,
+          affiliate_tracking: true,
+          cross_platform_validation: true,
+          hybrid_scoring: true
+        }
+      };
+
+      res.json(response);
+
+    } catch (error) {
+      console.error('❌ Error generating Multi-API recommendations:', error);
+      res.status(500).json({ error: 'Failed to generate multi-API recommendations' });
     }
   });
 

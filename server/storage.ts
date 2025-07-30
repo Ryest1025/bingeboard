@@ -85,6 +85,7 @@ import {
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, or, desc, count, ilike, inArray, sql } from "drizzle-orm";
+import { MultiAPIRecommendationService } from "./services/multiAPIRecommendationService.js";
 
 interface IStorage {
   // User methods
@@ -662,7 +663,7 @@ export class DatabaseStorage implements IStorage {
     return newRecommendation;
   }
 
-  async generateRecommendations(userId: string): Promise<Recommendation[]> {
+  async generateRecommendations(userId: string, useMultiAPI: boolean = false): Promise<Recommendation[]> {
     try {
       // First, clear existing recommendations for this user
       await db.delete(recommendations).where(eq(recommendations.userId, userId));
@@ -684,6 +685,79 @@ export class DatabaseStorage implements IStorage {
         contentRating,
         languagePreferences
       });
+
+      // Option to use multi-API recommendation engine
+      if (useMultiAPI) {
+        console.log('🚀 Using Multi-API Recommendation Engine');
+        
+        // Get user's viewing history for the multi-API service
+        const viewingHistory = await this.getUserViewingHistory(userId, 50);
+        const historyWithTmdbIds = await Promise.all(
+          viewingHistory.map(async (vh) => {
+            const show = await this.getShow(vh.showId);
+            return {
+              showId: vh.showId,
+              title: show?.title || 'Unknown Show',
+              tmdbId: show?.tmdbId
+            };
+          })
+        );
+
+        const multiAPIPreferences = {
+          favoriteGenres,
+          preferredNetworks,
+          watchingHabits,
+          contentRating,
+          languagePreferences,
+          viewingHistory: historyWithTmdbIds.filter(h => h.tmdbId) // Only include shows with TMDB IDs
+        };
+
+        const multiAPIRecommendations = await MultiAPIRecommendationService.generateMultiAPIRecommendations(
+          multiAPIPreferences,
+          20
+        );
+
+        console.log(`📊 Multi-API generated ${multiAPIRecommendations.length} recommendations`);
+
+        // Convert multi-API recommendations to database format
+        const savedRecommendations = [];
+        for (const rec of multiAPIRecommendations) {
+          try {
+            // Check if show exists or create it
+            let show = await this.getShowByTmdbId(rec.tmdbId);
+            if (!show) {
+              show = await this.upsertShow({
+                tmdbId: rec.tmdbId,
+                title: rec.title,
+                overview: rec.overview,
+                posterPath: rec.posterPath,
+                backdropPath: rec.backdropPath,
+                firstAirDate: rec.firstAirDate,
+                genres: rec.genres,
+                status: 'Released'
+              });
+            }
+
+            // Create enhanced reason with source info
+            const enhancedReason = `${rec.reason} (${rec.source.toUpperCase()} • ${rec.confidence}% confidence • ${rec.streamingAvailability?.totalPlatforms || 0} platforms)`;
+
+            const newRecommendation = await this.upsertRecommendation({
+              userId,
+              showId: show.id,
+              reason: enhancedReason,
+              score: rec.personalizedScore,
+              recommendedAt: new Date()
+            });
+
+            savedRecommendations.push(newRecommendation);
+          } catch (error) {
+            console.error(`Failed to save multi-API recommendation for ${rec.title}:`, error);
+          }
+        }
+
+        console.log(`✅ Saved ${savedRecommendations.length} multi-API recommendations for user ${userId}`);
+        return savedRecommendations;
+      }
 
       // Get user's viewing history and watchlist to avoid duplicates
       const viewingHistory = await this.getUserViewingHistory(userId, 100);

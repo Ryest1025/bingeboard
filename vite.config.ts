@@ -47,6 +47,12 @@ export default defineConfig({
       '.github.dev',
       'fuzzy-xylophone-5g97jqp4vq9wf4jjr-3000.app.github.dev' // Match Express port
     ],
-    // ❌ REMOVED proxy - Express handles /api directly when Vite is embedded
+    proxy: {
+      '/api': {
+        target: 'http://127.0.0.1:5000',
+        changeOrigin: true,
+        secure: false,
+      }
+    }
   },
 });

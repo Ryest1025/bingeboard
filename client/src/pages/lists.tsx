@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/useAuth";
+import NavigationHeader from "@/components/navigation-header";
+import MobileNav from "@/components/mobile-nav";
 import {
   List,
   Plus,
@@ -103,7 +105,7 @@ const mockLists: UserList[] = [
   }
 ];
 
-export default function ListsPage() {
+export default function Lists() {
   const { isAuthenticated } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
@@ -132,13 +134,16 @@ export default function ListsPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
+      <NavigationHeader />
       {/* Mobile-first layout with proper spacing */}
       <div className="pb-6 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto space-y-6">
 
           {/* Header */}
           <div className="text-center space-y-4">
-            <h1 className="text-3xl sm:text-4xl font-bold text-white">My Lists</h1>
+            <h1 className="text-3xl sm:text-4xl font-bold text-white">
+              <span className="bg-gradient-to-r from-teal-400 via-cyan-400 to-blue-400 bg-clip-text text-transparent">Binge</span> Lists
+            </h1>
             <p className="text-gray-400 text-sm sm:text-base">Organize your favorite movies and shows</p>
           </div>
 
@@ -219,6 +224,7 @@ export default function ListsPage() {
           onClose={() => setSelectedList(null)}
         />
       )}
+      <MobileNav />
     </div>
   );
 }

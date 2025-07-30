@@ -23,6 +23,7 @@ import { useQuery } from "@tanstack/react-query";
 import { AiRecommendations } from "../components/ai-recommendations";
 import NavigationHeader from "@/components/navigation-header";
 import StreamingLogos from "../components/streaming-logos";
+import MonetizedTrailer from "../components/monetized-trailer";
 
 export default function Dashboard() {
   console.log('🏠 DASHBOARD COMPONENT RENDERED - User is authenticated!');
@@ -243,14 +244,50 @@ export default function Dashboard() {
                       </div>
                     )}
 
-                    <div className="flex justify-between items-center">
+                    <div className="flex justify-between items-center mb-3">
                       <Badge className="bg-teal-500/20 text-teal-400 border-teal-400/20">
                         Trending #{index + 1}
                       </Badge>
-                      <Button size="sm" className="bg-teal-600 hover:bg-teal-700">
-                        <Eye className="h-3 w-3 mr-1" />
-                        View
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="space-y-1 mt-3">
+                      {/* Primary Action - Add to List */}
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        className="w-full h-7 text-xs border-gray-600 text-gray-300 hover:bg-gray-700 hover:border-gray-500 px-2"
+                        onClick={() => {
+                          console.log(`Add to List clicked for ${title}`);
+                          // Handle add to list action
+                        }}
+                      >
+                        <Plus className="h-2.5 w-2.5 mr-1" />
+                        Add to List
                       </Button>
+                      
+                      {/* Secondary Actions */}
+                      <div className="flex gap-1">
+                        <Button 
+                          size="sm" 
+                          className="flex-1 h-7 text-xs bg-green-600 hover:bg-green-700 text-white px-2"
+                          onClick={() => {
+                            console.log(`Watch Now clicked for ${title}`);
+                            // Handle watch now action
+                          }}
+                        >
+                          <Play className="h-2.5 w-2.5 mr-1" />
+                          Watch
+                        </Button>
+                        
+                        <MonetizedTrailer 
+                          show={show}
+                          onTrailerViewed={() => {
+                            console.log(`Trailer viewed for ${title}`);
+                            // Track trailer views for analytics
+                          }}
+                        />
+                      </div>
                     </div>
                   </CardContent>
                 </Card>

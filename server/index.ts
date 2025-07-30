@@ -125,8 +125,10 @@ app.use((req, res, next) => {
     server = http.createServer(app);
   }
 
-  // Register routes but ignore the returned server
+  // IMPORTANT: Register API routes BEFORE Vite middleware
+  console.log('🔄 Registering API routes first...');
   await registerRoutes(app);
+  console.log('✅ API routes registered successfully');
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
