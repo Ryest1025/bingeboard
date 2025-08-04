@@ -34,6 +34,8 @@ import {
   Menu,
   Sparkles
 } from "lucide-react";
+import EnhancedFilterSystem from "../components/common/EnhancedFilterSystem";
+import CollectionManager from "../components/common/CollectionManager";
 
 export default function WorkingDashboard() {
   const [user, setUser] = useState<any>(null);
@@ -268,6 +270,16 @@ export default function WorkingDashboard() {
               </div>
             </CardContent>
           </Card>
+
+          {/* Enhanced Filter System */}
+          {/* <div className="col-span-full mb-6">
+            <EnhancedFilterSystem />
+          </div> */}
+
+          {/* Collection Manager */}
+          {/* <div className="col-span-full mb-6">
+            <CollectionManager />
+          </div> */}
 
           {/* Quick Stats */}
           <Card className="glass-effect border-slate-700/50 hover:border-slate-600/50 transition-all duration-300 hover:shadow-xl hover:shadow-blue-500/5 group">

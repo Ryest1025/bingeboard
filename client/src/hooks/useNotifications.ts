@@ -9,52 +9,14 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 //   showNotification
 // } from '@/firebase/messaging';
 
-// Mock implementations for compatibility
-const requestNotificationPermission = async (): Promise<string | null> => {
-  console.log('📱 Mock notification permission requested');
-  return "mock-token-123";
-};
-
-const sendTokenToServer = async (token: string, userId: string): Promise<void> => {
-  console.log('📱 Mock sending token to server:', { token, userId });
-};
-
-const showNotification = (options: { 
-  title: string; 
-  body: string; 
-  image?: string; 
-  icon?: string;
-  click_action?: string;
-  data?: any;
-}) => {
-  console.log('📱 Mock showing notification:', options);
-};
-
-const onForegroundMessage = (callback: (payload: MessagePayload) => void) => {
-  console.log('📱 Mock setting up foreground message listener');
-  // Return a dummy unsubscribe function
-  return () => {
-    console.log('📱 Mock unsubscribing from foreground messages');
-  };
-};
-
 // Mock types for compatibility
 interface MessagePayload {
   notification?: {
     title?: string;
     body?: string;
     image?: string;
-    icon?: string;
   };
-  data?: Record<string, string>;
-}
-
-// Notification preferences type
-interface NotificationPreferences {
-  pushNotifications?: boolean;
-  emailNotifications?: boolean;
-  showReminders?: boolean;
-  [key: string]: any;
+  data?: { [key: string]: string };
 }
 import { useAuth } from './useAuth';
 import { apiRequest } from '@/lib/queryClient';
@@ -67,7 +29,7 @@ export const useNotifications = () => {
   const queryClient = useQueryClient();
 
   // Get notification preferences
-  const { data: preferences, isLoading: preferencesLoading } = useQuery<NotificationPreferences>({
+  const { data: preferences, isLoading: preferencesLoading } = useQuery({
     queryKey: ['/api/notifications/preferences'],
     enabled: isAuthenticated,
     staleTime: 5 * 60 * 1000, // 5 minutes
@@ -83,11 +45,11 @@ export const useNotifications = () => {
   // Update preferences mutation
   const updatePreferencesMutation = useMutation({
     mutationFn: async (updates: any) => {
-      return apiRequest(
-        'PUT', 
-        '/api/notifications/preferences', 
-        updates
-      );
+      return apiRequest('/api/notifications/preferences', {
+        method: 'PUT',
+        body: JSON.stringify(updates),
+        headers: { 'Content-Type': 'application/json' },
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/notifications/preferences'] });
@@ -97,10 +59,10 @@ export const useNotifications = () => {
   // Send test notification mutation
   const sendTestMutation = useMutation({
     mutationFn: async () => {
-      return apiRequest(
-        'POST',
-        '/api/notifications/send-test'
-      );
+      return apiRequest('/api/notifications/send-test', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/notifications/history'] });
@@ -146,8 +108,8 @@ export const useNotifications = () => {
         showNotification({
           title: payload.notification.title || 'BingeBoard',
           body: payload.notification.body || 'You have a new notification',
-          image: payload.notification.image,
           icon: payload.notification.icon,
+          click_action: payload.data?.click_action,
           data: payload.data,
         });
       }

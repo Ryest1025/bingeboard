@@ -4,33 +4,15 @@ import admin from 'firebase-admin';
 let app: admin.app.App | null = null;
 
 export function initializeFirebaseAdmin() {
-  console.log('🔍 initializeFirebaseAdmin called. Current app state:', !!app);
   if (app) {
-    console.log('✅ Firebase Admin SDK already initialized, returning existing app');
     return app;
   }
 
   try {
     // Check if we have Firebase Admin key
     const serviceAccountKey = process.env.FIREBASE_ADMIN_KEY;
-    console.log('🔍 FIREBASE_ADMIN_KEY present:', !!serviceAccountKey);
     
     if (!serviceAccountKey) {
-      // For development mode, initialize with application default credentials if no key provided
-      if (process.env.NODE_ENV === 'development') {
-        console.log('🔶 Development mode: Initializing Firebase Admin with default configuration');
-        try {
-          app = admin.initializeApp({
-            projectId: process.env.VITE_FIREBASE_PROJECT_ID || 'bingeboard-73c5f',
-          });
-          console.log('✅ Firebase Admin SDK initialized in development mode');
-          return app;
-        } catch (devError) {
-          console.warn('Failed to initialize Firebase Admin in development mode:', devError);
-          // Continue to warning message below
-        }
-      }
-      
       console.warn('Firebase Admin SDK not initialized: FIREBASE_ADMIN_KEY environment variable not set');
       return null;
     }

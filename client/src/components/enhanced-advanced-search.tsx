@@ -13,7 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Search, Filter, ChevronDown, X, Plus, Bell, Star, Award, Calendar, Clock, Globe } from "lucide-react";
-import { ShowCard } from "./show-card";
+import { RecommendationCard, RecommendationGrid, SectionTitle } from "@/components/common";
 import { useToast } from "@/hooks/use-toast";
 
 interface AdvancedFilters {
@@ -842,11 +842,19 @@ export function EnhancedAdvancedSearch() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-              {results.map((show) => (
-                <ShowCard key={show.tmdbId} show={show} />
-              ))}
-            </div>
+            <RecommendationGrid 
+              shows={results.map((show) => ({
+                tmdbId: show.tmdbId,
+                title: show.title,
+                posterPath: show.posterPath,
+                rating: show.rating,
+                streamingPlatforms: show.streamingPlatforms
+              }))}
+              columns={{ sm: 1, md: 2, lg: 3, xl: 4 }}
+              onInteraction={(action, tmdbId) => {
+                console.log(`Enhanced search result interaction: ${action} on ${tmdbId}`);
+              }}
+            />
             
             {results.length < totalResults && (
               <div className="flex justify-center mt-6">

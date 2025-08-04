@@ -51,7 +51,7 @@ const featureCategories = [
         name: "Airing Calendar",
         description: "View personalized calendar for upcoming episodes and new seasons",
         implemented: true,
-        route: "/lists"
+        route: "/upcoming"
       },
       {
         name: "Platform Sync",
@@ -237,7 +237,7 @@ const featureCategories = [
         name: "Continue Watching",
         description: "Prompts to continue shows you've paused or forgotten",
         implemented: true,
-        route: "/lists"
+        route: "/upcoming"
       },
       {
         name: "Friend Activity Alerts",

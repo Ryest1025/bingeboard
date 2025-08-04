@@ -32,6 +32,7 @@ import { SiGoogle, SiFacebook } from "react-icons/si";
 import { useToast } from "../hooks/use-toast";
 import { isMobileDevice } from "../lib/deviceUtils";
 import { signInWithGoogle, signInWithFacebook } from "../lib/auth";
+import { RecommendationCard } from "@/components/common";
 
 interface Show {
   id: number;
@@ -69,13 +70,7 @@ function FeatureCard({ icon: Icon, title, description, highlight }: {
   );
 }
 
-function ComparisonCard({ feature, bingeboard, trakt, tvtime, hobi }: {
-  feature: string;
-  bingeboard: string;
-  trakt: string;
-  tvtime: string;
-  hobi: string;
-}) {
+function ComparisonRow({ feature, bingeboard, trakt, tvtime, hobi }: ComparisonRowProps) {
   return (
     <div className="grid grid-cols-5 gap-4 py-4 border-b border-gray-800/50">
       <div className="font-medium text-white">{feature}</div>
@@ -464,7 +459,21 @@ export default function Landing() {
             
             <div className="flex space-x-6 overflow-x-auto pb-6 scrollbar-hide">
               {trendingShows.results.slice(0, 8).map((show) => (
-                <ShowCard key={show.id} show={show} />
+                <RecommendationCard 
+                  key={show.id} 
+                  show={{
+                    tmdbId: show.id,
+                    title: show.name || show.title || 'Unknown Title',
+                    posterPath: show.poster_path 
+                      ? `https://image.tmdb.org/t/p/w300${show.poster_path}`
+                      : undefined,
+                    rating: show.vote_average?.toFixed(1) || 'N/A'
+                  }}
+                  variant="compact"
+                  onInteraction={(action, tmdbId) => {
+                    console.log(`Landing backup trending interaction: ${action} on ${tmdbId}`);
+                  }}
+                />
               ))}
             </div>
           </div>

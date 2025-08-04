@@ -2,6 +2,8 @@
 // Load environment variables first
 import dotenv from 'dotenv';
 dotenv.config();
+console.log("FIREBASE_ADMIN_KEY present:", !!process.env.FIREBASE_ADMIN_KEY);
+
 
 import express, { type Request, Response, NextFunction } from "express";
 import cors from "cors";
@@ -125,10 +127,8 @@ app.use((req, res, next) => {
     server = http.createServer(app);
   }
 
-  // IMPORTANT: Register API routes BEFORE Vite middleware
-  console.log('🔄 Registering API routes first...');
+  // Register routes but ignore the returned server
   await registerRoutes(app);
-  console.log('✅ API routes registered successfully');
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
@@ -149,16 +149,19 @@ app.use((req, res, next) => {
   console.log('  env.trim() === "development":', env.trim() === "development");
   console.log('  process.env.NODE_ENV:', JSON.stringify(process.env.NODE_ENV));
 
-  if (env === "development") {
+  // Check if we should run in API-only mode (port 5000) or full-stack mode (port 3000)
+  const port = parseInt(process.env.PORT || '3000');
+  const isApiOnlyMode = port === 5000 || process.env.API_ONLY === 'true';
+
+  if (env === "development" && !isApiOnlyMode) {
     console.log('✅ Setting up Vite development server...');
     await setupVite(app, server);
-  } else {
+  } else if (env === "production") {
     console.log('📦 Setting up static file serving...');
     serveStatic(app);
+  } else {
+    console.log('🔧 Running in API-only mode (no Vite setup)...');
   }
-
-  // Use port 3000 for the full-stack app
-  const port = parseInt(process.env.PORT || '3000');
 
   let isRetrying = false;
 

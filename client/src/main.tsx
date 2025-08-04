@@ -149,18 +149,6 @@ try {
   if (root) {
     console.log("✅ Root element found, creating React app");
 
-    // CRITICAL: Check for React internals before mounting
-    console.log("🔍 Checking for ReactCurrentDispatcher in React internals...");
-    const ReactInternals = React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
-    if (ReactInternals && ReactInternals.ReactCurrentDispatcher) {
-      console.log("✅ Found ReactCurrentDispatcher in React internals");
-    } else {
-      console.warn("🚫 Could not find ReactCurrentDispatcher in React internals.");
-      throw new Error("React hooks system not properly initialized");
-    }
-    
-    console.log("🔄 Setting up React app with error handling...");
-    
     // Add timeout to detect stuck loading states
     const loadingTimeout = setTimeout(() => {
       console.error("❌ React app took too long to load - showing fallback");
@@ -178,12 +166,7 @@ try {
       `;
     }, 10000); // 10 second timeout
 
-    // Initialize React with strict mode disabled if we've had issues
-    const reactRoot = createRoot(root);
-    reactRoot.render(<App />);
-    
-    // Make React available for debugging
-    window.React = React;
+    createRoot(root).render(<App />);
     console.log("✅ React app rendered successfully");
 
     // Clear timeout if app loads successfully
@@ -195,28 +178,5 @@ try {
 } catch (error) {
   console.error("❌ Critical error in main.tsx:", error);
   const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-  
-  // Try to display a more helpful error message for hook errors
-  const isHookError = errorMessage.includes('hook') || 
-                     errorMessage.includes('useEffect') || 
-                     errorMessage.includes('useState');
-  
-  document.body.innerHTML = `
-    <div style="color: white; font-family: system-ui; padding: 20px; background: #111; text-align: center; max-width: 600px; margin: 40px auto; border-radius: 8px;">
-      <h1 style="color: #f87171;">React Initialization Error</h1>
-      <p style="margin: 20px 0; font-size: 16px;">${errorMessage}</p>
-      ${isHookError ? `
-        <div style="background: #1e1e1e; padding: 15px; border-radius: 4px; text-align: left; margin: 20px 0;">
-          <p style="color: #14b8a6; margin: 0 0 10px 0;">This appears to be a React hooks initialization error.</p>
-          <p style="color: #d1d5db; margin: 0;">React hooks must be initialized properly before use.</p>
-        </div>
-      ` : ''}
-      <button 
-        onclick="window.location.reload()" 
-        style="margin-top: 20px; background: #14b8a6; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-size: 16px;"
-      >
-        Reload Page
-      </button>
-    </div>
-  `;
+  document.body.innerHTML = '<div style="color: red; padding: 20px;">Critical error: ' + errorMessage + '</div>';
 }

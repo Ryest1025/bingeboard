@@ -140,7 +140,7 @@ export default function StreamingIntegration() {
             <div className="flex items-center space-x-6">
               <nav className="hidden md:flex space-x-6">
                 <Link href="/discover" className="hover:text-binge-purple transition-colors">Discover</Link>
-                <Link href="/lists" className="hover:text-binge-purple transition-colors">Binge Lists</Link>
+                <Link href="/upcoming" className="hover:text-binge-purple transition-colors">Upcoming</Link>
                 <Link href="/friends" className="hover:text-binge-purple transition-colors">Binge Friends</Link>
               </nav>
               

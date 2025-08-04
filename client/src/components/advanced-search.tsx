@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Search, Filter, Star, Calendar, Tv } from "lucide-react";
-import ShowCard from "@/components/show-card";
+import { RecommendationCard, RecommendationGrid, SectionTitle } from "@/components/common";
 
 interface AdvancedSearchProps {
   onClose?: () => void;
@@ -261,11 +261,19 @@ export default function AdvancedSearch({ onClose }: AdvancedSearchProps) {
               </div>
 
               {searchResults.results.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                  {searchResults.results.map((show: any) => (
-                    <ShowCard key={show.tmdbId} show={show} />
-                  ))}
-                </div>
+                <RecommendationGrid 
+                  shows={searchResults.results.map((show: any) => ({
+                    tmdbId: show.tmdbId,
+                    title: show.title,
+                    posterPath: show.posterPath,
+                    rating: show.rating,
+                    streamingPlatforms: show.streamingPlatforms
+                  }))}
+                  columns={{ sm: 1, md: 2, lg: 3, xl: 4 }}
+                  onInteraction={(action, tmdbId) => {
+                    console.log(`Search result interaction: ${action} on ${tmdbId}`);
+                  }}
+                />
               ) : (
                 <div className="text-center py-8">
                   <p className="text-muted-foreground">

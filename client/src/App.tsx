@@ -14,7 +14,6 @@ import SimpleNav from "@/components/simple-nav";
 import { ConsentBanner } from "@/components/consent-banner";
 import NotFound from "@/pages/not-found";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
-import HookErrorBoundary from "@/components/HookErrorBoundary";
 import Landing from "@/pages/landing";
 import LoginSimple from "@/pages/login-simple";
 import Signup from "@/pages/signup";
@@ -42,7 +41,7 @@ import TermsOfService from "@/pages/terms-of-service";
 import EULA from "@/pages/eula";
 import DataDeletion from "@/pages/data-deletion";
 import UpcomingEnhanced from "@/pages/upcoming-enhanced";
-import Lists from "@/pages/lists";
+import Lists from "@/pages/modern-lists";
 import Profile from "@/pages/modern-profile";
 import Settings from "@/pages/settings";
 import Features from "@/pages/features";
@@ -56,7 +55,7 @@ import ResetPassword from "@/pages/reset-password";
 import MobileDiagnostic from "@/pages/mobile-diagnostic";
 import MobileHub from "@/pages/mobile-hub";
 import MobileApp from "@/pages/mobile-app";
-import ListsTest from "@/pages/lists-test";
+import ComponentsDemo from "@/pages/components-demo";
 /**
  * 🔒 CLEANED UP: Removed duplicate auth pages and test components
  * Only keeping essential auth functionality in login-simple.tsx
@@ -117,13 +116,13 @@ function Router() {
   return (
     <div className="min-h-screen flex flex-col bg-black">
       {/* Navigation bars:
-          - Main app pages (/, /discover, /lists, /activity, /friends) use NavigationHeader 
+          - Main app pages (/, /discover, /upcoming, /activity, /friends) use NavigationHeader 
           - Other authenticated users get TopNav
           - Unauthenticated users get SimpleNav (except on landing page) */}
       {location !== "/landing" &&
         location !== "/" &&
         location !== "/discover" &&
-        location !== "/lists" &&
+        location !== "/upcoming" &&
         location !== "/activity" &&
         location !== "/friends" && (
           isAuthenticated ? <TopNav /> : <SimpleNav />
@@ -133,7 +132,7 @@ function Router() {
           location !== "/landing" &&
           location !== "/" &&
           location !== "/discover" &&
-          location !== "/lists" &&
+          location !== "/upcoming" &&
           location !== "/activity" &&
           location !== "/friends")
           ? "pt-16 pb-20 md:pb-20"
@@ -159,7 +158,7 @@ function Router() {
           <Route path="/reset-password" component={ResetPassword} />
 
           {/* Conditional home route based on authentication - MUST BE FIRST */}
-          <Route path="/" component={isAuthenticated ? Home : Landing} />
+          <Route path="/" component={Home} />
 
           {/* Protected routes - require authentication */}
           {isAuthenticated ? (
@@ -170,7 +169,6 @@ function Router() {
               <Route path="/social" component={Friends} />
               <Route path="/friends/discover" component={FriendsDiscovery} />
               <Route path="/find-friends" component={FindFriends} />
-              <Route path="/lists" component={Lists} />
               <Route path="/upcoming" component={UpcomingEnhanced} />
               <Route path="/subscription" component={Subscription} />
               <Route path="/pricing" component={SubscriptionPricing} />
@@ -178,6 +176,7 @@ function Router() {
               <Route path="/profile" component={Profile} />
               <Route path="/settings" component={Settings} />
               <Route path="/features" component={Features} />
+              <Route path="/lists" component={Lists} />
               <Route path="/watchlist" component={Watchlist} />
               <Route path="/sports" component={Sports} />
               <Route path="/streaming-demo" component={StreamingDemo} />
@@ -186,8 +185,8 @@ function Router() {
               <Route path="/import-history" component={ImportHistory} />
               <Route path="/mobile-diagnostic" component={MobileDiagnostic} />
               <Route path="/mobile-hub" component={MobileHub} />
+              <Route path="/components-demo" component={ComponentsDemo} />
               <Route path="/show/:id" component={ShowDetails} />
-              <Route path="/lists-test" component={ListsTest} />
             </>
           ) : (
             <>
@@ -248,39 +247,14 @@ function Router() {
 }
 
 export default function App() {
-  const [appInitialized, setAppInitialized] = useState(false);
-  
-  // Initialize app after React is mounted
-  useEffect(() => {
-    console.log('App component mounted - React is working');
-    // Add a small delay to ensure all systems are ready
-    setTimeout(() => {
-      setAppInitialized(true);
-    }, 100);
-  }, []);
-  
-  // If not initialized, show a simple loading screen
-  if (!appInitialized) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-black">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-500 mx-auto"></div>
-          <p className="text-gray-400 mt-4">Initializing BingeBoard...</p>
-        </div>
-      </div>
-    );
-  }
-  
   return (
-    <HookErrorBoundary>
-      <QueryClientProvider client={queryClient}>
-        <TooltipProvider>
-          <ErrorBoundary>
-            <Router />
-            {/* <Toaster /> */}
-          </ErrorBoundary>
-        </TooltipProvider>
-      </QueryClientProvider>
-    </HookErrorBoundary>
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <ErrorBoundary>
+          <Router />
+          {/* <Toaster /> */}
+        </ErrorBoundary>
+      </TooltipProvider>
+    </QueryClientProvider>
   );
 }

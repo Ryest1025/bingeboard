@@ -48,24 +48,12 @@ export async function setupVite(app: Express, server: Server) {
     appType: "custom",
   });
 
-  // CRITICAL: Make sure Vite doesn't capture API routes
-  // Add a middleware to exclude /api routes before applying Vite middlewares
-  app.use((req, res, next) => {
-    if (req.path.startsWith('/api')) {
-      console.log(`👉 API request detected, bypassing Vite: ${req.method} ${req.path}`);
-      return next();
-    }
-    // For non-API routes, continue to Vite middleware
-    vite.middlewares(req, res, next);
-  });
-
-  // Fallback route handler for HTML5 history
+  app.use(vite.middlewares);
   app.use("*", async (req, res, next) => {
     const url = req.originalUrl;
 
-    // Double-check: Skip API routes - let them be handled by the API middleware
+    // Skip API routes - let them be handled by the API middleware
     if (url.startsWith('/api/')) {
-      console.log(`👉 API request in fallback handler: ${req.method} ${url}`);
       return next();
     }
 

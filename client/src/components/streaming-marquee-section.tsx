@@ -13,12 +13,12 @@ const streamingPlatforms: StreamingPlatform[] = [
   { name: 'Max', logo: 'https://upload.wikimedia.org/wikipedia/commons/1/17/Max_logo.svg', color: '#002BE7' },
   { name: 'Prime Video', logo: 'https://upload.wikimedia.org/wikipedia/commons/f/f1/Prime_Video.png', color: '#00A8E1' },
   { name: 'Hulu', logo: 'https://upload.wikimedia.org/wikipedia/commons/e/e4/Hulu_Logo.svg', color: '#1CE783' },
-  { name: 'Apple TV+', logo: 'https://upload.wikimedia.org/wikipedia/commons/2/28/Apple_TV_Plus_Logo.svg', color: '#000000' },
+  { name: 'Apple TV+', logo: 'https://upload.wikimedia.org/wikipedia/commons/2/28/Apple_TV_Plus_Logo.svg', color: '#FFFFFF' },
   { name: 'Paramount+', logo: 'https://upload.wikimedia.org/wikipedia/commons/a/a5/Paramount_Plus_logo.svg', color: '#0064FF' },
   { name: 'Peacock', logo: 'https://upload.wikimedia.org/wikipedia/commons/d/d7/Peacock_logo.svg', color: '#FA6B00' },
   { name: 'Crunchyroll', logo: 'https://upload.wikimedia.org/wikipedia/commons/f/f6/Crunchyroll_Logo.svg', color: '#FF6600' },
   { name: 'Showtime', logo: 'https://upload.wikimedia.org/wikipedia/commons/2/2e/Showtime.svg', color: '#FF0000' },
-  { name: 'Starz', logo: 'https://upload.wikimedia.org/wikipedia/commons/e/e2/Starz_logo.svg', color: '#000000' },
+  { name: 'Starz', logo: 'https://upload.wikimedia.org/wikipedia/commons/e/e2/Starz_logo.svg', color: '#FFFFFF' },
   { name: 'Discovery+', logo: 'https://upload.wikimedia.org/wikipedia/commons/2/24/Discovery_Plus_logo.svg', color: '#0077C8' }
 ];
 
@@ -35,9 +35,6 @@ export function StreamingMarqueeSection() {
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
         <div className="text-center mb-12">
-          <Badge variant="outline" className="mb-4 px-4 py-2 text-sm border-teal-500/30 text-teal-400 bg-teal-500/10">
-            ✨ Content From All Your Favorite Platforms
-          </Badge>
           <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
             Watch from <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-400 to-blue-500">Everywhere</span>
           </h2>
@@ -97,15 +94,7 @@ export function StreamingMarqueeSection() {
             Track, discover, and organize content from 50+ streaming services
           </p>
           <div className="flex flex-wrap justify-center gap-3">
-            <Badge variant="secondary" className="px-3 py-1 text-xs bg-slate-800/50 text-gray-300 border-slate-700">
-              🎬 Movies & TV Shows
-            </Badge>
-            <Badge variant="secondary" className="px-3 py-1 text-xs bg-slate-800/50 text-gray-300 border-slate-700">
-              🔍 Smart Recommendations
-            </Badge>
-            <Badge variant="secondary" className="px-3 py-1 text-xs bg-slate-800/50 text-gray-300 border-slate-700">
-              📱 Cross-Platform Sync
-            </Badge>
+           
           </div>
         </div>
       </div>

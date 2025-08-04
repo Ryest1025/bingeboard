@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Link } from "wouter";
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
@@ -16,21 +16,83 @@ import {
   BookOpen,
   Settings,
   LogOut,
-  Eye
+  Eye,
+  Filter,
+  Sparkles
 } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
 import { useQuery } from "@tanstack/react-query";
 import { AiRecommendations } from "../components/ai-recommendations";
 import NavigationHeader from "@/components/navigation-header";
 import StreamingLogos from "../components/streaming-logos";
-import MonetizedTrailer from "../components/monetized-trailer";
+import EnhancedFilterSystem from "../components/common/EnhancedFilterSystem";
+import CollectionManager from "../components/common/CollectionManager";
+import { useToast } from "@/hooks/use-toast";
+// ...rest of the code remains unchanged (already matches the provided version)...
+
+// Filter types for enhanced integration
+interface EnhancedFilters {
+  genres: string[];
+  content_types: string[];
+  mood: string[];
+  viewing_context: string[];
+  content_rating: string[];
+  runtime_min: number;
+  runtime_max: number;
+  release_year_min: number;
+  release_year_max: number;
+  min_rating: number;
+  streaming_services: number[];
+  languages: string[];
+  accessibility_needs: string[];
+  content_warnings: string[];
+  social_features: string[];
+}
 
 export default function Dashboard() {
-  console.log('🏠 DASHBOARD COMPONENT RENDERED - User is authenticated!');
+  console.log('🚨 Dashboard loaded v5 - Enhanced with Singleton Auth');
+  // console.log('🏠 DASHBOARD COMPONENT RENDERED - User is authenticated!'); // Disabled for performance
 
   const { user, isLoading, isAuthenticated } = useAuth();
+  const { toast } = useToast();
 
-  console.log('📊 Dashboard auth state:', { isLoading, isAuthenticated, userEmail: user?.email });
+  // console.log('📊 Dashboard auth state:', { isLoading, isAuthenticated, userEmail: user?.email }); // Disabled for performance
+
+  // Enhanced Filter System Integration
+  const [activeFilters, setActiveFilters] = useState<EnhancedFilters | null>(null);
+  const [filteredShows, setFilteredShows] = useState<any[]>([]);
+
+  // Handle filter changes from EnhancedFilterSystem
+  const handleFiltersChange = useCallback((filters: EnhancedFilters) => {
+    setActiveFilters(filters);
+    console.log('🎯 Filters updated:', filters);
+    
+    // Show toast when filters are active
+    const filterCount = Object.values(filters).flat().length + 
+      (filters.runtime_min !== 30 || filters.runtime_max !== 180 ? 1 : 0) +
+      (filters.release_year_min !== 2000 || filters.release_year_max !== new Date().getFullYear() ? 1 : 0) +
+      (filters.min_rating !== 6.0 ? 1 : 0);
+    
+    if (filterCount > 0) {
+      toast({
+        title: "Filters Applied",
+        description: `${filterCount} filter${filterCount !== 1 ? 's' : ''} active - showing personalized results`
+      });
+    }
+  }, [toast]);
+
+  // Handle filter application (when user clicks Apply)
+  const handleFiltersApply = useCallback((filters: EnhancedFilters) => {
+    console.log('✅ Applying filters:', filters);
+    setActiveFilters(filters);
+    
+    // Here you would typically make an API call with the filters
+    // For now, we'll just show a success message
+    toast({
+      title: "Search Updated",
+      description: "Content filtered based on your preferences"
+    });
+  }, [toast]);
 
   // Add streaming data to shows
   const addStreamingDataToShows = (shows: any[]) => {
@@ -129,14 +191,28 @@ export default function Dashboard() {
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-28">
-        {/* Welcome Section */}
+        {/* Welcome Section with Enhanced Features Status */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-white mb-2">
-            Welcome back!
-          </h1>
-          <p className="text-gray-400">
-            Ready to discover your next favorite show or movie?
-          </p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-white mb-2">
+                Welcome back!
+              </h1>
+              <p className="text-gray-400">
+                Ready to discover your next favorite show or movie?
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <Badge className="bg-gradient-to-r from-teal-500 to-blue-500 text-white">
+                <Filter className="h-3 w-3 mr-1" />
+                Enhanced Filters
+              </Badge>
+              <Badge className="bg-gradient-to-r from-purple-500 to-pink-500 text-white">
+                <BookOpen className="h-3 w-3 mr-1" />
+                Smart Collections
+              </Badge>
+            </div>
+          </div>
         </div>
 
         {/* Quick Stats */}
@@ -244,50 +320,14 @@ export default function Dashboard() {
                       </div>
                     )}
 
-                    <div className="flex justify-between items-center mb-3">
+                    <div className="flex justify-between items-center">
                       <Badge className="bg-teal-500/20 text-teal-400 border-teal-400/20">
                         Trending #{index + 1}
                       </Badge>
-                    </div>
-
-                    {/* Action Buttons */}
-                    <div className="space-y-1 mt-3">
-                      {/* Primary Action - Add to List */}
-                      <Button 
-                        size="sm" 
-                        variant="outline"
-                        className="w-full h-7 text-xs border-gray-600 text-gray-300 hover:bg-gray-700 hover:border-gray-500 px-2"
-                        onClick={() => {
-                          console.log(`Add to List clicked for ${title}`);
-                          // Handle add to list action
-                        }}
-                      >
-                        <Plus className="h-2.5 w-2.5 mr-1" />
-                        Add to List
+                      <Button size="sm" className="bg-teal-600 hover:bg-teal-700">
+                        <Eye className="h-3 w-3 mr-1" />
+                        View
                       </Button>
-                      
-                      {/* Secondary Actions */}
-                      <div className="flex gap-1">
-                        <Button 
-                          size="sm" 
-                          className="flex-1 h-7 text-xs bg-green-600 hover:bg-green-700 text-white px-2"
-                          onClick={() => {
-                            console.log(`Watch Now clicked for ${title}`);
-                            // Handle watch now action
-                          }}
-                        >
-                          <Play className="h-2.5 w-2.5 mr-1" />
-                          Watch
-                        </Button>
-                        
-                        <MonetizedTrailer 
-                          show={show}
-                          onTrailerViewed={() => {
-                            console.log(`Trailer viewed for ${title}`);
-                            // Track trailer views for analytics
-                          }}
-                        />
-                      </div>
                     </div>
                   </CardContent>
                 </Card>
@@ -296,10 +336,162 @@ export default function Dashboard() {
           </div>
         </div>
 
+        {/* Enhanced Filter System with Integration */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h2 className="text-2xl font-bold text-white flex items-center gap-2">
+                <Filter className="h-6 w-6 text-teal-400" />
+                Smart Content Discovery
+              </h2>
+              <p className="text-gray-400 text-sm mt-1">
+                Use advanced filters to find exactly what you're in the mood for
+              </p>
+            </div>
+            {activeFilters && (
+              <Badge variant="secondary" className="bg-teal-500/20 text-teal-400 border-teal-400/20">
+                <Sparkles className="h-3 w-3 mr-1" />
+                Filters Active
+              </Badge>
+            )}
+          </div>
+          <EnhancedFilterSystem 
+            onFiltersChange={handleFiltersChange}
+            onApply={handleFiltersApply}
+            showAdvanced={true}
+          />
+        </div>
+
         {/* AI Recommendations Section */}
         <div className="mb-8">
           <AiRecommendations horizontal={true} />
         </div>
+
+        {/* Enhanced Collections Management */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h2 className="text-2xl font-bold text-white flex items-center gap-2">
+                <BookOpen className="h-6 w-6 text-purple-400" />
+                My Collections
+              </h2>
+              <p className="text-gray-400 text-sm mt-1">
+                Organize your shows and movies into personalized collections
+              </p>
+            </div>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="border-purple-400/20 text-purple-400 hover:bg-purple-500/10"
+              onClick={() => {
+                toast({
+                  title: "Collection Manager",
+                  description: "Create and manage your personalized collections below"
+                });
+              }}
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Quick Help
+            </Button>
+          </div>
+          <CollectionManager user={user} />
+        </div>
+
+        {/* Filtered Results Section - Shows when filters are active */}
+        {activeFilters && (
+          <div className="mb-8">
+            <div className="bg-gradient-to-r from-teal-500/10 to-blue-500/10 border border-teal-500/20 rounded-lg p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                    <Sparkles className="h-5 w-5 text-teal-400" />
+                    Filtered Results
+                  </h2>
+                  <p className="text-gray-400 text-sm">
+                    Content matching your current filter preferences
+                  </p>
+                </div>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => {
+                    setActiveFilters(null);
+                    toast({
+                      title: "Filters Cleared",
+                      description: "Showing all content"
+                    });
+                  }}
+                  className="border-teal-400/20 text-teal-400 hover:bg-teal-500/10"
+                >
+                  Clear Filters
+                </Button>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                {/* This would be populated with filtered shows */}
+                <Card className="glass-effect border-teal-500/20">
+                  <CardContent className="p-4 text-center">
+                    <div className="w-full h-32 bg-gradient-to-br from-teal-500/20 to-blue-500/20 rounded-lg flex items-center justify-center mb-3">
+                      <Search className="h-8 w-8 text-teal-400" />
+                    </div>
+                    <h3 className="text-white font-semibold mb-2">Filtered Content</h3>
+                    <p className="text-gray-400 text-sm">
+                      Results will appear here based on your filter selections
+                    </p>
+                    <Button 
+                      size="sm" 
+                      className="mt-3 bg-teal-600 hover:bg-teal-700"
+                      onClick={() => {
+                        toast({
+                          title: "Search Integration",
+                          description: "Connect to content API to show filtered results"
+                        });
+                      }}
+                    >
+                      Search Now
+                    </Button>
+                  </CardContent>
+                </Card>
+                
+                {/* Placeholder cards to show the layout */}
+                {[1, 2, 3].map((i) => (
+                  <Card key={i} className="glass-effect border-slate-700/50 opacity-50">
+                    <CardContent className="p-4">
+                      <div className="w-full h-32 bg-slate-700 rounded-lg mb-3 animate-pulse" />
+                      <div className="h-4 bg-slate-700 rounded mb-2 animate-pulse" />
+                      <div className="h-3 bg-slate-700 rounded w-2/3 animate-pulse" />
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+              
+              {/* Filter Summary */}
+              <div className="mt-4 p-3 bg-slate-800/50 rounded-lg">
+                <h4 className="text-sm font-semibold text-white mb-2">Active Filters:</h4>
+                <div className="flex flex-wrap gap-2">
+                  {activeFilters.genres.length > 0 && (
+                    <Badge variant="outline" className="border-teal-400/20 text-teal-400">
+                      Genres: {activeFilters.genres.join(', ')}
+                    </Badge>
+                  )}
+                  {activeFilters.mood.length > 0 && (
+                    <Badge variant="outline" className="border-purple-400/20 text-purple-400">
+                      Mood: {activeFilters.mood.join(', ')}
+                    </Badge>
+                  )}
+                  {activeFilters.streaming_services.length > 0 && (
+                    <Badge variant="outline" className="border-blue-400/20 text-blue-400">
+                      Platforms: {activeFilters.streaming_services.length} selected
+                    </Badge>
+                  )}
+                  <Badge variant="outline" className="border-gray-400/20 text-gray-400">
+                    Rating: {activeFilters.min_rating}+ ⭐
+                  </Badge>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Quick Actions */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -311,7 +503,7 @@ export default function Dashboard() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-gray-400 text-sm">Find your next favorite show</p>
+              <p className="text-gray-400 text-sm">Find your next favorite show with enhanced filters</p>
               <Link href="/discover">
                 <Button className="w-full mt-4 bg-gradient-to-r from-teal-600 to-blue-600">
                   Explore Now
@@ -341,19 +533,58 @@ export default function Dashboard() {
             <CardHeader>
               <CardTitle className="text-white flex items-center">
                 <Settings className="h-5 w-5 mr-2 text-gray-400" />
-                Import History
+                Smart Collections
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-gray-400 text-sm">Get better recommendations</p>
-              <Link href="/import-history">
-                <Button variant="outline" className="w-full mt-4 border-slate-700 text-gray-300">
-                  Import Data
-                </Button>
-              </Link>
+              <p className="text-gray-400 text-sm">Organize with advanced tagging and presets</p>
+              <Button 
+                variant="outline" 
+                className="w-full mt-4 border-slate-700 text-gray-300"
+                onClick={() => {
+                  document.querySelector('[data-testid="collection-manager"]')?.scrollIntoView({ 
+                    behavior: 'smooth' 
+                  });
+                  toast({
+                    title: "Collections",
+                    description: "Scroll up to see the enhanced Collection Manager"
+                  });
+                }}
+              >
+                Manage Collections
+              </Button>
             </CardContent>
           </Card>
         </div>
+
+        {/* Enhanced Features Debug Info (remove in production) */}
+        {process.env.NODE_ENV === 'development' && (
+          <div className="mt-8 p-4 bg-slate-800/50 border border-slate-700 rounded-lg">
+            <h3 className="text-sm font-semibold text-white mb-2">🔧 Enhanced Features Status</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+              <div>
+                <h4 className="text-teal-400 font-medium mb-1">Enhanced Filter System:</h4>
+                <ul className="text-gray-400 space-y-1">
+                  <li>✅ Debounced search (300ms)</li>
+                  <li>✅ Smart preset suggestions</li>
+                  <li>✅ Section-specific resets</li>
+                  <li>✅ Real-time filter preview</li>
+                  <li>✅ Active filter count: {activeFilters ? 'Connected' : 'Waiting for filters'}</li>
+                </ul>
+              </div>
+              <div>
+                <h4 className="text-purple-400 font-medium mb-1">Collection Manager:</h4>
+                <ul className="text-gray-400 space-y-1">
+                  <li>✅ Tag autocomplete system</li>
+                  <li>✅ Public/Private presets</li>
+                  <li>✅ Advanced validation</li>
+                  <li>✅ Bulk operations</li>
+                  <li>✅ Enhanced search & filters</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        )}
       </main>
     </div>
   );

@@ -7,6 +7,10 @@ interface AuthState {
   isAuthenticated: boolean;
 }
 
+// Singleton shared state for auth
+let sharedAuthState: AuthState | null = null;
+let sharedSetAuthState: ((s: AuthState) => void) | null = null;
+
 /**
  * 🔒 AUTHENTICATION HOOK - PRODUCTION LOCKED
  * 
@@ -33,19 +37,35 @@ interface AuthState {
  */
 
 export function useAuth(): AuthState {
-  console.log('🔍🔍🔍 useAuth hook called - START');
+  // console.log('🔍🔍🔍 useAuth hook called - START'); // Disabled for performance
 
-  const [authState, setAuthState] = useState<AuthState>({
-    user: null,
-    isLoading: true, // Start with loading to check session first
-    isAuthenticated: false
+  const [authState, setAuthState] = useState<AuthState>(() => {
+    if (sharedAuthState) return sharedAuthState;
+    return {
+      user: null,
+      isLoading: true, // Start with loading to check session first
+      isAuthenticated: false
+    };
   });
 
-  console.log('🔍🔍🔍 useAuth initial state:', authState);
+  const [checkedSession, setCheckedSession] = useState(false);
+
+  // Register the setter globally so all hooks share updates
+  useEffect(() => {
+    sharedSetAuthState = setAuthState;
+  }, []);
+
+  // console.log('🔍🔍🔍 useAuth initial state:', authState); // Disabled for performance
 
   useEffect(() => {
     let isMounted = true;
     console.log('🔍 useAuth hook starting - URL:', window.location.href);
+
+    // ✅ Prevent repeated fetches - only run once
+    if (checkedSession) {
+      console.log('🔍 Session already checked, skipping...');
+      return;
+    }
 
     // Mobile detection and redirect - only on first load
     const userAgent = navigator.userAgent || '';
@@ -62,11 +82,13 @@ export function useAuth(): AuthState {
     const loadingTimeout = setTimeout(() => {
       if (isMounted) {
         console.log('⚠️ Auth loading timeout - setting not authenticated');
-        setAuthState({
+        const newState = {
           user: null,
           isLoading: false,
           isAuthenticated: false
-        });
+        };
+        setAuthState(newState);
+        sharedAuthState = newState;
       }
     }, 8000); // 8 second timeout
 
@@ -75,7 +97,7 @@ export function useAuth(): AuthState {
       try {
         // First priority: Check Firebase auth state
         const { getAuth } = await import('firebase/auth');
-        const auth = getAuth();
+        const { auth } = await import('@/firebase/config');
 
         // Check if user is already logged in to Firebase
         const currentUser = auth.currentUser;
@@ -102,11 +124,13 @@ export function useAuth(): AuthState {
                 const user = await response.json();
                 console.log('✅ Firebase user validated with backend:', user.email);
                 clearTimeout(loadingTimeout);
-                setAuthState({
+                const newState = {
                   user,
                   isLoading: false,
                   isAuthenticated: true
-                });
+                };
+                setAuthState(newState);
+                sharedAuthState = newState;
                 return;
               } else {
                 const text = await response.text();
@@ -123,7 +147,7 @@ export function useAuth(): AuthState {
           // Fallback to Firebase-only authentication
           console.log('✅ Using Firebase-only authentication for:', currentUser.email);
           clearTimeout(loadingTimeout);
-          setAuthState({
+          const newState = {
             user: {
               id: currentUser.uid,
               email: currentUser.email,
@@ -132,7 +156,9 @@ export function useAuth(): AuthState {
             },
             isLoading: false,
             isAuthenticated: true
-          });
+          };
+          setAuthState(newState);
+          sharedAuthState = newState;
           return;
         }
 
@@ -157,11 +183,13 @@ export function useAuth(): AuthState {
               const user = await sessionResponse.json();
               console.log('✅ Local session found:', user.email);
               clearTimeout(loadingTimeout);
-              setAuthState({
+              const newState = {
                 user,
                 isLoading: false,
                 isAuthenticated: true
-              });
+              };
+              setAuthState(newState);
+              sharedAuthState = newState;
               return;
             } else {
               const text = await sessionResponse.text();
@@ -197,7 +225,7 @@ export function useAuth(): AuthState {
           if (firebaseUser) {
             console.log('✅ Firebase user detected:', firebaseUser.email);
             // Use Firebase-only authentication (no backend dependency)
-            setAuthState({
+            const newState = {
               user: {
                 id: firebaseUser.uid,
                 email: firebaseUser.email,
@@ -206,14 +234,18 @@ export function useAuth(): AuthState {
               },
               isLoading: false,
               isAuthenticated: true
-            });
+            };
+            setAuthState(newState);
+            sharedAuthState = newState;
           } else {
             console.log('❌ No Firebase user found');
-            setAuthState({
+            const newState = {
               user: null,
               isLoading: false,
               isAuthenticated: false
-            });
+            };
+            setAuthState(newState);
+            sharedAuthState = newState;
           }
         });
 
@@ -226,22 +258,27 @@ export function useAuth(): AuthState {
 
       } catch (error) {
         console.error('❌ Firebase auth setup error:', error);
-        setAuthState({
+        const newState = {
           user: null,
           isLoading: false,
           isAuthenticated: false
-        });
+        };
+        setAuthState(newState);
+        sharedAuthState = newState;
       }
     };
 
     // Start the authentication check
     initAuth();
+    
+    // Mark session as checked after starting auth
+    setCheckedSession(true);
 
     return () => {
       isMounted = false;
       clearTimeout(loadingTimeout);
     };
-  }, []);
+  }, [checkedSession]); // Add checkedSession to dependency array
 
   return authState;
 }
