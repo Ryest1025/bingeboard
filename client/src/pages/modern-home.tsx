@@ -353,22 +353,8 @@ export default function ModernHome() {
   };
 
   if (!isAuthenticated) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-[hsl(228,25%,3%)] via-[hsl(226,22%,6%)] to-[hsl(224,20%,8%)] flex items-center justify-center p-4">
-        <Card className="glass-effect border-slate-700 max-w-md mx-auto">
-          <CardContent className="p-8 text-center space-y-4">
-            <Play className="h-16 w-16 text-teal-400 mx-auto" />
-            <h2 className="text-2xl font-bold text-white">Welcome to BingeBoard</h2>
-            <p className="text-gray-300">
-              Your personalized entertainment hub awaits. Track, discover, and share your viewing journey.
-            </p>
-            <Button asChild className="w-full bg-gradient-to-r from-teal-500 to-cyan-500 text-white">
-              <Link href="/api/login">Get Started</Link>
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
+    setLocation("/landing");
+    return null;
   }
 
   return (
@@ -390,7 +376,7 @@ export default function ModernHome() {
           </div>
 
           {/* Welcome Message */}
-          <h2 className="text-2xl text-white">Welcome back, {userData?.firstName || 'Alex'}</h2>
+          <h2 className="text-2xl text-white">Welcome back, {user?.displayName?.split(' ')[0] || user?.email?.split('@')[0] || 'Alex'}</h2>
 
           {/* Mood Badges */}
           <div className="flex gap-2 flex-wrap">

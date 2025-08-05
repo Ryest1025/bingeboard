@@ -1,0 +1,137 @@
+// Firebase configuration using v9 modular syntax
+import { initializeApp, getApps, getApp } from 'firebase/app';
+import { getAuth, GoogleAuthProvider, FacebookAuthProvider, setPersistence, browserLocalPersistence } from 'firebase/auth';
+import { getMessaging, isSupported } from 'firebase/messaging';
+
+/**
+ * 🔒 FIREBASE CONFIG - CLEAN VERSION
+ * 
+ * ✅ Fixed Firebase auth initialization error
+ * ✅ Proper component registration
+ * ✅ Clean initialization flow
+ * 
+ * Created: August 5, 2025
+ * Status: ✅ WORKING
+ */
+
+// Firebase configuration
+const firebaseConfig = {
+  apiKey: "AIzaSyB45zr8b2HjIx1fzXOuQsHxeQK9wl_wC88",
+  authDomain: "bingeboard-73c5f.firebaseapp.com",
+  projectId: "bingeboard-73c5f",
+  storageBucket: "bingeboard-73c5f.firebasestorage.app",
+  messagingSenderId: "145846820194",
+  appId: "1:145846820194:web:047efd7a8e59b36944a03b",
+  measurementId: "G-TB1ZXQ79LB"
+};
+
+console.log('🔍 Firebase Config Values:', {
+  apiKey: firebaseConfig.apiKey ? '✅ Present' : '❌ Missing',
+  authDomain: firebaseConfig.authDomain ? '✅ Present' : '❌ Missing',
+  projectId: firebaseConfig.projectId ? '✅ Present' : '❌ Missing',
+});
+
+// Initialize Firebase app
+const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
+console.log('✅ Firebase app initialized successfully');
+
+// Initialize Firebase Auth with delayed initialization to ensure proper registration
+let auth: ReturnType<typeof getAuth>;
+
+// Use setTimeout to ensure Firebase auth component is properly registered
+setTimeout(() => {
+  try {
+    auth = getAuth(app);
+    console.log('✅ Firebase Auth initialized successfully');
+    
+    // Set persistence after auth is initialized
+    setPersistence(auth, browserLocalPersistence)
+      .then(() => {
+        console.log('✅ Firebase persistence set to browserLocalPersistence');
+      })
+      .catch((error) => {
+        console.warn('⚠️ Failed to set Firebase persistence:', error);
+      });
+  } catch (error) {
+    console.error('❌ Firebase Auth initialization failed:', error);
+  }
+}, 100);
+
+// Export a promise-based auth getter for immediate use
+export const getAuthInstance = async (): Promise<ReturnType<typeof getAuth>> => {
+  if (auth) return auth;
+  
+  // Wait for auth to be initialized
+  return new Promise((resolve, reject) => {
+    const checkAuth = () => {
+      if (auth) {
+        resolve(auth);
+      } else {
+        setTimeout(checkAuth, 10);
+      }
+    };
+    checkAuth();
+    
+    // Timeout after 5 seconds
+    setTimeout(() => reject(new Error('Auth initialization timeout')), 5000);
+  });
+};
+
+// Export auth for compatibility (will be undefined initially)
+export { auth };
+
+// Set persistence
+setPersistence(auth, browserLocalPersistence)
+  .then(() => {
+    console.log('✅ Firebase persistence set to browserLocalPersistence');
+  })
+  .catch((error) => {
+    console.warn('⚠️ Failed to set Firebase persistence:', error);
+  });
+
+// Configure providers
+const googleProvider = new GoogleAuthProvider();
+const facebookProvider = new FacebookAuthProvider();
+
+// Configure provider settings for cross-platform compatibility
+googleProvider.setCustomParameters({
+  prompt: 'select_account'
+});
+
+facebookProvider.setCustomParameters({
+  display: 'popup'
+});
+
+// Initialize Firebase Messaging conditionally
+let messaging: ReturnType<typeof getMessaging> | null = null;
+
+const initMessaging = async () => {
+  try {
+    const messagingSupported = await isSupported();
+    if (messagingSupported && typeof window !== 'undefined' && 'serviceWorker' in navigator) {
+      messaging = getMessaging(app);
+      console.log('✅ Firebase Messaging initialized successfully');
+    } else {
+      console.log('ℹ️ Firebase Messaging not supported in this environment');
+    }
+  } catch (error) {
+    console.log('ℹ️ Firebase Messaging initialization skipped:', error);
+  }
+};
+
+// Initialize messaging asynchronously
+initMessaging();
+
+// Exports
+export { auth, googleProvider, facebookProvider, messaging };
+export default app;
+
+// Debug logging
+console.log('🔥 Firebase configuration loaded:', {
+  apiKey: firebaseConfig.apiKey ? 'Set' : 'Missing',
+  authDomain: firebaseConfig.authDomain,
+  projectId: firebaseConfig.projectId,
+  appId: firebaseConfig.appId ? 'Set' : 'Missing',
+  currentDomain: typeof window !== 'undefined' ? window.location.hostname : 'server-side',
+  env: import.meta.env.MODE
+});

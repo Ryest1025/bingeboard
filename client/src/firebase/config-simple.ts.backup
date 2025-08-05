@@ -1,0 +1,95 @@
+// Firebase configuration using v9 modular syntax - Reuses existing Firebase instance
+import { getApps, getApp } from 'firebase/app';
+import { getAuth, GoogleAuthProvider, FacebookAuthProvider, setPersistence, browserLocalPersistence } from 'firebase/auth';
+
+// Get the existing Firebase app or throw error
+const getExistingApp = () => {
+  if (getApps().length === 0) {
+    console.error('Firebase app not initialized. Import from @/firebase/config instead');
+    throw new Error('Firebase app not initialized. Import from @/firebase/config instead');
+  }
+  return getApp();
+};
+
+// Use existing Firebase app
+const app = getExistingApp();
+
+// Initialize auth with proper async handling to avoid registration errors
+let authInstance: ReturnType<typeof getAuth> | null = null;
+
+const initializeAuth = async (): Promise<ReturnType<typeof getAuth>> => {
+  if (authInstance) return authInstance;
+  
+  return new Promise((resolve, reject) => {
+    // Use requestAnimationFrame to ensure proper timing
+    requestAnimationFrame(() => {
+      try {
+        authInstance = getAuth(app);
+        console.log('✅ Firebase Auth (config-simple) initialized successfully');
+        
+        // Set persistence
+        setPersistence(authInstance, browserLocalPersistence).catch((error) => {
+          console.error('Failed to set Firebase persistence:', error);
+        });
+        
+        resolve(authInstance);
+      } catch (error) {
+        console.error('❌ Firebase Auth (config-simple) initialization failed:', error);
+        reject(error);
+      }
+    });
+  });
+};
+
+// Create auth proxy for compatibility
+const auth = new Proxy({} as ReturnType<typeof getAuth>, {
+  get(target, prop) {
+    if (authInstance) {
+      return authInstance[prop as keyof ReturnType<typeof getAuth>];
+    }
+    
+    // For methods that might be called before auth is ready, return async versions
+    if (typeof prop === 'string' && ['signInWithPopup', 'signOut', 'onAuthStateChanged'].includes(prop)) {
+      return async (...args: any[]) => {
+        const authObj = await initializeAuth();
+        return (authObj as any)[prop](...args);
+      };
+    }
+    
+    return undefined;
+  }
+});
+
+// Initialize immediately
+initializeAuth();
+
+// Export auth
+export { auth };
+
+// Add debug logging
+console.log('Firebase config-simple: Using existing Firebase instance', {
+  currentDomain: window.location.hostname,
+  isCodespaces: window.location.hostname.includes('.app.github.dev'),
+  fullOrigin: window.location.origin
+});
+
+// Configure providers with custom parameters for domain compatibility
+export const googleProvider = new GoogleAuthProvider();
+export const facebookProvider = new FacebookAuthProvider();
+
+// Configure scopes and custom parameters for localhost development
+googleProvider.addScope('profile');
+googleProvider.addScope('email');
+googleProvider.setCustomParameters({
+  prompt: 'select_account',
+  hd: '', // Allow any hosted domain
+  // Always use window.location.origin for correct redirect in all environments
+  redirect_uri: window.location.origin
+});
+
+facebookProvider.addScope('email');
+facebookProvider.setCustomParameters({
+  display: 'popup', // Use popup instead of redirect for localhost
+  // Always use window.location.origin for correct redirect in all environments
+  redirect_uri: window.location.origin
+});

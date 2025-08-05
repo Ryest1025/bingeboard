@@ -59,11 +59,11 @@ export function useAuth(): AuthState {
 
   useEffect(() => {
     let isMounted = true;
-    console.log('🔍 useAuth hook starting - URL:', window.location.href);
+    // console.log('🔍 useAuth hook starting - URL:', window.location.href);
 
     // ✅ Prevent repeated fetches - only run once
     if (checkedSession) {
-      console.log('🔍 Session already checked, skipping...');
+      // console.log('🔍 Session already checked, skipping...');
       return;
     }
 
@@ -96,8 +96,8 @@ export function useAuth(): AuthState {
     const initAuth = async () => {
       try {
         // First priority: Check Firebase auth state
-        const { getAuth } = await import('firebase/auth');
-        const { auth } = await import('@/firebase/config');
+        const { getAuthInstance } = await import('@/firebase/config');
+        const auth = await getAuthInstance();
 
         // Check if user is already logged in to Firebase
         const currentUser = auth.currentUser;
@@ -164,18 +164,18 @@ export function useAuth(): AuthState {
 
         // If no current Firebase user, check for existing backend session
         console.log('🔍 No Firebase user, checking for existing local session...');
-        console.log('🔍 Current URL:', window.location.href);
-        console.log('🔍 Document cookies:', document.cookie);
+        // console.log('🔍 Current URL:', window.location.href);
+        // console.log('🔍 Document cookies:', document.cookie);
 
         try {
-          console.log('🔍 Fetching /api/auth/user with credentials...');
+          // console.log('🔍 Fetching /api/auth/user with credentials...');
           const sessionResponse = await fetch('/api/auth/user', {
             credentials: 'include'
           });
 
           console.log(`📡 Session response: ${sessionResponse.status} ${sessionResponse.statusText}`);
-          console.log(`📋 Content-Type: ${sessionResponse.headers.get('content-type')}`);
-          console.log(`📋 Response URL: ${sessionResponse.url}`);
+          // console.log(`📋 Content-Type: ${sessionResponse.headers.get('content-type')}`);
+          // console.log(`📋 Response URL: ${sessionResponse.url}`);
 
           if (sessionResponse.ok) {
             const contentType = sessionResponse.headers.get('content-type');
@@ -210,14 +210,18 @@ export function useAuth(): AuthState {
         console.log('⚠️ Auth initialization error:', error);
       }
 
-      // Set up Firebase auth state listener
+            // Set up Firebase auth state listener
       console.log('🔍 Setting up Firebase auth state listener...');
 
       try {
         const { onAuthStateChanged } = await import('firebase/auth');
-        const { auth } = await import('@/firebase/config');
+        const { getAuthInstance } = await import('@/firebase/config');
+        const auth = await getAuthInstance();
+
+        console.log('🔍 Auth instance obtained, setting up listener...');
 
         const unsubscribe = onAuthStateChanged(auth, async (firebaseUser: any) => {
+          console.log('🔍 Firebase auth state changed:', firebaseUser ? firebaseUser.email : 'No user');
           if (!isMounted) return;
 
           clearTimeout(loadingTimeout);
@@ -229,8 +233,7 @@ export function useAuth(): AuthState {
               user: {
                 id: firebaseUser.uid,
                 email: firebaseUser.email,
-                displayName: firebaseUser.displayName,
-                firebase: true
+                name: firebaseUser.displayName || firebaseUser.email
               },
               isLoading: false,
               isAuthenticated: true
@@ -249,11 +252,36 @@ export function useAuth(): AuthState {
           }
         });
 
+        // Immediately clear loading state since Firebase listener is set up
+        console.log('🔍 Firebase listener set up, clearing loading state...');
+        const immediateState = {
+          user: null,
+          isLoading: false,
+          isAuthenticated: false
+        };
+        setAuthState(immediateState);
+        sharedAuthState = immediateState;
+
+        // Fallback timeout to ensure loading state is cleared
+        const fallbackTimeout = setTimeout(() => {
+          console.log('⚠️ Auth state listener timeout - clearing loading state');
+          if (isMounted) {
+            const newState = {
+              user: null,
+              isLoading: false,
+              isAuthenticated: false
+            };
+            setAuthState(newState);
+            sharedAuthState = newState;
+          }
+        }, 3000); // 3 second fallback
+
         // Return cleanup function
         return () => {
           isMounted = false;
           unsubscribe();
           clearTimeout(loadingTimeout);
+          clearTimeout(fallbackTimeout);
         };
 
       } catch (error) {

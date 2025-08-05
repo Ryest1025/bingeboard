@@ -5,31 +5,23 @@ import "./index.css";
 
 console.log("🚀 MAIN.TSX LOADED - Starting React app");
 
-// Set up Firebase auth persistence
-const initFirebasePersistence = async () => {
-  try {
-    const { getAuth, setPersistence, browserLocalPersistence } = await import('firebase/auth');
-    const auth = getAuth();
-    await setPersistence(auth, browserLocalPersistence);
-    console.log('✅ Firebase auth persistence set to local');
-  } catch (error) {
-    console.warn('⚠️ Could not set Firebase persistence:', error);
-  }
-};
+// Remove Firebase initialization from main.tsx to prevent conflicts
+// Firebase will be initialized properly in the config files
 
-// Initialize persistence
-initFirebasePersistence();
-
-// Add Firebase to global scope for debugging
+// Add Firebase to global scope for debugging (after delay)
 const setupGlobalFirebase = async () => {
   try {
-    const { getAuth, GoogleAuthProvider, signInWithPopup } = await import('firebase/auth');
-    const auth = getAuth();
+    // Wait for Firebase to be properly initialized
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    const { getAuthInstance } = await import('@/firebase/config');
+    const auth = await getAuthInstance();
 
     // Make Firebase easily accessible in console
     (window as any).firebaseAuth = auth;
     (window as any).testLogin = async () => {
       console.log('🧪 Testing login from console...');
+      const { GoogleAuthProvider, signInWithPopup } = await import('firebase/auth');
       const provider = new GoogleAuthProvider();
       provider.addScope('email');
       provider.addScope('profile');

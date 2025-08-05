@@ -67,40 +67,5 @@ export const getFacebookProvider = async () => {
   return provider;
 };
 
-// Create provider instances for direct import compatibility
-let googleProviderCache: any = null;
-let facebookProviderCache: any = null;
-
-const initializeProviders = async () => {
-  if (!googleProviderCache) {
-    googleProviderCache = await getGoogleProvider();
-  }
-  if (!facebookProviderCache) {
-    facebookProviderCache = await getFacebookProvider();
-  }
-};
-
-// Initialize providers immediately for compatibility
-initializeProviders();
-
-// Proxy objects for immediate access
-export const googleProvider = new Proxy({} as any, {
-  get(target, prop) {
-    if (googleProviderCache) {
-      return googleProviderCache[prop];
-    }
-    return undefined;
-  }
-});
-
-export const facebookProvider = new Proxy({} as any, {
-  get(target, prop) {
-    if (facebookProviderCache) {
-      return facebookProviderCache[prop];
-    }
-    return undefined;
-  }
-});
-
 // Legacy exports for compatibility
 export { getAuthInstance as auth };

@@ -1,7 +1,6 @@
 import { Switch, Route, useLocation } from "wouter";
 import React, { Suspense, useState, useEffect, lazy } from "react";
-import { queryClient } from "./lib/queryClient";
-import { QueryClientProvider } from "@tanstack/react-query";
+import { SafeQueryProvider } from "./lib/safeQueryClient";
 // import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/useAuth";
@@ -248,13 +247,13 @@ function Router() {
 
 export default function App() {
   return (
-    <QueryClientProvider client={queryClient}>
+    <SafeQueryProvider>
       <TooltipProvider>
         <ErrorBoundary>
           <Router />
           {/* <Toaster /> */}
         </ErrorBoundary>
       </TooltipProvider>
-    </QueryClientProvider>
+    </SafeQueryProvider>
   );
 }

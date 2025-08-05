@@ -149,9 +149,9 @@ app.use((req, res, next) => {
   console.log('  env.trim() === "development":', env.trim() === "development");
   console.log('  process.env.NODE_ENV:', JSON.stringify(process.env.NODE_ENV));
 
-  // Check if we should run in API-only mode (port 5000) or full-stack mode (port 3000)
-  const port = parseInt(process.env.PORT || '3000');
-  const isApiOnlyMode = port === 5000 || process.env.API_ONLY === 'true';
+  // Check if we should run in API-only mode (port 5000) or full-stack mode (port 5000 with Vite)
+  const port = parseInt(process.env.PORT || '5000');
+  const isApiOnlyMode = process.env.API_ONLY === 'true';
 
   if (env === "development" && !isApiOnlyMode) {
     console.log('✅ Setting up Vite development server...');

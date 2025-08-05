@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,7 +16,7 @@ import { Bell, Search, User, Settings, LogOut, Crown } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 
-export function TopNav() {
+function TopNavComponent() {
   const { user, isAuthenticated } = useAuth();
   const [location, navigate] = useLocation();
   const [searchQuery, setSearchQuery] = useState("");
@@ -43,6 +43,20 @@ export function TopNav() {
   // Fetch notification history to get unread count
   const { data: notifications = [] } = useQuery({
     queryKey: ['/api/notifications/history'],
+    queryFn: async () => {
+      try {
+        const response = await fetch('/api/notifications/history', {
+          credentials: 'include'
+        });
+        if (!response.ok) {
+          throw new Error('Failed to fetch notifications');
+        }
+        return await response.json();
+      } catch (error) {
+        console.debug('Failed to fetch notifications:', error);
+        return [];
+      }
+    },
     enabled: isAuthenticated,
   });
 
@@ -287,3 +301,5 @@ export function TopNav() {
     </header>
   );
 }
+
+export const TopNav = React.memo(TopNavComponent);

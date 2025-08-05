@@ -1285,6 +1285,62 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // User lists endpoint (new dashboard format)
+  app.get('/api/user/lists', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims?.sub || req.user.id;
+      
+      // Mock user lists - replace with actual database queries
+      const mockUserLists = [
+        { id: 1, name: "Sci-Fi Favorites", itemCount: 12 },
+        { id: 2, name: "Comedy Watchlist", itemCount: 8 },
+        { id: 3, name: "Completed Shows", itemCount: 84 },
+        { id: 4, name: "Want to Watch", itemCount: 27 }
+      ];
+
+      // TODO: Replace with actual database query
+      // const lists = await storage.getUserLists(userId);
+      
+      res.json({ lists: mockUserLists });
+    } catch (error) {
+      console.error('Error fetching user lists:', error);
+      res.status(500).json({ error: 'Failed to fetch user lists' });
+    }
+  });
+
+  // Because You Watched recommendations endpoint
+  app.get('/api/recommendations/because-you-watched', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims?.sub || req.user.id;
+      
+      // Use TMDB to get real recommendations
+      const tmdbService = new TMDBService();
+      
+      // Get popular TV shows as recommendations (later can be personalized)
+      const popularShows = await tmdbService.getPopular('tv');
+      
+      // Transform TMDB data to match our expected format
+      const recommendations = {
+        shows: popularShows.results.slice(0, 8).map((show: any) => ({
+          id: show.id,
+          title: show.name,
+          poster_path: show.poster_path,
+          backdrop_path: show.backdrop_path,
+          vote_average: show.vote_average,
+          overview: show.overview,
+          first_air_date: show.first_air_date,
+          genre_ids: show.genre_ids,
+          media_type: 'tv'
+        }))
+      };
+      
+      res.json(recommendations);
+    } catch (error) {
+      console.error('Error fetching recommendations:', error);
+      res.status(500).json({ error: 'Failed to fetch recommendations' });
+    }
+  });
+
   // Quick fix endpoint to set up test AI recommendations preferences
   app.post('/api/debug/setup-ai-preferences', isAuthenticated, async (req: any, res) => {
     try {
@@ -2224,6 +2280,169 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error fetching collection tags:', error);
       res.status(500).json({ error: 'Failed to fetch collection tags' });
+    }
+  });
+
+  // =============================================================================
+  // DASHBOARD API ENDPOINTS
+  // =============================================================================
+
+  // Spotlight data for dashboard (trending content + continue watching)
+  app.get('/api/tmdb/spotlight', async (req, res) => {
+    try {
+      const tmdbService = new TMDBService();
+      
+      // Get trending TV shows and movies
+      const [trendingTV, trendingMovies] = await Promise.all([
+        tmdbService.getTrending('tv', 'day'),
+        tmdbService.getTrending('movie', 'day')
+      ]);
+
+      // Mock continue watching data - replace with actual user data
+      const continueWatching = [
+        {
+          id: 1,
+          title: "The Bear",
+          poster_path: "/sHFlbKS3WLqfGlFLQ4wdAoLNN2B.jpg",
+          progress: 75,
+          platform: "Hulu",
+          nextEpisode: "S3 E8"
+        },
+        {
+          id: 2,
+          title: "House of the Dragon",
+          poster_path: "/7QMsOTMUswlwxJP0rTTZfmz2tX2.jpg",
+          progress: 45,
+          platform: "HBO Max",
+          nextEpisode: "S2 E4"
+        }
+      ];
+
+      const spotlight = {
+        trending: [...(trendingTV.results || []), ...(trendingMovies.results || [])].slice(0, 10),
+        continueWatching
+      };
+
+      res.json(spotlight);
+    } catch (error) {
+      console.error('Error fetching spotlight data:', error);
+      res.status(500).json({ error: 'Failed to fetch spotlight data' });
+    }
+  });
+
+  // Social activity endpoint for friends watching
+  app.get('/api/social/activity', isAuthenticated, async (req: any, res) => {
+    try {
+      // Mock friend activity data - replace with actual social features
+      const friendActivity = [
+        {
+          id: 1,
+          friendName: "Alex",
+          action: "started watching",
+          showTitle: "The Bear",
+          timestamp: new Date().toISOString()
+        },
+        {
+          id: 2,
+          friendName: "Sam",
+          action: "added to watchlist",
+          showTitle: "House of the Dragon",
+          timestamp: new Date(Date.now() - 3600000).toISOString()
+        }
+      ];
+
+      res.json(friendActivity);
+    } catch (error) {
+      console.error('Error fetching social activity:', error);
+      res.status(500).json({ error: 'Failed to fetch social activity' });
+    }
+  });
+
+  // Enhanced filter search endpoint
+  app.post('/api/content/enhanced-search', async (req, res) => {
+    try {
+      const filters = req.body;
+      const tmdbService = new TMDBService();
+      
+      // Build TMDB discover query from enhanced filters
+      const discoverParams: any = {
+        page: 1,
+        sort_by: filters.sortBy || 'popularity.desc'
+      };
+
+      if (filters.genres?.length > 0) {
+        discoverParams.with_genres = filters.genres.join(',');
+      }
+
+      if (filters.ratingRange) {
+        discoverParams['vote_average.gte'] = filters.ratingRange[0];
+        discoverParams['vote_average.lte'] = filters.ratingRange[1];
+      }
+
+      if (filters.releaseYear) {
+        discoverParams.primary_release_year = filters.releaseYear;
+      }
+
+      if (filters.providers?.length > 0) {
+        discoverParams.with_watch_providers = filters.providers.join('|');
+        discoverParams.watch_region = 'US';
+      }
+
+      // Get results for both TV and movies
+      const [tvResults, movieResults] = await Promise.all([
+        tmdbService.discover('tv', discoverParams),
+        tmdbService.discover('movie', discoverParams)
+      ]);
+
+      const combinedResults = [
+        ...(tvResults.results || []).map((item: any) => ({ ...item, media_type: 'tv' })),
+        ...(movieResults.results || []).map((item: any) => ({ ...item, media_type: 'movie' }))
+      ].slice(0, 20);
+
+      res.json({
+        results: combinedResults,
+        totalResults: (tvResults.total_results || 0) + (movieResults.total_results || 0)
+      });
+    } catch (error) {
+      console.error('Error performing enhanced search:', error);
+      res.status(500).json({ error: 'Failed to perform enhanced search' });
+    }
+  });
+
+  // New releases endpoint
+  app.get('/api/content/new-releases', async (req, res) => {
+    try {
+      const tmdbService = new TMDBService();
+      
+      // Get current date and 30 days ago
+      const today = new Date();
+      const thirtyDaysAgo = new Date(today.getTime() - (30 * 24 * 60 * 60 * 1000));
+      
+      const discoverParams = {
+        'primary_release_date.gte': thirtyDaysAgo.toISOString().split('T')[0],
+        'primary_release_date.lte': today.toISOString().split('T')[0],
+        sort_by: 'primary_release_date.desc',
+        page: 1
+      };
+
+      const [newMovies, newTVShows] = await Promise.all([
+        tmdbService.discover('movie', discoverParams),
+        tmdbService.discover('tv', { 
+          ...discoverParams, 
+          'first_air_date.gte': discoverParams['primary_release_date.gte'],
+          'first_air_date.lte': discoverParams['primary_release_date.lte']
+        })
+      ]);
+
+      const releases = [
+        ...(newMovies.results || []).slice(0, 10).map((item: any) => ({ ...item, media_type: 'movie' })),
+        ...(newTVShows.results || []).slice(0, 10).map((item: any) => ({ ...item, media_type: 'tv' }))
+      ].slice(0, 20);
+
+      res.json({ releases });
+    } catch (error) {
+      console.error('Error fetching new releases:', error);
+      res.status(500).json({ error: 'Failed to fetch new releases' });
     }
   });
 
