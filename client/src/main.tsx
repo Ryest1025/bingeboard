@@ -14,11 +14,12 @@ const setupGlobalFirebase = async () => {
     // Wait for Firebase to be properly initialized
     await new Promise(resolve => setTimeout(resolve, 1000));
     
-    const { getAuthInstance } = await import('@/firebase/config');
-    const auth = await getAuthInstance();
+    // Use mobile-safe Firebase config to avoid getModularInstance errors
+    const { auth, getAuthInstance } = await import('@/firebase/config-mobile');
+    const authInstance = getAuthInstance();
 
     // Make Firebase easily accessible in console
-    (window as any).firebaseAuth = auth;
+    (window as any).firebaseAuth = authInstance;
     (window as any).testLogin = async () => {
       console.log('🧪 Testing login from console...');
       const { GoogleAuthProvider, signInWithPopup } = await import('firebase/auth');
@@ -31,7 +32,7 @@ const setupGlobalFirebase = async () => {
 
       try {
         console.log('🔐 Starting Google OAuth...');
-        const result = await signInWithPopup(auth, provider);
+        const result = await signInWithPopup(authInstance, provider);
         const user = result.user;
         const token = await user.getIdToken(true); // Force refresh
 

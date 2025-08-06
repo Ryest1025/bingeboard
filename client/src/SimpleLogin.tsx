@@ -85,16 +85,17 @@ export default function SimpleLogin() {
       marginBottom: '10px'
     },
     logoIcon: {
-      width: '48px',
+      width: '40px',
       height: '32px',
-      background: 'linear-gradient(135deg, #14B8A6, #0891B2)',
-      borderRadius: '4px',
+      background: 'linear-gradient(135deg, #475569 0%, #1e293b 100%)',
+      borderRadius: '6px',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
       marginRight: '12px',
-      boxShadow: '0 4px 14px rgba(20, 184, 166, 0.4)',
-      border: '2px solid #14B8A6'
+      border: '2px solid #64748b',
+      position: 'relative' as const,
+      boxShadow: '0 4px 8px rgba(0,0,0,0.2)'
     },
     logoText: {
       fontSize: '28px',
@@ -207,7 +208,45 @@ export default function SimpleLogin() {
         <div style={styles.header}>
           <div style={styles.logo}>
             <div style={styles.logoIcon}>
-              <span style={{ color: 'white', fontWeight: 'bold', fontSize: '20px' }}>B</span>
+              {/* TV Screen with B */}
+              <div style={{
+                position: 'absolute',
+                inset: '4px',
+                background: 'linear-gradient(135deg, #14b8a6 0%, #06b6d4 50%, #3b82f6 100%)',
+                borderRadius: '3px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}>
+                <span style={{ 
+                  color: 'white', 
+                  fontWeight: 'bold', 
+                  fontSize: '14px',
+                  textShadow: '0 0 6px rgba(0,0,0,0.8), 0 0 2px rgba(255,255,255,0.3)'
+                }}>B</span>
+              </div>
+              {/* TV Base */}
+              <div style={{
+                position: 'absolute',
+                bottom: '-4px',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                width: '12px',
+                height: '4px',
+                background: '#475569',
+                borderRadius: '2px'
+              }}></div>
+              {/* TV Legs */}
+              <div style={{
+                position: 'absolute',
+                bottom: '-8px',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                width: '20px',
+                height: '4px',
+                background: '#64748b',
+                borderRadius: '2px'
+              }}></div>
             </div>
             <h1 style={styles.logoText}>BingeBoard</h1>
           </div>

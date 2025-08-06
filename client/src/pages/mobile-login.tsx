@@ -73,9 +73,22 @@ export default function MobileLogin() {
     <div className="min-h-screen bg-black flex items-center justify-center p-4">
       <Card className="w-full max-w-md glass-effect border-slate-700/50">
         <CardHeader className="text-center space-y-4">
-          {/* BingeBoard Logo */}
+          {/* TV-style logo */}
           <div className="flex justify-center">
-            <img src="/bingeboard-logo.png" alt="BingeBoard Logo" className="w-16 h-12 rounded shadow-lg" />
+            <div className="w-16 h-12 relative">
+              {/* TV Frame */}
+              <div className="w-full h-full bg-slate-600 rounded-lg relative shadow-lg">
+                {/* Screen */}
+                <div className="absolute inset-1 bg-gradient-to-br from-teal-500 via-cyan-400 to-blue-500 rounded-md flex items-center justify-center">
+                  <span className="text-white font-black text-xl drop-shadow-lg" style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.8)' }}>B</span>
+                </div>
+                {/* Base */}
+                <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-8 h-1 bg-slate-700 rounded-b"></div>
+                {/* Legs */}
+                <div className="absolute -bottom-2 left-1/4 w-1 h-1 bg-slate-700"></div>
+                <div className="absolute -bottom-2 right-1/4 w-1 h-1 bg-slate-700"></div>
+              </div>
+            </div>
           </div>
           
           <div>

@@ -18,7 +18,7 @@ import LoginSimple from "@/pages/login-simple";
 import Signup from "@/pages/signup";
 import MobileSocialLogin from "@/pages/mobile-social-login";
 import MobileLogin from "@/pages/mobile-login";
-import Home from "@/pages/dashboard";
+import Home from "@/pages/home";
 import ModernDiscover from "@/pages/modern-discover";
 import Activity from "@/pages/activity";
 import Friends from "@/pages/social";
@@ -55,6 +55,7 @@ import MobileDiagnostic from "@/pages/mobile-diagnostic";
 import MobileHub from "@/pages/mobile-hub";
 import MobileApp from "@/pages/mobile-app";
 import ComponentsDemo from "@/pages/components-demo";
+import Dashboard from "@/pages/dashboard";
 /**
  * 🔒 CLEANED UP: Removed duplicate auth pages and test components
  * Only keeping essential auth functionality in login-simple.tsx
@@ -113,9 +114,9 @@ function Router() {
   console.log('🏠 Home route will render:', isAuthenticated ? 'Home (Dashboard)' : 'Landing', 'for path "/"');
 
   return (
-    <div className="min-h-screen flex flex-col bg-black">
+    <div className="min-h-screen flex flex-col bg-black overflow-x-hidden">
       {/* Navigation bars:
-          - Main app pages (/, /discover, /upcoming, /activity, /friends) use NavigationHeader 
+          - Main app pages (/, /discover, /upcoming, /activity, /friends, /dashboard) use NavigationHeader 
           - Other authenticated users get TopNav
           - Unauthenticated users get SimpleNav (except on landing page) */}
       {location !== "/landing" &&
@@ -123,7 +124,8 @@ function Router() {
         location !== "/discover" &&
         location !== "/upcoming" &&
         location !== "/activity" &&
-        location !== "/friends" && (
+        location !== "/friends" &&
+        location !== "/dashboard" && (
           isAuthenticated ? <TopNav /> : <SimpleNav />
         )}
 
@@ -133,7 +135,8 @@ function Router() {
           location !== "/discover" &&
           location !== "/upcoming" &&
           location !== "/activity" &&
-          location !== "/friends")
+          location !== "/friends" &&
+          location !== "/dashboard")
           ? "pt-16 pb-20 md:pb-20"
           : "pt-0 pb-0"
         }`}>
@@ -162,6 +165,7 @@ function Router() {
           {/* Protected routes - require authentication */}
           {isAuthenticated ? (
             <>
+              <Route path="/dashboard" component={Dashboard} />
               <Route path="/discover" component={ModernDiscover} />
               <Route path="/activity" component={Activity} />
               <Route path="/friends" component={Friends} />

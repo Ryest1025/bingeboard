@@ -1,14 +1,16 @@
-// Firebase configuration - SIMPLE WORKING VERSION
+// Firebase configuration - MOBILE-OPTIMIZED VERSION
 import { initializeApp, getApps } from 'firebase/app';
+import { getAuth, Auth, GoogleAuthProvider, FacebookAuthProvider } from 'firebase/auth';
 
 /**
- * 🔒 FIREBASE CONFIG - SIMPLE APPROACH
+ * 🔒 FIREBASE CONFIG - MOBILE-STABLE APPROACH
  * 
- * ✅ Minimal configuration to avoid timing issues
- * ✅ Firebase app only - auth imported separately when needed
+ * ✅ Direct imports to avoid getModularInstance errors
+ * ✅ Synchronous initialization for mobile compatibility
+ * ✅ Proper error handling for mobile browsers
  * 
- * Created: August 5, 2025
- * Status: ✅ TESTING
+ * Created: August 6, 2025
+ * Status: ✅ MOBILE-FIXED
  */
 
 // Firebase configuration
@@ -28,79 +30,54 @@ console.log('🔍 Firebase Config Values:', {
   projectId: firebaseConfig.projectId ? '✅ Present' : '❌ Missing',
 });
 
-// Initialize Firebase app only
-const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
-console.log('✅ Firebase app initialized successfully');
+// Initialize Firebase app
+let app;
+try {
+  app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
+  console.log('✅ Firebase app initialized successfully');
+} catch (error) {
+  console.error('❌ Firebase app initialization failed:', error);
+  throw error;
+}
 
-// Export just the app - auth will be initialized later when needed
+// Initialize auth directly (no dynamic imports)
+let firebaseAuth: Auth;
+try {
+  firebaseAuth = getAuth(app);
+  console.log('✅ Firebase Auth initialized directly');
+} catch (error) {
+  console.error('❌ Firebase Auth initialization failed:', error);
+  throw error;
+}
+
+// Initialize providers directly
+const googleProvider = new GoogleAuthProvider();
+googleProvider.setCustomParameters({ prompt: 'select_account' });
+googleProvider.addScope('email');
+googleProvider.addScope('profile');
+
+const facebookProvider = new FacebookAuthProvider();
+facebookProvider.setCustomParameters({ display: 'popup' });
+facebookProvider.addScope('email');
+
+console.log('✅ Firebase providers initialized');
+
+// Export everything
 export default app;
+export { firebaseAuth as auth };
+export { googleProvider };
+export { facebookProvider };
 
-// Simple auth getter that initializes on first call
-let authCache: any = null;
-
-export const getAuthInstance = async () => {
-  if (authCache) return authCache;
-  
-  try {
-    const { getAuth } = await import('firebase/auth');
-    authCache = getAuth(app);
-    console.log('✅ Firebase Auth initialized on demand');
-    return authCache;
-  } catch (error) {
-    console.error('❌ Firebase Auth initialization failed:', error);
-    throw error;
-  }
+// Simple auth getter for compatibility
+export const getAuthInstance = async (): Promise<Auth> => {
+  return firebaseAuth;
 };
 
-// Simple provider getters
+// Provider getters for compatibility
 export const getGoogleProvider = async () => {
-  const { GoogleAuthProvider } = await import('firebase/auth');
-  const provider = new GoogleAuthProvider();
-  provider.setCustomParameters({ prompt: 'select_account' });
-  return provider;
+  return googleProvider;
 };
 
 export const getFacebookProvider = async () => {
-  const { FacebookAuthProvider } = await import('firebase/auth');
-  const provider = new FacebookAuthProvider();
-  provider.setCustomParameters({ display: 'popup' });
-  return provider;
+  return facebookProvider;
 };
-
-// Create provider instances for direct import compatibility
-let googleProviderCache: any = null;
-let facebookProviderCache: any = null;
-
-const initializeProviders = async () => {
-  if (!googleProviderCache) {
-    googleProviderCache = await getGoogleProvider();
-  }
-  if (!facebookProviderCache) {
-    facebookProviderCache = await getFacebookProvider();
-  }
-};
-
-// Initialize providers immediately for compatibility
-initializeProviders();
-
-// Proxy objects for immediate access
-export const googleProvider = new Proxy({} as any, {
-  get(target, prop) {
-    if (googleProviderCache) {
-      return googleProviderCache[prop];
-    }
-    return undefined;
-  }
-});
-
-export const facebookProvider = new Proxy({} as any, {
-  get(target, prop) {
-    if (facebookProviderCache) {
-      return facebookProviderCache[prop];
-    }
-    return undefined;
-  }
-});
-
-// Legacy exports for compatibility
-export { getAuthInstance as auth };

@@ -154,10 +154,25 @@ export default function MobileSocialLogin() {
       <Card className="w-full max-w-md bg-slate-950/80 border-slate-800 shadow-xl backdrop-blur-lg">
         <CardHeader className="space-y-2 pb-2">
           <div className="flex justify-center">
-            <Tv className="h-12 w-12 text-teal-500" />
+            {/* TV-style logo */}
+            <div className="w-12 h-10 relative">
+              {/* TV Frame */}
+              <div className="w-full h-full bg-slate-600 rounded-lg relative shadow-lg">
+                {/* Screen */}
+                <div className="absolute inset-1 bg-gradient-to-br from-teal-500 via-cyan-400 to-blue-500 rounded-md flex items-center justify-center">
+                  <span className="text-white font-black text-lg drop-shadow-lg" style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.8)' }}>B</span>
+                </div>
+                {/* Base */}
+                <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-6 h-1 bg-slate-700 rounded-b"></div>
+                {/* Legs */}
+                <div className="absolute -bottom-2 left-1/4 w-1 h-1 bg-slate-700"></div>
+                <div className="absolute -bottom-2 right-1/4 w-1 h-1 bg-slate-700"></div>
+              </div>
+            </div>
           </div>
           <CardTitle className="text-center text-2xl font-bold text-white">
-            BingeBoard
+            <span className="font-black bg-gradient-to-r from-teal-400 to-cyan-300 bg-clip-text text-transparent">Binge</span>
+            <span className="font-light text-white">Board</span>
           </CardTitle>
           <CardDescription className="text-center text-slate-400">
             Your personal TV and movie tracker

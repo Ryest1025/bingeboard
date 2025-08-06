@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -10,12 +10,18 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
-import { Search, Bell, LogOut, User, Settings } from "lucide-react";
+import { Search, Bell, LogOut, User, Settings, Menu, X } from "lucide-react";
 
 export default function NavigationHeader() {
   const [location, setLocation] = useLocation();
   const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  // Close mobile menu when location changes
+  useEffect(() => {
+    setIsMobileMenuOpen(false);
+  }, [location]);
 
   // Handle logout with proper Firebase and server cleanup
   const handleLogout = async () => {
@@ -80,27 +86,27 @@ export default function NavigationHeader() {
               onClick={() => setLocation('/')}
               className="flex items-center space-x-3 hover:scale-105 transition-transform"
             >
-              {/* TV Logo */}
+              {/* TV Logo - Matching Landing Page Design */}
               <div className="relative">
-                <div className="w-8 h-6 bg-gradient-to-br from-slate-700 to-slate-900 rounded-md shadow-lg border border-slate-600 relative">
-                  <div className="absolute inset-1 bg-gradient-to-br from-teal-500 via-cyan-500 to-blue-500 rounded-sm flex items-center justify-center">
+                <div className="w-8 h-6 md:w-10 md:h-8 bg-gradient-to-br from-slate-700 to-slate-900 rounded-lg shadow-xl border-2 border-slate-600 relative">
+                  <div className="absolute inset-1 bg-gradient-to-br from-teal-500 via-cyan-500 to-blue-500 rounded-md flex items-center justify-center">
                     <div
-                      className="text-xs font-bold text-white drop-shadow-lg"
-                      style={{ textShadow: '0 0 4px rgba(0,0,0,0.8)' }}
+                      className="text-xs md:text-sm font-bold text-white drop-shadow-lg"
+                      style={{ textShadow: '0 0 6px rgba(0,0,0,0.8), 0 0 2px rgba(255,255,255,0.3)' }}
                     >
                       B
                     </div>
                   </div>
-                  <div className="absolute -bottom-0.5 left-1/2 transform -translate-x-1/2 w-2 h-0.5 bg-slate-700 rounded-sm"></div>
-                  <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-3 h-0.5 bg-slate-600 rounded-sm"></div>
+                  <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-2 md:w-3 h-1 bg-slate-700 rounded-sm"></div>
+                  <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-3 md:w-5 h-1 bg-slate-600 rounded-sm"></div>
                 </div>
               </div>
 
-              <span className="text-lg font-bold">
-                <span className="bg-gradient-to-r from-teal-400 via-cyan-400 to-blue-400 bg-clip-text text-transparent">
+              <span className="text-lg md:text-xl font-bold">
+                <span className="bg-gradient-to-r from-teal-400 via-cyan-400 to-blue-400 bg-clip-text text-transparent font-black">
                   Binge
                 </span>
-                <span className="text-white ml-1">Board</span>
+                <span className="text-white font-light ml-1">Board</span>
               </span>
             </button>
 
@@ -141,13 +147,23 @@ export default function NavigationHeader() {
           </div>
 
           {/* Right: User Actions */}
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-2 md:space-x-4">
+            {/* Mobile Search Button */}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setLocation('/discover')}
+              className="sm:hidden text-gray-300 hover:text-white hover:bg-white/5 p-2"
+            >
+              <Search className="h-5 w-5" />
+            </Button>
+
             {/* Notifications */}
             <Button
               variant="ghost"
               size="sm"
               onClick={handleNotificationsClick}
-              className="text-gray-300 hover:text-white hover:bg-white/5"
+              className="text-gray-300 hover:text-white hover:bg-white/5 p-2"
             >
               <Bell className="h-5 w-5" />
             </Button>
@@ -179,8 +195,61 @@ export default function NavigationHeader() {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
+
+            {/* Mobile Menu Button */}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className="md:hidden text-gray-300 hover:text-white hover:bg-white/5 p-2"
+            >
+              {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </Button>
           </div>
         </div>
+
+        {/* Mobile Menu */}
+        {isMobileMenuOpen && (
+          <div className="md:hidden border-t border-white/10 py-4">
+            {/* Mobile Search */}
+            <div className="mb-4">
+              <form onSubmit={handleSearch} className="relative">
+                <Input
+                  type="text"
+                  placeholder="Search shows, movies..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full bg-white/5 border-white/10 text-white placeholder-gray-400 pr-10"
+                />
+                <button
+                  type="submit"
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white"
+                >
+                  <Search className="h-4 w-4" />
+                </button>
+              </form>
+            </div>
+
+            {/* Mobile Navigation Items */}
+            <div className="space-y-2">
+              {navItems.map((item) => (
+                <button
+                  key={item.path}
+                  onClick={() => {
+                    setLocation(item.path);
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className={`w-full text-left px-4 py-3 rounded-lg text-sm font-medium transition-colors ${item.active
+                    ? 'bg-teal-500/20 text-teal-400 border border-teal-500/30'
+                    : 'text-gray-300 hover:text-white hover:bg-white/5'
+                    }`}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </nav>
   );

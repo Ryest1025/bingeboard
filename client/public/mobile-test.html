@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+    <title>BingeBoard Mobile Test</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #000;
+            color: #fff;
+        }
+        .test-container {
+            max-width: 400px;
+            margin: 0 auto;
+        }
+        .test-item {
+            padding: 15px;
+            margin: 10px 0;
+            background: #1a1a1a;
+            border-radius: 8px;
+            border: 1px solid #333;
+        }
+        .status {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .pass { background: #10b981; }
+        .fail { background: #ef4444; }
+        .info { background: #3b82f6; }
+        button {
+            width: 100%;
+            padding: 12px;
+            background: #ef4444;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            margin: 10px 0;
+            cursor: pointer;
+        }
+        button:active {
+            transform: scale(0.98);
+        }
+        #deviceInfo {
+            font-size: 12px;
+            line-height: 1.4;
+            background: #1a1a1a;
+            padding: 10px;
+            border-radius: 6px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🎬 BingeBoard Mobile Test</h1>
+        
+        <div class="test-item">
+            <h3>📱 Device Detection</h3>
+            <div id="deviceInfo"></div>
+        </div>
+
+        <div class="test-item">
+            <h3>🌐 Network Test</h3>
+            <button onclick="testAPI()">Test API Connection</button>
+            <div id="apiResult"></div>
+        </div>
+
+        <div class="test-item">
+            <h3>📺 App Features</h3>
+            <button onclick="testPWA()">Test PWA Installation</button>
+            <button onclick="testOffline()">Test Offline Mode</button>
+            <button onclick="window.location.href='/'">Open Full App</button>
+        </div>
+
+        <div class="test-item">
+            <h3>🎯 Mobile Optimizations</h3>
+            <div id="optimizations"></div>
+        </div>
+    </div>
+
+    <script>
+        // Device Detection
+        function updateDeviceInfo() {
+            const info = {
+                'User Agent': navigator.userAgent,
+                'Screen Size': `${screen.width}x${screen.height}`,
+                'Viewport': `${window.innerWidth}x${window.innerHeight}`,
+                'Device Pixel Ratio': window.devicePixelRatio,
+                'Touch Support': 'ontouchstart' in window ? 'Yes' : 'No',
+                'Standalone Mode': window.navigator.standalone ? 'Yes' : 'No',
+                'PWA Display Mode': window.matchMedia('(display-mode: standalone)').matches ? 'Standalone' : 'Browser'
+            };
+            
+            document.getElementById('deviceInfo').innerHTML = Object.entries(info)
+                .map(([key, value]) => `<strong>${key}:</strong> ${value}`)
+                .join('<br>');
+        }
+
+        // API Test
+        async function testAPI() {
+            const resultDiv = document.getElementById('apiResult');
+            resultDiv.innerHTML = '<span class="status info">Testing...</span>';
+            
+            try {
+                const response = await fetch('/api/tmdb/genre/tv/list');
+                if (response.ok) {
+                    const data = await response.json();
+                    resultDiv.innerHTML = `<span class="status pass">✓ API Working</span><br>Found ${data.genres?.length || 0} genres`;
+                } else {
+                    resultDiv.innerHTML = `<span class="status fail">✗ API Error</span><br>Status: ${response.status}`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<span class="status fail">✗ Network Error</span><br>${error.message}`;
+            }
+        }
+
+        // PWA Test
+        function testPWA() {
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.getRegistrations().then(registrations => {
+                    const status = registrations.length > 0 ? 'Registered' : 'Not Found';
+                    alert(`Service Worker: ${status}\nManifest: ${document.querySelector('link[rel="manifest"]') ? 'Found' : 'Missing'}`);
+                });
+            } else {
+                alert('Service Worker not supported');
+            }
+        }
+
+        // Offline Test
+        function testOffline() {
+            const status = navigator.onLine ? 'Online' : 'Offline';
+            alert(`Network Status: ${status}\nOffline support: ${('serviceWorker' in navigator) ? 'Available' : 'Not Available'}`);
+        }
+
+        // Check Optimizations
+        function checkOptimizations() {
+            const optimizations = [];
+            
+            if (window.innerWidth <= 768) {
+                optimizations.push('<span class="status pass">✓ Mobile Viewport Detected</span>');
+            }
+            
+            if (document.querySelector('meta[name="viewport"]')) {
+                optimizations.push('<span class="status pass">✓ Viewport Meta Tag</span>');
+            }
+            
+            if (document.querySelector('link[rel="manifest"]')) {
+                optimizations.push('<span class="status pass">✓ PWA Manifest</span>');
+            }
+            
+            if ('serviceWorker' in navigator) {
+                optimizations.push('<span class="status pass">✓ Service Worker Support</span>');
+            }
+            
+            if (CSS.supports('(display: grid)')) {
+                optimizations.push('<span class="status pass">✓ CSS Grid Support</span>');
+            }
+            
+            document.getElementById('optimizations').innerHTML = optimizations.join('<br>');
+        }
+
+        // Initialize
+        updateDeviceInfo();
+        checkOptimizations();
+    </script>
+</body>
+</html>

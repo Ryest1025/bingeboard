@@ -70,7 +70,7 @@ export default function SimpleLogin() {
     try {
       const user = await signInWithGoogle();
       showSuccess(`Welcome ${user.displayName || user.email}!`);
-      setLocation('/dashboard'); // Redirect to dashboard after login
+      setLocation('/'); // Redirect to dashboard after login
     } catch (err: any) {
       showError(err.message);
     } finally {
@@ -85,7 +85,7 @@ export default function SimpleLogin() {
     try {
       const user = await signInWithFacebook();
       showSuccess(`Welcome ${user.displayName || user.email}!`);
-      setLocation('/dashboard'); // Redirect to dashboard after login
+      setLocation('/'); // Redirect to dashboard after login
     } catch (err: any) {
       showError(err.message);
     } finally {
@@ -103,7 +103,7 @@ export default function SimpleLogin() {
         // Sign in with email/password
         const user = await signInWithEmail(formData.email, formData.password);
         showSuccess(`Welcome back ${user.email}!`);
-        setLocation('/dashboard');
+        setLocation('/');
       } else {
         // Sign up with email/password
         const displayName = `${formData.firstName} ${formData.lastName}`.trim();
@@ -113,7 +113,7 @@ export default function SimpleLogin() {
           displayName || undefined
         );
         showSuccess(`Account created for ${user.email}!`);
-        setLocation('/dashboard');
+        setLocation('/');
       }
     } catch (err: any) {
       // Enhanced error handling for account conflicts

@@ -180,18 +180,18 @@ export default function Signup() {
         // Add a nice completion animation delay
         setTimeout(() => {
           console.log("🎯 Navigating to dashboard...");
-          setLocation('/dashboard');
+          setLocation('/');
         }, 1500);
       } else {
         console.warn("⚠️ Failed to save preferences, but continuing to dashboard");
         showSuccess("Welcome to BingeBoard! 🚀");
-        setTimeout(() => setLocation('/dashboard'), 1500);
+        setTimeout(() => setLocation('/'), 1500);
       }
     } catch (error) {
       console.error("❌ Error saving onboarding data:", error);
       // Still navigate to dashboard even if save fails
       showSuccess("Welcome to BingeBoard! 🚀");
-      setTimeout(() => setLocation('/dashboard'), 1500);
+      setTimeout(() => setLocation('/'), 1500);
     } finally {
       setIsLoading(false);
     }

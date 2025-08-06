@@ -10,7 +10,15 @@
   "check": "tsc",
   "db:push": "drizzle-kit push",
   "migrate:generate": "drizzle-kit generate --config drizzle.config.ts",
-  "migrate:apply": "drizzle-kit apply --config drizzle.config.ts"
+  "migrate:apply": "drizzle-kit apply --config drizzle.config.ts",
+  "mobile:init": "npx cap init BingeBoard com.bingeboard.app",
+  "mobile:add:ios": "npx cap add ios",
+  "mobile:add:android": "npx cap add android", 
+  "mobile:sync": "npm run build && npx cap sync",
+  "mobile:open:ios": "npx cap open ios",
+  "mobile:open:android": "npx cap open android",
+  "mobile:build:ios": "npm run build && npx cap sync && npx cap build ios",
+  "mobile:build:android": "npm run build && npx cap sync && npx cap build android"
 },
   "dependencies": {
     "@capacitor/android": "^7.4.0",

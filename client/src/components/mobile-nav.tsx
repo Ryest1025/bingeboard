@@ -19,7 +19,7 @@ export default function MobileNav() {
   }
 
   const navItems = [
-    { path: "/dashboard", icon: HomeIcon, label: "Home" },
+    { path: "/", icon: HomeIcon, label: "Home" },
     { path: "/discover", icon: DiscoverIcon, label: "Discover" },
     { path: "/lists", icon: List, label: "Lists" },
     { path: "/social", icon: FriendsIcon, label: "Social" },
@@ -34,7 +34,7 @@ export default function MobileNav() {
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = location === item.path ||
-              (item.path === "/dashboard" && location === "/") ||
+              (item.path === "/" && location === "/") ||
               (item.path === "/discover" && location.startsWith("/discover"));
 
             return (

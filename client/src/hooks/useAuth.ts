@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { onAuthStateChanged } from "firebase/auth";
 // Remove static Firebase imports to prevent conflicts
 
 interface AuthState {
@@ -214,7 +215,7 @@ export function useAuth(): AuthState {
       console.log('🔍 Setting up Firebase auth state listener...');
 
       try {
-        const { onAuthStateChanged } = await import('firebase/auth');
+        // Use direct auth instance for mobile compatibility
         const { getAuthInstance } = await import('@/firebase/config');
         const auth = await getAuthInstance();
 

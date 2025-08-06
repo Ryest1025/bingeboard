@@ -68,9 +68,32 @@ export async function setupAuth(app: Express) {
 export const isAuthenticated: RequestHandler = async (req, res, next) => {
   const sessionUser = (req as any).session?.user;
   const authHeader = req.headers.authorization;
+  const endpoint = req.originalUrl || req.url;
 
-  console.log('🔐 Authentication middleware - Session user:', JSON.stringify(sessionUser, null, 2));
-  console.log('🔐 Authentication middleware - Auth header:', authHeader ? 'Bearer token present' : 'No auth header');
+  // Enhanced debugging for session issues with endpoint tracking
+  console.log(`🔐 Authentication middleware [${endpoint}] - Session user:`, sessionUser ? 'Present' : 'undefined');
+  console.log(`🔐 Authentication middleware [${endpoint}] - Auth header:`, authHeader ? 'Bearer token present' : 'No auth header');
+  
+  // Special handling for user-preferences endpoint - add retry logic
+  if (endpoint.includes('/api/user/preferences') && !sessionUser && !authHeader) {
+    console.log('🔐 User preferences endpoint - attempting session recovery');
+    
+    // Try to regenerate session if it exists but user is missing
+    if ((req as any).session && !(req as any).session.user) {
+      console.log('🔐 Session exists but user is undefined - potential race condition');
+      
+      // Small delay to allow session to stabilize
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      // Re-check session after delay
+      const recoveredUser = (req as any).session?.user;
+      if (recoveredUser) {
+        console.log('🔐 Session recovered successfully after delay');
+        (req as any).user = recoveredUser;
+        return next();
+      }
+    }
+  }
 
   // Try session-based authentication first (existing users)
   if (sessionUser) {
@@ -78,12 +101,16 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
     const isExpired = sessionUser.claims?.exp && sessionUser.claims.exp < Math.floor(Date.now() / 1000);
     if (isExpired) {
       console.log('🔐 Session expired for user:', sessionUser.email);
+      (req as any).session.user = null; // Clear expired session
       return res.status(401).json({ message: 'Session expired' });
     }
 
+    // Ensure session is refreshed
+    (req as any).session.touch();
+
     // Attach user to request
     (req as any).user = sessionUser;
-    console.log('🔐 Session user attached to request:', sessionUser.email);
+    console.log(`🔐 Session user attached to request [${endpoint}]:`, sessionUser.email);
     return next();
   }
 
@@ -110,7 +137,7 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
           };
 
           (req as any).user = mockUser;
-          console.log('🔐 Mock Firebase user attached (dev mode):', mockUser.email);
+          console.log(`🔐 Mock Firebase user attached (dev mode) [${endpoint}]:`, mockUser.email);
           return next();
         }
 
@@ -122,7 +149,7 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
       const admin = getFirebaseAdmin();
 
       const decodedToken = await admin.auth().verifyIdToken(idToken);
-      console.log('🔐 Firebase token verified for user:', decodedToken.email);
+      console.log(`🔐 Firebase token verified for user [${endpoint}]:`, decodedToken.email);
 
       // Create a user object similar to session format
       const firebaseUser = {
@@ -133,7 +160,7 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
       };
 
       (req as any).user = firebaseUser;
-      console.log('🔐 Firebase user attached to request:', firebaseUser.email);
+      console.log(`🔐 Firebase user attached to request [${endpoint}]:`, firebaseUser.email);
       return next();
 
     } catch (error) {

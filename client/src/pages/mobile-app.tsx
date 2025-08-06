@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
+import { StreamingMarqueeSection } from '@/components/streaming-marquee-section';
 import { 
   Play, 
   Search, 
@@ -94,6 +95,14 @@ export default function MobileApp() {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
 
+  // Debug auth state
+  console.log('Mobile App - Auth State:', { 
+    user: !!user, 
+    isAuthenticated, 
+    isLoading,
+    willRedirectToDashboard: isAuthenticated && !isLoading && !!user
+  });
+
   const isMobile = () => /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
   const handleGoogleLogin = async () => {
@@ -112,7 +121,7 @@ export default function MobileApp() {
         const result = await signInWithPopup(auth, provider);
         const sessionResult = await createBackendSession(result.user);
         toast({ title: "Welcome to BingeBoard!", description: "Successfully signed in with Google" });
-        window.location.href = '/';
+        // Let the auth state change handle the UI update
       }
     } catch (err: any) {
       let errorMessage = err.message;
@@ -138,7 +147,7 @@ export default function MobileApp() {
         const result = await signInWithPopup(auth, provider);
         const sessionResult = await createBackendSession(result.user);
         toast({ title: "Welcome to BingeBoard!", description: "Successfully signed in with Facebook" });
-        window.location.href = '/';
+        // Let the auth state change handle the UI update
       }
     } catch (err: any) {
       let errorMessage = err.message;
@@ -159,7 +168,7 @@ export default function MobileApp() {
         if (result && result.user) {
           await createBackendSession(result.user);
           toast({ title: "Welcome to BingeBoard!", description: "Successfully signed in!" });
-          window.location.href = '/';
+          // Let the auth state change handle the UI update
         }
       } catch (err: any) {
         // Only show error if not null
@@ -169,6 +178,15 @@ export default function MobileApp() {
       }
     })();
   }, []);
+
+  // Auto-redirect authenticated users to dashboard
+  useEffect(() => {
+    if (isAuthenticated && !isLoading && user) {
+      // For now, all authenticated users go to dashboard
+      // The dashboard can handle onboarding logic internally if needed
+      setLocation('/dashboard');
+    }
+  }, [isAuthenticated, isLoading, user, setLocation]);
 
   if (isLoading) {
     return (
@@ -197,64 +215,31 @@ export default function MobileApp() {
               {/* Logo & Title */}
               <div className="space-y-4">
                 <div className="relative flex justify-center mb-4">
-                  {/* Film Strip "B" Logo - Based on Reference Images */}
+                  {/* TV-style logo */}
                   <div className="relative">
-                    {/* Main film strip body forming the "B" */}
-                    <div className="relative w-20 h-24 bg-gradient-to-br from-teal-400 via-cyan-400 to-blue-500 shadow-2xl">
-                      
-                      {/* Film perforations - left side */}
-                      <div className="absolute left-1 top-2 space-y-1.5">
-                        <div className="w-1.5 h-1.5 bg-slate-950 rounded-sm"></div>
-                        <div className="w-1.5 h-1.5 bg-slate-950 rounded-sm"></div>
-                        <div className="w-1.5 h-1.5 bg-slate-950 rounded-sm"></div>
-                        <div className="w-1.5 h-1.5 bg-slate-950 rounded-sm"></div>
-                        <div className="w-1.5 h-1.5 bg-slate-950 rounded-sm"></div>
-                        <div className="w-1.5 h-1.5 bg-slate-950 rounded-sm"></div>
-                        <div className="w-1.5 h-1.5 bg-slate-950 rounded-sm"></div>
-                        <div className="w-1.5 h-1.5 bg-slate-950 rounded-sm"></div>
-                        <div className="w-1.5 h-1.5 bg-slate-950 rounded-sm"></div>
-                        <div className="w-1.5 h-1.5 bg-slate-950 rounded-sm"></div>
+                    <div className="w-20 h-16 relative">
+                      {/* TV Frame */}
+                      <div className="w-full h-full bg-slate-600 rounded-lg relative shadow-lg">
+                        {/* Screen */}
+                        <div className="absolute inset-2 bg-gradient-to-br from-teal-500 via-cyan-400 to-blue-500 rounded-md flex items-center justify-center">
+                          <span className="text-white font-black text-2xl drop-shadow-lg" style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.8)' }}>B</span>
+                        </div>
+                        {/* Base */}
+                        <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-10 h-1 bg-slate-700 rounded-b"></div>
+                        {/* Legs */}
+                        <div className="absolute -bottom-2 left-1/4 w-1 h-1 bg-slate-700"></div>
+                        <div className="absolute -bottom-2 right-1/4 w-1 h-1 bg-slate-700"></div>
                       </div>
-                      
-                      {/* Film perforations - right side */}
-                      <div className="absolute right-1 top-2 space-y-1.5">
-                        <div className="w-1.5 h-1.5 bg-slate-950 rounded-sm"></div>
-                        <div className="w-1.5 h-1.5 bg-slate-950 rounded-sm"></div>
-                        <div className="w-1.5 h-1.5 bg-slate-950 rounded-sm"></div>
-                        <div className="w-1.5 h-1.5 bg-slate-950 rounded-sm"></div>
-                        <div className="w-1.5 h-1.5 bg-slate-950 rounded-sm"></div>
-                        <div className="w-1.5 h-1.5 bg-slate-950 rounded-sm"></div>
-                        <div className="w-1.5 h-1.5 bg-slate-950 rounded-sm"></div>
-                        <div className="w-1.5 h-1.5 bg-slate-950 rounded-sm"></div>
-                        <div className="w-1.5 h-1.5 bg-slate-950 rounded-sm"></div>
-                        <div className="w-1.5 h-1.5 bg-slate-950 rounded-sm"></div>
-                      </div>
-                      
-                      {/* Film frames in the center */}
-                      <div className="absolute left-4 right-4 top-2 space-y-1">
-                        <div className="h-3 bg-white/20 rounded-sm border border-white/10"></div>
-                        <div className="h-3 bg-white/20 rounded-sm border border-white/10"></div>
-                        <div className="h-3 bg-white/20 rounded-sm border border-white/10"></div>
-                        <div className="h-3 bg-white/20 rounded-sm border border-white/10"></div>
-                        <div className="h-3 bg-white/20 rounded-sm border border-white/10"></div>
-                      </div>
-                      
-                      {/* "B" shaped curves extending to the right */}
-                      <div className="absolute right-0 top-0 w-8 h-10 bg-gradient-to-br from-teal-400 via-cyan-400 to-blue-500 rounded-r-full"></div>
-                      <div className="absolute right-0 top-8 w-6 h-3 bg-slate-950 rounded-l-full"></div>
-                      <div className="absolute right-0 bottom-0 w-10 h-12 bg-gradient-to-br from-teal-400 via-cyan-400 to-blue-500 rounded-r-full"></div>
-                      
-                      {/* 3D depth effect */}
-                      <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-black/5 pointer-events-none"></div>
                     </div>
                     
                     {/* Glow effect */}
-                    <div className="absolute inset-0 w-20 h-24 bg-gradient-to-br from-teal-400 to-blue-500 blur-lg opacity-25 scale-110"></div>
+                    <div className="absolute inset-0 w-20 h-16 bg-gradient-to-br from-teal-400 to-blue-500 blur-lg opacity-25 scale-110"></div>
                   </div>
                 </div>
                 
-                <h1 className="text-4xl font-bold bg-gradient-to-r from-white via-gray-100 to-gray-200 bg-clip-text text-transparent">
-                  BingeBoard
+                <h1 className="text-4xl font-bold">
+                  <span className="font-black bg-gradient-to-r from-teal-400 to-cyan-300 bg-clip-text text-transparent">Binge</span>
+                  <span className="font-light text-white">Board</span>
                 </h1>
                 <p className="text-xl text-gray-300">
                   Your Ultimate
@@ -266,34 +251,6 @@ export default function MobileApp() {
                   Track shows, discover content, and never lose your place again. 
                   The smarter way to manage your entertainment.
                 </p>
-              </div>
-
-              {/* Key Benefits */}
-              <div className="grid grid-cols-2 gap-4 text-center">
-                <div className="space-y-2">
-                  <div className="w-12 h-12 bg-gradient-to-br from-teal-500 to-cyan-500 rounded-xl flex items-center justify-center mx-auto shadow-lg border border-white/10">
-                    <Play className="h-6 w-6 text-white drop-shadow-sm" />
-                  </div>
-                  <div className="text-white text-sm font-medium">Smart Tracking</div>
-                </div>
-                <div className="space-y-2">
-                  <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-xl flex items-center justify-center mx-auto shadow-lg border border-white/10">
-                    <TrendingUp className="h-6 w-6 text-white drop-shadow-sm" />
-                  </div>
-                  <div className="text-white text-sm font-medium">Trending</div>
-                </div>
-                <div className="space-y-2">
-                  <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center mx-auto shadow-lg border border-white/10">
-                    <Users className="h-6 w-6 text-white drop-shadow-sm" />
-                  </div>
-                  <div className="text-white text-sm font-medium">Social</div>
-                </div>
-                <div className="space-y-2">
-                  <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-500 rounded-xl flex items-center justify-center mx-auto shadow-lg border border-white/10">
-                    <Zap className="h-6 w-6 text-white drop-shadow-sm" />
-                  </div>
-                  <div className="text-white text-sm font-medium">Instant Sync</div>
-                </div>
               </div>
 
               {/* Login Section */}
@@ -350,17 +307,118 @@ export default function MobileApp() {
                   </Button>
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
 
-              {/* Quick Access */}
-              <div className="pt-4 border-t border-gray-800">
-                <Button 
-                  onClick={() => setLocation('/mobile-hub')}
-                  variant="ghost"
-                  className="text-gray-400 hover:text-gray-300 text-sm"
-                >
-                  <Settings className="h-4 w-4 mr-2" />
-                  Mobile Test Hub
-                </Button>
+        {/* Streaming Platforms Marquee */}
+        <div className="relative overflow-hidden">
+          {/* Simple marquee without background container */}
+          <div className="text-center mb-6">
+            <h3 className="text-lg font-semibold text-white/80 mb-2">
+              Everything You Need in <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-400 to-blue-500">One Place</span>
+            </h3>
+          </div>
+          
+          {/* Edge-to-edge marquee */}
+          <div className="relative overflow-hidden">
+            {/* Fade gradients */}
+            <div className="absolute left-0 top-0 w-12 h-full bg-gradient-to-r from-slate-950 via-slate-950/80 to-transparent z-10 pointer-events-none"></div>
+            <div className="absolute right-0 top-0 w-12 h-full bg-gradient-to-l from-slate-950 via-slate-950/80 to-transparent z-10 pointer-events-none"></div>
+            
+            {/* Scrolling platforms - faster animation with reliable CDN logos */}
+            <div className="flex space-x-6 py-4" style={{ animation: 'marquee-left 15s linear infinite' }}>
+              {/* Netflix */}
+              <div className="flex-shrink-0 w-16 h-12 flex items-center justify-center">
+                <div className="w-12 h-8 bg-red-600 rounded-sm flex items-center justify-center">
+                  <span className="text-white font-bold text-xs">NETFLIX</span>
+                </div>
+              </div>
+              {/* Disney+ */}
+              <div className="flex-shrink-0 w-16 h-12 flex items-center justify-center">
+                <div className="w-12 h-8 bg-blue-600 rounded-sm flex items-center justify-center">
+                  <span className="text-white font-bold text-xs">Disney+</span>
+                </div>
+              </div>
+              {/* Max */}
+              <div className="flex-shrink-0 w-16 h-12 flex items-center justify-center">
+                <div className="w-12 h-8 bg-purple-600 rounded-sm flex items-center justify-center">
+                  <span className="text-white font-bold text-xs">MAX</span>
+                </div>
+              </div>
+              {/* Prime Video */}
+              <div className="flex-shrink-0 w-16 h-12 flex items-center justify-center">
+                <div className="w-12 h-8 bg-blue-500 rounded-sm flex items-center justify-center">
+                  <span className="text-white font-bold text-xs">Prime</span>
+                </div>
+              </div>
+              {/* Hulu */}
+              <div className="flex-shrink-0 w-16 h-12 flex items-center justify-center">
+                <div className="w-12 h-8 bg-green-500 rounded-sm flex items-center justify-center">
+                  <span className="text-white font-bold text-xs">Hulu</span>
+                </div>
+              </div>
+              {/* Apple TV+ */}
+              <div className="flex-shrink-0 w-16 h-12 flex items-center justify-center">
+                <div className="w-12 h-8 bg-gray-800 rounded-sm flex items-center justify-center">
+                  <span className="text-white font-bold text-xs">Apple</span>
+                </div>
+              </div>
+              {/* Paramount+ */}
+              <div className="flex-shrink-0 w-16 h-12 flex items-center justify-center">
+                <div className="w-12 h-8 bg-blue-700 rounded-sm flex items-center justify-center">
+                  <span className="text-white font-bold text-xs">P+</span>
+                </div>
+              </div>
+              {/* Peacock */}
+              <div className="flex-shrink-0 w-16 h-12 flex items-center justify-center">
+                <div className="w-12 h-8 bg-yellow-500 rounded-sm flex items-center justify-center">
+                  <span className="text-white font-bold text-xs">Peacock</span>
+                </div>
+              </div>
+              {/* YouTube TV */}
+              <div className="flex-shrink-0 w-16 h-12 flex items-center justify-center">
+                <div className="w-12 h-8 bg-red-500 rounded-sm flex items-center justify-center">
+                  <span className="text-white font-bold text-xs">YouTube</span>
+                </div>
+              </div>
+              {/* Starz */}
+              <div className="flex-shrink-0 w-16 h-12 flex items-center justify-center">
+                <div className="w-12 h-8 bg-black rounded-sm flex items-center justify-center border border-gray-600">
+                  <span className="text-white font-bold text-xs">STARZ</span>
+                </div>
+              </div>
+              
+              {/* Repeat for seamless loop */}
+              <div className="flex-shrink-0 w-16 h-12 flex items-center justify-center">
+                <div className="w-12 h-8 bg-red-600 rounded-sm flex items-center justify-center">
+                  <span className="text-white font-bold text-xs">NETFLIX</span>
+                </div>
+              </div>
+              <div className="flex-shrink-0 w-16 h-12 flex items-center justify-center">
+                <div className="w-12 h-8 bg-blue-600 rounded-sm flex items-center justify-center">
+                  <span className="text-white font-bold text-xs">Disney+</span>
+                </div>
+              </div>
+              <div className="flex-shrink-0 w-16 h-12 flex items-center justify-center">
+                <div className="w-12 h-8 bg-purple-600 rounded-sm flex items-center justify-center">
+                  <span className="text-white font-bold text-xs">MAX</span>
+                </div>
+              </div>
+              <div className="flex-shrink-0 w-16 h-12 flex items-center justify-center">
+                <div className="w-12 h-8 bg-blue-500 rounded-sm flex items-center justify-center">
+                  <span className="text-white font-bold text-xs">Prime</span>
+                </div>
+              </div>
+              <div className="flex-shrink-0 w-16 h-12 flex items-center justify-center">
+                <div className="w-12 h-8 bg-green-500 rounded-sm flex items-center justify-center">
+                  <span className="text-white font-bold text-xs">Hulu</span>
+                </div>
+              </div>
+              <div className="flex-shrink-0 w-16 h-12 flex items-center justify-center">
+                <div className="w-12 h-8 bg-gray-800 rounded-sm flex items-center justify-center">
+                  <span className="text-white font-bold text-xs">Apple</span>
+                </div>
               </div>
             </div>
           </div>
@@ -374,7 +432,6 @@ export default function MobileApp() {
                 Core Features
               </Badge>
               <h2 className="text-2xl font-bold text-white">
-                Everything You Need to 
                 <span className="bg-gradient-to-r from-teal-400 to-cyan-400 bg-clip-text text-transparent block">
                   Track Your Entertainment
                 </span>
@@ -410,37 +467,6 @@ export default function MobileApp() {
     );
   }
 
-  // Authenticated user experience - redirect to main app
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 flex items-center justify-center">
-      <div className="text-center max-w-md mx-auto px-4">
-        <div className="w-16 h-16 bg-gradient-to-br from-teal-500 to-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
-          <CheckCircle className="h-8 w-8 text-white" />
-        </div>
-        <h2 className="text-2xl font-bold text-white mb-4">
-          Welcome back, {user?.displayName || user?.email?.split('@')[0] || 'there'}!
-        </h2>
-        <p className="text-blue-200 mb-8">
-          You're all set! Redirecting you to your personalized dashboard...
-        </p>
-        <div className="space-y-4">
-          <Button 
-            onClick={() => setLocation('/')}
-            className="bg-gradient-to-r from-teal-600 via-cyan-600 to-blue-600 hover:from-teal-700 hover:via-cyan-700 hover:to-blue-700 text-white px-8 py-4 text-lg font-semibold w-full"
-          >
-            <Home className="h-5 w-5 mr-2" />
-            Go to Dashboard
-          </Button>
-          <Button 
-            onClick={() => setLocation('/mobile-hub')}
-            variant="outline"
-            className="border-gray-600 text-gray-300 hover:bg-gray-700 w-full"
-          >
-            <Settings className="h-4 w-4 mr-2" />
-            Mobile Test Hub
-          </Button>
-        </div>
-      </div>
-    </div>
-  );
+  // If authenticated, this component shouldn't render - redirect should happen
+  return null;
 }

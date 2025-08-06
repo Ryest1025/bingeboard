@@ -6,6 +6,7 @@ import {
   StreamingLocation,
   UtellyResult
 } from '../clients/utellyClient.js';
+import { streamingCache } from '../cache/streaming-cache.js';
 
 interface EnhancedStreamingPlatform {
   provider_id: number;
@@ -116,12 +117,18 @@ export class MultiAPIStreamingService {
     mediaType: 'movie' | 'tv' = 'tv',
     imdbId?: string
   ): Promise<StreamingAvailabilityResponse> {
+    // 🚀 Check cache first for performance boost
+    const cachedResult = streamingCache.get(tmdbId, mediaType);
+    if (cachedResult) {
+      return cachedResult;
+    }
+
     const allPlatforms: EnhancedStreamingPlatform[] = [];
     const sources = { tmdb: false, watchmode: false, utelly: false };
 
     // 1. Get TMDB watch providers
     try {
-      const tmdbData = await this.tmdbService.getWatchProviders(mediaType, tmdbId);
+      const tmdbData = await this.tmdbService.getWatchProviders(mediaType, tmdbId) as any;
       if (tmdbData.results?.US?.flatrate || tmdbData.results?.US?.buy || tmdbData.results?.US?.rent) {
         sources.tmdb = true;
 
@@ -131,7 +138,7 @@ export class MultiAPIStreamingService {
           ...(tmdbData.results.US.rent || [])
         ];
 
-        tmdbProviders.forEach(provider => {
+        tmdbProviders.forEach((provider: any) => {
           const normalizedName = this.normalizePlatformName(provider.provider_name);
           allPlatforms.push({
             provider_id: provider.provider_id,
@@ -206,7 +213,7 @@ export class MultiAPIStreamingService {
     const premiumPlatforms = finalPlatforms.filter(p => p.type === 'sub' || p.price && p.price > 0).length;
     const freePlatforms = finalPlatforms.filter(p => p.type === 'free' || (p.price && p.price === 0)).length;
 
-    return {
+    const result = {
       tmdbId,
       title,
       platforms: finalPlatforms,
@@ -216,6 +223,11 @@ export class MultiAPIStreamingService {
       freePlatforms,
       sources
     };
+
+    // 🚀 Cache the result for future requests (30 minute TTL)
+    streamingCache.set(tmdbId, mediaType, result, 30 * 60 * 1000);
+
+    return result;
   }
 
   // Score platforms based on data completeness for deduplication

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { StreamingMarqueeSection } from '@/components/streaming-marquee-section';
 import { 
   Smartphone, 
   TestTube, 
@@ -80,8 +81,32 @@ export default function MobileHub() {
         {/* Header */}
         <div className="text-center mb-6">
           <div className="flex items-center justify-center mb-4">
-            <Smartphone className="h-12 w-12 text-blue-400 mr-3" />
-            <h1 className="text-4xl font-bold text-white">Mobile Hub</h1>
+            {/* Updated BingeBoard TV Logo */}
+            <div className="relative mr-4">
+              <div className="w-12 h-10 bg-gradient-to-br from-slate-700 to-slate-900 rounded-lg shadow-xl border-2 border-slate-600 relative">
+                <div className="absolute inset-1 bg-gradient-to-br from-teal-500 via-cyan-500 to-blue-500 rounded-md flex items-center justify-center">
+                  <div
+                    className="text-lg font-bold text-white drop-shadow-lg"
+                    style={{ textShadow: '0 0 6px rgba(0,0,0,0.8), 0 0 2px rgba(255,255,255,0.3)' }}
+                  >
+                    B
+                  </div>
+                </div>
+                <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-4 h-1 bg-slate-700 rounded-sm"></div>
+                <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-6 h-1 bg-slate-600 rounded-sm"></div>
+              </div>
+            </div>
+            <div className="text-center">
+              <h1 className="text-3xl font-bold">
+                <span className="bg-gradient-to-r from-teal-400 via-cyan-400 to-blue-400 bg-clip-text text-transparent font-black">
+                  Binge
+                </span>
+                <span className="text-white font-light ml-1">Board</span>
+              </h1>
+              <p className="text-teal-400 text-sm font-medium tracking-widest uppercase opacity-75">
+                Mobile Hub
+              </p>
+            </div>
           </div>
           <p className="text-gray-300 text-lg">
             Mobile-optimized tools and testing suite for BingeBoard
@@ -115,6 +140,65 @@ export default function MobileHub() {
                 Logged in as: {user.displayName || user.email}
               </div>
             )}
+          </div>
+        </div>
+
+        {/* Streaming Platforms Preview */}
+        <div className="mb-8">
+          <div className="text-center mb-4">
+            <h3 className="text-xl font-semibold text-white mb-2">
+              Watch from <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-400 to-blue-500">Everywhere</span>
+            </h3>
+            <p className="text-gray-400 text-sm">Supports 50+ streaming platforms</p>
+          </div>
+          
+          {/* Streaming Icons Row */}
+          <div className="overflow-hidden relative">
+            <div className="flex animate-marquee-left space-x-6 py-4">
+              {/* Netflix */}
+              <div className="flex-shrink-0 w-16 h-12 bg-red-600 rounded flex items-center justify-center">
+                <span className="text-white font-bold text-sm">N</span>
+              </div>
+              {/* Disney+ */}
+              <div className="flex-shrink-0 w-16 h-12 bg-blue-600 rounded flex items-center justify-center">
+                <span className="text-white font-bold text-sm">D+</span>
+              </div>
+              {/* Max */}
+              <div className="flex-shrink-0 w-16 h-12 bg-purple-600 rounded flex items-center justify-center">
+                <span className="text-white font-bold text-sm">MAX</span>
+              </div>
+              {/* Prime */}
+              <div className="flex-shrink-0 w-16 h-12 bg-cyan-600 rounded flex items-center justify-center">
+                <span className="text-white font-bold text-sm">PV</span>
+              </div>
+              {/* Hulu */}
+              <div className="flex-shrink-0 w-16 h-12 bg-green-500 rounded flex items-center justify-center">
+                <span className="text-white font-bold text-sm">HULU</span>
+              </div>
+              {/* Apple TV+ */}
+              <div className="flex-shrink-0 w-16 h-12 bg-gray-800 rounded flex items-center justify-center">
+                <span className="text-white font-bold text-sm">TV+</span>
+              </div>
+              {/* Repeat for seamless loop */}
+              <div className="flex-shrink-0 w-16 h-12 bg-red-600 rounded flex items-center justify-center">
+                <span className="text-white font-bold text-sm">N</span>
+              </div>
+              <div className="flex-shrink-0 w-16 h-12 bg-blue-600 rounded flex items-center justify-center">
+                <span className="text-white font-bold text-sm">D+</span>
+              </div>
+              <div className="flex-shrink-0 w-16 h-12 bg-purple-600 rounded flex items-center justify-center">
+                <span className="text-white font-bold text-sm">MAX</span>
+              </div>
+              <div className="flex-shrink-0 w-16 h-12 bg-cyan-600 rounded flex items-center justify-center">
+                <span className="text-white font-bold text-sm">PV</span>
+              </div>
+              <div className="flex-shrink-0 w-16 h-12 bg-green-500 rounded flex items-center justify-center">
+                <span className="text-white font-bold text-sm">HULU</span>
+              </div>
+              <div className="flex-shrink-0 w-16 h-12 bg-gray-800 rounded flex items-center justify-center">
+                <span className="text-white font-bold text-sm">TV+</span>
+              </div>
+            </div>
           </div>
         </div>
 

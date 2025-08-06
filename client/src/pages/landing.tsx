@@ -177,17 +177,6 @@ export default function Landing() {
   // State for trending shows
   const [trendingShows, setTrendingShows] = useState<{ results: Show[] } | null>(null);
 
-  // Mobile redirect on initial load
-  useEffect(() => {
-    // Check if user is on a mobile device
-    if (isMobileDevice()) {
-      console.log("📱 Mobile device detected, redirecting to mobile hub");
-      setLocation('/mobile-hub');
-    } else {
-      console.log("🖥️ Desktop device detected, staying on landing page");
-    }
-  }, [setLocation]);
-
   // Handle redirect results for mobile social login
   useEffect(() => {
     const handleRedirectResult = async () => {
