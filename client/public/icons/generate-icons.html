@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>BingeBoard Icon Generator</title>
+</head>
+<body>
+    <h2>BingeBoard PWA Icon Generator</h2>
+    <canvas id="canvas" width="512" height="512" style="border: 1px solid #ccc;"></canvas>
+    <br><br>
+    <button id="generate">Generate All Icon Sizes</button>
+    
+    <div id="downloads" style="margin-top: 20px;"></div>
+    
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        function drawBingeBoardIcon(size) {
+            const canvas = document.createElement('canvas');
+            canvas.width = size;
+            canvas.height = size;
+            const ctx = canvas.getContext('2d');
+            
+            // Background gradient
+            const gradient = ctx.createLinearGradient(0, 0, 0, size);
+            gradient.addColorStop(0, '#ef4444'); // Red theme color
+            gradient.addColorStop(1, '#b91c1c'); // Darker red
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, size, size);
+            
+            // Icon letter "B"
+            ctx.fillStyle = 'white';
+            ctx.font = `bold ${size * 0.6}px Arial`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('B', size / 2, size / 2);
+            
+            return canvas;
+        }
+        
+        function downloadCanvas(canvas, filename) {
+            const link = document.createElement('a');
+            link.download = filename;
+            link.href = canvas.toDataURL();
+            link.click();
+        }
+        
+        document.getElementById('generate').addEventListener('click', function() {
+            const sizes = [72, 96, 128, 144, 152, 192, 384, 512];
+            const downloads = document.getElementById('downloads');
+            downloads.innerHTML = '<h3>Generated Icons:</h3>';
+            
+            sizes.forEach(size => {
+                const iconCanvas = drawBingeBoardIcon(size);
+                const link = document.createElement('a');
+                link.href = iconCanvas.toDataURL();
+                link.download = `icon-${size}x${size}.png`;
+                link.textContent = `Download ${size}x${size}`;
+                link.style.display = 'block';
+                link.style.margin = '5px 0';
+                downloads.appendChild(link);
+                
+                // Auto-download
+                setTimeout(() => link.click(), size / 10);
+            });
+        });
+        
+        // Draw preview
+        const previewCanvas = drawBingeBoardIcon(512);
+        const ctx2 = canvas.getContext('2d');
+        ctx2.drawImage(previewCanvas, 0, 0);
+    </script>
+</body>
+</html>

@@ -1,4 +1,4 @@
-import React from 'react';
+import * as React from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 // Create a simple QueryClient with minimal config to avoid initialization issues
@@ -17,6 +17,12 @@ interface SafeQueryProviderProps {
 }
 
 export function SafeQueryProvider({ children }: SafeQueryProviderProps) {
+  // Add safety check for React
+  if (!React || !React.useEffect) {
+    console.error('❌ React is not properly loaded');
+    return <div>Loading React...</div>;
+  }
+
   return (
     <QueryClientProvider client={simpleQueryClient}>
       {children}

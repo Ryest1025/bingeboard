@@ -21,8 +21,10 @@ interface RecommendationCardProps {
   onMarkAsSeen?: (tmdbId: number) => void;
   onShare?: (tmdbId: number) => void;
   onPlayTrailer?: (trailerUrl: string) => void;
+  onInteraction?: (action: string, tmdbId: number) => void;
   isInWatchlist?: boolean;
   isSeen?: boolean;
+  variant?: 'default' | 'compact';
 }
 
 export default function RecommendationCard({
@@ -31,8 +33,10 @@ export default function RecommendationCard({
   onMarkAsSeen,
   onShare,
   onPlayTrailer,
+  onInteraction,
   isInWatchlist = false,
   isSeen = false,
+  variant = 'default',
 }: RecommendationCardProps) {
   const [hovered, setHovered] = useState(false);
 
@@ -62,54 +66,56 @@ export default function RecommendationCard({
               <Play className="w-12 h-12 text-gray-400" />
             </div>
           )}
-          {/* Quick Actions Overlay */}
-          <div
-            className={`absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/60 rounded-t-lg transition-opacity duration-200 ${hovered ? 'opacity-100' : 'opacity-0 pointer-events-none md:group-hover:opacity-100 md:pointer-events-auto'}`}
-            onClick={e => e.stopPropagation()}
-          >
-            <div className="flex gap-2">
-              <Button
-                size="icon"
-                variant={isInWatchlist ? "secondary" : "outline"}
-                className="rounded-full"
-                title={isInWatchlist ? "In Watchlist" : "Add to Watchlist"}
-                onClick={() => onAddToWatchlist && onAddToWatchlist(show.tmdbId)}
-                disabled={isInWatchlist}
-              >
-                {isInWatchlist ? <Check className="w-5 h-5" /> : <Plus className="w-5 h-5" />}
-              </Button>
-              {show.hasTrailer && show.trailerUrl && (
+          {/* Quick Actions Overlay - Only show for default variant (authorized users) */}
+          {variant === 'default' && (
+            <div
+              className={`absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/60 rounded-t-lg transition-opacity duration-200 ${hovered ? 'opacity-100' : 'opacity-0 pointer-events-none md:group-hover:opacity-100 md:pointer-events-auto'}`}
+              onClick={e => e.stopPropagation()}
+            >
+              <div className="flex gap-2">
+                <Button
+                  size="icon"
+                  variant={isInWatchlist ? "secondary" : "outline"}
+                  className="rounded-full"
+                  title={isInWatchlist ? "In Watchlist" : "Add to Watchlist"}
+                  onClick={() => onAddToWatchlist && onAddToWatchlist(show.tmdbId)}
+                  disabled={isInWatchlist}
+                >
+                  {isInWatchlist ? <Check className="w-5 h-5" /> : <Plus className="w-5 h-5" />}
+                </Button>
+                {show.hasTrailer && show.trailerUrl && (
+                  <Button
+                    size="icon"
+                    variant="outline"
+                    className="rounded-full"
+                    title="Play Trailer"
+                    onClick={() => onPlayTrailer && onPlayTrailer(show.trailerUrl!)}
+                  >
+                    <Play className="w-5 h-5" />
+                  </Button>
+                )}
+                <Button
+                  size="icon"
+                  variant={isSeen ? "secondary" : "outline"}
+                  className="rounded-full"
+                  title={isSeen ? "Seen" : "Mark as Seen"}
+                  onClick={() => onMarkAsSeen && onMarkAsSeen(show.tmdbId)}
+                  disabled={isSeen}
+                >
+                  <Eye className="w-5 h-5" />
+                </Button>
                 <Button
                   size="icon"
                   variant="outline"
                   className="rounded-full"
-                  title="Play Trailer"
-                  onClick={() => onPlayTrailer && onPlayTrailer(show.trailerUrl!)}
+                  title="Share"
+                  onClick={() => onShare && onShare(show.tmdbId)}
                 >
-                  <Play className="w-5 h-5" />
+                  <Share className="w-5 h-5" />
                 </Button>
-              )}
-              <Button
-                size="icon"
-                variant={isSeen ? "secondary" : "outline"}
-                className="rounded-full"
-                title={isSeen ? "Seen" : "Mark as Seen"}
-                onClick={() => onMarkAsSeen && onMarkAsSeen(show.tmdbId)}
-                disabled={isSeen}
-              >
-                <Eye className="w-5 h-5" />
-              </Button>
-              <Button
-                size="icon"
-                variant="outline"
-                className="rounded-full"
-                title="Share"
-                onClick={() => onShare && onShare(show.tmdbId)}
-              >
-                <Share className="w-5 h-5" />
-              </Button>
+              </div>
             </div>
-          </div>
+          )}
         </div>
         <div className="p-3">
           <h3 className="font-semibold mb-1 truncate cursor-pointer hover:text-binge-purple transition-colors" onClick={handlePosterClick}>

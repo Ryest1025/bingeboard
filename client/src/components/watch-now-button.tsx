@@ -24,7 +24,8 @@ import {
   getPrimaryStreamingPlatform, 
   getAllAvailablePlatforms,
   getWatchNowText,
-  getShortButtonText 
+  getShortButtonText,
+  getPlatformDirectUrl
 } from "@/lib/streamingUtils";
 import { 
   getBestTrailer, 
@@ -241,14 +242,15 @@ export default function WatchNowButton({
         <DropdownMenuSeparator />
         <DropdownMenuItem
           onClick={() => {
-            const searchQuery = `${show.title} streaming watch online`;
-            window.open(`https://www.google.com/search?q=${encodeURIComponent(searchQuery)}`, '_blank');
+            // Use Netflix as fallback platform for "Find other sources"
+            const fallbackUrl = getPlatformDirectUrl('Netflix', show.title);
+            window.open(fallbackUrl, '_blank');
             setIsDropdownOpen(false);
           }}
           className="flex items-center gap-3 p-3 text-muted-foreground"
         >
           <ExternalLink className="h-4 w-4" />
-          <span>Find other sources</span>
+          <span>Search on Netflix</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
 

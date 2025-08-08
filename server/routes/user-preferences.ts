@@ -304,19 +304,31 @@ export function registerUserPreferencesRoutes(app: Express) {
 
       // Calculate stats
       const totalWatched = viewingHistory.length;
-      const uniqueShows = new Set(viewingHistory.map(vh => vh.showId)).size;
+      const uniqueShows = new Set(viewingHistory.map(vh => vh.contentId)).size;
       const thisWeekCount = viewingHistory.filter(vh => {
-        const watchDate = new Date(vh.watchedAt);
+        const watchDate = new Date(vh.watchedAt * 1000); // Convert Unix timestamp to Date
         const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
         return watchDate >= weekAgo;
       }).length;
 
-      // Calculate total watch time (estimate)
-      const totalMinutes = viewingHistory.reduce((sum, vh) => sum + (vh.totalDuration || vh.watchDuration || 45), 0);
+      // Calculate total watch time (estimate - since SQLite schema doesn't have duration fields)
+      const totalMinutes = viewingHistory.length * 45; // Estimate 45 minutes per entry
       const totalHours = Math.round(totalMinutes / 60);
 
-      // Genre distribution
-      const genreStats = preferences?.preferredGenres?.map(genre => ({
+      // Genre distribution - handle JSON string format from SQLite
+      let favoriteGenres = [];
+      try {
+        if (preferences?.preferredGenres) {
+          favoriteGenres = typeof preferences.preferredGenres === 'string' 
+            ? JSON.parse(preferences.preferredGenres) 
+            : preferences.preferredGenres;
+        }
+      } catch (error) {
+        console.warn('Error parsing preferred genres:', error);
+        favoriteGenres = [];
+      }
+
+      const genreStats = favoriteGenres.map((genre: string) => ({
         name: genre,
         count: Math.floor(Math.random() * 20) + 5, // Mock data for now
         percentage: Math.floor(Math.random() * 30) + 10

@@ -173,6 +173,38 @@ export default function Signup() {
         experience: formData.experience
       });
 
+      // Also sync to server preferences API if user is authenticated
+      try {
+        const syncResponse = await fetch('/api/user/preferences/sync-onboarding', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
+          body: JSON.stringify({
+            onboardingData: {
+              favoriteGenres: formData.favoriteGenres,
+              watchingGoals: [formData.watchingGoals],
+              experience: formData.experience,
+              streamingPlatforms: [],
+              contentTypes: ["Movies", "TV Series"],
+              viewingHabits: {
+                preferredTime: "evening",
+                bingeDuration: "2-3 hours",
+                weeklyGoal: "5-10 hours"
+              },
+              theme: "dark"
+            }
+          })
+        });
+
+        if (syncResponse.ok) {
+          console.log("✅ Onboarding data synced to server successfully");
+        }
+      } catch (syncError) {
+        console.warn("⚠️ Failed to sync onboarding data to server:", syncError);
+      }
+
       if (success) {
         console.log("💾 Saved onboarding data to user profile");
         showSuccess("Profile setup complete! Welcome to BingeBoard! 🚀");

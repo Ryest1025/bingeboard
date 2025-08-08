@@ -16,7 +16,7 @@ const streamingServices = [
   { name: "Max", logo: "https://images.justwatch.com/icon/52449539/s200/max.png", color: "#8A2BE2" },
   { name: "Amazon Prime Video", logo: "https://images.justwatch.com/icon/52449062/s200/amazon-prime-video.png", color: "#00A8E1" },
   { name: "Hulu", logo: "https://images.justwatch.com/icon/52449639/s200/hulu.png", color: "#1CE783" },
-  { name: "Apple TV+", logo: "https://images.justwatch.com/icon/190848813/s200/apple-tv-plus.png", color: "#000000" },
+  { name: "Apple TV+", logo: "https://images.justwatch.com/icon/190848813/s200/apple-tv-plus.png", color: "#FFFFFF" },
   { name: "Paramount+", logo: "https://images.justwatch.com/icon/52449516/s200/paramount-plus.png", color: "#0064FF" },
   { name: "Peacock", logo: "https://images.justwatch.com/icon/52449334/s200/peacock.png", color: "#FA6400" },
   { name: "Crunchyroll", logo: "https://images.justwatch.com/icon/127514713/s200/crunchyroll.png", color: "#FF6500" },

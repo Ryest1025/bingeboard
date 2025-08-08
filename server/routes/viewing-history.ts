@@ -122,7 +122,7 @@ export function registerViewingHistoryRoutes(app: Express) {
 
       console.log(`▶️ Fetching continue watching list for user: ${userId}`);
 
-      // Mock continue watching data
+      // Mock continue watching data with TMDB poster enrichment
       const continueWatching = [
         {
           showId: 94997,
@@ -130,6 +130,8 @@ export function registerViewingHistoryRoutes(app: Express) {
           mediaType: "tv",
           lastWatched: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(),
           platform: "HBO Max",
+          poster_path: "/7QMsOTMUswlwxJP0rTTZfmz2tX2.jpg", // TMDB poster path
+          backdrop_path: "/17SQAkcYWKq5WMcjdkJzYQJlrOl.jpg", // TMDB backdrop path
           currentEpisode: {
             seasonNumber: 1,
             episodeNumber: 9,
@@ -146,6 +148,8 @@ export function registerViewingHistoryRoutes(app: Express) {
           mediaType: "tv",
           lastWatched: new Date(Date.now() - 1000 * 60 * 60 * 24 * 3).toISOString(),
           platform: "Netflix",
+          poster_path: "/3xnWaLQjelJDDF7LT1WBo6f4BRe.jpg", // TMDB poster path
+          backdrop_path: "/tsRy63Mu5cu8etL1X7ZLyf7UP1M.jpg", // TMDB backdrop path
           currentEpisode: {
             seasonNumber: 2,
             episodeNumber: 1,

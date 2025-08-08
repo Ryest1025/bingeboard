@@ -9,7 +9,7 @@ interface StreamingPlatform {
 
 const streamingPlatforms: StreamingPlatform[] = [
   { name: 'Netflix', logo: 'https://upload.wikimedia.org/wikipedia/commons/0/08/Netflix_2015_logo.svg', color: '#E50914' },
-  { name: 'Disney+', logo: 'https://upload.wikimedia.org/wikipedia/commons/3/36/Disney%2B_logo.svg', color: '#113CCF' },
+  { name: 'Disney+', logo: 'https://images.justwatch.com/icon/52449455/s100/disney-plus.webp', color: '#113CCF' },
   { name: 'Max', logo: 'https://upload.wikimedia.org/wikipedia/commons/1/17/Max_logo.svg', color: '#002BE7' },
   { name: 'Prime Video', logo: 'https://upload.wikimedia.org/wikipedia/commons/f/f1/Prime_Video.png', color: '#00A8E1' },
   { name: 'Hulu', logo: 'https://upload.wikimedia.org/wikipedia/commons/e/e4/Hulu_Logo.svg', color: '#1CE783' },
@@ -18,7 +18,7 @@ const streamingPlatforms: StreamingPlatform[] = [
   { name: 'Peacock', logo: 'https://upload.wikimedia.org/wikipedia/commons/d/d7/Peacock_logo.svg', color: '#FA6B00' },
   { name: 'Crunchyroll', logo: 'https://upload.wikimedia.org/wikipedia/commons/f/f6/Crunchyroll_Logo.svg', color: '#FF6600' },
   { name: 'Showtime', logo: 'https://upload.wikimedia.org/wikipedia/commons/2/2e/Showtime.svg', color: '#FF0000' },
-  { name: 'Starz', logo: 'https://upload.wikimedia.org/wikipedia/commons/e/e2/Starz_logo.svg', color: '#FFFFFF' },
+  { name: 'Starz', logo: 'https://images.justwatch.com/icon/52449051/s200/starz.png', color: '#FFFFFF' },
   { name: 'Discovery+', logo: 'https://upload.wikimedia.org/wikipedia/commons/2/24/Discovery_Plus_logo.svg', color: '#0077C8' }
 ];
 
@@ -62,7 +62,11 @@ export function StreamingMarqueeSection() {
                     <img
                       src={platform.logo}
                       alt={platform.name}
-                      className="max-w-full max-h-full object-contain filter brightness-110 group-hover:brightness-125 transition-all duration-300 drop-shadow-2xl"
+                      className={`max-w-full max-h-full object-contain group-hover:brightness-125 transition-all duration-300 drop-shadow-2xl ${
+                        platform.color === '#FFFFFF' || platform.name === 'Apple TV+' || platform.name === 'Starz'
+                          ? 'filter invert brightness-100'
+                          : 'filter brightness-110'
+                      }`}
                       style={{ maxWidth: '64px', maxHeight: '48px' }}
                       onError={(e) => {
                         // Fallback to text if image fails to load
@@ -70,7 +74,7 @@ export function StreamingMarqueeSection() {
                         target.style.display = 'none';
                         const fallback = document.createElement('div');
                         fallback.className = 'text-white font-semibold text-xs text-center';
-                        fallback.style.color = platform.color;
+                        fallback.style.color = platform.color === '#FFFFFF' ? '#60A5FA' : platform.color;
                         fallback.textContent = platform.name;
                         target.parentNode?.appendChild(fallback);
                       }}
@@ -91,10 +95,10 @@ export function StreamingMarqueeSection() {
         {/* Bottom CTA */}
         <div className="text-center mt-12">
           <p className="text-gray-400 text-sm mb-6">
-            Track, discover, and organize content from 50+ streaming services
+            Track, discover, and organize content from all major streaming platforms
           </p>
           <div className="flex flex-wrap justify-center gap-3">
-           
+
           </div>
         </div>
       </div>

@@ -1629,12 +1629,45 @@ export default function OnboardingModal({ isOpen, onComplete, userDisplayName, u
     console.log(`⭐ Plan: ${formData.selectedPlan}`);
 
     try {
+      // Save to user manager (local storage/Firebase)
       await userDataManager.updatePreferences({
         favoriteGenres: formData.favoriteGenres,
         watchingGoals: "entertainment", // Default goal since we removed goals step
         experience: "casual" // Default since we removed goals
       });
       console.log("✅ Onboarding data saved to user manager successfully");
+
+      // Also sync to server preferences API
+      const syncResponse = await fetch('/api/user/preferences/sync-onboarding', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          onboardingData: {
+            favoriteGenres: formData.favoriteGenres,
+            streamingPlatforms: formData.streamingPlatforms,
+            contentTypes: formData.contentTypes,
+            favoriteTeams: formData.favoriteTeams,
+            viewingHabits: {
+              preferredTime: "evening",
+              bingeDuration: "2-3 hours", 
+              weeklyGoal: "5-10 hours"
+            },
+            theme: formData.theme,
+            userProfile: formData.userProfile,
+            privacy: formData.privacy
+          }
+        })
+      });
+
+      if (syncResponse.ok) {
+        console.log("✅ Onboarding data synced to server successfully");
+      } else {
+        console.warn("⚠️ Failed to sync onboarding data to server, but continuing");
+      }
+
       setTimeout(() => {
         onComplete();
       }, 1000);

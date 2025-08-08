@@ -1,4 +1,4 @@
-/**
+*
  * Preferences API Logic
  * 
  * Centralized logic for handling user preferences across multiple storage backends
@@ -7,12 +7,12 @@
 
 import { getFirestore, doc, setDoc, updateDoc, getDoc } from "firebase/firestore";
 import app from "@/firebase/config";
-import type { 
-  UserPreferences, 
-  PreferencesApiResponse, 
+import type {
+  UserPreferences,
+  PreferencesApiResponse,
   PreferencesLoadResult,
   PreferencesSource,
-  FirestorePreferencesDocument 
+  FirestorePreferencesDocument
 } from "@/types/preferences";
 
 export class PreferencesService {
@@ -25,8 +25,8 @@ export class PreferencesService {
    * 3. localStorage (fallback)
    */
   static async savePreferences(
-    userId: string, 
-    userEmail: string, 
+    userId: string,
+    userEmail: string,
     preferences: UserPreferences
   ): Promise<PreferencesApiResponse> {
     // Try Firestore first
@@ -34,7 +34,7 @@ export class PreferencesService {
       const result = await this.saveToFirestore(userId, userEmail, preferences);
       if (result.success) {
         // Also backup to API
-        this.saveToAPI(userId, preferences).catch(error => 
+        this.saveToAPI(userId, preferences).catch(error =>
           console.warn('⚠️ API backup failed:', error)
         );
         return result;
@@ -91,13 +91,13 @@ export class PreferencesService {
    * Firebase Firestore operations
    */
   private static async saveToFirestore(
-    userId: string, 
-    userEmail: string, 
+    userId: string,
+    userEmail: string,
     preferences: UserPreferences
   ): Promise<PreferencesApiResponse> {
     const userDocRef = doc(this.db, "userPreferences", userId);
     const userDocSnap = await getDoc(userDocRef);
-    
+
     const documentData: FirestorePreferencesDocument = {
       userId,
       userEmail,
@@ -123,7 +123,7 @@ export class PreferencesService {
   private static async loadFromFirestore(userId: string): Promise<PreferencesLoadResult> {
     const userDocRef = doc(this.db, "userPreferences", userId);
     const userDocSnap = await getDoc(userDocRef);
-    
+
     if (userDocSnap.exists()) {
       const data = userDocSnap.data() as FirestorePreferencesDocument;
       console.log('✅ Preferences loaded from Firestore');
@@ -145,7 +145,7 @@ export class PreferencesService {
    * Backend API operations
    */
   private static async saveToAPI(
-    userId: string, 
+    userId: string,
     preferences: UserPreferences
   ): Promise<PreferencesApiResponse> {
     const response = await fetch('/api/user/preferences', {
@@ -173,7 +173,7 @@ export class PreferencesService {
     const response = await fetch('/api/user/preferences', {
       credentials: 'include',
     });
-    
+
     if (response.ok) {
       const data = await response.json();
       if (data.preferences) {

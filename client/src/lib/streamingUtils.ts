@@ -243,3 +243,30 @@ export function getWatchNowText(platformName: string): string {
 
   return watchTexts[platformName] || `Watch on ${platformName}`;
 }
+
+// Get direct platform URLs for streaming services
+export function getPlatformDirectUrl(platformName: string, title: string): string {
+  const encodedTitle = encodeURIComponent(title);
+  
+  const platformUrls: { [key: string]: string } = {
+    'Netflix': `https://www.netflix.com/search?q=${encodedTitle}`,
+    'Disney Plus': `https://www.disneyplus.com/search?q=${encodedTitle}`,
+    'Disney+': `https://www.disneyplus.com/search?q=${encodedTitle}`,
+    'Hulu': `https://www.hulu.com/search?q=${encodedTitle}`,
+    'Amazon Prime Video': `https://www.amazon.com/gp/video/search?phrase=${encodedTitle}`,
+    'Prime Video': `https://www.amazon.com/gp/video/search?phrase=${encodedTitle}`,
+    'HBO Max': `https://play.max.com/search?q=${encodedTitle}`,
+    'Max': `https://play.max.com/search?q=${encodedTitle}`,
+    'Apple TV Plus': `https://tv.apple.com/search?term=${encodedTitle}`,
+    'Apple TV+': `https://tv.apple.com/search?term=${encodedTitle}`,
+    'Paramount Plus': `https://www.paramountplus.com/search/?query=${encodedTitle}`,
+    'Paramount+': `https://www.paramountplus.com/search/?query=${encodedTitle}`,
+    'Peacock': `https://www.peacocktv.com/search?q=${encodedTitle}`,
+    'Crunchyroll': `https://www.crunchyroll.com/search?q=${encodedTitle}`,
+    'YouTube TV': `https://tv.youtube.com/search?q=${encodedTitle}`,
+    'Showtime': `https://www.showtime.com/search?q=${encodedTitle}`,
+    'Starz': `https://www.starz.com/search?query=${encodedTitle}`
+  };
+  
+  return platformUrls[platformName] || `https://www.netflix.com/search?q=${encodedTitle}`;
+}

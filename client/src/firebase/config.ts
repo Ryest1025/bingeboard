@@ -1,17 +1,6 @@
-// Firebase configuration - MOBILE-OPTIMIZED VERSION
-import { initializeApp, getApps } from 'firebase/app';
-import { getAuth, Auth, GoogleAuthProvider, FacebookAuthProvider } from 'firebase/auth';
-
-/**
- * 🔒 FIREBASE CONFIG - MOBILE-STABLE APPROACH
- * 
- * ✅ Direct imports to avoid getModularInstance errors
- * ✅ Synchronous initialization for mobile compatibility
- * ✅ Proper error handling for mobile browsers
- * 
- * Created: August 6, 2025
- * Status: ✅ MOBILE-FIXED
- */
+// Firebase configuration - Clean version
+import { initializeApp, getApps, getApp } from 'firebase/app';
+import { getAuth, GoogleAuthProvider, FacebookAuthProvider } from 'firebase/auth';
 
 // Firebase configuration
 const firebaseConfig = {
@@ -24,33 +13,13 @@ const firebaseConfig = {
   measurementId: "G-TB1ZXQ79LB"
 };
 
-console.log('🔍 Firebase Config Values:', {
-  apiKey: firebaseConfig.apiKey ? '✅ Present' : '❌ Missing',
-  authDomain: firebaseConfig.authDomain ? '✅ Present' : '❌ Missing',
-  projectId: firebaseConfig.projectId ? '✅ Present' : '❌ Missing',
-});
-
 // Initialize Firebase app
-let app;
-try {
-  app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
-  console.log('✅ Firebase app initialized successfully');
-} catch (error) {
-  console.error('❌ Firebase app initialization failed:', error);
-  throw error;
-}
+const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
 
-// Initialize auth directly (no dynamic imports)
-let firebaseAuth: Auth;
-try {
-  firebaseAuth = getAuth(app);
-  console.log('✅ Firebase Auth initialized directly');
-} catch (error) {
-  console.error('❌ Firebase Auth initialization failed:', error);
-  throw error;
-}
+// Initialize auth
+export const auth = getAuth(app);
 
-// Initialize providers directly
+// Initialize providers  
 const googleProvider = new GoogleAuthProvider();
 googleProvider.setCustomParameters({ prompt: 'select_account' });
 googleProvider.addScope('email');
@@ -60,24 +29,11 @@ const facebookProvider = new FacebookAuthProvider();
 facebookProvider.setCustomParameters({ display: 'popup' });
 facebookProvider.addScope('email');
 
-console.log('✅ Firebase providers initialized');
-
-// Export everything
+// Exports
 export default app;
-export { firebaseAuth as auth };
-export { googleProvider };
-export { facebookProvider };
+export { googleProvider, facebookProvider };
+export const getGoogleProvider = () => googleProvider;
+export const getFacebookProvider = () => facebookProvider;
 
-// Simple auth getter for compatibility
-export const getAuthInstance = async (): Promise<Auth> => {
-  return firebaseAuth;
-};
-
-// Provider getters for compatibility
-export const getGoogleProvider = async () => {
-  return googleProvider;
-};
-
-export const getFacebookProvider = async () => {
-  return facebookProvider;
-};
+// For compatibility with existing code
+export const getAuthInstance = () => auth;

@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔧 Authentication Fix Tool</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 20px;
+            background: #0f172a;
+            color: #e2e8f0;
+            line-height: 1.6;
+        }
+        .container {
+            background: #1e293b;
+            padding: 30px;
+            border-radius: 12px;
+            border: 1px solid #334155;
+        }
+        .button {
+            background: #3b82f6;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 10px 10px 0;
+            transition: background 0.2s;
+        }
+        .button:hover {
+            background: #2563eb;
+        }
+        .button.danger {
+            background: #ef4444;
+        }
+        .button.danger:hover {
+            background: #dc2626;
+        }
+        .status {
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-weight: 500;
+        }
+        .success {
+            background: #166534;
+            border: 1px solid #22c55e;
+            color: #bbf7d0;
+        }
+        .error {
+            background: #991b1b;
+            border: 1px solid #ef4444;
+            color: #fecaca;
+        }
+        .info {
+            background: #1e40af;
+            border: 1px solid #3b82f6;
+            color: #bfdbfe;
+        }
+        .log {
+            background: #111827;
+            border: 1px solid #374151;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 14px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Authentication Fix Tool</h1>
+        <div id="status" class="status info">
+            Ready to diagnose authentication issues...
+        </div>
+
+        <h3>🚀 Quick Actions:</h3>
+        <button class="button" onclick="clearAllAuth()">Clear All Auth Data</button>
+        <button class="button" onclick="testFirebaseAuth()">Test Firebase Auth</button>
+        <button class="button" onclick="checkSessionStatus()">Check Session Status</button>
+        <button class="button danger" onclick="forceLogout()">Force Complete Logout</button>
+
+        <h3>📊 Authentication Status:</h3>
+        <div id="authStatus" class="log">Checking authentication status...</div>
+
+        <h3>🔧 Advanced Options:</h3>
+        <button class="button" onclick="refreshFirebaseToken()">Refresh Firebase Token</button>
+        <button class="button" onclick="testAPIAccess()">Test API Access</button>
+        <button class="button" onclick="debugSessionData()">Debug Session Data</button>
+    </div>
+
+    <script type="module">
+        let statusDiv = document.getElementById('status');
+        let authStatusDiv = document.getElementById('authStatus');
+
+        function updateStatus(message, type = 'info') {
+            statusDiv.className = `status ${type}`;
+            statusDiv.innerHTML = message;
+        }
+
+        function logAuthStatus(message) {
+            authStatusDiv.innerHTML += message + '\n';
+            authStatusDiv.scrollTop = authStatusDiv.scrollHeight;
+        }
+
+        // Clear all authentication data
+        window.clearAllAuth = async function() {
+            updateStatus('🧹 Clearing all authentication data...', 'info');
+            
+            try {
+                // Clear localStorage
+                const keysToRemove = [];
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    if (key && (key.includes('firebase') || key.includes('auth') || key.includes('user') || key.includes('session'))) {
+                        keysToRemove.push(key);
+                    }
+                }
+                keysToRemove.forEach(key => localStorage.removeItem(key));
+                logAuthStatus(`🗑️ Cleared ${keysToRemove.length} localStorage keys`);
+
+                // Clear sessionStorage
+                const sessionKeysToRemove = [];
+                for (let i = 0; i < sessionStorage.length; i++) {
+                    const key = sessionStorage.key(i);
+                    if (key && (key.includes('firebase') || key.includes('auth') || key.includes('user') || key.includes('session'))) {
+                        sessionKeysToRemove.push(key);
+                    }
+                }
+                sessionKeysToRemove.forEach(key => sessionStorage.removeItem(key));
+                logAuthStatus(`🗑️ Cleared ${sessionKeysToRemove.length} sessionStorage keys`);
+
+                // Clear cookies
+                document.cookie.split(";").forEach(function(c) {
+                    document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+                });
+                logAuthStatus('🍪 Cleared all cookies');
+
+                updateStatus('✅ All authentication data cleared! Please refresh the page.', 'success');
+            } catch (error) {
+                updateStatus(`❌ Error clearing auth data: ${error.message}`, 'error');
+                logAuthStatus(`❌ Error: ${error.message}`);
+            }
+        };
+
+        // Test Firebase authentication
+        window.testFirebaseAuth = async function() {
+            updateStatus('🔍 Testing Firebase authentication...', 'info');
+            
+            try {
+                // Import Firebase (assuming it's available)
+                const { auth } = await import('/firebase.js').catch(() => ({}));
+                
+                if (!auth) {
+                    throw new Error('Firebase auth not available');
+                }
+
+                const user = auth.currentUser;
+                if (user) {
+                    logAuthStatus(`✅ Firebase user found: ${user.email}`);
+                    const token = await user.getIdToken();
+                    logAuthStatus(`🔑 Token obtained: ${token.substring(0, 20)}...`);
+                    updateStatus('✅ Firebase authentication is working!', 'success');
+                } else {
+                    logAuthStatus('❌ No Firebase user found');
+                    updateStatus('❌ No authenticated Firebase user', 'error');
+                }
+            } catch (error) {
+                updateStatus(`❌ Firebase test failed: ${error.message}`, 'error');
+                logAuthStatus(`❌ Firebase error: ${error.message}`);
+            }
+        };
+
+        // Check session status
+        window.checkSessionStatus = async function() {
+            updateStatus('📡 Checking session status...', 'info');
+            
+            try {
+                const response = await fetch('/api/auth/session', {
+                    credentials: 'include'
+                });
+                
+                logAuthStatus(`📡 Session response: ${response.status} ${response.statusText}`);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    logAuthStatus(`✅ Session data: ${JSON.stringify(data, null, 2)}`);
+                    updateStatus('✅ Session is valid!', 'success');
+                } else {
+                    logAuthStatus(`❌ Session invalid: ${response.status}`);
+                    updateStatus('❌ Session is invalid or expired', 'error');
+                }
+            } catch (error) {
+                updateStatus(`❌ Session check failed: ${error.message}`, 'error');
+                logAuthStatus(`❌ Session error: ${error.message}`);
+            }
+        };
+
+        // Force complete logout
+        window.forceLogout = async function() {
+            updateStatus('🚪 Forcing complete logout...', 'info');
+            
+            try {
+                // Clear all auth data first
+                await clearAllAuth();
+                
+                // Try to sign out from Firebase
+                try {
+                    const { auth } = await import('/firebase.js').catch(() => ({}));
+                    if (auth && auth.currentUser) {
+                        await auth.signOut();
+                        logAuthStatus('🚪 Firebase signOut completed');
+                    }
+                } catch (fbError) {
+                    logAuthStatus(`⚠️ Firebase signOut failed: ${fbError.message}`);
+                }
+
+                // Try to call logout API
+                try {
+                    await fetch('/api/auth/logout', {
+                        method: 'POST',
+                        credentials: 'include'
+                    });
+                    logAuthStatus('🚪 API logout completed');
+                } catch (apiError) {
+                    logAuthStatus(`⚠️ API logout failed: ${apiError.message}`);
+                }
+
+                updateStatus('✅ Complete logout finished! Please refresh the page.', 'success');
+                
+                // Auto-refresh after 2 seconds
+                setTimeout(() => {
+                    window.location.reload();
+                }, 2000);
+                
+            } catch (error) {
+                updateStatus(`❌ Logout failed: ${error.message}`, 'error');
+                logAuthStatus(`❌ Logout error: ${error.message}`);
+            }
+        };
+
+        // Refresh Firebase token
+        window.refreshFirebaseToken = async function() {
+            updateStatus('🔄 Refreshing Firebase token...', 'info');
+            
+            try {
+                const { auth } = await import('/firebase.js').catch(() => ({}));
+                
+                if (!auth || !auth.currentUser) {
+                    throw new Error('No Firebase user to refresh');
+                }
+
+                const newToken = await auth.currentUser.getIdToken(true); // Force refresh
+                logAuthStatus(`🔑 New token: ${newToken.substring(0, 20)}...`);
+                updateStatus('✅ Firebase token refreshed!', 'success');
+            } catch (error) {
+                updateStatus(`❌ Token refresh failed: ${error.message}`, 'error');
+                logAuthStatus(`❌ Token refresh error: ${error.message}`);
+            }
+        };
+
+        // Test API access
+        window.testAPIAccess = async function() {
+            updateStatus('🧪 Testing API access...', 'info');
+            
+            const endpoints = [
+                '/api/auth/session',
+                '/api/user/preferences',
+                '/api/continue-watching?limit=1'
+            ];
+
+            for (const endpoint of endpoints) {
+                try {
+                    const response = await fetch(endpoint, {
+                        credentials: 'include'
+                    });
+                    
+                    logAuthStatus(`${endpoint}: ${response.status} ${response.statusText}`);
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        logAuthStatus(`  ✅ Success: ${JSON.stringify(data).substring(0, 100)}...`);
+                    } else {
+                        logAuthStatus(`  ❌ Failed: ${response.status}`);
+                    }
+                } catch (error) {
+                    logAuthStatus(`${endpoint}: ❌ Error: ${error.message}`);
+                }
+            }
+            
+            updateStatus('✅ API access test completed', 'success');
+        };
+
+        // Debug session data
+        window.debugSessionData = function() {
+            updateStatus('🔍 Debugging session data...', 'info');
+            
+            logAuthStatus('=== LOCAL STORAGE ===');
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key && (key.includes('auth') || key.includes('user') || key.includes('firebase') || key.includes('session'))) {
+                    const value = localStorage.getItem(key);
+                    logAuthStatus(`${key}: ${value ? value.substring(0, 100) + '...' : 'null'}`);
+                }
+            }
+            
+            logAuthStatus('=== SESSION STORAGE ===');
+            for (let i = 0; i < sessionStorage.length; i++) {
+                const key = sessionStorage.key(i);
+                if (key && (key.includes('auth') || key.includes('user') || key.includes('firebase') || key.includes('session'))) {
+                    const value = sessionStorage.getItem(key);
+                    logAuthStatus(`${key}: ${value ? value.substring(0, 100) + '...' : 'null'}`);
+                }
+            }
+            
+            logAuthStatus('=== COOKIES ===');
+            const cookies = document.cookie.split('; ');
+            cookies.forEach(cookie => {
+                const [name, value] = cookie.split('=');
+                if (name && (name.includes('auth') || name.includes('user') || name.includes('firebase') || name.includes('session'))) {
+                    logAuthStatus(`${name}: ${value ? value.substring(0, 50) + '...' : 'null'}`);
+                }
+            });
+            
+            updateStatus('✅ Session data debug completed', 'success');
+        };
+
+        // Auto-run initial checks
+        setTimeout(() => {
+            checkSessionStatus();
+            debugSessionData();
+        }, 1000);
+    </script>
+</body>
+</html>

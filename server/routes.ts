@@ -7,6 +7,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 // import authRoutes from './routes/auth';
 import analyticsRoutes from './routes/analytics.js';
+import { getDashboardContent, getDiscoverContent, getSearchContent } from './routes/content.js';
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated, verifyPassword } from "./auth";
 import { db, sqlite } from "./db";
@@ -27,6 +28,7 @@ import { MultiAPIStreamingService } from "./services/multiAPIStreamingService";
 import { searchStreamingAvailability, getStreamingByImdbId } from "./clients/utellyClient";
 import { registerViewingHistoryRoutes } from "./routes/viewing-history";
 import { registerUserPreferencesRoutes } from "./routes/user-preferences";
+import { registerFilterRoutes } from "./routes/filters";
 import multer from "multer";
 import csvParser from "csv-parser";
 import { Readable } from "stream";
@@ -71,6 +73,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json({ status: 'OK', timestamp: new Date().toISOString() });
   });
 
+  // CRITICAL: Set up authentication and session middleware FIRST
+  // This must happen before any routes that use isAuthenticated middleware
+  await setupAuth(app);
+
   // Analytics routes for monetization tracking
   app.use('/api/analytics', analyticsRoutes);
 
@@ -80,8 +86,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // User Preferences & Profile Routes
   registerUserPreferencesRoutes(app);
 
-  // Auth middleware
-  await setupAuth(app);
+  // Filter Data Routes for Enhanced Filter System
+  registerFilterRoutes(app);
+
+  // Content API Routes for Enhanced Filter System
+  app.get('/api/content/dashboard', getDashboardContent);
+  app.get('/api/content/discover', getDiscoverContent);
+  app.get('/api/content/search', getSearchContent);
 
   // Debug middleware to log all requests and cookies
   app.use((req, res, next) => {
@@ -585,6 +596,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
       config: firebaseConfig,
       timestamp: Date.now()
     });
+  });
+
+  // 🔐 Session Status Endpoint - Checks if user has valid session
+  // This endpoint allows checking session without full authentication
+  app.get('/api/auth/session', async (req: any, res) => {
+    try {
+      console.log('🔍 Session check endpoint called');
+      console.log('📋 Session exists:', !!(req as any).session);
+      console.log('📋 Session user:', (req as any).session?.user?.email);
+      
+      if ((req as any).session?.user) {
+        const sessionUser = (req as any).session.user;
+        console.log('✅ Valid session found for:', sessionUser.email);
+        res.json({
+          authenticated: true,
+          user: sessionUser
+        });
+      } else {
+        console.log('❌ No valid session found');
+        res.status(401).json({
+          authenticated: false,
+          message: 'No valid session'
+        });
+      }
+    } catch (error) {
+      console.error('❌ Session check error:', error);
+      res.status(500).json({
+        authenticated: false,
+        message: 'Session check failed'
+      });
+    }
   });
 
   // 🔐 CRITICAL AUTHENTICATION ENDPOINT - Session Validation
@@ -1356,21 +1398,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // MISSING API ENDPOINTS - Adding the missing routes that frontend expects
   // =============================================================================
 
-  // User stats endpoint for dashboard
-  app.get('/api/user/stats', isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims?.sub || req.user.id;
-
-      // Get comprehensive user stats from storage
-      const stats = await storage.getUserStats(userId);
-
-      res.json(stats);
-    } catch (error: any) {
-      console.error('Error fetching user stats:', error);
-      res.status(500).json({ error: 'Failed to fetch user stats' });
-    }
-  });
-
   // Watchlist endpoint
   app.get('/api/watchlist', isAuthenticated, async (req: any, res) => {
     try {
@@ -1421,6 +1448,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ error: 'Failed to fetch user lists' });
     }
   });
+
+  // Discover route integration
+  const discoverRoutes = await import('./routes/discover.js');
+  app.use('/api/content', discoverRoutes.default);
 
   // Because You Watched recommendations endpoint
   app.get('/api/recommendations/because-you-watched', isAuthenticated, async (req: any, res) => {
@@ -2511,6 +2542,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
         tmdbService.getTrending('movie', 'day')
       ]);
 
+      // Combine and get top 10 trending items
+      const allTrending = [...(trendingTV.results || []), ...(trendingMovies.results || [])].slice(0, 10);
+      
+      // Enrich with streaming provider data
+      const enrichedTrending = await Promise.all(
+        allTrending.map(async (item: any) => {
+          try {
+            const mediaType = item.media_type || (item.title ? 'movie' : 'tv');
+            const watchProviders = await tmdbService.getWatchProviders(mediaType, item.id);
+            
+            // Extract streaming platforms from watch providers
+            const providers = watchProviders?.results?.US;
+            const streamingPlatforms = [];
+            
+            if (providers?.flatrate) {
+              streamingPlatforms.push(...providers.flatrate.map((p: any) => ({
+                name: p.provider_name,
+                logo: p.logo_path,
+                id: p.provider_id
+              })));
+            }
+            if (providers?.buy) {
+              streamingPlatforms.push(...providers.buy.slice(0, 2).map((p: any) => ({
+                name: p.provider_name,
+                logo: p.logo_path,
+                id: p.provider_id,
+                type: 'buy'
+              })));
+            }
+            
+            return {
+              ...item,
+              streamingPlatforms,
+              watchProviders: providers
+            };
+          } catch (error) {
+            console.warn(`Failed to get watch providers for ${item.title || item.name}:`, error);
+            return item; // Return original item if provider fetch fails
+          }
+        })
+      );
+
       // Mock continue watching data - replace with actual user data
       const continueWatching = [
         {
@@ -2532,7 +2605,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       ];
 
       const spotlight = {
-        trending: [...(trendingTV.results || []), ...(trendingMovies.results || [])].slice(0, 10),
+        trending: enrichedTrending,
         continueWatching
       };
 

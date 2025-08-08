@@ -31,10 +31,11 @@ export const getStreamingPlatforms = (show: any): any[] => {
   const showData = show?.show || show;
   
   // Try multiple possible property names for streaming platforms
+  // Prioritize the new streamingPlatforms array from enhanced API
   const platforms = showData?.streamingPlatforms || 
                    showData?.streaming_platforms || 
                    showData?.streamingProviders || 
-                   showData?.watchProviders || 
+                   showData?.watchProviders?.results?.US?.flatrate || 
                    showData?.watch_providers?.results?.US?.flatrate || 
                    [];
   

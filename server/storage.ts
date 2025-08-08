@@ -4,10 +4,9 @@ import {
   shows,
   watchlist,
   userPreferences,
-  passwordResetCodes
+  passwordResetCodes,
+  watchHistory
 } from "../shared/schema/index";
-
-
 
 // Import all other tables from PostgreSQL schema (they will use fallback behavior)
 import {
@@ -25,7 +24,6 @@ import {
   aiRecommendations,
   searchAlerts,
   streamingIntegrations,
-  viewingHistory,
   userBehavior,
   recommendationTraining,
   contactImports,
@@ -74,8 +72,6 @@ import {
   type InsertUserPreferences,
   type StreamingIntegration,
   type InsertStreamingIntegration,
-  type ViewingHistory,
-  type InsertViewingHistory,
   type UserBehavior,
   type InsertUserBehavior,
   type RecommendationTraining,
@@ -85,6 +81,18 @@ import {
   type SocialConnection,
   type InsertSocialConnection
 } from "../shared/schema";
+
+// Import SQLite-specific types
+import type {
+  User,
+  NewUser,
+  WatchHistory,
+  NewWatchHistory,
+  Watchlist,
+  NewWatchlist,
+  PasswordResetCode,
+  NewPasswordResetCode
+} from "../shared/schema/index";
 import { db } from "./db";
 import { eq, and, or, desc, count, ilike, inArray, sql } from "drizzle-orm";
 
@@ -190,8 +198,8 @@ interface IStorage {
   deleteStreamingIntegration(id: number, userId: string): Promise<void>;
 
   // Viewing History methods
-  getUserViewingHistory(userId: string, limit?: number): Promise<ViewingHistory[]>;
-  createViewingHistory(history: InsertViewingHistory): Promise<ViewingHistory>;
+  getUserViewingHistory(userId: string, limit?: number): Promise<WatchHistory[]>;
+  createViewingHistory(history: NewWatchHistory): Promise<WatchHistory>;
   getShowByTitle(title: string): Promise<Show | undefined>;
 
   // User Behavior Tracking methods
@@ -690,7 +698,7 @@ export class DatabaseStorage implements IStorage {
       // Get user's viewing history and watchlist to avoid duplicates
       const viewingHistory = await this.getUserViewingHistory(userId, 100);
       const watchlist = await this.getUserWatchlist(userId);
-      const watchedShowIds = viewingHistory.map(vh => vh.showId);
+      const watchedShowIds = viewingHistory.map(vh => vh.contentId);
       const watchlistShowIds = watchlist.map(w => w.showId);
       const avoidShowIds = [...watchedShowIds, ...watchlistShowIds];
 
@@ -1102,12 +1110,12 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Viewing History methods
-  async getUserViewingHistory(userId: string, limit?: number): Promise<ViewingHistory[]> {
+  async getUserViewingHistory(userId: string, limit?: number): Promise<WatchHistory[]> {
     const query = db
       .select()
-      .from(viewingHistory)
-      .where(eq(viewingHistory.userId, userId))
-      .orderBy(desc(viewingHistory.watchedAt));
+      .from(watchHistory)
+      .where(eq(watchHistory.userId, userId))
+      .orderBy(desc(watchHistory.watchedAt));
 
     if (limit) {
       query.limit(limit);
@@ -1116,9 +1124,9 @@ export class DatabaseStorage implements IStorage {
     return await query;
   }
 
-  async createViewingHistory(history: InsertViewingHistory): Promise<ViewingHistory> {
+  async createViewingHistory(history: NewWatchHistory): Promise<WatchHistory> {
     const [newHistory] = await db
-      .insert(viewingHistory)
+      .insert(watchHistory)
       .values(history)
       .returning();
     return newHistory;

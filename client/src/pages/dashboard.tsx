@@ -1,20 +1,106 @@
-import React, { useState } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { useContinueWatching, useCurrentProgress } from "@/hooks/useViewingHistory";
+import { useFilterOptions } from "@/hooks/useFilterOptions";
+import { useLocalStorage } from "@/hooks/useLocalStorage";
+import { useFilters } from "@/hooks/useFilters";
 import NavigationHeader from "@/components/navigation-header";
 import Toast from "@/components/toast";
 import RecommendationModal from "@/components/recommendation-modal";
+import ShowDetailsModal from "@/components/show-details-modal";
+import { ListSelectorModal } from "@/components/list-selector-modal";
+import { DashboardFilterProvider, useDashboardFilters } from "@/components/dashboard/filters/DashboardFilterProvider";
+import { RecommendationFilter } from "@/components/filters/RecommendationFilter";
+import { FriendFeedFilterChips } from "@/components/dashboard/filters/FriendFeedFilterChips";
+import { CustomListFilterPanel } from "@/components/dashboard/filters/CustomListFilterPanel";
+import type { RecommendationFilters } from "@/components/filters/types";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Play, Star, Clock, Users, Plus, TrendingUp, Sparkles, BarChart3, Eye, Brain, Flame, Heart, Filter, List } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Play, Star, Clock, Users, Plus, TrendingUp, Sparkles, BarChart3, Eye, Brain, Flame, Heart, Filter, List, X, Bookmark } from "lucide-react";
 import { getShowTitle, getShowPosterUrl, getShowBackdropUrl, getStreamingPlatforms, getStreamingLogo, formatRating, trackEvent, getShowRating, getShowOverview, getShowId } from "@/utils/show-utils";
+import { motion } from "framer-motion";
 
-export default function Dashboard() {
+// Error Boundary Component for graceful error handling
+const ErrorFallback: React.FC<{ 
+  error?: Error; 
+  resetError?: () => void; 
+  title?: string;
+  className?: string;
+}> = ({ error, resetError, title = "Something went wrong", className = "" }) => (
+  <div className={`bg-gray-800 rounded-lg p-6 text-center ${className}`}>
+    <div className="text-red-400 mb-2">⚠️</div>
+    <h3 className="text-lg font-medium text-white mb-2">{title}</h3>
+    <p className="text-gray-400 text-sm mb-4">
+      {error?.message || "We encountered an unexpected error. Please try again."}
+    </p>
+    {resetError && (
+      <Button 
+        onClick={resetError} 
+        variant="outline" 
+        size="sm"
+        className="text-white border-gray-600 hover:border-gray-500"
+      >
+        Try Again
+      </Button>
+    )}
+  </div>
+);
+
+// Safe wrapper component for error boundaries
+const SafeSection: React.FC<{ 
+  children: React.ReactNode; 
+  fallback?: React.ReactNode;
+  title?: string;
+  className?: string;
+}> = ({ children, fallback, title, className }) => {
+  try {
+    return <>{children}</>;
+  } catch (error) {
+    console.error(`Error in ${title || 'section'}:`, error);
+    return fallback || <ErrorFallback error={error as Error} title={title} className={className} />;
+  }
+};
+
+function Dashboard() {
   const { user, isLoading, isAuthenticated } = useAuth();
-  const [selectedGenre, setSelectedGenre] = useState("all");
+  const { watchlistStatus, preferredGenres, setFilter } = useDashboardFilters(); // Get from context
   const [selectedRecommendationGenre, setSelectedRecommendationGenre] = useState("all"); // Separate genre filter for Just For You section
   const [recommendationMode, setRecommendationMode] = useState("ai"); // "ai" or "trending"
   const [selectedShow, setSelectedShow] = useState<any>(null);
+  
+  // Spotlight filter type: "genre" or "network"
+  const [spotlightFilterType, setSpotlightFilterType] = useState<'genre' | 'network'>('genre');
+  const [selectedNetwork, setSelectedNetwork] = useState('all');
+  
+  // Available networks for filtering
+  const availableNetworks = useMemo(() => [
+    { id: 'all', name: 'All' },
+    { id: '213', name: 'Netflix' },
+    { id: '2', name: 'ABC' },
+    { id: '1024', name: 'Hulu' },
+    { id: '49', name: 'HBO' },
+    { id: '2552', name: 'Apple TV+' },
+    { id: '2739', name: 'Paramount+' },
+    { id: '1303', name: 'Disney+' },
+    { id: '3353', name: 'Peacock' },
+    { id: '21', name: 'BBC' }
+  ], []);
+  
+  // 🎯 Section-Specific Smart Filters
+  const [recommendationFilters, setRecommendationFilters] = useState<RecommendationFilters>({
+    mood: 'discover',
+    genre: '',
+    platform: ''
+  });
+  
+  // Modal states
+  const [listSelectorOpen, setListSelectorOpen] = useState(false);
+  const [showToAddToList, setShowToAddToList] = useState<any>(null);
+  const [showDetailsModalOpen, setShowDetailsModalOpen] = useState(false);
+  const [selectedShowForDetails, setSelectedShowForDetails] = useState<any>(null);
 
   // Toast state
   const [toast, setToast] = useState({
@@ -23,8 +109,8 @@ export default function Dashboard() {
     type: 'success' as 'success' | 'error' | 'info'
   });
 
-  // Fetch user preferences to get onboarding genre data
-  const { data: userPreferencesData } = useQuery({
+  // 🎯 Section-Specific Smart Filters
+  const { data: userPreferencesData, error: preferencesError } = useQuery({
     queryKey: ["/api/user/preferences"],
     queryFn: async () => {
       const res = await fetch("/api/user/preferences", { credentials: 'include' });
@@ -41,14 +127,15 @@ export default function Dashboard() {
             preferredNetworks: userData.preferences?.preferredNetworks || []
           };
         }
-        return null;
+        throw new Error('Both preferences and user data fetch failed');
       }
       const data = await res.json();
       console.log("🔍 Raw user preferences API response:", data);
       return data.preferences;
     },
     enabled: !!isAuthenticated,
-    staleTime: 600000 // Cache for 10 minutes
+    staleTime: 600000, // Cache for 10 minutes
+    retry: 1 // Only retry once to avoid infinite loops
   });
 
   // Fetch genres dynamically from TMDB
@@ -63,10 +150,10 @@ export default function Dashboard() {
   });
 
   // Create personalized genres array based on user onboarding preferences
-  const genres = React.useMemo(() => {
+  const genres = useMemo(() => {
     const allGenres = genresData?.genres || [];
     
-    console.log("🎭 All available TMDB genres:", allGenres.map(g => `${g.name} (${g.id})`));
+    console.log("🎭 All available TMDB genres:", allGenres.map((g: any) => `${g.name} (${g.id})`));
     
     // Enhanced genre mapping to cover all possible onboarding selections including Sports
     const extendedGenres = [
@@ -77,7 +164,7 @@ export default function Dashboard() {
     
     // Robust fallback for user preferences
     const knownUserPreferences = ["Drama", "Comedy", "Thriller", "Romance"];
-    const rawUserPreferences = userPreferencesData?.preferredGenres;
+    const rawUserPreferences = (userPreferencesData as any)?.preferredGenres;
     
     console.log("🧪 Raw userPreferencesData.preferredGenres:", rawUserPreferences);
     console.log("🎭 User preferences data:", userPreferencesData);
@@ -174,9 +261,45 @@ export default function Dashboard() {
     ];
   }, [genresData, userPreferencesData]);
 
-  // Additional state and hooks
+  // Enhanced genres with popular additions for better discovery
+  const enhancedGenres = useMemo(() => {
+    if (genres.length >= 8) return genres; // If we already have enough genres, use them
+    
+    // Add popular genres if the current list is too short
+    if (!genresData?.genres) return genres;
+    
+    const popularGenreNames = ['Action', 'Comedy', 'Drama', 'Thriller', 'Horror', 'Romance', 'Sci-Fi', 'Documentary', 'Animation', 'Crime'];
+    const existingIds = new Set(genres.map(g => g.id));
+    
+    const additionalGenres = popularGenreNames
+      .map(name => {
+        const found = genresData.genres.find((g: any) => g.name === name);
+        return found ? { id: String(found.id), name: found.name } : null;
+      })
+      .filter(Boolean)
+      .filter(genre => !existingIds.has(genre!.id))
+      .slice(0, 8 - genres.length);
+    
+    return [...genres, ...additionalGenres];
+  }, [genres, genresData]);
 
-  // Extracted navigation handlers
+  // Compute selected genre from centralized filter context
+  const selectedGenre = useMemo(() => {
+    if (!preferredGenres || preferredGenres.length === 0) return "all";
+    
+    // Use the first selected genre from the filter context
+    const firstGenre = preferredGenres[0];
+    
+    // Find the matching genre ID in our enhanced genres
+    const matchingGenre = enhancedGenres.find(g => 
+      g.name.toLowerCase() === firstGenre.toLowerCase() ||
+      g.id === firstGenre
+    );
+    
+    return matchingGenre ? matchingGenre.id : "all";
+  }, [preferredGenres, enhancedGenres]);
+
+  // Navigation and utility handlers
   const goToSocial = () => window.location.href = '/social';
   const goToLists = () => window.location.href = '/lists';
   const goToSpecificList = (listId: number) => window.location.href = `/lists/${listId}`;
@@ -190,42 +313,29 @@ export default function Dashboard() {
     setToast(prev => ({ ...prev, isVisible: false }));
   };
 
+  // Show details handler
+  const handleShowDetails = (show: any) => {
+    setSelectedShowForDetails(show);
+    setShowDetailsModalOpen(true);
+  };
+
   // Button handlers with analytics tracking
 
   const handleAddToList = async (show: any) => {
     const title = getShowTitle(show);
     const showId = getShowId(show);
-    const posterPath = getShowPosterUrl(show);
     
     try {
       trackEvent('Add to List Clicked', { showId: showId, showTitle: title });
       
-      // Use the first list (assuming a default "Want to Watch" list with ID 1)
-      const response = await fetch('/api/user/lists/1/add', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({
-          itemId: showId,
-          itemType: show.media_type || 'tv',
-          title: title,
-          posterPath: posterPath
-        })
-      });
+      // Open list selector modal instead of adding to default list
+      setShowToAddToList(show);
+      setListSelectorOpen(true);
       
-      if (response.ok) {
-        showToast(`Added "${title}" to your list!`, 'success');
-        trackEvent('Add to List Success', { showId: showId, showTitle: title });
-      } else {
-        const errorData = await response.json().catch(() => ({}));
-        console.error('Add to list failed:', errorData);
-        showToast('Failed to add to list', 'error');
-        trackEvent('Add to List Failed', { showId: showId, error: 'API Error' });
-      }
     } catch (error) {
-      console.error('Failed to add to watchlist:', error);
-      showToast('Failed to add to watchlist', 'error');
-      trackEvent('Add to List Failed', { showId: showId, error: 'Network Error' });
+      console.error('Failed to open list selector:', error);
+      showToast('Failed to open list selector', 'error');
+      trackEvent('Add to List Failed', { showId: showId, error: 'Modal Error' });
     }
   };
 
@@ -237,23 +347,32 @@ export default function Dashboard() {
     try {
       trackEvent('Watch Now Clicked', { showId: showId, showTitle: title });
       
-      // If streaming platforms are available, use the first one
+      // If streaming platforms are available, use the first one directly
       if (streamingPlatforms && streamingPlatforms.length > 0) {
         const platform = streamingPlatforms[0];
-        if (platform.link) {
-          // Direct to streaming service with affiliate link support
-          trackEvent('Streaming Platform Redirect', { 
-            showId: showId, 
-            platform: platform.provider_name,
-            affiliateLink: platform.link
-          });
-          window.open(platform.link, '_blank');
-          return;
-        }
+        
+        // Generate platform-specific URL - handle both name and provider_name properties
+        const platformName = platform.name || platform.provider_name;
+        const platformUrl = getPlatformDirectUrl(platformName, title);
+        
+        trackEvent('Streaming Platform Redirect', { 
+          showId: showId, 
+          platform: platformName,
+          directLink: platformUrl
+        });
+        
+        showToast(`Opening on ${platformName}...`, 'info');
+        window.open(platformUrl, '_blank');
+        return;
       }
       
       // Fallback: Get streaming data and try again
-      const response = await fetch(`/api/streaming/comprehensive/tv/${showId}`, {
+      const params = new URLSearchParams({
+        title: title,
+        ...(show.imdb_id && { imdbId: show.imdb_id })
+      });
+      
+      const response = await fetch(`/api/streaming/comprehensive/tv/${showId}?${params}`, {
         credentials: 'include'
       });
       
@@ -261,29 +380,66 @@ export default function Dashboard() {
         const streamingData = await response.json();
         if (streamingData.results && streamingData.results.length > 0) {
           const firstPlatform = streamingData.results[0];
-          if (firstPlatform.link) {
-            trackEvent('Streaming Platform Redirect (Fetched)', { 
-              showId: showId, 
-              platform: firstPlatform.provider_name,
-              affiliateLink: firstPlatform.link
-            });
-            window.open(firstPlatform.link, '_blank');
-            return;
-          }
+          const platformName = firstPlatform.name || firstPlatform.provider_name;
+          const platformUrl = getPlatformDirectUrl(platformName, title);
+          
+          trackEvent('Streaming Platform Redirect (Fetched)', { 
+            showId: showId, 
+            platform: platformName,
+            directLink: platformUrl
+          });
+          
+          showToast(`Opening on ${platformName}...`, 'info');
+          window.open(platformUrl, '_blank');
+          return;
         }
       }
       
-      // Final fallback: Google search
+      // Final fallback: First available streaming platform search
+      const platformUrl = getPlatformDirectUrl('Netflix', title); // Default to Netflix search
       trackEvent('Watch Now Fallback', { showId: showId, showTitle: title });
-      showToast('Opening search for streaming options...', 'info');
-      window.open(`https://www.google.com/search?q=watch+${encodeURIComponent(title)}+online+streaming`, '_blank');
+      showToast('Opening on streaming platform...', 'info');
+      window.open(platformUrl, '_blank');
       
     } catch (error) {
       console.error('Watch Now error:', error);
       trackEvent('Watch Now Error', { showId: showId, error: error });
-      // Fallback to Google search
-      window.open(`https://www.google.com/search?q=watch+${encodeURIComponent(title)}+online+streaming`, '_blank');
+      // Fallback to Netflix search
+      const platformUrl = getPlatformDirectUrl('Netflix', title);
+      window.open(platformUrl, '_blank');
     }
+  };
+
+  // Helper function to get direct platform URLs
+  const getPlatformDirectUrl = (platformName: string, title: string): string => {
+    const encodedTitle = encodeURIComponent(title);
+    
+    const platformUrls: { [key: string]: string } = {
+      'Netflix': `https://www.netflix.com/search?q=${encodedTitle}`,
+      'Disney Plus': `https://www.disneyplus.com/search?q=${encodedTitle}`,
+      'Disney+': `https://www.disneyplus.com/search?q=${encodedTitle}`,
+      'Hulu': `https://www.hulu.com/search?q=${encodedTitle}`,
+      'Amazon Prime Video': `https://www.amazon.com/gp/video/search?phrase=${encodedTitle}`,
+      'Prime Video': `https://www.amazon.com/gp/video/search?phrase=${encodedTitle}`,
+      'HBO Max': `https://play.max.com/search?q=${encodedTitle}`,
+      'Max': `https://play.max.com/search?q=${encodedTitle}`,
+      'Apple TV Plus': `https://tv.apple.com/search?term=${encodedTitle}`,
+      'Apple TV+': `https://tv.apple.com/search?term=${encodedTitle}`,
+      'Paramount Plus': `https://www.paramountplus.com/search/?query=${encodedTitle}`,
+      'Paramount+': `https://www.paramountplus.com/search/?query=${encodedTitle}`,
+      'Peacock': `https://www.peacocktv.com/search?q=${encodedTitle}`,
+      'Crunchyroll': `https://www.crunchyroll.com/search?q=${encodedTitle}`,
+      'YouTube TV': `https://tv.youtube.com/search?q=${encodedTitle}`,
+      'Youtube TV': `https://tv.youtube.com/search?q=${encodedTitle}`,
+      'Showtime': `https://www.showtime.com/search?q=${encodedTitle}`,
+      'Starz': `https://www.starz.com/search?query=${encodedTitle}`,
+      'fuboTV': `https://www.fubo.tv/search?query=${encodedTitle}`,
+      'Philo': `https://www.philo.com/search?q=${encodedTitle}`,
+      'Amazon Video': `https://www.amazon.com/gp/video/search?phrase=${encodedTitle}`,
+      'Apple TV': `https://tv.apple.com/search?term=${encodedTitle}`
+    };
+    
+    return platformUrls[platformName] || `https://www.netflix.com/search?q=${encodedTitle}`;
   };
 
   const handleWatchTrailer = async (show: any) => {
@@ -293,57 +449,52 @@ export default function Dashboard() {
     try {
       trackEvent('Watch Trailer Clicked', { showId: showId, showTitle: title });
       
-      const response = await fetch(`/api/tmdb/tv/${showId}/videos`);
-      const data = await response.json();
-      const trailer = data.results?.find((video: any) => 
-        video.type === 'Trailer' && video.site === 'YouTube'
-      );
+      // Open the enhanced show details modal with trailer tab
+      setSelectedShowForDetails(show);
+      setShowDetailsModalOpen(true);
       
-      if (trailer) {
-        trackEvent('Trailer Found', { showId: showId, trailerKey: trailer.key });
-        window.open(`https://www.youtube.com/watch?v=${trailer.key}`, '_blank');
-      } else {
-        showToast('No trailer available for this show', 'info');
-        trackEvent('Trailer Not Found', { showId: showId });
-      }
     } catch (error) {
-      console.error('Failed to fetch trailer:', error);
+      console.error('Failed to open trailer:', error);
       showToast('Failed to load trailer', 'error');
-      trackEvent('Trailer Fetch Failed', { showId: showId });
+      trackEvent('Trailer Open Failed', { showId: showId });
     }
   };
 
-  // Fetch trending/spotlight data filtered by genre WITHOUT streaming data for faster loading
+  // Fetch trending/spotlight data filtered by genre or network
   const { data: spotlightData, isLoading: spotlightLoading, error: spotlightError } = useQuery({
-    queryKey: ["/api/tmdb/trending", selectedGenre],
+    queryKey: ["/api/tmdb/trending-enhanced-v2", spotlightFilterType, spotlightFilterType === 'genre' ? selectedGenre : selectedNetwork],
     queryFn: async () => {
-      console.log("🎬 Fetching spotlight for genre:", selectedGenre, typeof selectedGenre);
+      let url = `/api/tmdb/spotlight`; // Default fallback to real TMDB trending
       
-      let url;
-      if (selectedGenre === "all") {
-        // Use trending WITHOUT streaming data for faster loading
-        url = `/api/trending/tv/day`;
-      } else {
-        // Use discover API for specific genres WITHOUT streaming data
-        url = `/api/tmdb/discover/tv?with_genres=${selectedGenre}&sort_by=popularity.desc`;
+      if (spotlightFilterType === 'genre') {
+        if (selectedGenre === "all") {
+          url = `/api/tmdb/spotlight`;
+        } else {
+          url = `/api/tmdb/discover/tv?with_genres=${selectedGenre}&sort_by=popularity.desc`;
+        }
+      } else if (spotlightFilterType === 'network') {
+        if (selectedNetwork === "all") {
+          url = `/api/tmdb/spotlight`;
+        } else {
+          url = `/api/tmdb/discover/tv?with_networks=${selectedNetwork}&sort_by=popularity.desc`;
+        }
       }
-      
-      console.log("🔗 Spotlight URL (fast mode):", url);
       
       const res = await fetch(url);
       if (!res.ok) {
-        console.error("❌ Spotlight fetch failed:", res.status, res.statusText);
         throw new Error(`Failed to fetch trending: ${res.status}`);
       }
-      
       const data = await res.json();
-      console.log("📊 Spotlight API response:", data);
-      console.log("✅ Spotlight data received (fast mode):", data.results?.length || 0, "items");
+      
+      // Normalize the response: spotlight endpoint returns {trending: [...]} while discover returns {results: [...]}
+      if (data.trending) {
+        return { results: data.trending };
+      }
       return data;
     },
     enabled: !!isAuthenticated,
-    staleTime: 300000, // Cache for 5 minutes to improve performance
-    refetchOnWindowFocus: false, // Don't refetch when window gains focus
+    staleTime: 0, // Force fresh data
+    refetchOnWindowFocus: false,
   });
 
     // Fetch AI recommendations filtered by genre
@@ -406,6 +557,20 @@ export default function Dashboard() {
 
   // Real continue watching data using the new hook
   const { data: continueWatchingData, isLoading: continueWatchingLoading } = useContinueWatching();
+  
+  // Debug logging for continue watching data
+  React.useEffect(() => {
+    if (continueWatchingData) {
+      console.log('📺 Continue watching data:', continueWatchingData);
+      continueWatchingData.forEach((item, index) => {
+        console.log(`Show ${index + 1}:`, {
+          title: item.title,
+          poster_path: item.poster_path,
+          posterUrl: getShowPosterUrl(item)
+        });
+      });
+    }
+  }, [continueWatchingData]);
 
   // Real progress data using the new hook  
   const { data: progressData, isLoading: progressLoading } = useCurrentProgress();
@@ -489,7 +654,7 @@ export default function Dashboard() {
   });
 
   // Fetch friend activity with fallback
-  const { data: friendActivity } = useQuery({
+  const { data: friendActivityData } = useQuery({
     queryKey: ["/api/social/activity"],
     queryFn: async () => {
       try {
@@ -531,6 +696,37 @@ export default function Dashboard() {
   }
 
   const featuredShow = spotlightData?.results?.[0] ?? null;
+  
+  // Enhanced streaming data for spotlight feature
+  const { data: enhancedStreamingData } = useQuery({
+    queryKey: ["/api/streaming/comprehensive/tv", featuredShow?.id, featuredShow?.name],
+    queryFn: async () => {
+      if (!featuredShow?.id || !featuredShow?.name) return null;
+      
+      console.log("🎬 Fetching enhanced streaming data for:", featuredShow.id, featuredShow.name);
+      const params = new URLSearchParams({
+        title: featuredShow.name,
+        ...(featuredShow.imdb_id && { imdbId: featuredShow.imdb_id })
+      });
+      
+      const res = await fetch(`/api/streaming/comprehensive/tv/${featuredShow.id}?${params}`, { 
+        credentials: 'include' 
+      });
+      
+      if (!res.ok) {
+        console.warn("⚠️ Enhanced streaming data unavailable, using fallback");
+        return null;
+      }
+      
+      const data = await res.json();
+      console.log("📺 Enhanced streaming data:", data);
+      return data;
+    },
+    enabled: !!featuredShow?.id && !!featuredShow?.name,
+    staleTime: 900000, // Cache for 15 minutes
+    retry: 1
+  });
+
   const currentRecommendations = recommendationMode === "ai" 
     ? (aiRecommendations?.recommendations || aiRecommendations?.results || aiRecommendations) 
     : (() => {
@@ -551,7 +747,9 @@ export default function Dashboard() {
       })();
 
   // Simplify expressions with intermediate variables
-  const featuredShowStreaming = getStreamingPlatforms(featuredShow);
+  const featuredShowStreaming = enhancedStreamingData?.results 
+    ? enhancedStreamingData.results 
+    : getStreamingPlatforms(featuredShow);
   const featuredShowTitle = getShowTitle(featuredShow);
   const featuredShowBackdrop = getShowBackdropUrl(featuredShow);
   
@@ -572,151 +770,174 @@ export default function Dashboard() {
         onClose={hideToast}
       />
       
-      <main className="max-w-7xl mx-auto px-4 md:px-6 py-4 pt-4 md:pt-20 pb-24 md:pb-4 overflow-x-hidden">
+      <main className="max-w-7xl mx-auto px-4 md:px-6 py-1 pt-1 md:pt-3 pb-24 md:pb-4 overflow-x-hidden">
         {/* Main Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 md:gap-6 w-full">
           {/* Main Content Area (3/4) */}
           <div className="lg:col-span-3 w-full min-w-0">
-            {/* Compact Welcome + Stats */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
+            {/* Compact Welcome */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-2 gap-2">
               <div>
                 <h1 className="text-xl md:text-2xl font-bold">Welcome back, {user?.firstName || user?.displayName || 'there'}!</h1>
                 <p className="text-gray-400 text-sm">Ready to discover your next binge?</p>
               </div>
-              
-              {/* Compact Stats Pills */}
-              <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
-                <div className="flex items-center gap-2 bg-gray-800 px-2 sm:px-3 py-2 text-xs sm:text-sm rounded-lg">
-                  <Eye className="h-3 w-3 sm:h-4 sm:w-4 text-blue-400" />
-                  <span className="text-gray-300">{userStats?.totalWatched || 0}</span>
-                </div>
-                <div className="flex items-center gap-2 bg-gray-800 px-2 sm:px-3 py-2 text-xs sm:text-sm rounded-lg">
-                  <Clock className="h-3 w-3 sm:h-4 sm:w-4 text-teal-400" />
-                  <span className="text-gray-300">{userStats?.totalHours || 0}h</span>
-                </div>
-                <div className="flex items-center gap-2 bg-gray-800 px-2 sm:px-3 py-2 text-xs sm:text-sm rounded-lg">
-                  <Star className="h-3 w-3 sm:h-4 sm:w-4 text-yellow-400" />
-                  <span className="text-gray-300">{userStats?.avgRating || 0}</span>
-                </div>
-              </div>
             </div>
 
-            {/* Spotlight Section with Genre Filter */}
-            <div className="mb-8">
-              <div className="flex items-center justify-between mb-4">
+            {/* Spotlight Section with Filter Type Selector */}
+            <div className="mb-5">
+              <div className="flex items-center justify-between mb-3">
                 <h2 className="text-xl md:text-2xl font-bold flex items-center gap-2">
                   <Sparkles className="h-5 w-5 md:h-6 md:w-6 text-yellow-400" />
                   Spotlight
                 </h2>
-                {/* Spotlight Genre Filter */}
                 <div className="flex items-center gap-2">
                   <Filter className="h-4 w-4 text-gray-400" />
-                  <span className="text-sm text-gray-400">Genre:</span>
-                  {genresLoading ? (
-                    <div className="flex gap-2">
-                      {[...Array(6)].map((_, i) => (
-                        <div key={i} className="h-8 w-16 bg-gray-800 rounded animate-pulse"></div>
-                      ))}
-                    </div>
-                  ) : (
-                    genres.map((genre) => (
-                      <Button
-                        key={genre.id}
-                        onClick={() => setSelectedGenre(String(genre.id))}
-                        variant={String(selectedGenre) === String(genre.id) ? "default" : "ghost"}
-                        size="sm"
-                        className={String(selectedGenre) === String(genre.id) 
-                          ? "bg-gray-700 text-white hover:bg-gray-600" 
-                          : "text-gray-400 hover:text-white hover:bg-gray-800"
-                        }
+                  <span className="text-sm text-gray-400">Filter by:</span>
+                  <select
+                    value={spotlightFilterType}
+                    onChange={e => setSpotlightFilterType(e.target.value as 'genre' | 'network')}
+                    className="bg-gray-800 text-white border border-gray-600 rounded px-2 py-1 text-sm"
+                  >
+                    <option value="genre">Genre</option>
+                    <option value="network">Network</option>
+                  </select>
+                  {spotlightFilterType === 'genre' ? (
+                    genresLoading ? (
+                      <div className="h-8 w-32 bg-gray-800 rounded animate-pulse"></div>
+                    ) : (
+                      <select
+                        value={selectedGenre}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          if (value === "all") {
+                            setFilter('preferredGenres', []);
+                          } else {
+                            const selectedGenreObj = enhancedGenres.find(g => g.id === value);
+                            if (selectedGenreObj) {
+                              setFilter('preferredGenres', [selectedGenreObj.name]);
+                            }
+                          }
+                        }}
+                        className="bg-gray-800 text-white border border-gray-600 rounded px-3 py-2 text-sm min-w-[120px]"
                       >
-                        {genre.name}
-                      </Button>
-                    ))
+                        {enhancedGenres.map((genre) => (
+                          <option key={genre.id} value={String(genre.id)}>
+                            {genre.name}
+                          </option>
+                        ))}
+                      </select>
+                    )
+                  ) : (
+                    <select
+                      value={selectedNetwork}
+                      onChange={e => setSelectedNetwork(e.target.value)}
+                      className="bg-gray-800 text-white border border-gray-600 rounded px-3 py-2 text-sm min-w-[120px]"
+                    >
+                      {availableNetworks.map(network => (
+                        <option key={network.id} value={network.id}>{network.name}</option>
+                      ))}
+                    </select>
                   )}
                 </div>
               </div>
 
               {/* Hero Spotlight */}
-              {spotlightLoading ? (
-                <div className="relative h-64 bg-gray-800 animate-pulse rounded-lg">
-                  <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/50 to-transparent"></div>
-                  <div className="absolute bottom-6 left-6">
-                    <div className="h-8 w-48 bg-gray-700 rounded mb-3"></div>
-                    <div className="h-4 w-96 bg-gray-700 rounded mb-4"></div>
-                    <div className="flex gap-2">
-                      <div className="h-8 w-24 bg-gray-700 rounded"></div>
-                      <div className="h-8 w-24 bg-gray-700 rounded"></div>
-                    </div>
-                  </div>
-                </div>
-              ) : featuredShow ? (
-                <div 
-                  className="relative h-64 bg-cover bg-center"
-                  style={{
-                    backgroundImage: `url(${featuredShowBackdrop})`,
-                  }}
-                >
-                  {/* Dark overlay */}
-                  <div className="absolute inset-0 bg-black/60" />
-                  
-                  {/* Content */}
-                  <div className="relative h-full flex items-center">
-                    <div className="max-w-2xl px-4 md:px-8">
-                      <div className="inline-flex items-center gap-2 bg-yellow-600/20 backdrop-blur-sm text-yellow-300 px-3 py-1 text-sm mb-3">
-                        <TrendingUp className="h-4 w-4" />
-                        #{selectedGenre === "all" ? "1 Overall" : `1 in ${genres.find(g => g.id.toString() === selectedGenre)?.name}`}
-                      </div>
-                      <h2 className="text-2xl md:text-4xl font-bold mb-4">{featuredShowTitle}</h2>
-                      <p className="text-gray-200 mb-4 line-clamp-3">{featuredShow.overview}</p>
-                      
-                      {/* Temporarily disabled streaming platforms for faster loading */}
-                      <div className="mb-4">
-                        <p className="text-sm text-blue-400 italic">
-                          🚀 Fast loading mode - search for "{featuredShowTitle}" on your favorite platform
-                        </p>
-                      </div>
-                      
-                      <div className="flex items-center gap-3">
-                        <Button 
-                          size="sm" 
-                          className="bg-white text-black hover:bg-gray-200"
-                          onClick={() => handleWatchNow(featuredShow)}
-                        >
-                          <Play className="h-4 w-4 mr-2" />
-                          Watch Now
-                        </Button>
-                        <Button 
-                          variant="secondary" 
-                          size="sm" 
-                          className="bg-red-600/80 text-white hover:bg-red-700/80"
-                          onClick={() => handleWatchTrailer(featuredShow)}
-                        >
-                          <Sparkles className="h-4 w-4 mr-2" />
-                          Trailer
-                        </Button>
-                        <Button 
-                          variant="secondary" 
-                          size="sm" 
-                          className="bg-gray-800/80 text-white hover:bg-gray-700/80"
-                          onClick={() => handleAddToList(featuredShow)}
-                        >
-                          <Plus className="h-4 w-4 mr-2" />
-                          Add to List
-                        </Button>
+              <SafeSection title="Spotlight Feature" className="h-64">
+                {spotlightLoading ? (
+                  <div className="relative h-64 bg-gray-800 animate-pulse rounded-lg">
+                    <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/50 to-transparent"></div>
+                    <div className="absolute bottom-6 left-6">
+                      <div className="h-8 w-48 bg-gray-700 rounded mb-3"></div>
+                      <div className="h-4 w-96 bg-gray-700 rounded mb-4"></div>
+                      <div className="flex gap-2">
+                        <div className="h-8 w-24 bg-gray-700 rounded"></div>
+                        <div className="h-8 w-24 bg-gray-700 rounded"></div>
                       </div>
                     </div>
                   </div>
-                </div>
-              ) : (
-                <div className="h-64 bg-gray-800 rounded-lg flex items-center justify-center">
-                  <p className="text-gray-400">No spotlight content available</p>
-                </div>
-              )}
+                ) : featuredShow ? (
+                  <div 
+                    className="relative h-64 bg-cover bg-center rounded-lg overflow-hidden"
+                    style={{
+                      backgroundImage: featuredShowBackdrop 
+                        ? `url(${featuredShowBackdrop})` 
+                        : 'linear-gradient(135deg, rgb(55 65 81) 0%, rgb(31 41 55) 100%)',
+                    }}
+                  >
+                    {/* Dark overlay */}
+                    <div className="absolute inset-0 bg-black/60" />
+                    
+                    {/* Content */}
+                    <div className="relative h-full flex items-center">
+                      <div className="max-w-2xl px-4 md:px-8">
+                        {/* Trending label */}
+                        <div className="inline-flex items-center gap-2 bg-yellow-600/20 backdrop-blur-sm text-yellow-300 px-3 py-1 text-sm mb-3">
+                          <TrendingUp className="h-4 w-4" />
+                          {spotlightFilterType === 'genre'
+                            ? `#${selectedGenre === "all" ? "1 Overall" : `1 in ${enhancedGenres.find(g => g.id.toString() === selectedGenre)?.name}`}`
+                            : `#${selectedNetwork === "all" ? "1 Overall" : `1 on ${availableNetworks.find(n => n.id === selectedNetwork)?.name}`}`
+                          }
+                        </div>
+                        <h2 className="text-2xl md:text-4xl font-bold mb-4">{featuredShowTitle}</h2>
+                        <p className="text-gray-200 mb-4 line-clamp-3">{featuredShow.overview}</p>
+                        
+                        {/* Enhanced streaming platforms display */}
+                        <div className="mb-4">
+                          {enhancedStreamingData?.results && (
+                            <div className="flex items-center gap-2 text-sm">
+                              <span className="text-blue-400">Watch on:</span>
+                              <div className="flex gap-2">
+                                {enhancedStreamingData.results.slice(0, 3).map((platform: any, idx: number) => (
+                                  <span key={idx} className="bg-blue-600/20 text-blue-300 px-2 py-1 rounded-md">
+                                    {platform.provider_name}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                        
+                        <div className="flex items-center gap-3">
+                          <Button 
+                            size="sm" 
+                            className="bg-white text-black hover:bg-gray-200"
+                            onClick={() => handleWatchNow(featuredShow)}
+                          >
+                            <Play className="h-4 w-4 mr-2" />
+                            Watch Now
+                          </Button>
+                          <Button 
+                            variant="secondary" 
+                            size="sm" 
+                            className="bg-red-600/80 text-white hover:bg-red-700/80"
+                            onClick={() => handleWatchTrailer(featuredShow)}
+                          >
+                            <Sparkles className="h-4 w-4 mr-2" />
+                            Trailer
+                          </Button>
+                          <Button 
+                            variant="secondary" 
+                            size="sm" 
+                            className="bg-gray-800/80 text-white hover:bg-gray-700/80"
+                            onClick={() => handleAddToList(featuredShow)}
+                          >
+                            <Plus className="h-4 w-4 mr-2" />
+                            Add to List
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="h-64 bg-gray-800 rounded-lg flex items-center justify-center">
+                    <p className="text-gray-400">No spotlight content available</p>
+                  </div>
+                )}
+              </SafeSection>
             </div>
 
-            {/* Just For You Section */}
-            <div className="mb-8">
+            {/* Just For You Section with Smart Inline Filter */}
+            <div className="mb-6">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-xl font-semibold flex items-center gap-2">
                   {recommendationMode === "ai" ? (
@@ -733,34 +954,18 @@ export default function Dashboard() {
                 </h3>
                 
                 <div className="flex items-center gap-4">
-                  {/* Recommendation Genre Filter */}
-                  <div className="flex items-center gap-2">
-                    <Filter className="h-4 w-4 text-gray-400" />
-                    <span className="text-sm text-gray-400">Filter:</span>
-                    {genresLoading ? (
-                      <div className="flex gap-2">
-                        {[...Array(3)].map((_, i) => (
-                          <div key={i} className="h-8 w-16 bg-gray-800 rounded animate-pulse"></div>
-                        ))}
-                      </div>
-                    ) : (
-                      <select
-                        value={selectedRecommendationGenre}
-                        onChange={(e) => setSelectedRecommendationGenre(e.target.value)}
-                        className="bg-gray-800 text-white border border-gray-600 rounded px-3 py-1 text-sm"
-                      >
-                        <option value="all">All Genres</option>
-                        {genres.filter(g => g.id !== "all").map((genre) => (
-                          <option key={genre.id} value={String(genre.id)}>
-                            {genre.name}
-                          </option>
-                        ))}
-                      </select>
-                    )}
-                  </div>
+                  {/* Smart Recommendation Filter */}
+                  <RecommendationFilter
+                    onChange={(filters) => {
+                      setRecommendationFilters(filters);
+                      console.log('🎛️ Recommendation filters changed:', filters);
+                    }}
+                    initialFilters={recommendationFilters}
+                    compact={true}
+                  />
                   
                   {/* Mode Toggle */}
-                  <div className="flex items-center bg-gray-800">
+                  <div className="flex items-center bg-gray-800 rounded-lg">
                     <Button
                       onClick={() => setRecommendationMode("ai")}
                       variant={recommendationMode === "ai" ? "default" : "ghost"}
@@ -803,9 +1008,13 @@ export default function Dashboard() {
                     <div key={index} className="group cursor-pointer">
                       <div className="bg-gray-800 aspect-[2/3] mb-2 relative overflow-hidden hover:scale-105 transition-transform">
                         <img
-                          src={showPoster}
+                          src={showPoster || '/fallback-poster.jpg'}
                           alt={showTitle}
                           className="w-full h-full object-cover"
+                          onClick={() => handleShowDetails(show)}
+                          onError={(e) => {
+                            e.currentTarget.src = '/fallback-poster.jpg';
+                          }}
                         />
                         
                         {/* Hover actions with working buttons */}
@@ -827,13 +1036,20 @@ export default function Dashboard() {
                           <button 
                             onClick={() => handleAddToList(show)}
                             className="bg-gray-800 text-white p-2 rounded hover:bg-gray-700 transition-colors"
-                            title="Add to Watchlist"
+                            title="Add to List"
                           >
                             <Plus className="h-4 w-4" />
                           </button>
+                          <button 
+                            onClick={() => handleShowDetails(show)}
+                            className="bg-blue-600 text-white p-2 rounded hover:bg-blue-700 transition-colors"
+                            title="Show Details"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </button>
                         </div>
                       </div>
-                      <p className="text-sm font-medium line-clamp-2 group-hover:text-blue-400 transition-colors">
+                      <p className="text-sm font-medium line-clamp-2 group-hover:text-blue-400 transition-colors cursor-pointer" onClick={() => handleShowDetails(show)}>
                         {showTitle}
                       </p>
                       
@@ -871,9 +1087,19 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {/* Sports Highlights Section */}
-            {sportsHighlights && sportsHighlights.length > 0 && (
-              <div className="mb-8">
+            {/* Sports Highlights Section - Only show if user selected sports/documentary genres */}
+            {sportsHighlights && sportsHighlights.length > 0 && 
+             userPreferencesData?.preferredGenres && 
+             (userPreferencesData.preferredGenres.includes('Documentary') || 
+              userPreferencesData.preferredGenres.includes('Action') ||
+              userPreferencesData.preferredGenres.includes('Sport') ||
+              userPreferencesData.preferredGenres.includes('Sports')) && (
+              <motion.div 
+                className="mb-8"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: 0.2 }}
+              >
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-xl font-semibold text-white flex items-center gap-2">
                     <BarChart3 className="h-5 w-5 text-orange-400" />
@@ -998,28 +1224,69 @@ export default function Dashboard() {
                     ))}
                   </div>
                 )}
-              </div>
+              </motion.div>
             )}
           </div>
 
           {/* Sidebar (1/4) */}
           <div className="lg:col-span-1 w-full min-w-0">
             <div className="space-y-4">
-              {/* Actionable Quick Actions Sidebar */}
+              {/* Enhanced Friend Activity Sidebar with Filtering */}
               <div 
-                onClick={goToSocial} 
                 className="bg-gray-800 p-4 hover:bg-gray-700 transition-all duration-200 cursor-pointer border-l-4 border-transparent hover:border-blue-500 group"
+                onClick={goToSocial}
               >
-                <div className="flex items-center gap-3 mb-2">
-                  <Users className="h-5 w-5 text-blue-400 group-hover:text-blue-300" />
-                  <h4 className="font-semibold text-white group-hover:text-blue-200">Friend Activity</h4>
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-3">
+                    <Users className="h-5 w-5 text-blue-400 group-hover:text-blue-300" />
+                    <h4 className="font-semibold text-white group-hover:text-blue-200">Friend Activity</h4>
+                  </div>
                 </div>
+                
+                {/* Compact Friend Feed Filter */}
+                <div className="mb-3" onClick={(e) => e.stopPropagation()}>
+                  <FriendFeedFilterChips />
+                </div>
+                
                 <p className="text-gray-400 text-sm mb-3 group-hover:text-gray-300">See what your friends are watching</p>
-                <div className="text-xs text-gray-500 mb-2">
-                  {friendActivity?.recent?.length || 0} recent activities
-                </div>
+                
+                {/* Recent Activity Preview */}
+                {friendActivityData?.recent && friendActivityData.recent.length > 0 ? (
+                  <div className="space-y-2 mb-3">
+                    {friendActivityData.recent.slice(0, 2).map((activity: any, index: number) => (
+                      <div 
+                        key={index} 
+                        className="flex items-center gap-2 p-2 hover:bg-gray-600 rounded transition-colors text-sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          console.log('View activity:', activity);
+                        }}
+                      >
+                        <div className="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
+                          <Users className="h-3 w-3 text-white" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-white text-xs font-medium truncate">
+                            {activity.friendName}
+                          </p>
+                          <p className="text-gray-400 text-xs truncate">
+                            {activity.action} {activity.showTitle}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-xs text-gray-500 mb-2">
+                    No recent activity
+                  </div>
+                )}
+                
                 <div className="text-xs text-blue-400 group-hover:text-blue-300 font-medium">
-                  Click to view all →
+                  {friendActivityData?.recent?.length > 0 
+                    ? `View all ${friendActivityData.recent.length} activities →` 
+                    : 'View friend activity →'
+                  }
                 </div>
               </div>
 
@@ -1044,8 +1311,28 @@ export default function Dashboard() {
                             handleWatchNow(item);
                           }}
                         >
-                          <div className="w-8 h-8 bg-blue-600 rounded flex items-center justify-center flex-shrink-0">
-                            <Play className="h-4 w-4 text-white" />
+                          <div className="w-8 h-8 rounded overflow-hidden flex-shrink-0">
+                            <img 
+                              src={getShowPosterUrl(item)} 
+                              alt={item.title}
+                              className="w-full h-full object-cover"
+                              onLoad={() => {
+                                console.log(`✅ Poster loaded for ${item.title}:`, getShowPosterUrl(item));
+                              }}
+                              onError={(e) => {
+                                console.error(`❌ Poster failed to load for ${item.title}:`, getShowPosterUrl(item));
+                                console.log('Item data:', item);
+                                // Fallback to play icon if poster fails to load
+                                e.currentTarget.style.display = 'none';
+                                e.currentTarget.parentElement!.innerHTML = `
+                                  <div class="w-8 h-8 bg-blue-600 rounded flex items-center justify-center">
+                                    <svg class="h-4 w-4 text-white" fill="currentColor" viewBox="0 0 24 24">
+                                      <path d="M8 5v14l11-7z"/>
+                                    </svg>
+                                  </div>
+                                `;
+                              }}
+                            />
                           </div>
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-medium text-white truncate">
@@ -1095,9 +1382,16 @@ export default function Dashboard() {
                 className="bg-gray-800 p-4 hover:bg-gray-700 transition-all duration-200 cursor-pointer border-l-4 border-transparent hover:border-teal-500 group"
                 onClick={goToLists}
               >
-                <div className="flex items-center gap-3 mb-4">
-                  <List className="h-5 w-5 text-teal-400 group-hover:text-teal-300" />
-                  <h4 className="font-semibold text-white group-hover:text-teal-200">Your Lists</h4>
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-3">
+                    <List className="h-5 w-5 text-teal-400 group-hover:text-teal-300" />
+                    <h4 className="font-semibold text-white group-hover:text-teal-200">Your Lists</h4>
+                  </div>
+                </div>
+                
+                {/* Compact Filter Panel for Lists */}
+                <div className="mb-3" onClick={(e) => e.stopPropagation()}>
+                  <CustomListFilterPanel />
                 </div>
                 
                 {userLists?.lists && userLists.lists.length > 0 ? (
@@ -1158,6 +1452,35 @@ export default function Dashboard() {
         onWatchNow={handleWatchNow}
       />
 
+      {/* List Selector Modal */}
+      <ListSelectorModal
+        isOpen={listSelectorOpen}
+        onClose={() => setListSelectorOpen(false)}
+        show={showToAddToList}
+        onSuccess={() => {
+          setListSelectorOpen(false);
+          setShowToAddToList(null);
+          showToast('Successfully added to list!', 'success');
+        }}
+      />
+
+      {/* Enhanced Show Details Modal with Integrated Trailer */}
+      <ShowDetailsModal
+        show={selectedShowForDetails}
+        open={showDetailsModalOpen}
+        onClose={() => setShowDetailsModalOpen(false)}
+        onAddToList={(show) => {
+          handleAddToList(show);
+        }}
+        onWatchNow={(show) => {
+          handleWatchNow(show);
+        }}
+        onWatchTrailer={(show) => {
+          // This function is handled internally in the modal now
+          console.log('Trailer tab activated for:', getShowTitle(show));
+        }}
+      />
+
       {/* Toast Notifications */}
       <Toast 
         isVisible={toast.isVisible}
@@ -1168,3 +1491,14 @@ export default function Dashboard() {
     </div>
   );
 }
+
+// Main Dashboard component wrapped with DashboardFilterProvider
+function DashboardWithProvider() {
+  return (
+    <DashboardFilterProvider>
+      <Dashboard />
+    </DashboardFilterProvider>
+  );
+}
+
+export default DashboardWithProvider;

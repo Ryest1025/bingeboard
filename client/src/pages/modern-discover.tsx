@@ -9,6 +9,11 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import NavigationHeader from "@/components/navigation-header";
 import { useAuth } from "@/hooks/useAuth";
 import { useStreamingEnrichedContent } from "@/hooks/useStreamingEnrichedContent";
+import { useFilterOptions } from "@/hooks/useFilterOptions";
+import { useFilters } from "@/hooks/useFilters";
+import EnhancedFilterSystem from "@/components/common/EnhancedFilterSystem";
+import { FilterBadges, type FilterValues } from "@/components/common/FilterBadges";
+import { useLocalStorage } from "@/hooks/useLocalStorage";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -167,6 +172,28 @@ export default function ModernDiscover() {
   const [showQuickFilters, setShowQuickFilters] = useState(false);
   const { user } = useAuth();
 
+  // Strategic Filter Management using custom hook with URL sync for Discover
+  const {
+    filters: discoverFilters,
+    setFilters: setDiscoverFilters,
+    clearFilters,
+    hasActiveFilters,
+    activeFilterCount,
+    applyFilters
+  } = useFilters({
+    persistKey: 'discover-filters',
+    syncWithUrl: true, // Enable deep linking for Discover page
+    onFiltersChange: (newFilters) => {
+      console.log('🔍 Discover filters changed:', newFilters);
+    }
+  });
+
+  // UI state management with localStorage persistence
+  const [showAdvancedFilters, setShowAdvancedFilters] = useLocalStorage('discover-show-filters', false);
+  const [activeFilterTab, setActiveFilterTab] = useLocalStorage('discover-active-filter-tab', 'genres');
+  const [stickyFilterSummary, setStickyFilterSummary] = useState<JSX.Element | null>(null);
+  const { filterOptions, isLoading: filterOptionsLoading } = useFilterOptions();
+
   // Initialize search query from URL parameters
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -185,6 +212,30 @@ export default function ModernDiscover() {
     }, 300);
     return () => clearTimeout(timer);
   }, [searchQuery]);
+
+  // Strategic Discover Filter Handlers
+  const handleDiscoverFiltersChange = (filters: FilterValues) => {
+    setDiscoverFilters(filters);
+    // Real-time filter updates - could trigger immediate UI updates
+  };
+
+  const handleDiscoverFiltersApply = (filters: FilterValues) => {
+    setDiscoverFilters(filters); // Update state and trigger the filter change
+    // Trigger filtered content fetch
+    console.log('🎯 Applying discover filters:', filters);
+  };
+
+  const handleRemoveDiscoverFilter = (type: keyof FilterValues, value: string) => {
+    const newFilters = {
+      ...discoverFilters,
+      [type]: discoverFilters[type].filter(item => item !== value)
+    };
+    setDiscoverFilters(newFilters);
+  };
+
+  const handleClearAllDiscoverFilters = () => {
+    clearFilters(); // Use the strategic clear function from the hook
+  };
 
   // Fetch trending shows from TMDB with real streaming data (Utelly + TMDB + Watchmode)
   const { data: trendingData } = useQuery({
@@ -363,8 +414,8 @@ export default function ModernDiscover() {
 
 
   const handleMoreFilters = () => {
-    console.log("Opening advanced filters");
-    // This would open a modal or expand filter options
+    setShowAdvancedFilters(!showAdvancedFilters);
+    console.log("🎯 Toggling advanced filters:", !showAdvancedFilters);
   };
 
   const handleTrendingView = () => {
@@ -502,6 +553,115 @@ export default function ModernDiscover() {
                 })}
               </div>
             </div>
+          </div>
+
+          {/* STRATEGIC FILTER SYSTEM INTEGRATION */}
+          <div className="space-y-4">
+            {/* Sticky Filter Summary Bar */}
+            {stickyFilterSummary && (
+              <div className="sticky top-0 z-40 bg-gray-900/95 backdrop-blur-sm border-b border-gray-800 px-4 py-3 mb-6 rounded-lg">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 overflow-x-auto">
+                    <Filter className="w-4 h-4 text-blue-400 flex-shrink-0" />
+                    {stickyFilterSummary}
+                  </div>
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+                      className="text-xs h-6"
+                    >
+                      Edit
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={handleClearAllDiscoverFilters}
+                      className="text-red-400 hover:text-red-300 text-xs h-6"
+                    >
+                      Clear
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                <Filter className="h-5 w-5 text-blue-400" />
+                Find Something to Watch
+                {hasActiveFilters && (
+                  <Badge variant="secondary" className="bg-blue-500/20 text-blue-300 ml-2">
+                    {activeFilterCount} active
+                  </Badge>
+                )}
+              </h2>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+                className="text-gray-400 hover:text-white"
+              >
+                {showAdvancedFilters ? 'Hide' : 'Show'} Filters
+              </Button>
+            </div>
+
+            {/* Filter Badges - Show active filters */}
+            {hasActiveFilters && (
+              <FilterBadges 
+                filters={discoverFilters}
+                onRemoveFilter={handleRemoveDiscoverFilter}
+                onClearAll={handleClearAllDiscoverFilters}
+                onToggleFilters={() => setShowAdvancedFilters(!showAdvancedFilters)}
+                className="mb-4"
+              />
+            )}
+
+            {/* Enhanced Filter System - Compact Mode for Discover */}
+            {showAdvancedFilters && (
+              <div className="p-4 bg-gray-900/50 rounded-lg border border-gray-700/50 backdrop-blur-sm">
+                <EnhancedFilterSystem
+                  persistKey="discover-filters"
+                  compactMode={true}
+                  defaultExpanded={true}
+                  showFilterSummary={true}
+                  onFiltersChange={handleDiscoverFiltersChange}
+                  onApply={handleDiscoverFiltersApply}
+                  activeTab={activeFilterTab}
+                  onActiveTabChange={setActiveFilterTab}
+                  onFilterSummaryRender={setStickyFilterSummary}
+                  className="w-full"
+                />
+              </div>
+            )}
+
+            {/* Filtered Content Preview */}
+            {hasActiveFilters && (
+              <div className="bg-gray-900/30 rounded-lg p-4 border border-gray-700/50 backdrop-blur-sm">
+                <h4 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
+                  <Eye className="h-5 w-5 text-teal-400" />
+                  Filtered Discovery Results
+                </h4>
+                <p className="text-gray-400 text-sm mb-3">
+                  {discoverFilters.genres.length > 0 && `Genres: ${discoverFilters.genres.join(', ')}`}
+                  {discoverFilters.genres.length > 0 && discoverFilters.platforms.length > 0 && ' • '}
+                  {discoverFilters.platforms.length > 0 && `Platforms: ${discoverFilters.platforms.join(', ')}`}
+                </p>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {/* This would be replaced with actual filtered content */}
+                  {[1, 2, 3, 4].map((item) => (
+                    <div key={item} className="bg-gray-800/50 rounded-lg p-4 text-center backdrop-blur-sm">
+                      <div className="w-full h-32 bg-gray-700 rounded mb-2 flex items-center justify-center">
+                        <Sparkles className="h-8 w-8 text-gray-400" />
+                      </div>
+                      <p className="text-sm text-gray-300">Filtered Content {item}</p>
+                      <p className="text-xs text-gray-500">Powered by your filters</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Top Picks Today */}

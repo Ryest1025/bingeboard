@@ -2,8 +2,11 @@ import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Card } from "@/components/ui/card";
-import { X, Volume2, VolumeX, ExternalLink, Play } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { X, Volume2, VolumeX, ExternalLink, Play, DollarSign } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
+import { AdSelector, AdAnalytics, RevenueCalculator, type AdContent } from "@/lib/adConfig";
 
 interface AdPlayerProps {
   onAdComplete: () => void;
@@ -11,59 +14,18 @@ interface AdPlayerProps {
   skipAfter?: number; // seconds after which skip is allowed
   duration?: number; // ad duration in seconds
   className?: string;
+  userPreferences?: string[]; // For ad targeting
 }
 
-interface AdContent {
-  id: string;
-  title: string;
-  description: string;
-  videoUrl: string;
-  clickUrl?: string;
-  advertiser: string;
-  duration: number;
-  skipAfter?: number;
-}
-
-// Mock ad content - in production, this would come from an ad server
-const sampleAds: AdContent[] = [
-  {
-    id: "ad1",
-    title: "Stream Your Favorites",
-    description: "Discover unlimited movies and shows",
-    videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
-    clickUrl: "https://example.com/streaming-service",
-    advertiser: "StreamMax",
-    duration: 15,
-    skipAfter: 5
-  },
-  {
-    id: "ad2", 
-    title: "Premium Snacks",
-    description: "Perfect for your movie nights",
-    videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
-    clickUrl: "https://example.com/snacks",
-    advertiser: "CinemaSnacks",
-    duration: 10,
-    skipAfter: 3
-  },
-  {
-    id: "ad3",
-    title: "Smart TV Experience",
-    description: "Upgrade your home entertainment",
-    videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4", 
-    clickUrl: "https://example.com/smart-tv",
-    advertiser: "TechVision",
-    duration: 20,
-    skipAfter: 8
-  }
-];
+// Remove the sample ads array since we're using the config system
 
 export default function AdPlayer({ 
   onAdComplete, 
   onSkip,
   skipAfter = 5,
   duration = 15,
-  className = ""
+  className = "",
+  userPreferences = []
 }: AdPlayerProps) {
   const [currentAd, setCurrentAd] = useState<AdContent | null>(null);
   const [timeLeft, setTimeLeft] = useState(duration);
@@ -71,16 +33,25 @@ export default function AdPlayer({
   const [isMuted, setIsMuted] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [showClickOverlay, setShowClickOverlay] = useState(false);
+  const [adStartTime, setAdStartTime] = useState<number>(0);
   
   const videoRef = useRef<HTMLVideoElement>(null);
   const { toast } = useToast();
+  const { user } = useAuth();
 
   useEffect(() => {
-    // Load random ad
-    const randomAd = sampleAds[Math.floor(Math.random() * sampleAds.length)];
-    setCurrentAd(randomAd);
-    setTimeLeft(randomAd.duration);
-  }, []);
+    // Load ad using the smart selection algorithm
+    const selectedAd = AdSelector.selectAd(userPreferences);
+    if (selectedAd) {
+      setCurrentAd(selectedAd);
+      setTimeLeft(selectedAd.duration);
+      
+      // Track ad view
+      if (user) {
+        AdAnalytics.trackAdView(selectedAd.id, user.id || user.uid, 'trailer-monetization');
+      }
+    }
+  }, [userPreferences, user]);
 
   useEffect(() => {
     if (!currentAd || !isPlaying) return;
@@ -88,6 +59,11 @@ export default function AdPlayer({
     const timer = setInterval(() => {
       setTimeLeft((prev) => {
         if (prev <= 1) {
+          // Track ad completion
+          if (user && currentAd) {
+            const watchTime = Date.now() - adStartTime;
+            AdAnalytics.trackAdCompletion(currentAd.id, user.id || user.uid, watchTime);
+          }
           onAdComplete();
           return 0;
         }
@@ -103,23 +79,32 @@ export default function AdPlayer({
       clearInterval(timer);
       clearTimeout(skipTimer);
     };
-  }, [currentAd, onAdComplete, skipAfter, isPlaying]);
+  }, [currentAd, onAdComplete, skipAfter, isPlaying, user, adStartTime]);
 
   const handleVideoPlay = () => {
     setIsPlaying(true);
+    setAdStartTime(Date.now());
     videoRef.current?.play();
   };
 
   const handleSkip = () => {
     if (canSkip && onSkip) {
+      // Track partial ad view
+      if (user && currentAd) {
+        const watchTime = Date.now() - adStartTime;
+        AdAnalytics.trackAdCompletion(currentAd.id, user.id || user.uid, watchTime);
+      }
       onSkip();
     }
   };
 
   const handleAdClick = () => {
-    if (currentAd?.clickUrl) {
-      // Track ad click
-      console.log('Ad clicked:', currentAd.id);
+    if (currentAd?.clickUrl && user) {
+      // Track ad click for revenue analytics
+      AdAnalytics.trackAdClick(currentAd.id, user.id || user.uid, currentAd.clickUrl);
+      
+      console.log('💰 Ad clicked - Estimated revenue:', RevenueCalculator.calculateClickRevenue(currentAd.id));
+      
       window.open(currentAd.clickUrl, '_blank');
       
       toast({
@@ -201,10 +186,14 @@ export default function AdPlayer({
             {/* Top Bar */}
             <div className="absolute top-4 left-4 right-4 flex items-center justify-between">
               <div className="flex items-center gap-2 text-white text-sm">
-                <div className="bg-red-600 px-2 py-1 rounded text-xs font-medium">
+                <div className="bg-red-600 px-2 py-1 rounded text-xs font-medium flex items-center gap-1">
                   AD
+                  <DollarSign className="w-3 h-3" />
                 </div>
                 <span>{currentAd.advertiser}</span>
+                <Badge variant="outline" className="border-green-500 text-green-400 text-xs">
+                  Revenue: ${RevenueCalculator.calculateAdRevenue(currentAd.id, false).toFixed(3)}
+                </Badge>
               </div>
               
               <div className="flex items-center gap-2">

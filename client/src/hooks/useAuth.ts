@@ -169,8 +169,8 @@ export function useAuth(): AuthState {
         // console.log('🔍 Document cookies:', document.cookie);
 
         try {
-          // console.log('🔍 Fetching /api/auth/user with credentials...');
-          const sessionResponse = await fetch('/api/auth/user', {
+          // console.log('🔍 Fetching /api/auth/session with credentials...');
+          const sessionResponse = await fetch('/api/auth/session', {
             credentials: 'include'
           });
 
@@ -181,7 +181,9 @@ export function useAuth(): AuthState {
           if (sessionResponse.ok) {
             const contentType = sessionResponse.headers.get('content-type');
             if (contentType && contentType.includes('application/json')) {
-              const user = await sessionResponse.json();
+              const sessionData = await sessionResponse.json();
+              // Extract user from session data
+              const user = sessionData.user || sessionData;
               console.log('✅ Local session found:', user.email);
               clearTimeout(loadingTimeout);
               const newState = {

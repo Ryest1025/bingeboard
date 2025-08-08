@@ -1,9 +1,13 @@
-import React from "react";
+import * as React from "react";
 import { createRoot } from "react-dom/client";
 import App from "./App";
 import "./index.css";
 
 console.log("🚀 MAIN.TSX LOADED - Starting React app");
+
+// Debug React loading
+console.log("🔍 React object:", React);
+console.log("🔍 React.useEffect:", typeof React.useEffect);
 
 // Remove Firebase initialization from main.tsx to prevent conflicts
 // Firebase will be initialized properly in the config files

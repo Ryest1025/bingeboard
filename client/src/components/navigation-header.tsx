@@ -11,6 +11,7 @@ import {
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
 import { Search, Bell, LogOut, User, Settings, Menu, X } from "lucide-react";
+import { EnhancedSearchBar } from "@/components/search/EnhancedSearchBar";
 
 export default function NavigationHeader() {
   const [location, setLocation] = useLocation();
@@ -65,6 +66,64 @@ export default function NavigationHeader() {
     e.preventDefault();
     if (searchQuery.trim()) {
       setLocation(`/discover?q=${encodeURIComponent(searchQuery)}`);
+    }
+  };
+
+  // Enhanced search handlers
+  const handleAddToWatchlist = async (showId: number) => {
+    try {
+      const response = await fetch('/api/watchlist', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ 
+          showId, 
+          status: 'want_to_watch',
+          tmdbId: showId 
+        })
+      });
+      
+      if (response.ok) {
+        // You can add a toast notification here
+        console.log('Added to watchlist successfully');
+      }
+    } catch (error) {
+      console.error('Failed to add to watchlist:', error);
+    }
+  };
+
+  const handleWatchNow = async (show: any) => {
+    // Import the utility functions
+    const { getShowTitle, getStreamingPlatforms } = await import("@/utils/show-utils");
+    
+    const title = getShowTitle(show);
+    const streamingPlatforms = getStreamingPlatforms(show);
+    
+    // Generate platform-specific URL
+    const getPlatformDirectUrl = (platformName: string, title: string): string => {
+      const encodedTitle = encodeURIComponent(title);
+      const platformUrls: { [key: string]: string } = {
+        'Netflix': `https://www.netflix.com/search?q=${encodedTitle}`,
+        'Disney+': `https://www.disneyplus.com/search?q=${encodedTitle}`,
+        'Hulu': `https://www.hulu.com/search?q=${encodedTitle}`,
+        'Amazon Prime Video': `https://www.amazon.com/gp/video/search?phrase=${encodedTitle}`,
+        'HBO Max': `https://play.max.com/search?q=${encodedTitle}`,
+        'Apple TV+': `https://tv.apple.com/search?term=${encodedTitle}`,
+        'Paramount+': `https://www.paramountplus.com/search/?query=${encodedTitle}`,
+        'Peacock': `https://www.peacocktv.com/search?q=${encodedTitle}`,
+      };
+      return platformUrls[platformName] || `https://www.netflix.com/search?q=${encodedTitle}`;
+    };
+
+    if (streamingPlatforms && streamingPlatforms.length > 0) {
+      const platform = streamingPlatforms[0];
+      const platformName = platform.name || platform.provider_name;
+      const platformUrl = getPlatformDirectUrl(platformName, title);
+      window.open(platformUrl, '_blank');
+    } else {
+      // Fallback to Netflix search
+      const platformUrl = getPlatformDirectUrl('Netflix', title);
+      window.open(platformUrl, '_blank');
     }
   };
 
@@ -127,23 +186,13 @@ export default function NavigationHeader() {
             </div>
           </div>
 
-          {/* Center: Search */}
+          {/* Center: Enhanced Search */}
           <div className="hidden sm:block flex-1 max-w-md mx-8">
-            <form onSubmit={handleSearch} className="relative">
-              <Input
-                type="text"
-                placeholder="Search shows, movies..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-white/5 border-white/10 text-white placeholder-gray-400 pr-10"
-              />
-              <button
-                type="submit"
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white"
-              >
-                <Search className="h-4 w-4" />
-              </button>
-            </form>
+            <EnhancedSearchBar 
+              placeholder="Search shows, movies..."
+              onAddToWatchlist={handleAddToWatchlist}
+              onWatchNow={handleWatchNow}
+            />
           </div>
 
           {/* Right: User Actions */}
@@ -211,23 +260,13 @@ export default function NavigationHeader() {
         {/* Mobile Menu */}
         {isMobileMenuOpen && (
           <div className="md:hidden border-t border-white/10 py-4">
-            {/* Mobile Search */}
+            {/* Mobile Enhanced Search */}
             <div className="mb-4">
-              <form onSubmit={handleSearch} className="relative">
-                <Input
-                  type="text"
-                  placeholder="Search shows, movies..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full bg-white/5 border-white/10 text-white placeholder-gray-400 pr-10"
-                />
-                <button
-                  type="submit"
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white"
-                >
-                  <Search className="h-4 w-4" />
-                </button>
-              </form>
+              <EnhancedSearchBar 
+                placeholder="Search shows, movies..."
+                onAddToWatchlist={handleAddToWatchlist}
+                onWatchNow={handleWatchNow}
+              />
             </div>
 
             {/* Mobile Navigation Items */}
