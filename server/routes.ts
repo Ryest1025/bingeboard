@@ -1,3 +1,25 @@
+  // Debug: GET user by email (mask password hash)
+  app.get('/api/debug/user-by-email', async (req, res) => {
+    const email = req.query.email?.toString().trim();
+    if (!email) return res.status(400).json({ error: 'Missing email' });
+    try {
+      const user = await storage.getUserByEmail(email);
+      if (!user) return res.status(404).json({ error: 'User not found' });
+      // Mask password hash
+      const maskedUser = { ...user, passwordHash: user.passwordHash ? '***' + user.passwordHash.slice(-6) : null };
+      res.json({ user: maskedUser });
+    } catch (err) {
+      res.status(500).json({ error: 'Failed to fetch user' });
+    }
+  });
+
+  // Debug: Echo cookies and session user
+  app.get('/api/debug/echo-cookies', (req, res) => {
+    res.json({
+      cookies: req.headers.cookie || null,
+      sessionUser: (req as any).session?.user || null
+    });
+  });
 import type { Express } from "express";
 import { type Server } from "http";
 import path from "path";
@@ -427,6 +449,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Enhanced genres error:', error);
       res.status(500).json({ message: 'Failed to fetch enhanced genres' });
+    }
+  });
+
+  // NEW: Combined genres endpoint merging TV + Movie genres to ensure broader coverage (Thriller, Romance, etc.)
+  app.get('/api/content/genres-combined/list', async (_req, res) => {
+    try {
+      const tv = await tmdbService.getGenres('tv');
+      const movie = await tmdbService.getGenres('movie');
+      const map = new Map<number, string>();
+      // Helper to insert preserving first casing
+      const addAll = (arr: any) => Array.isArray(arr?.genres) && arr.genres.forEach((g: any) => { if (!map.has(g.id)) map.set(g.id, g.name); });
+      addAll(tv);
+      addAll(movie);
+
+      // Ensure presence of expected onboarding genres even if TMDB omits them for a category
+      const mustHave = [
+        { id: 99999, name: 'Sports' },
+        { id: 53, name: 'Thriller' }, // TMDB movie genre id
+        { id: 10749, name: 'Romance' }
+      ];
+      mustHave.forEach(g => { if (![...map.values()].some(v => v.toLowerCase() === g.name.toLowerCase())) map.set(g.id, g.name); });
+
+      const genres = [...map.entries()].map(([id, name]) => ({ id, name })).sort((a, b) => a.name.localeCompare(b.name));
+      res.setHeader('Cache-Control', 'public, max-age=3600');
+      res.json({ genres, source: 'combined', count: genres.length });
+    } catch (e) {
+      console.error('Combined genres error:', e);
+      res.status(500).json({ message: 'Failed to fetch combined genres' });
     }
   });
 

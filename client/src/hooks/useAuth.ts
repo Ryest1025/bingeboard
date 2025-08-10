@@ -11,6 +11,8 @@ interface AuthState {
 // Singleton shared state for auth
 let sharedAuthState: AuthState | null = null;
 let sharedSetAuthState: ((s: AuthState) => void) | null = null;
+let sessionCheckStarted = false; // global guard to avoid repeated network fetches
+let sessionCheckCompleted = false;
 
 /**
  * 🔒 AUTHENTICATION HOOK - PRODUCTION LOCKED
@@ -63,10 +65,11 @@ export function useAuth(): AuthState {
     // console.log('🔍 useAuth hook starting - URL:', window.location.href);
 
     // ✅ Prevent repeated fetches - only run once
-    if (checkedSession) {
-      // console.log('🔍 Session already checked, skipping...');
+    if (sessionCheckStarted || checkedSession) {
+      // Already in-flight or done
       return;
     }
+    sessionCheckStarted = true;
 
     // Mobile detection and redirect - only on first load
     const userAgent = navigator.userAgent || '';
@@ -303,7 +306,8 @@ export function useAuth(): AuthState {
     initAuth();
 
     // Mark session as checked after starting auth
-    setCheckedSession(true);
+  setCheckedSession(true);
+  sessionCheckCompleted = true;
 
     return () => {
       isMounted = false;
