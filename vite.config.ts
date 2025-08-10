@@ -39,6 +39,16 @@ export default defineConfig({
       '.github.dev',
       'fuzzy-xylophone-5g97jqp4vq9wf4jjr-3000.app.github.dev' // Match Express port
     ],
-    // ❌ REMOVED proxy - Express handles /api directly when Vite is embedded
+    // ✅ Re-introduced proxy so frontend dev server (3000) can forward to backend (5000) with consistent localhost origin
+    proxy: {
+      '/api': {
+        target: 'http://localhost:5000', // Use localhost (not 127.0.0.1) to keep cookies on same origin family
+        changeOrigin: true,
+        secure: false,
+        configure: (proxy) => {
+          console.log('🔗 API proxy active: /api -> http://localhost:5000');
+        }
+      }
+    }
   },
 });

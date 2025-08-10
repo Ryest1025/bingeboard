@@ -1580,6 +1580,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Verify password
+      console.log('🔍 Password debug:', {
+        providedLength: password.length,
+        hashPresent: !!user.passwordHash,
+        hashSnippet: user.passwordHash?.slice(0, 12)
+      });
       const isValidPassword = await verifyPassword(password, user.passwordHash);
       if (!isValidPassword) {
         console.log(`❌ Invalid password for user: ${email}`);

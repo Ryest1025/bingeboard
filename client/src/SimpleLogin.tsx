@@ -34,11 +34,24 @@ export default function SimpleLogin() {
       }
 
       const endpoint = isLogin ? '/api/auth/login' : '/api/auth/register';
+      const payload = {
+        email: formData.email.trim(),
+        password: formData.password.trim(),
+        // Only send extra fields on register
+        ...(isLogin ? {} : {
+          firstName: formData.firstName?.trim(),
+          lastName: formData.lastName?.trim(),
+          confirmPassword: formData.confirmPassword?.trim()
+        })
+      } as any;
+
+      console.log('🚀 Login attempt payload:', JSON.stringify({ endpoint, ...payload, passwordLength: payload.password?.length }));
+
       const response = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify(formData)
+        body: JSON.stringify(payload)
       });
 
       if (response.ok) {
