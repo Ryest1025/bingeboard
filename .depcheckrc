@@ -1,0 +1,12 @@
+{
+  "ignoreMatches": [
+    "@types/*",
+    "sqlite3",
+    "drizzle-orm",
+    "drizzle-zod",
+    "@neondatabase/serverless",
+    "zod",
+    "react",
+    "react-dom"
+  ]
+}

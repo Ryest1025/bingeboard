@@ -1,0 +1,9 @@
+{
+  "ignore": [
+    "^server/db/index.ts$",
+    "^shared/schema.*$",
+    "^client/src/App-.*.tsx$",
+    "^client/src/firebase-test.ts$",
+    "^client/src/SimpleLogin.tsx$"
+  ]
+}

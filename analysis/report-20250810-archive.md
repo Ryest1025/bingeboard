@@ -1,0 +1,710 @@
+# Archive Mode Unused Report (20250810)
+
+## Archived Files
+\n- client/src/App-debug.tsx
+- client/src/App-diagnostic.tsx
+- client/src/App-fresh.tsx
+- client/src/App-minimal.tsx
+- client/src/App-mobile.tsx
+- client/src/App-simple.tsx
+- client/src/App-test.tsx
+- client/src/App-working.tsx
+
+## Raw ts-prune Output
+\n```
+server/stability-monitor.ts:11 - StabilityMonitor (used in module)
+server/stability-monitor.ts:195 - default
+server/storage.ts:217 - DatabaseStorage (used in module)
+client/src/App-debug.tsx:3 - default
+client/src/App-diagnostic.tsx:4 - default
+client/src/App-fresh.tsx:3 - default
+client/src/App-minimal.tsx:3 - default
+client/src/App-mobile.tsx:3 - default
+client/src/App-simple.tsx:10 - default
+client/src/App-test.tsx:1 - default
+client/src/App-working.tsx:18 - default
+client/src/firebase-test.ts:17 - default
+client/src/SimpleLogin.tsx:3 - default
+server/clients/utellyClient.ts:106 - getUniqueStreamingServices
+server/clients/utellyClient.ts:141 - filterByStreamingService
+server/clients/utellyClient.ts:24 - UtellyResponse (used in module)
+server/clients/utellyClient.ts:123 - POPULAR_STREAMING_SERVICES
+server/db/index.ts:20 - sessions
+server/db/index.ts:31 - users
+server/db/index.ts:52 - shows
+server/db/index.ts:70 - platforms
+server/db/index.ts:79 - showPlatforms
+server/db/index.ts:93 - watchlists
+server/db/index.ts:109 - friendships
+server/db/index.ts:124 - contactImports
+server/db/index.ts:137 - socialConnections
+server/db/index.ts:157 - friendSuggestions
+server/db/index.ts:171 - activities
+server/db/index.ts:184 - activityLikes
+server/db/index.ts:198 - activityComments
+server/db/index.ts:207 - recommendations
+server/db/index.ts:217 - upcomingReleases
+server/db/index.ts:234 - releaseReminders
+server/db/index.ts:253 - notifications
+server/db/index.ts:267 - sports
+server/db/index.ts:277 - teams
+server/db/index.ts:293 - games
+server/db/index.ts:315 - userSportsPreferences
+server/db/index.ts:326 - sportsActivities
+server/db/index.ts:336 - searchAlerts
+server/db/index.ts:370 - aiRecommendations
+server/db/index.ts:384 - userPreferences
+server/db/index.ts:402 - usersRelations
+server/db/index.ts:412 - showsRelations
+server/db/index.ts:419 - watchlistsRelations
+server/db/index.ts:430 - friendshipsRelations
+server/db/index.ts:443 - activitiesRelations
+server/db/index.ts:456 - activityLikesRelations
+server/db/index.ts:467 - activityCommentsRelations
+server/db/index.ts:478 - platformsRelations
+server/db/index.ts:482 - showPlatformsRelations
+server/db/index.ts:493 - recommendationsRelations
+server/db/index.ts:504 - upcomingReleasesRelations
+server/db/index.ts:512 - releaseRemindersRelations
+server/db/index.ts:523 - notificationsRelations
+server/db/index.ts:531 - sportsRelations
+server/db/index.ts:537 - teamsRelations
+server/db/index.ts:546 - gamesRelations
+server/db/index.ts:564 - userSportsPreferencesRelations
+server/db/index.ts:575 - sportsActivitiesRelations
+server/db/index.ts:587 - searchAlertsRelations
+server/db/index.ts:594 - aiRecommendationsRelations
+server/db/index.ts:605 - userPreferencesRelations
+server/db/index.ts:613 - insertUserSchema
+server/db/index.ts:618 - insertShowSchema
+server/db/index.ts:624 - insertWatchlistSchema
+server/db/index.ts:630 - insertFriendshipSchema
+server/db/index.ts:635 - insertActivitySchema
+server/db/index.ts:640 - insertActivityLikeSchema
+server/db/index.ts:645 - insertActivityCommentSchema
+server/db/index.ts:650 - insertPlatformSchema
+server/db/index.ts:655 - insertRecommendationSchema
+server/db/index.ts:660 - insertUpcomingReleaseSchema
+server/db/index.ts:666 - insertReleaseReminderSchema
+server/db/index.ts:671 - insertNotificationSchema
+server/db/index.ts:677 - insertSportSchema
+server/db/index.ts:682 - insertTeamSchema
+server/db/index.ts:687 - insertGameSchema
+server/db/index.ts:693 - insertUserSportsPreferencesSchema
+server/db/index.ts:699 - insertSportsActivitySchema
+server/db/index.ts:705 - insertSearchAlertSchema
+server/db/index.ts:712 - insertAiRecommendationSchema
+server/db/index.ts:717 - insertUserPreferencesSchema
+server/db/index.ts:723 - streamingIntegrations
+server/db/index.ts:739 - viewingHistory
+server/db/index.ts:756 - userBehavior
+server/db/index.ts:768 - recommendationTraining
+server/db/index.ts:780 - platformConfigs
+server/db/index.ts:795 - insertStreamingIntegrationSchema
+server/db/index.ts:801 - insertViewingHistorySchema
+server/db/index.ts:806 - insertUserBehaviorSchema
+server/db/index.ts:811 - insertRecommendationTrainingSchema
+server/db/index.ts:816 - insertPlatformConfigSchema
+server/db/index.ts:823 - customLists
+server/db/index.ts:838 - customListItems
+server/db/index.ts:851 - customListCollaborators
+server/db/index.ts:863 - userStats
+server/db/index.ts:878 - episodeProgress
+server/db/index.ts:895 - insertCustomListSchema
+server/db/index.ts:901 - insertCustomListItemSchema
+server/db/index.ts:906 - insertCustomListCollaboratorSchema
+server/db/index.ts:911 - insertUserStatsSchema
+server/db/index.ts:916 - insertEpisodeProgressSchema
+server/db/index.ts:922 - fcmTokens
+server/db/index.ts:934 - notificationPreferences
+server/db/index.ts:949 - notificationHistory
+server/db/index.ts:962 - insertFcmTokenSchema
+server/db/index.ts:968 - insertNotificationPreferencesSchema
+server/db/index.ts:974 - insertNotificationHistorySchema
+server/db/index.ts:980 - insertContactImportSchema
+server/db/index.ts:985 - insertFriendSuggestionSchema
+server/db/index.ts:991 - UpsertUser
+server/db/index.ts:992 - User
+server/db/index.ts:993 - Show
+server/db/index.ts:994 - InsertShow
+server/db/index.ts:995 - Watchlist
+server/db/index.ts:996 - InsertWatchlist
+server/db/index.ts:997 - Friendship
+server/db/index.ts:998 - InsertFriendship
+server/db/index.ts:999 - ContactImport
+server/db/index.ts:1000 - InsertContactImport
+server/db/index.ts:1001 - FriendSuggestion
+server/db/index.ts:1002 - InsertFriendSuggestion
+server/db/index.ts:1003 - Activity
+server/db/index.ts:1004 - InsertActivity
+server/db/index.ts:1005 - ActivityLike
+server/db/index.ts:1006 - InsertActivityLike
+server/db/index.ts:1007 - ActivityComment
+server/db/index.ts:1008 - InsertActivityComment
+server/db/index.ts:1009 - Platform
+server/db/index.ts:1010 - InsertPlatform
+server/db/index.ts:1011 - Recommendation
+server/db/index.ts:1012 - InsertRecommendation
+server/db/index.ts:1013 - UpcomingRelease
+server/db/index.ts:1014 - InsertUpcomingRelease
+server/db/index.ts:1015 - ReleaseReminder
+server/db/index.ts:1016 - InsertReleaseReminder
+server/db/index.ts:1017 - Notification
+server/db/index.ts:1018 - InsertNotification
+server/db/index.ts:1021 - Sport
+server/db/index.ts:1022 - InsertSport
+server/db/index.ts:1023 - Team
+server/db/index.ts:1024 - InsertTeam
+server/db/index.ts:1025 - Game
+server/db/index.ts:1026 - InsertGame
+server/db/index.ts:1027 - UserSportsPreferences
+server/db/index.ts:1028 - InsertUserSportsPreferences
+server/db/index.ts:1029 - SportsActivity
+server/db/index.ts:1030 - InsertSportsActivity
+server/db/index.ts:1033 - SearchAlert
+server/db/index.ts:1034 - InsertSearchAlert
+server/db/index.ts:1035 - AiRecommendation
+server/db/index.ts:1036 - InsertAiRecommendation
+server/db/index.ts:1037 - UserPreferences
+server/db/index.ts:1038 - InsertUserPreferences
+server/db/index.ts:1041 - StreamingIntegration
+server/db/index.ts:1042 - InsertStreamingIntegration
+server/db/index.ts:1043 - ViewingHistory
+server/db/index.ts:1044 - InsertViewingHistory
+server/db/index.ts:1045 - UserBehavior
+server/db/index.ts:1046 - InsertUserBehavior
+server/db/index.ts:1047 - RecommendationTraining
+server/db/index.ts:1048 - InsertRecommendationTraining
+server/db/index.ts:1049 - PlatformConfig
+server/db/index.ts:1050 - InsertPlatformConfig
+server/db/index.ts:1053 - CustomList
+server/db/index.ts:1054 - InsertCustomList
+server/db/index.ts:1055 - CustomListItem
+server/db/index.ts:1056 - InsertCustomListItem
+server/db/index.ts:1057 - CustomListCollaborator
+server/db/index.ts:1058 - InsertCustomListCollaborator
+server/db/index.ts:1061 - UserStats
+server/db/index.ts:1062 - InsertUserStats
+server/db/index.ts:1063 - EpisodeProgress
+server/db/index.ts:1064 - InsertEpisodeProgress
+server/db/index.ts:1067 - FcmToken
+server/db/index.ts:1068 - InsertFcmToken
+server/db/index.ts:1069 - NotificationPreferences
+server/db/index.ts:1070 - InsertNotificationPreferences
+server/db/index.ts:1071 - NotificationHistory
+server/db/index.ts:1072 - InsertNotificationHistory
+server/db/index.ts:1075 - insertSocialConnectionSchema
+server/db/index.ts:1081 - SocialConnection
+server/db/index.ts:1082 - InsertSocialConnection
+server/db/index.ts:1085 - Friend
+server/db/index.ts:1094 - FriendRequest
+server/routes/collections.ts:274 - default
+server/routes/filterPresets.ts:91 - default
+server/routes/moods.ts:29 - default
+server/routes/streamingServices.ts:24 - default
+server/routes/trending.ts:5 - default
+server/routes/userFeedback.ts:122 - default
+server/services/aiRecommendations.ts:37 - AIRecommendationService
+server/services/dataSecurityService.ts:5 - DataExportRequest (used in module)
+server/services/dataSecurityService.ts:11 - DataDeletionRequest (used in module)
+server/services/dataSecurityService.ts:17 - UserDataSummary (used in module)
+server/services/dataSecurityService.ts:30 - DataSecurityService (used in module)
+server/services/dataSecurityService.ts:338 - dataSecurityService
+server/services/sports.ts:3 - SportsService (used in module)
+server/services/tmdb.ts:257 - tmdbService
+shared/schema/index.ts:15 - sessions
+shared/schema/index.ts:81 - movies
+shared/schema/index.ts:171 - insertUserSchema
+shared/schema/index.ts:172 - insertWatchHistorySchema
+shared/schema/index.ts:173 - insertWatchlistSchema
+shared/schema/index.ts:174 - insertUserPreferencesSchema
+shared/schema/index.ts:175 - insertPasswordResetCodeSchema
+shared/schema/index.ts:179 - User
+shared/schema/index.ts:183 - Watchlist
+client/src/components/activity-item.tsx:20 - default
+client/src/components/ad-player.tsx:22 - default
+client/src/components/advanced-search.tsx:19 - default
+client/src/components/affiliate-monetization.tsx:39 - default
+client/src/components/BrandShowcase.tsx:11 - default
+client/src/components/category-icons.tsx:2 - TrendingIcon
+client/src/components/category-icons.tsx:12 - PopularIcon
+client/src/components/category-icons.tsx:21 - TopRatedIcon
+client/src/components/category-icons.tsx:30 - ComingSoonIcon
+client/src/components/category-icons.tsx:42 - RecommendationsIcon
+client/src/components/category-icons.tsx:55 - UpcomingIcon
+client/src/components/category-icons.tsx:96 - ActivityIcon
+client/src/components/competitive-advantages.tsx:5 - CompetitiveAdvantages
+client/src/components/consent-banner.tsx:120 - useConsent
+client/src/components/debug-ai-recommendations.tsx:7 - DebugAiRecommendations
+client/src/components/discover-filters.tsx:84 - default
+client/src/components/enhanced-advanced-search.tsx:123 - EnhancedAdvancedSearch
+client/src/components/enhanced-onboarding-modal.tsx:95 - default
+client/src/components/index.ts:1 - BingeBoardHeader
+client/src/components/layout.tsx:12 - Layout (used in module)
+client/src/components/layout.tsx:31 - default
+client/src/components/monetization-dashboard.tsx:33 - default
+client/src/components/navigation-header-backup.tsx:19 - default
+client/src/components/navigation-header-fixed.tsx:19 - default
+client/src/components/onboarding-modal.tsx:14 - default
+client/src/components/preferences-panel.tsx:43 - default
+client/src/components/premium-badge.tsx:10 - default
+client/src/components/premium-badge.tsx:47 - PremiumFeatureBadge
+client/src/components/premium-feature-gate.tsx:214 - PremiumIndicator
+client/src/components/premium-features-showcase.tsx:35 - default
+client/src/components/RecommendationCard.tsx:30 - default
+client/src/components/search-alerts.tsx:107 - SearchAlerts
+client/src/components/share-button.tsx:45 - default
+client/src/components/share-button.tsx:314 - QuickShareButton
+client/src/components/show-card.tsx:23 - default
+client/src/components/sports-card.tsx:31 - default
+client/src/components/sports-card.tsx:189 - SportsSummary
+client/src/components/streaming-marquee-modal.tsx:143 - marqueeStyles
+client/src/components/subscription-plans.tsx:294 - UpgradePrompt
+client/src/components/watch-now-button.tsx:326 - QuickWatchButton (used in module)
+client/src/components/watchlist-manager.tsx:41 - default
+client/src/firebase/config-fixed.ts:51 - auth (used in module)
+client/src/firebase/config-fixed.ts:63 - googleProvider (used in module)
+client/src/firebase/config-fixed.ts:64 - facebookProvider (used in module)
+client/src/firebase/config-fixed.ts:96 - messaging (used in module)
+client/src/firebase/config-fixed.ts:108 - default
+client/src/firebase/config-minimal.ts:36 - default
+client/src/firebase/config-minimal.ts:41 - getAuthInstance (used in module)
+client/src/firebase/config-minimal.ts:56 - getGoogleProvider
+client/src/firebase/config-minimal.ts:63 - getFacebookProvider
+client/src/firebase/config-minimal.ts:71 - auth
+client/src/firebase/config-new.ts:131 - auth (used in module)
+client/src/firebase/config-new.ts:131 - googleProvider (used in module)
+client/src/firebase/config-new.ts:131 - facebookProvider (used in module)
+client/src/firebase/config-new.ts:131 - messaging (used in module)
+client/src/firebase/config-new.ts:131 - initializeAuthSafely (used in module)
+client/src/firebase/config-new.ts:132 - default
+client/src/firebase/config-simple-minimal.ts:12 - auth
+client/src/firebase/config-simple-minimal.ts:13 - googleProvider
+client/src/firebase/config-simple-minimal.ts:14 - facebookProvider
+client/src/firebase/config-simple-minimal.ts:16 - default
+client/src/firebase/config-simple.ts:14 - facebookProvider (used in module)
+client/src/firebase/config-simple.ts:16 - default
+client/src/firebase/config-test.ts:23 - testFirebaseConfig (used in module)
+client/src/firebase/messaging.ts:8 - NotificationPayload (used in module)
+client/src/firebase/messaging.ts:18 - requestNotificationPermission
+client/src/firebase/messaging.ts:84 - onForegroundMessage
+client/src/firebase/messaging.ts:91 - sendTokenToServer
+client/src/firebase/messaging.ts:121 - subscribeToTopic
+client/src/firebase/messaging.ts:137 - showNotification
+client/src/hooks/use-toast.ts:74 - reducer (used in module)
+client/src/hooks/use-toast.ts:191 - toast (used in module)
+client/src/hooks/useAuth-clean.ts:11 - useAuth
+client/src/hooks/useAuth-fixed.ts:11 - useAuth
+client/src/hooks/useBatchStreaming.ts:4 - UseBatchStreamingResult (used in module)
+client/src/hooks/useBatchStreaming.ts:12 - UseBatchStreamingOptions (used in module)
+client/src/hooks/useBecauseYouWatched.ts:3 - useBecauseYouWatched
+client/src/hooks/useDashboardFeed.ts:6 - useDashboardFeed
+client/src/hooks/useEnhancedSearch.ts:15 - default
+client/src/hooks/useEnhancedSearch.ts:33 - useBatchStreamingAvailability
+client/src/hooks/useFilteredContent.ts:19 - useFilteredContent (used in module)
+client/src/hooks/useFilteredContent.ts:116 - useDiscoverContent
+client/src/hooks/useFilteredContent.ts:131 - useSearchWithFilters
+client/src/hooks/useFilterOptions.ts:3 - FilterOption (used in module)
+client/src/hooks/useFilterOptions.ts:9 - FilterOptions (used in module)
+client/src/hooks/useFilterOptions.ts:16 - UseFilterOptionsResult (used in module)
+client/src/hooks/useLocalStorage.ts:30 - default
+client/src/hooks/useRecommendedShows.ts:20 - useRecommendedShows
+client/src/hooks/useRecommendedShows.ts:32 - useAiRecommendations
+client/src/hooks/useRecommendedShows.ts:44 - useTrendingShows
+client/src/hooks/useRecommendedShows.ts:4 - RecommendedShow
+client/src/hooks/useStreaming.ts:26 - useStreamingByImdbId
+client/src/hooks/useStreaming.ts:39 - useUniqueStreamingServices
+client/src/hooks/useTrailer.ts:28 - useTrailer (used in module)
+client/src/hooks/useTrailer.ts:4 - TrailerItem (used in module)
+client/src/hooks/useTrailer.ts:17 - TrailerResponse (used in module)
+client/src/hooks/useUserLists.ts:3 - useUserLists
+client/src/hooks/useViewingHistory.ts:72 - useViewingHistory
+client/src/hooks/useViewingHistory.ts:197 - useUpdateProgress
+client/src/hooks/useViewingHistory.ts:236 - useAddToHistory
+client/src/hooks/useViewingHistory.ts:352 - useImportHistory
+client/src/hooks/useViewingHistory.ts:391 - formatViewingTime
+client/src/hooks/useViewingHistory.ts:407 - calculateProgress
+client/src/hooks/useViewingHistory.ts:413 - isEpisodeCompleted
+client/src/hooks/useViewingHistory.ts:14 - ViewingHistoryEntry (used in module)
+client/src/hooks/useViewingHistory.ts:28 - ContinueWatchingItem (used in module)
+client/src/hooks/useViewingHistory.ts:47 - ProgressUpdate (used in module)
+client/src/hooks/useViewingHistory.ts:58 - NewHistoryEntry (used in module)
+client/src/hooks/useWatchProviders.ts:22 - useWatchProviders
+client/src/hooks/useWatchProviders.ts:3 - StreamingProvider (used in module)
+client/src/hooks/useWatchProviders.ts:10 - WatchProvidersResponse (used in module)
+client/src/lib/adConfig.ts:3 - AdPartner (used in module)
+client/src/lib/adConfig.ts:27 - AD_PARTNERS (used in module)
+client/src/lib/adConfig.ts:66 - AD_CONTENT (used in module)
+client/src/lib/adConfig.ts:326 - default
+client/src/lib/affiliateUtils.ts:106 - generateTrackingId (used in module)
+client/src/lib/affiliateUtils.ts:135 - trackAffiliateClick (used in module)
+client/src/lib/affiliateUtils.ts:162 - getAvailableAffiliatePlatforms
+client/src/lib/affiliateUtils.ts:172 - getCommissionRate (used in module)
+client/src/lib/affiliateUtils.ts:198 - calculatePotentialEarnings
+client/src/lib/auth-utils.ts:13 - isMobile (used in module)
+client/src/lib/auth-utils.ts:18 - signInWithProvider (used in module)
+client/src/lib/auth-utils.ts:41 - signInWithGoogle
+client/src/lib/auth-utils.ts:47 - signInWithFacebook
+client/src/lib/auth-utils.ts:53 - handleAuthRedirect
+client/src/lib/auth-utils.ts:68 - createBackendSession
+client/src/lib/auth.ts:28 - AuthUser (used in module)
+client/src/lib/auth.ts:246 - signOutUser
+client/src/lib/auth.ts:257 - getCurrentUser
+client/src/lib/auth.ts:262 - isAuthenticated
+client/src/lib/auth.ts:294 - checkSignInMethods
+client/src/lib/auth.ts:307 - handleAccountLinking
+client/src/lib/authUtils.ts:11 - getAuthenticatedUser
+client/src/lib/behaviorTracker.ts:310 - behaviorTracker
+client/src/lib/behaviorTracker.ts:313 - BehaviorTracker (used in module)
+client/src/lib/config.ts:20 - API_ENDPOINTS
+client/src/lib/deviceUtils.ts:26 - isIOS (used in module)
+client/src/lib/deviceUtils.ts:32 - isAndroid (used in module)
+client/src/lib/deviceUtils.ts:38 - getDeviceType
+client/src/lib/deviceUtils.ts:47 - getMobileViewportMeta
+client/src/lib/deviceUtils.ts:58 - applyMobileOptimizations
+client/src/lib/firebaseAuth.ts:87 - signInWithGoogle
+client/src/lib/firebaseAuth.ts:92 - signInWithFacebook
+client/src/lib/firebaseAuth.ts:97 - handleRedirectResult
+client/src/lib/firebaseAuth.ts:168 - signInWithFacebookOld
+client/src/lib/github-user-data.ts:5 - UserData (used in module)
+client/src/lib/github-user-data.ts:37 - WatchlistItem (used in module)
+client/src/lib/github-user-data.ts:269 - default
+client/src/lib/mobileAuth.ts:30 - mobileSignIn
+client/src/lib/mobileAuth.ts:44 - mobileRegister
+client/src/lib/mobileAuth.ts:58 - createMobileBackendSession (used in module)
+client/src/lib/mobileAuth.ts:84 - mobileLogout
+client/src/lib/mobileAuth.ts:105 - onMobileAuthStateChange
+client/src/lib/mobileAuth.ts:120 - getCurrentMobileUser
+client/src/lib/mobileAuth.ts:125 - isMobileAuthenticated
+client/src/lib/mobileAuth.ts:130 - isMobileDevice (used in module)
+client/src/lib/mobileAuth.ts:137 - getAuthMethod
+client/src/lib/mockStreamingData.ts:171 - addStreamingDataBatch
+client/src/lib/mockStreamingData.ts:4 - StreamingProvider (used in module)
+client/src/lib/mockStreamingData.ts:16 - ComprehensiveStreamingResponse (used in module)
+client/src/lib/permanentAuth.ts:35 - signInWithEmail
+client/src/lib/permanentAuth.ts:49 - registerWithEmail
+client/src/lib/permanentAuth.ts:63 - createBackendSession (used in module)
+client/src/lib/permanentAuth.ts:89 - logout
+client/src/lib/permanentAuth.ts:110 - onAuthStateChange
+client/src/lib/permanentAuth.ts:125 - getCurrentUser
+client/src/lib/permanentAuth.ts:130 - isAuthenticated
+client/src/lib/queryClient.ts:31 - getQueryFn (used in module)
+client/src/lib/realStreamingData.ts:30 - fetchComprehensiveStreamingData (used in module)
+client/src/lib/realStreamingData.ts:63 - addRealStreamingData (used in module)
+client/src/lib/realStreamingData.ts:114 - addMockStreamingData
+client/src/lib/realStreamingData.ts:2 - StreamingProvider (used in module)
+client/src/lib/realStreamingData.ts:14 - ComprehensiveStreamingResponse (used in module)
+client/src/lib/safeQueryClient.tsx:33 - queryClient
+client/src/lib/socialFriends.ts:85 - getSocialFriends
+client/src/lib/socialFriends.ts:98 - searchSocialFriends
+client/src/lib/socialFriends.ts:111 - connectSocialAccount
+client/src/lib/socialFriends.ts:130 - inviteFriendToBingeBoard
+client/src/lib/socialFriends.ts:149 - getPlatformIcon
+client/src/lib/socialFriends.ts:162 - getPlatformColor
+client/src/lib/socialFriends.ts:175 - formatPlatformName
+client/src/lib/socialFriends.ts:3 - SocialFriend (used in module)
+client/src/lib/socialFriends.ts:14 - SocialConnection (used in module)
+client/src/lib/streamingService.ts:22 - fetchWatchProviders (used in module)
+client/src/lib/streamingService.ts:62 - addRealStreamingData (used in module)
+client/src/lib/streamingService.ts:86 - addStreamingDataBatch
+client/src/lib/streamingService.ts:2 - StreamingProvider (used in module)
+client/src/lib/streamingService.ts:9 - WatchProvidersResponse (used in module)
+client/src/lib/streamingUtils.ts:91 - getStreamingLink (used in module)
+client/src/lib/streamingUtils.ts:164 - isMobileDevice (used in module)
+client/src/lib/test-imports.ts:43 - testUserData (used in module)
+client/src/lib/trailerUtils.ts:20 - getTrailerVideos (used in module)
+client/src/lib/trailerUtils.ts:95 - getTrailerThumbnail (used in module)
+client/src/lib/trailerUtils.ts:135 - getAllTrailers
+client/src/lib/trailerUtils.ts:144 - formatTrailerDuration (used in module)
+client/src/lib/trailerUtils.ts:170 - getTrailerMetadata
+client/src/lib/trailerUtils.ts:160 - TrailerMetadata (used in module)
+client/src/lib/user-data-manager.ts:227 - default
+client/src/pages/auth-comprehensive-test.tsx:22 - default
+client/src/pages/bulletproof-landing.tsx:18 - default
+client/src/pages/component-demo.tsx:11 - default
+client/src/pages/dashboard-enhanced.tsx:7 - default
+client/src/pages/dashboard-integration-example.tsx:24 - default
+client/src/pages/DiscoverPage.tsx:12 - default
+client/src/pages/enhanced-discover.tsx:176 - default
+client/src/pages/filter-demo.tsx:11 - default
+client/src/pages/filter-integration-demo.tsx:26 - default
+client/src/pages/find-friends-basic.tsx:7 - default
+client/src/pages/find-friends-simple.tsx:64 - default
+client/src/pages/firebase-auth-test.tsx:22 - default
+client/src/pages/friends.tsx:18 - default
+client/src/pages/landing-backup.tsx:152 - default
+client/src/pages/lists.tsx:106 - default
+client/src/pages/login-minimal.tsx:9 - default
+client/src/pages/mobile-test-comprehensive.tsx:32 - default
+client/src/pages/modern-discover-enhanced.tsx:187 - default
+client/src/pages/modern-home-clean.tsx:33 - default
+client/src/pages/search-demo.tsx:5 - default
+client/src/pages/simple-auth-fixed.tsx:14 - default
+client/src/pages/simple-auth-minimal.tsx:3 - default
+client/src/pages/simple-auth.tsx:14 - default
+client/src/pages/simple-login.tsx:19 - default
+client/src/pages/social-new.tsx:121 - default
+client/src/pages/streaming-integration.tsx:49 - default
+client/src/pages/working-dashboard.tsx:40 - default
+client/src/services/utellyApi.ts:141 - filterByStreamingService
+client/src/services/utellyApi.ts:16 - UtellyResult (used in module)
+client/src/services/utellyApi.ts:123 - POPULAR_STREAMING_SERVICES
+client/src/styles/theme.ts:4 - BingeTheme (used in module)
+client/src/styles/theme.ts:12 - bingeTheme (used in module)
+client/src/styles/theme.ts:21 - themeUtils
+client/src/styles/theme.ts:98 - createStyles
+client/src/styles/theme.ts:153 - default
+client/src/styles/tokens.ts:81 - typography (used in module)
+client/src/styles/tokens.ts:123 - animations
+client/src/styles/tokens.ts:139 - breakpoints (used in module)
+client/src/styles/tokens.ts:148 - getCSSVariables
+client/src/styles/tokens.ts:170 - tailwindTheme
+client/src/tests/a11ySnapshot.util.ts:26 - diffSnapshots
+client/src/types/preferences.ts:48 - ViewingStyleOption
+client/src/types/preferences.ts:55 - RecommendationMode
+client/src/utils/filterUtils.ts:10 - buildFilterQuery (used in module)
+client/src/utils/filterUtils.ts:32 - fetchFilteredDashboardContent
+client/src/utils/filterUtils.ts:49 - fetchFilteredDiscoverContent
+client/src/utils/filterUtils.ts:89 - filtersToTMDBQuery
+client/src/components/common/index.ts:2 - RecommendationCard
+client/src/components/common/index.ts:3 - RecommendationGrid
+client/src/components/common/index.ts:4 - SectionTitle
+client/src/components/common/index.ts:7 - Show
+client/src/components/common/index.ts:7 - RecommendationCardProps
+client/src/components/dashboard/BecauseYouWatchedCard.tsx:6 - default
+client/src/components/dashboard/CurrentlyWatchingCard.tsx:18 - default
+client/src/components/dashboard/NewReleasesCard.tsx:9 - default
+client/src/components/dashboard/QuickActionsCard.tsx:7 - default
+client/src/components/dashboard/QuickStatsCard.tsx:15 - default
+client/src/components/dashboard/RecentActivityCard.tsx:10 - default
+client/src/components/dashboard/RecommendationsCard.tsx:4 - default
+client/src/components/dashboard/SearchBar.tsx:5 - default
+client/src/components/dashboard/SpotlightCard.tsx:9 - default
+client/src/components/dashboard/UserListsCard.tsx:19 - default
+client/src/components/dashboard/WelcomeCard.tsx:12 - default
+client/src/components/filters/CustomListFilterPanel.tsx:9 - CustomListFilterPanelProps (used in module)
+client/src/components/filters/FriendFeedFilterChips.tsx:8 - FriendFeedFilterChipsProps (used in module)
+client/src/components/filters/index.ts:1 - RecommendationFilter
+client/src/components/filters/index.ts:2 - FriendFeedFilterChips
+client/src/components/filters/index.ts:3 - CustomListFilterPanel
+client/src/components/filters/index.ts:4 - WatchlistQuickFilter
+client/src/components/filters/index.ts:8 - RecommendationFilters
+client/src/components/filters/index.ts:9 - FriendFeedFilters
+client/src/components/filters/index.ts:10 - CustomListFilters
+client/src/components/filters/index.ts:11 - WatchlistFilters
+client/src/components/filters/RecommendationFilter.tsx:22 - RecommendationFilterProps (used in module)
+client/src/components/filters/WatchlistQuickFilter.tsx:7 - WatchlistQuickFilterProps (used in module)
+client/src/components/onboarding/onboarding-modal.tsx:9 - OnboardingModal
+client/src/components/onboarding/OnboardingModal-Backup.tsx:15 - default
+client/src/components/onboarding/OnboardingModal-Fixed.tsx:13 - default
+client/src/components/onboarding/OnboardingModal-New.tsx:15 - default
+client/src/components/onboarding/OnboardingModal-Old.tsx:15 - default
+client/src/components/onboarding/OnboardingModal.tsx:13 - default
+client/src/components/preferences/index.ts:8 - PreferencesPanel
+client/src/components/preferences/index.ts:9 - GENRES
+client/src/components/preferences/index.ts:9 - VIEWING_PREFERENCES
+client/src/components/preferences/index.ts:9 - ANIMATION_CONFIG
+client/src/components/search/HybridSearchBar.tsx:18 - default
+client/src/components/search/index.ts:2 - EnhancedSearchBar
+client/src/components/search/index.ts:3 - SearchPreviewDropdown
+client/src/components/search/index.ts:4 - SearchResultCard
+client/src/components/search/index.ts:5 - ShowDetailsModal
+client/src/components/search/PlatformBadges.tsx:5 - PlatformInfo (used in module)
+client/src/components/search/PlatformBadges.tsx:18 - PlatformBadges (used in module)
+client/src/components/streaming/StreamingPlatformsDisplay.tsx:38 - default
+client/src/components/ui/accordion.tsx:56 - Accordion (used in module)
+client/src/components/ui/accordion.tsx:56 - AccordionItem (used in module)
+client/src/components/ui/accordion.tsx:56 - AccordionTrigger (used in module)
+client/src/components/ui/accordion.tsx:56 - AccordionContent (used in module)
+client/src/components/ui/alert-dialog.tsx:129 - AlertDialogPortal (used in module)
+client/src/components/ui/alert-dialog.tsx:130 - AlertDialogOverlay (used in module)
+client/src/components/ui/aspect-ratio.tsx:5 - AspectRatio (used in module)
+client/src/components/ui/badge.tsx:26 - BadgeProps (used in module)
+client/src/components/ui/badge.tsx:36 - badgeVariants (used in module)
+client/src/components/ui/breadcrumb.tsx:108 - Breadcrumb (used in module)
+client/src/components/ui/breadcrumb.tsx:109 - BreadcrumbList (used in module)
+client/src/components/ui/breadcrumb.tsx:110 - BreadcrumbItem (used in module)
+client/src/components/ui/breadcrumb.tsx:111 - BreadcrumbLink (used in module)
+client/src/components/ui/breadcrumb.tsx:112 - BreadcrumbPage (used in module)
+client/src/components/ui/breadcrumb.tsx:113 - BreadcrumbSeparator (used in module)
+client/src/components/ui/breadcrumb.tsx:114 - BreadcrumbEllipsis (used in module)
+client/src/components/ui/calendar.tsx:8 - CalendarProps (used in module)
+client/src/components/ui/calendar.tsx:68 - Calendar (used in module)
+client/src/components/ui/card.tsx:79 - CardFooter (used in module)
+client/src/components/ui/carousel.tsx:254 - CarouselApi (used in module)
+client/src/components/ui/carousel.tsx:255 - Carousel (used in module)
+client/src/components/ui/carousel.tsx:256 - CarouselContent (used in module)
+client/src/components/ui/carousel.tsx:257 - CarouselItem (used in module)
+client/src/components/ui/carousel.tsx:258 - CarouselPrevious (used in module)
+client/src/components/ui/carousel.tsx:259 - CarouselNext (used in module)
+client/src/components/ui/chart.tsx:11 - ChartConfig (used in module)
+client/src/components/ui/chart.tsx:359 - ChartContainer (used in module)
+client/src/components/ui/chart.tsx:360 - ChartTooltip (used in module)
+client/src/components/ui/chart.tsx:361 - ChartTooltipContent (used in module)
+client/src/components/ui/chart.tsx:362 - ChartLegend (used in module)
+client/src/components/ui/chart.tsx:363 - ChartLegendContent (used in module)
+client/src/components/ui/chart.tsx:364 - ChartStyle (used in module)
+client/src/components/ui/command.tsx:142 - Command (used in module)
+client/src/components/ui/command.tsx:143 - CommandDialog (used in module)
+client/src/components/ui/command.tsx:144 - CommandInput (used in module)
+client/src/components/ui/command.tsx:145 - CommandList (used in module)
+client/src/components/ui/command.tsx:146 - CommandEmpty (used in module)
+client/src/components/ui/command.tsx:147 - CommandGroup (used in module)
+client/src/components/ui/command.tsx:148 - CommandItem (used in module)
+client/src/components/ui/command.tsx:149 - CommandShortcut (used in module)
+client/src/components/ui/command.tsx:150 - CommandSeparator (used in module)
+client/src/components/ui/context-menu.tsx:183 - ContextMenu (used in module)
+client/src/components/ui/context-menu.tsx:184 - ContextMenuTrigger (used in module)
+client/src/components/ui/context-menu.tsx:185 - ContextMenuContent (used in module)
+client/src/components/ui/context-menu.tsx:186 - ContextMenuItem (used in module)
+client/src/components/ui/context-menu.tsx:187 - ContextMenuCheckboxItem (used in module)
+client/src/components/ui/context-menu.tsx:188 - ContextMenuRadioItem (used in module)
+client/src/components/ui/context-menu.tsx:189 - ContextMenuLabel (used in module)
+client/src/components/ui/context-menu.tsx:190 - ContextMenuSeparator (used in module)
+client/src/components/ui/context-menu.tsx:191 - ContextMenuShortcut (used in module)
+client/src/components/ui/context-menu.tsx:192 - ContextMenuGroup (used in module)
+client/src/components/ui/context-menu.tsx:193 - ContextMenuPortal (used in module)
+client/src/components/ui/context-menu.tsx:194 - ContextMenuSub (used in module)
+client/src/components/ui/context-menu.tsx:195 - ContextMenuSubContent (used in module)
+client/src/components/ui/context-menu.tsx:196 - ContextMenuSubTrigger (used in module)
+client/src/components/ui/context-menu.tsx:197 - ContextMenuRadioGroup (used in module)
+client/src/components/ui/dialog.tsx:113 - DialogPortal (used in module)
+client/src/components/ui/dialog.tsx:114 - DialogOverlay (used in module)
+client/src/components/ui/dialog.tsx:119 - DialogFooter (used in module)
+client/src/components/ui/drawer.tsx:109 - DrawerPortal (used in module)
+client/src/components/ui/drawer.tsx:110 - DrawerOverlay (used in module)
+client/src/components/ui/drawer.tsx:112 - DrawerClose (used in module)
+client/src/components/ui/drawer.tsx:115 - DrawerFooter (used in module)
+client/src/components/ui/drawer.tsx:117 - DrawerDescription (used in module)
+client/src/components/ui/dropdown-menu.tsx:187 - DropdownMenuCheckboxItem (used in module)
+client/src/components/ui/dropdown-menu.tsx:188 - DropdownMenuRadioItem (used in module)
+client/src/components/ui/dropdown-menu.tsx:191 - DropdownMenuShortcut (used in module)
+client/src/components/ui/dropdown-menu.tsx:192 - DropdownMenuGroup (used in module)
+client/src/components/ui/dropdown-menu.tsx:193 - DropdownMenuPortal (used in module)
+client/src/components/ui/dropdown-menu.tsx:194 - DropdownMenuSub (used in module)
+client/src/components/ui/dropdown-menu.tsx:195 - DropdownMenuSubContent (used in module)
+client/src/components/ui/dropdown-menu.tsx:196 - DropdownMenuSubTrigger (used in module)
+client/src/components/ui/dropdown-menu.tsx:197 - DropdownMenuRadioGroup (used in module)
+client/src/components/ui/form.tsx:170 - useFormField (used in module)
+client/src/components/ui/form.tsx:171 - Form (used in module)
+client/src/components/ui/form.tsx:172 - FormItem (used in module)
+client/src/components/ui/form.tsx:173 - FormLabel (used in module)
+client/src/components/ui/form.tsx:174 - FormControl (used in module)
+client/src/components/ui/form.tsx:175 - FormDescription (used in module)
+client/src/components/ui/form.tsx:176 - FormMessage (used in module)
+client/src/components/ui/form.tsx:177 - FormField (used in module)
+client/src/components/ui/hover-card.tsx:29 - HoverCard (used in module)
+client/src/components/ui/hover-card.tsx:29 - HoverCardTrigger (used in module)
+client/src/components/ui/hover-card.tsx:29 - HoverCardContent (used in module)
+client/src/components/ui/input-otp.tsx:69 - InputOTP (used in module)
+client/src/components/ui/input-otp.tsx:69 - InputOTPGroup (used in module)
+client/src/components/ui/input-otp.tsx:69 - InputOTPSlot (used in module)
+client/src/components/ui/input-otp.tsx:69 - InputOTPSeparator (used in module)
+client/src/components/ui/menubar.tsx:240 - Menubar (used in module)
+client/src/components/ui/menubar.tsx:241 - MenubarMenu (used in module)
+client/src/components/ui/menubar.tsx:242 - MenubarTrigger (used in module)
+client/src/components/ui/menubar.tsx:243 - MenubarContent (used in module)
+client/src/components/ui/menubar.tsx:244 - MenubarItem (used in module)
+client/src/components/ui/menubar.tsx:245 - MenubarSeparator (used in module)
+client/src/components/ui/menubar.tsx:246 - MenubarLabel (used in module)
+client/src/components/ui/menubar.tsx:247 - MenubarCheckboxItem (used in module)
+client/src/components/ui/menubar.tsx:248 - MenubarRadioGroup (used in module)
+client/src/components/ui/menubar.tsx:249 - MenubarRadioItem (used in module)
+client/src/components/ui/menubar.tsx:250 - MenubarPortal (used in module)
+client/src/components/ui/menubar.tsx:251 - MenubarSubContent (used in module)
+client/src/components/ui/menubar.tsx:252 - MenubarSubTrigger (used in module)
+client/src/components/ui/menubar.tsx:253 - MenubarGroup (used in module)
+client/src/components/ui/menubar.tsx:254 - MenubarSub (used in module)
+client/src/components/ui/menubar.tsx:255 - MenubarShortcut (used in module)
+client/src/components/ui/navigation-menu.tsx:119 - navigationMenuTriggerStyle (used in module)
+client/src/components/ui/navigation-menu.tsx:120 - NavigationMenu (used in module)
+client/src/components/ui/navigation-menu.tsx:121 - NavigationMenuList (used in module)
+client/src/components/ui/navigation-menu.tsx:122 - NavigationMenuItem (used in module)
+client/src/components/ui/navigation-menu.tsx:123 - NavigationMenuContent (used in module)
+client/src/components/ui/navigation-menu.tsx:124 - NavigationMenuTrigger (used in module)
+client/src/components/ui/navigation-menu.tsx:125 - NavigationMenuLink (used in module)
+client/src/components/ui/navigation-menu.tsx:126 - NavigationMenuIndicator (used in module)
+client/src/components/ui/navigation-menu.tsx:127 - NavigationMenuViewport (used in module)
+client/src/components/ui/pagination.tsx:110 - Pagination (used in module)
+client/src/components/ui/pagination.tsx:111 - PaginationContent (used in module)
+client/src/components/ui/pagination.tsx:112 - PaginationEllipsis (used in module)
+client/src/components/ui/pagination.tsx:113 - PaginationItem (used in module)
+client/src/components/ui/pagination.tsx:114 - PaginationLink (used in module)
+client/src/components/ui/pagination.tsx:115 - PaginationNext (used in module)
+client/src/components/ui/pagination.tsx:116 - PaginationPrevious (used in module)
+client/src/components/ui/premium.tsx:4 - LoadingSkeleton
+client/src/components/ui/premium.tsx:19 - PremiumButton
+client/src/components/ui/premium.tsx:70 - PremiumCard
+client/src/components/ui/premium.tsx:97 - PremiumInput
+client/src/components/ui/premium.tsx:149 - PremiumToast
+client/src/components/ui/recommendation-icon.tsx:6 - RecommendationIcon
+client/src/components/ui/resizable.tsx:45 - ResizablePanelGroup (used in module)
+client/src/components/ui/resizable.tsx:45 - ResizablePanel (used in module)
+client/src/components/ui/resizable.tsx:45 - ResizableHandle (used in module)
+client/src/components/ui/scroll-area.tsx:46 - ScrollBar (used in module)
+client/src/components/ui/select.tsx:151 - SelectGroup (used in module)
+client/src/components/ui/select.tsx:155 - SelectLabel (used in module)
+client/src/components/ui/select.tsx:157 - SelectSeparator (used in module)
+client/src/components/ui/select.tsx:158 - SelectScrollUpButton (used in module)
+client/src/components/ui/select.tsx:159 - SelectScrollDownButton (used in module)
+client/src/components/ui/sheet.tsx:131 - SheetPortal (used in module)
+client/src/components/ui/sheet.tsx:132 - SheetOverlay (used in module)
+client/src/components/ui/sheet.tsx:133 - SheetTrigger (used in module)
+client/src/components/ui/sheet.tsx:134 - SheetClose (used in module)
+client/src/components/ui/sheet.tsx:137 - SheetFooter (used in module)
+client/src/components/ui/sidebar.tsx:747 - Sidebar (used in module)
+client/src/components/ui/sidebar.tsx:748 - SidebarContent (used in module)
+client/src/components/ui/sidebar.tsx:749 - SidebarFooter (used in module)
+client/src/components/ui/sidebar.tsx:750 - SidebarGroup (used in module)
+client/src/components/ui/sidebar.tsx:751 - SidebarGroupAction (used in module)
+client/src/components/ui/sidebar.tsx:752 - SidebarGroupContent (used in module)
+client/src/components/ui/sidebar.tsx:753 - SidebarGroupLabel (used in module)
+client/src/components/ui/sidebar.tsx:754 - SidebarHeader (used in module)
+client/src/components/ui/sidebar.tsx:755 - SidebarInput (used in module)
+client/src/components/ui/sidebar.tsx:756 - SidebarInset (used in module)
+client/src/components/ui/sidebar.tsx:757 - SidebarMenu (used in module)
+client/src/components/ui/sidebar.tsx:758 - SidebarMenuAction (used in module)
+client/src/components/ui/sidebar.tsx:759 - SidebarMenuBadge (used in module)
+client/src/components/ui/sidebar.tsx:760 - SidebarMenuButton (used in module)
+client/src/components/ui/sidebar.tsx:761 - SidebarMenuItem (used in module)
+client/src/components/ui/sidebar.tsx:762 - SidebarMenuSkeleton (used in module)
+client/src/components/ui/sidebar.tsx:763 - SidebarMenuSub (used in module)
+client/src/components/ui/sidebar.tsx:764 - SidebarMenuSubButton (used in module)
+client/src/components/ui/sidebar.tsx:765 - SidebarMenuSubItem (used in module)
+client/src/components/ui/sidebar.tsx:766 - SidebarProvider (used in module)
+client/src/components/ui/sidebar.tsx:767 - SidebarRail (used in module)
+client/src/components/ui/sidebar.tsx:768 - SidebarSeparator (used in module)
+client/src/components/ui/sidebar.tsx:769 - SidebarTrigger (used in module)
+client/src/components/ui/sidebar.tsx:770 - useSidebar (used in module)
+client/src/components/ui/table.tsx:109 - Table (used in module)
+client/src/components/ui/table.tsx:110 - TableHeader (used in module)
+client/src/components/ui/table.tsx:111 - TableBody (used in module)
+client/src/components/ui/table.tsx:112 - TableFooter (used in module)
+client/src/components/ui/table.tsx:113 - TableHead (used in module)
+client/src/components/ui/table.tsx:114 - TableRow (used in module)
+client/src/components/ui/table.tsx:115 - TableCell (used in module)
+client/src/components/ui/table.tsx:116 - TableCaption (used in module)
+client/src/components/ui/toast.tsx:126 - ToastAction (used in module)
+client/src/components/ui/toggle-group.tsx:61 - ToggleGroup (used in module)
+client/src/components/ui/toggle-group.tsx:61 - ToggleGroupItem (used in module)
+client/src/components/ui/toggle.tsx:43 - Toggle (used in module)
+client/src/pages/api/moods.ts:7 - default
+client/src/pages/api/streaming-services.ts:7 - default
+client/src/components/dashboard/filters/FilterDemo.tsx:7 - FilterDemo
+client/src/components/dashboard/filters/WatchlistQuickFilter.tsx:14 - WatchlistQuickFilter
+client/src/pages/api/collections/[id].ts:7 - default
+client/src/pages/api/collections/index.ts:7 - default
+client/src/pages/api/filter-presets/[id].ts:7 - default
+client/src/pages/api/filter-presets/index.ts:7 - default
+client/src/pages/api/user-feedback/index.ts:7 - default
+```
+
+## Depcheck Summary (truncated)
+\n```
+{
+  "unusedDependencies": null,
+  "unusedDevDependencies": null
+}
+```
+
+Baseline file: /workspaces/bingeboard/bingeboard/analysis/baseline-unused-exports.txt
