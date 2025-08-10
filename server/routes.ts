@@ -443,6 +443,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!genres.find((g: any) => g.name === 'Sports')) {
         genres.push({ id: 99999, name: 'Sports' });
       }
+      if (!genres.find((g: any) => g.name === 'Thriller')) {
+        genres.push({ id: 53, name: 'Thriller' });
+      }
+      if (!genres.find((g: any) => g.name === 'Romance')) {
+        genres.push({ id: 10749, name: 'Romance' });
+      }
 
       res.setHeader('Cache-Control', 'public, max-age=3600');
       res.json({ genres, source: 'enhanced', count: genres.length });
@@ -478,6 +484,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (e) {
       console.error('Combined genres error:', e);
       res.status(500).json({ message: 'Failed to fetch combined genres' });
+    }
+  });
+
+  // Global alias outside /api/content to avoid middleware ordering issues
+  app.get('/api/genres/combined', async (_req, res) => {
+    try {
+      const tv = await tmdbService.getGenres('tv');
+      const movie = await tmdbService.getGenres('movie');
+      const map = new Map<number, string>();
+      const addAll = (arr: any) => Array.isArray(arr?.genres) && arr.genres.forEach((g: any) => { if (!map.has(g.id)) map.set(g.id, g.name); });
+      addAll(tv); addAll(movie);
+      [{ id: 99999, name: 'Sports' }, { id: 53, name: 'Thriller' }, { id: 10749, name: 'Romance' }].forEach(g => { if (![...map.values()].some(v => v.toLowerCase() === g.name.toLowerCase())) map.set(g.id, g.name); });
+      const genres = [...map.entries()].map(([id, name]) => ({ id, name })).sort((a, b) => a.name.localeCompare(b.name));
+      res.setHeader('Cache-Control', 'public, max-age=3600');
+      res.json({ genres, source: 'combined-alias', count: genres.length });
+    } catch (e) {
+      console.error('Combined alias genres error:', e);
+      res.status(500).json({ message: 'Failed to fetch combined genres (alias)' });
     }
   });
 

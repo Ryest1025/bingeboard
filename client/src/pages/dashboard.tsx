@@ -142,10 +142,17 @@ function Dashboard() {
   const { data: genresData, isLoading: genresLoading } = useQuery({
     queryKey: ["/api/content/genres-combined/list"],
     queryFn: async () => {
-      const res = await fetch("/api/content/genres-combined/list");
-      if (!res.ok) throw new Error("Failed to fetch genres");
-      const data = await res.json();
-      return data;
+      let res = await fetch("/api/content/genres-combined/list");
+      if (!res.ok) {
+        console.warn('⚠️ Combined genres primary endpoint failed:', res.status, '— trying alias');
+        res = await fetch('/api/genres/combined');
+      }
+      if (!res.ok) {
+        console.warn('⚠️ Combined genres alias failed:', res.status, '— falling back to enhanced tv list');
+        res = await fetch('/api/content/genres-enhanced/tv/list');
+      }
+      if (!res.ok) throw new Error('Failed to fetch genres (all fallbacks failed)');
+      return res.json();
     },
   });
 
