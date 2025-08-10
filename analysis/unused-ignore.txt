@@ -1,0 +1,8 @@
+# Lines here (substr match) will be filtered out of ts-prune output before diffing
+# Use for intentional demo/story exports, types, temporary placeholders.
+# Example patterns:
+# story
+# *.stories.tsx (NOTE: glob not supported; use literal fragments or exact lines.)
+# Type-only exports (avoid noise):
+: .*Props (used in module)
+: .*Schema

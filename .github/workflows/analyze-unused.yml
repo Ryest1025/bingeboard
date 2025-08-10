@@ -44,6 +44,9 @@ jobs:
         run: |
           chmod +x ./scripts/analyze-unused.sh
           # Allow configurable thresholds via workflow/env or matrix in future
+          if [ "${{ github.ref }}" = "refs/heads/main" ]; then
+            export STRICT_MAIN_NO_WARN=1
+          fi
           ./scripts/analyze-unused.sh || EXIT_CODE=$?
           EXIT_CODE=${EXIT_CODE:-0}
           echo "Analyzer exit code: $EXIT_CODE"

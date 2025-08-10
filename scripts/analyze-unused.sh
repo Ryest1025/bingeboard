@@ -26,15 +26,20 @@ if [[ -f "$REPO_ROOT/.env" ]]; then
 fi
 
 # Defaults (can be overridden by env)
+# Initial tightening per cleanup plan:
+#  - WARN on any growth (>0%)
+#  - FAIL on >5% growth
+#  - WARN on any new unused export (>0 new) and FAIL if >5 new
 UNUSED_EXPORT_FAIL_THRESHOLD=${UNUSED_EXPORT_FAIL_THRESHOLD:-5}
-UNUSED_EXPORT_WARN_THRESHOLD=${UNUSED_EXPORT_WARN_THRESHOLD:-2}
-UNUSED_GROWTH_FAIL_PERCENT=${UNUSED_GROWTH_FAIL_PERCENT:-10}
-UNUSED_GROWTH_WARN_PERCENT=${UNUSED_GROWTH_WARN_PERCENT:-5}
+UNUSED_EXPORT_WARN_THRESHOLD=${UNUSED_EXPORT_WARN_THRESHOLD:-0}
+UNUSED_GROWTH_FAIL_PERCENT=${UNUSED_GROWTH_FAIL_PERCENT:-5}
+UNUSED_GROWTH_WARN_PERCENT=${UNUSED_GROWTH_WARN_PERCENT:-0}
 
 UNUSED_DEP_FAIL_THRESHOLD=${UNUSED_DEP_FAIL_THRESHOLD:-5}
 UNUSED_DEP_WARN_THRESHOLD=${UNUSED_DEP_WARN_THRESHOLD:-1}
 
 STRICT_BASELINE=${STRICT_BASELINE:-0} # if 1, any change triggers at least WARN (or FAIL if above warn threshold)
+STRICT_MAIN_NO_WARN=${STRICT_MAIN_NO_WARN:-0} # if 1 (on main branch post-milestone), escalate what would be WARN growth to FAIL
 
 AUTO_UPDATE_BASELINE=0
 for arg in "$@"; do
@@ -67,6 +72,8 @@ DATE=$(date +%Y%m%d)
 REPORT_MD="$REPORT_DIR/report-$DATE.md"
 
 TS_PRUNE_OUT="/tmp/ts-prune-unused.txt"
+TS_PRUNE_FILTERED="/tmp/ts-prune-unused.filtered.txt"
+BASELINE_FILTERED="/tmp/ts-prune-baseline.filtered.txt"
 DEPCHECK_OUT="/tmp/depcheck-unused.txt"
 
 BASELINE_EXPORTS="$REPORT_DIR/baseline-unused-exports.txt"
@@ -82,6 +89,16 @@ STATUS="PASS"
 echo "[analyze-unused] Running ts-prune..." >&2
 npx ts-prune > "$TS_PRUNE_OUT.raw"
 sort -u "$TS_PRUNE_OUT.raw" > "$TS_PRUNE_OUT" && rm -f "$TS_PRUNE_OUT.raw"
+
+# Apply ignore list filtering (noise reduction) BEFORE diffing
+IGNORE_FILE="$REPORT_DIR/unused-ignore.txt"
+if [[ -f "$IGNORE_FILE" ]]; then
+  echo "[analyze-unused] Applying ignore patterns from $IGNORE_FILE" >&2
+  # Filter current list
+  grep -F -v -f "$IGNORE_FILE" "$TS_PRUNE_OUT" > "$TS_PRUNE_FILTERED" || true
+else
+  cp "$TS_PRUNE_OUT" "$TS_PRUNE_FILTERED"
+fi
 
 echo "[analyze-unused] Running depcheck..." >&2
 npx depcheck --json | jq -r '.unusedDependencies[]?, .unusedDevDependencies[]?' | sort -u > "$DEPCHECK_OUT" || true
@@ -99,8 +116,14 @@ REMOVED_DEPS=0
 
 if [[ -f "$BASELINE_EXPORTS" ]]; then
   BASELINE_EXPORT_COUNT=$(wc -l < "$BASELINE_EXPORTS" | tr -d ' ')
-  grep -Fxv -f "$BASELINE_EXPORTS" "$TS_PRUNE_OUT" > "$DIFF_NEW_EXPORTS" || true
-  grep -Fxv -f "$TS_PRUNE_OUT" "$BASELINE_EXPORTS" > "$DIFF_REMOVED_EXPORTS" || true
+  # Produce filtered baseline for fair comparison if ignore list present
+  if [[ -f "$IGNORE_FILE" ]]; then
+    grep -F -v -f "$IGNORE_FILE" "$BASELINE_EXPORTS" > "$BASELINE_FILTERED" || true
+  else
+    cp "$BASELINE_EXPORTS" "$BASELINE_FILTERED"
+  fi
+  grep -Fxv -f "$BASELINE_FILTERED" "$TS_PRUNE_FILTERED" > "$DIFF_NEW_EXPORTS" || true
+  grep -Fxv -f "$TS_PRUNE_FILTERED" "$BASELINE_FILTERED" > "$DIFF_REMOVED_EXPORTS" || true
   NEW_EXPORTS=$(grep -c . "$DIFF_NEW_EXPORTS" || true)
   REMOVED_EXPORTS=$(grep -c . "$DIFF_REMOVED_EXPORTS" || true)
   if [[ $BASELINE_EXPORT_COUNT -gt 0 ]]; then
@@ -130,6 +153,12 @@ elif (( NEW_EXPORTS > UNUSED_EXPORT_WARN_THRESHOLD )) || (( GROWTH_PERCENT > UNU
   EXPORT_WARN=true
 elif (( STRICT_BASELINE == 1 )) && [[ -f "$BASELINE_EXPORTS" ]] && ! diff -q "$BASELINE_EXPORTS" "$TS_PRUNE_OUT" >/dev/null; then
   EXPORT_WARN=true
+fi
+
+# Escalate WARN to FAIL on main if STRICT_MAIN_NO_WARN
+if $EXPORT_WARN && (( STRICT_MAIN_NO_WARN == 1 )); then
+  EXPORT_FAIL=true
+  EXPORT_WARN=false
 fi
 
 # Determine status for dependencies
@@ -175,6 +204,21 @@ fi
     echo "- Baseline updated in this run (intentional reset)."
   fi
   echo
+  # Group counts (prefix-based) for prioritization
+  echo "## Unused Export Group Summary"
+  if [[ -s "$TS_PRUNE_FILTERED" ]]; then
+    awk -F':' '{print $1}' "$TS_PRUNE_FILTERED" | \
+      awk -F'/' '{
+        if($1=="client" && $2=="src" && $3=="components") {g=$1"/"$2"/"$3"/"$4} \
+        else if($1=="client" && $2=="src" && $3=="firebase") {g=$1"/"$2"/"$3} \
+        else if($1=="client" && $2=="src" && $3=="pages") {g=$1"/"$2"/"$3} \
+        else if($1=="server") {g=$1"/"$2} else {g=$1}
+        counts[g]++
+      } END { for(k in counts) printf("- %s: %d\n", k, counts[k]) }' | sort -k2 -nr
+  else
+    echo "None."
+  fi
+  echo
   echo "## New Unused Exports"
   if [[ -s "$DIFF_NEW_EXPORTS" ]]; then
     echo '\n```'
@@ -211,10 +255,10 @@ fi
     echo "None."
   fi
   echo
-  echo "## Full Unused Export List"
-  if [[ -s "$TS_PRUNE_OUT" ]]; then
+  echo "## Full Unused Export List (filtered)"
+  if [[ -s "$TS_PRUNE_FILTERED" ]]; then
     echo '\n```'
-    cat "$TS_PRUNE_OUT"
+    cat "$TS_PRUNE_FILTERED"
     echo '```'
   else
     echo "None found."
