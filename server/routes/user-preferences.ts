@@ -63,12 +63,31 @@ export function registerUserPreferencesRoutes(app: Express) {
         console.warn('Failed to parse watching habits JSON:', error);
       }
 
+      // Normalize preferredGenres to array of strings
+      let normalizedGenres = [];
+      try {
+        if (preferences?.preferredGenres) {
+          if (Array.isArray(preferences.preferredGenres)) {
+            normalizedGenres = preferences.preferredGenres;
+          } else if (typeof preferences.preferredGenres === 'string') {
+            try {
+              normalizedGenres = JSON.parse(preferences.preferredGenres);
+            } catch {
+              normalizedGenres = preferences.preferredGenres.split(',').map(s => s.trim());
+            }
+          }
+        }
+      } catch (e) {
+        normalizedGenres = [];
+      }
+
       const response = {
         ...preferences,
+        preferredGenres: normalizedGenres,
         watchingHabits,
         // Add derived data
         hasCompletedOnboarding: preferences?.onboardingCompleted || false,
-        preferenceCount: (preferences?.preferredGenres?.length || 0) +
+        preferenceCount: (normalizedGenres.length || 0) +
           (preferences?.preferredNetworks?.length || 0) +
           (preferences?.favoriteTeams?.length || 0),
         lastUpdated: preferences?.updatedAt || new Date().toISOString()

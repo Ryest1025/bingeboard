@@ -140,9 +140,9 @@ function Dashboard() {
 
   // Fetch genres dynamically from TMDB
   const { data: genresData, isLoading: genresLoading } = useQuery({
-    queryKey: ["/api/content/genres-enhanced/tv/list"],
+    queryKey: ["/api/content/genres-combined/list"],
     queryFn: async () => {
-      const res = await fetch("/api/content/genres-enhanced/tv/list");
+      const res = await fetch("/api/content/genres-combined/list");
       if (!res.ok) throw new Error("Failed to fetch genres");
       const data = await res.json();
       return data;
