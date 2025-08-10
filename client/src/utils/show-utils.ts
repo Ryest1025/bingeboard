@@ -29,16 +29,16 @@ export const getShowBackdropUrl = (show: any, size: string = 'w1280'): string =>
 export const getStreamingPlatforms = (show: any): any[] => {
   // Handle nested show structure from AI recommendations
   const showData = show?.show || show;
-  
+
   // Try multiple possible property names for streaming platforms
   // Prioritize the new streamingPlatforms array from enhanced API
-  const platforms = showData?.streamingPlatforms || 
-                   showData?.streaming_platforms || 
-                   showData?.streamingProviders || 
-                   showData?.watchProviders?.results?.US?.flatrate || 
-                   showData?.watch_providers?.results?.US?.flatrate || 
-                   [];
-  
+  const platforms = showData?.streamingPlatforms ||
+    showData?.streaming_platforms ||
+    showData?.streamingProviders ||
+    showData?.watchProviders?.results?.US?.flatrate ||
+    showData?.watch_providers?.results?.US?.flatrate ||
+    [];
+
   return Array.isArray(platforms) ? platforms : [];
 };
 
@@ -48,30 +48,30 @@ export const getStreamingLogo = (platform: any): string => {
   if (platform.logo_path) {
     return `https://image.tmdb.org/t/p/w92${platform.logo_path}`;
   }
-  
+
   // Direct logo URL from API
   if (platform.logo) {
     return platform.logo;
   }
-  
+
   // Platform-specific hardcoded logos as fallback
   const platformLogos: Record<string, string> = {
     'netflix': 'https://image.tmdb.org/t/p/w92/9A1JSVmSxsyaBK4SUFsYVqbAYfW.jpg',
-    'hulu': 'https://image.tmdb.org/t/p/w92/fJ9B2CLOwlFNiDfC5EQ7Y7BfC0g.jpg', 
+    'hulu': 'https://image.tmdb.org/t/p/w92/fJ9B2CLOwlFNiDfC5EQ7Y7BfC0g.jpg',
     'amazon prime video': 'https://image.tmdb.org/t/p/w92/k5WjdWXNqO5TKUa1UMY2ixsT7KQ.jpg',
     'disney plus': 'https://image.tmdb.org/t/p/w92/dgBOYnKJWdgb5jm43LUhGHXJNQB.jpg',
     'hbo max': 'https://image.tmdb.org/t/p/w92/rOd3n8j4pJCLHPBDvVoFgcV9wpp.jpg',
     'paramount plus': 'https://image.tmdb.org/t/p/w92/qDZN5mW8F12YgK7YxCKpIrUZ2YL.jpg'
   };
-  
+
   const platformName = (platform.provider_name || platform.name || '').toLowerCase();
   if (platformLogos[platformName]) {
     return platformLogos[platformName];
   }
-  
+
   // Generic fallback
-  return 'https://via.placeholder.com/92x92/1f2937/white?text=' + 
-         encodeURIComponent((platform.provider_name || platform.name || '?').charAt(0).toUpperCase());
+  return 'https://via.placeholder.com/92x92/1f2937/white?text=' +
+    encodeURIComponent((platform.provider_name || platform.name || '?').charAt(0).toUpperCase());
 };
 
 export const formatRating = (rating: number | string | null | undefined): string => {
@@ -102,7 +102,7 @@ export const getShowId = (show: any): number => {
 export const trackEvent = (event: string, properties: Record<string, any> = {}) => {
   // TODO: Implement analytics tracking
   console.log('Analytics Event:', event, properties);
-  
+
   // Example implementation for future:
   // if (window.gtag) {
   //   window.gtag('event', event, properties);

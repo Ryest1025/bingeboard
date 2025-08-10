@@ -9,29 +9,29 @@ async function syncFirebaseSession() {
     const sessionResponse = await fetch('/api/auth/session', {
       credentials: 'include'
     });
-    
+
     if (sessionResponse.ok) {
       const sessionData = await sessionResponse.json();
       console.log('✅ Local session found:', sessionData);
-      
+
       // Check Firebase auth state
       const { auth } = await import('/src/lib/firebase/config.ts');
-      
+
       if (!auth.currentUser) {
         console.log('❌ Firebase user missing, attempting to restore...');
-        
+
         // Try to get a fresh token from the session
         const tokenResponse = await fetch('/api/auth/firebase-token', {
           credentials: 'include'
         });
-        
+
         if (tokenResponse.ok) {
           const { token } = await tokenResponse.json();
-          
+
           // Sign in with the custom token
           const { signInWithCustomToken } = await import('firebase/auth');
           await signInWithCustomToken(auth, token);
-          
+
           console.log('✅ Firebase user restored:', auth.currentUser?.email);
           return true;
         } else {
@@ -55,7 +55,7 @@ async function syncFirebaseSession() {
 // Auto-run if this is called directly
 if (typeof window !== 'undefined') {
   window.syncFirebaseSession = syncFirebaseSession;
-  
+
   // Auto-sync on load
   setTimeout(async () => {
     const success = await syncFirebaseSession();

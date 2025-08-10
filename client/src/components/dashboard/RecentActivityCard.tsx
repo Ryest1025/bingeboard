@@ -10,21 +10,21 @@ interface FriendActivityCardProps {
 export default function FriendActivityCard({ activities, feed, onRefresh }: FriendActivityCardProps) {
   // Mock data to match the reference design
   const mockFriends = [
-    { 
-      id: 1, 
-      name: "Bear", 
+    {
+      id: 1,
+      name: "Bear",
       avatar: "/api/placeholder/32/32",
       watching: "The Bear"
     },
-    { 
-      id: 2, 
-      name: "Alex", 
+    {
+      id: 2,
+      name: "Alex",
       avatar: "/api/placeholder/32/32",
       watching: "Succession"
     },
-    { 
-      id: 3, 
-      name: "Sam", 
+    {
+      id: 3,
+      name: "Sam",
       avatar: "/api/placeholder/32/32",
       watching: "Breaking Bad"
     },
@@ -45,7 +45,7 @@ export default function FriendActivityCard({ activities, feed, onRefresh }: Frie
             </div>
           </div>
         ))}
-        
+
         <div className="flex justify-center pt-2">
           <div className="w-6 h-1 bg-slate-700 rounded-full"></div>
         </div>

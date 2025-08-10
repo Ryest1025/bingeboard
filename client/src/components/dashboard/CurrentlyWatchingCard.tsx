@@ -28,7 +28,7 @@ export default function CurrentlyWatchingCard({ shows }: CurrentlyWatchingCardPr
     {
       id: 2,
       title: "Succession",
-      progress: "Resume S1E4", 
+      progress: "Resume S1E4",
       platform: "HBO MAX",
       poster: "/api/placeholder/60/80"
     }

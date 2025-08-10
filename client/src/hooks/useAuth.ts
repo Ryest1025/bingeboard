@@ -213,7 +213,7 @@ export function useAuth(): AuthState {
         console.log('⚠️ Auth initialization error:', error);
       }
 
-            // Set up Firebase auth state listener
+      // Set up Firebase auth state listener
       console.log('🔍 Setting up Firebase auth state listener...');
 
       try {
@@ -301,7 +301,7 @@ export function useAuth(): AuthState {
 
     // Start the authentication check
     initAuth();
-    
+
     // Mark session as checked after starting auth
     setCheckedSession(true);
 

@@ -29,8 +29,8 @@ export const WatchlistQuickFilter: React.FC = () => {
             onClick={() => setFilter('watchlistStatus', value)}
             className={`
               flex items-center gap-1.5 whitespace-nowrap transition-all
-              ${watchlistStatus === value 
-                ? `bg-${color}-600 text-white border-${color}-500 shadow-lg` 
+              ${watchlistStatus === value
+                ? `bg-${color}-600 text-white border-${color}-500 shadow-lg`
                 : 'bg-gray-700/50 text-gray-300 border-gray-600 hover:bg-gray-600/50 hover:text-gray-200'
               }
             `}

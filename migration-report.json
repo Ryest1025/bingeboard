@@ -1,0 +1,79 @@
+{
+  "filesUpdated": [
+    "client/src/lib/search-api.ts",
+    "client/src/pages/dashboard.tsx",
+    "client/src/pages/dashboard-enhanced.tsx",
+    "client/src/pages/modern-discover.tsx",
+    "client/src/pages/modern-discover-enhanced.tsx",
+    "client/src/pages/modern-home.tsx",
+    "client/src/pages/modern-home-clean.tsx",
+    "client/src/pages/landing-backup.tsx",
+    "client/src/components/search/HybridSearchBar.tsx",
+    "client/src/components/search/BrandedSearchBar.tsx",
+    "client/src/components/search/ShowDetailsModal.tsx",
+    "client/src/components/search/BrandedShowModal.tsx",
+    "server/routes.ts"
+  ],
+  "endpointsReplaced": {
+    "client/src/lib/search-api.ts": {
+      "/api/tmdb/search": 1
+    },
+    "client/src/pages/dashboard.tsx": {
+      "/api/tmdb/trending": 1,
+      "/api/tmdb/discover": 4,
+      "/api/tmdb/genre": 2
+    },
+    "client/src/pages/dashboard-enhanced.tsx": {
+      "/api/tmdb/trending": 1,
+      "/api/tmdb/discover": 1,
+      "/api/tmdb/genre": 2
+    },
+    "client/src/pages/modern-discover.tsx": {
+      "/api/tmdb/search": 2,
+      "/api/tmdb/discover": 2,
+      "/api/tmdb/movie/": 2
+    },
+    "client/src/pages/modern-discover-enhanced.tsx": {
+      "/api/tmdb/search": 2,
+      "/api/tmdb/trending": 1,
+      "/api/tmdb/discover": 1
+    },
+    "client/src/pages/modern-home.tsx": {
+      "/api/tmdb/trending": 1,
+      "/api/tmdb/discover": 1
+    },
+    "client/src/pages/modern-home-clean.tsx": {
+      "/api/tmdb/trending": 1
+    },
+    "client/src/pages/landing-backup.tsx": {
+      "/api/tmdb/trending": 1
+    },
+    "client/src/components/search/HybridSearchBar.tsx": {},
+    "client/src/components/search/BrandedSearchBar.tsx": {},
+    "client/src/components/search/ShowDetailsModal.tsx": {},
+    "client/src/components/search/BrandedShowModal.tsx": {}
+  },
+  "errorsEncountered": [],
+  "backupLocation": "/workspaces/bingeboard/bingeboard/migration-backup-1754833175980",
+  "startTime": "2025-08-10T13:39:35.980Z",
+  "endTime": null,
+  "migration_summary": {
+    "total_files_updated": 13,
+    "total_endpoints_replaced": 26,
+    "duration_ms": -1754833175980,
+    "success": true
+  },
+  "next_steps": [
+    "1. Test all endpoints to ensure they work correctly",
+    "2. Run: node migration-status-check.js to verify migration",
+    "3. Update any custom components to use new streaming data format",
+    "4. Monitor affiliate link generation and commission tracking",
+    "5. Test caching performance with multi-API calls",
+    "6. Update documentation and API references"
+  ],
+  "rollback_instructions": [
+    "1. Run: node migration-rollback.js /workspaces/bingeboard/bingeboard/migration-backup-1754833175980",
+    "2. Restart the development server",
+    "3. Verify all functionality is restored"
+  ]
+}

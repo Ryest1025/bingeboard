@@ -253,14 +253,14 @@ export default function ModernHome() {
 
   // Fetch trending shows safely
   useEffect(() => {
-    safeFetch('/api/tmdb/trending').then(data => {
+    safeFetch('/api/content/trending-enhanced').then(data => {
       if (data) setTrendingData(data);
     });
   }, []);
 
   // Fetch coming soon shows safely
   useEffect(() => {
-    safeFetch('/api/tmdb/discover/tv').then(data => {
+    safeFetch('/api/content/discover-enhanced/tv').then(data => {
       if (data) setComingSoonData(data);
     });
   }, []);
@@ -368,7 +368,7 @@ export default function ModernHome() {
           <div className="flex items-center justify-between">
             <h1 className="text-3xl font-bold text-white">Mood Match</h1>
             <div className="flex items-center gap-4">
-              <input 
+              <input
                 placeholder="Search movies, shows, and more"
                 className="w-64 px-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-gray-400"
               />
@@ -388,10 +388,10 @@ export default function ModernHome() {
 
           {/* Main Two-Column Layout */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            
+
             {/* Left Column - Spotlight */}
             <div className="lg:col-span-2 space-y-6">
-              
+
               {/* Trending Show Spotlight - Large Card */}
               <div className="relative h-[400px] rounded-xl overflow-hidden bg-gradient-to-r from-slate-900 to-slate-800">
                 {/* Background Image */}
@@ -405,13 +405,13 @@ export default function ModernHome() {
                     <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/40 to-transparent" />
                   </div>
                 )}
-                
+
                 {/* Content Overlay */}
                 <div className="relative z-10 p-8 h-full flex flex-col justify-between">
                   <div className="flex items-start justify-between">
                     <Badge className="bg-teal-600/90 text-white">#1 Trending</Badge>
                   </div>
-                  
+
                   <div className="space-y-4">
                     <h3 className="text-4xl font-bold text-white">
                       {trendingData?.results?.[0]?.name || trendingData?.results?.[0]?.title || 'The Bear'}
@@ -455,8 +455,8 @@ export default function ModernHome() {
                           </p>
                           <div className="flex items-center justify-between">
                             <div className="w-32 bg-slate-700 rounded-full h-1">
-                              <div 
-                                className="bg-teal-500 h-1 rounded-full" 
+                              <div
+                                className="bg-teal-500 h-1 rounded-full"
                                 style={{ width: `${item.progress}%` }}
                               />
                             </div>
@@ -475,11 +475,11 @@ export default function ModernHome() {
 
             {/* Right Column - Stats & Secondary Content */}
             <div className="space-y-6">
-              
+
               {/* Stats & Progress */}
               <Card className="bg-slate-800/50 border-slate-700 p-6">
                 <h3 className="text-lg font-bold text-white mb-4">Stats & Progress</h3>
-                
+
                 <div className="space-y-4">
                   {/* Watched Hours */}
                   <div className="text-center p-4 bg-slate-900/50 rounded-lg">
@@ -487,7 +487,7 @@ export default function ModernHome() {
                     <div className="text-sm text-gray-400">65 hrs &nbsp; • &nbsp; avg 8h/wk</div>
                     <div className="text-xs text-gray-500 mt-1">Watched</div>
                   </div>
-                  
+
                   {/* Quick Stats Grid */}
                   <div className="grid grid-cols-2 gap-3">
                     <div className="bg-slate-900/50 rounded-lg p-3 text-center">

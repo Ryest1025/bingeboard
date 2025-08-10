@@ -42,8 +42,8 @@ export default function MobileNav() {
                 key={item.path}
                 onClick={() => setLocation(item.path)}
                 className={`flex flex-col items-center p-2 min-w-0 flex-1 transition-colors duration-200 ${isActive
-                    ? "text-teal-400"
-                    : "text-gray-400 hover:text-gray-300"
+                  ? "text-teal-400"
+                  : "text-gray-400 hover:text-gray-300"
                   }`}
               >
                 <Icon className="w-5 h-5 mb-1 flex-shrink-0" />

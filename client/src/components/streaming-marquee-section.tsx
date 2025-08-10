@@ -62,11 +62,10 @@ export function StreamingMarqueeSection() {
                     <img
                       src={platform.logo}
                       alt={platform.name}
-                      className={`max-w-full max-h-full object-contain group-hover:brightness-125 transition-all duration-300 drop-shadow-2xl ${
-                        platform.color === '#FFFFFF' || platform.name === 'Apple TV+' || platform.name === 'Starz'
+                      className={`max-w-full max-h-full object-contain group-hover:brightness-125 transition-all duration-300 drop-shadow-2xl ${platform.color === '#FFFFFF' || platform.name === 'Apple TV+' || platform.name === 'Starz'
                           ? 'filter invert brightness-100'
                           : 'filter brightness-110'
-                      }`}
+                        }`}
                       style={{ maxWidth: '64px', maxHeight: '48px' }}
                       onError={(e) => {
                         // Fallback to text if image fails to load

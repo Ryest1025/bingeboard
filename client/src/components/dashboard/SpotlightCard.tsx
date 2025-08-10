@@ -39,7 +39,7 @@ export default function SpotlightCard({ spotlight }: SpotlightCardProps) {
           <div className="absolute inset-0">
             {/* Default gradient background */}
             <div className="w-full h-full bg-gradient-to-r from-slate-800 to-slate-600"></div>
-            
+
             {/* Image overlay (if available) */}
             {spotlight.backdrop_path && (
               <img
@@ -62,7 +62,7 @@ export default function SpotlightCard({ spotlight }: SpotlightCardProps) {
                 style={{ opacity: 0 }}
               />
             )}
-            
+
             {!spotlight.backdrop_path && spotlight.poster_path && (
               <img
                 src={`https://image.tmdb.org/t/p/w780${spotlight.poster_path}`}
@@ -78,21 +78,21 @@ export default function SpotlightCard({ spotlight }: SpotlightCardProps) {
                 style={{ opacity: 0 }}
               />
             )}
-            
+
             {/* Dark overlay for text readability */}
             <div className="absolute inset-0 bg-black bg-opacity-60"></div>
           </div>
-          
+
           {/* Content overlay */}
           <div className="relative z-10 p-8 h-full flex flex-col justify-center">
             <div className="mb-4">
               <span className="text-orange-400 text-sm font-medium">#1 Trending</span>
             </div>
-            
+
             <h2 className="text-4xl font-bold text-white mb-4">
               {spotlight.title || spotlight.name || "Unknown Title"}
             </h2>
-            
+
             <div className="flex items-center gap-4 mb-6 text-sm text-gray-300">
               <span>{spotlight.media_type === 'tv' ? 'TV Series' : 'Movie'}</span>
               <span>•</span>
@@ -100,11 +100,11 @@ export default function SpotlightCard({ spotlight }: SpotlightCardProps) {
               <span>•</span>
               <span>⭐ {spotlight.vote_average ? spotlight.vote_average.toFixed(1) : "N/A"}</span>
             </div>
-            
+
             <p className="text-gray-200 mb-6 max-w-2xl text-base leading-relaxed">
               {spotlight.overview || "No description available."}
             </p>
-            
+
             <button className="bg-white text-black px-6 py-3 font-medium flex items-center gap-2 hover:bg-gray-200 transition w-fit">
               <Play className="w-5 h-5" />
               Watch Now

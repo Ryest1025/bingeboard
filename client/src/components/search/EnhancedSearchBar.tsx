@@ -11,8 +11,8 @@ interface EnhancedSearchBarProps {
   onWatchNow?: (show: any) => void;
 }
 
-export function EnhancedSearchBar({ 
-  placeholder = "Search shows, movies...", 
+export function EnhancedSearchBar({
+  placeholder = "Search shows, movies...",
   className = "",
   onAddToWatchlist,
   onWatchNow
@@ -22,10 +22,10 @@ export function EnhancedSearchBar({
   const [selectedShow, setSelectedShow] = useState<any>(null);
   const [hoveredShow, setHoveredShow] = useState<any>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  
+
   const searchRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  
+
   // Debounce the search query to avoid too many API calls
   const debouncedQuery = useDebounce(query, 300);
 

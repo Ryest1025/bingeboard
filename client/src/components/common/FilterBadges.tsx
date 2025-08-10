@@ -22,32 +22,32 @@ interface FilterBadgesProps {
  * Smart component that displays active filters as removable badges
  * Shows count of active filters and provides clear all functionality
  */
-export function FilterBadges({ 
-  filters, 
-  onRemoveFilter, 
-  onClearAll, 
+export function FilterBadges({
+  filters,
+  onRemoveFilter,
+  onClearAll,
   onToggleFilters,
   className = ''
 }: FilterBadgesProps) {
   const activeFilters = React.useMemo(() => {
     const items: Array<{ type: keyof FilterValues; value: string; label: string }> = [];
-    
+
     filters.genres.forEach(genre => {
       items.push({ type: 'genres', value: genre, label: genre });
     });
-    
+
     filters.platforms.forEach(platform => {
       items.push({ type: 'platforms', value: platform, label: platform });
     });
-    
+
     filters.countries.forEach(country => {
       items.push({ type: 'countries', value: country, label: country });
     });
-    
+
     filters.sports.forEach(sport => {
       items.push({ type: 'sports', value: sport, label: sport });
     });
-    
+
     return items;
   }, [filters]);
 
@@ -91,7 +91,7 @@ export function FilterBadges({
             </Button>
           </Badge>
         ))}
-        
+
         {/* Show "and X more" if there are more than 5 filters */}
         {totalActiveFilters > 5 && (
           <Badge variant="outline" className="h-8 px-2 text-xs text-gray-600">

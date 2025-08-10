@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
   DropdownMenuTrigger,
-  DropdownMenuSeparator 
+  DropdownMenuSeparator
 } from "@/components/ui/dropdown-menu";
 import {
   Dialog,
@@ -19,24 +19,24 @@ import { Play, ExternalLink, ChevronDown, Video } from "lucide-react";
 import { TrailerWithAds } from "@/components/ad-player";
 import PremiumFeatureGate from "@/components/premium-feature-gate";
 import { useAuth } from "@/hooks/useAuth";
-import { 
-  openStreamingApp, 
-  getPrimaryStreamingPlatform, 
+import {
+  openStreamingApp,
+  getPrimaryStreamingPlatform,
   getAllAvailablePlatforms,
   getWatchNowText,
   getShortButtonText,
   getPlatformDirectUrl
 } from "@/lib/streamingUtils";
-import { 
-  getBestTrailer, 
+import {
+  getBestTrailer,
   getYouTubeEmbedUrl,
   trackTrailerView,
-  hasTrailer 
+  hasTrailer
 } from "@/lib/trailerUtils";
-import { 
+import {
   openAffiliateLink,
   hasAffiliateSupport,
-  getAffiliateCTA 
+  getAffiliateCTA
 } from "@/lib/affiliateUtils";
 
 interface StreamingPlatform {
@@ -56,22 +56,22 @@ interface WatchNowButtonProps {
   className?: string;
 }
 
-export default function WatchNowButton({ 
-  show, 
-  variant = "default", 
+export default function WatchNowButton({
+  show,
+  variant = "default",
   size = "default",
-  className = "" 
+  className = ""
 }: WatchNowButtonProps) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [showTrailerModal, setShowTrailerModal] = useState(false);
   const [trailerData, setTrailerData] = useState<any>(null);
   const [loadingTrailer, setLoadingTrailer] = useState(false);
   const { user } = useAuth();
-  
+
   // Check if user has premium plan for ad-free trailers
   const userPlan = user?.subscription?.plan || "free";
   const hasAdFreeTrailers = userPlan === "plus" || userPlan === "premium";
-  
+
   // Load trailer data when modal opens
   const handleTrailerClick = async () => {
     setLoadingTrailer(true);
@@ -186,7 +186,7 @@ export default function WatchNowButton({
             {platforms.length > 1 && <DropdownMenuSeparator />}
           </>
         )}
-        
+
         {/* Watch Trailer Option */}
         <DropdownMenuSeparator />
         <DropdownMenuItem
@@ -238,7 +238,7 @@ export default function WatchNowButton({
               <ExternalLink className="h-3 w-3 opacity-70" />
             </DropdownMenuItem>
           ))}
-        
+
         <DropdownMenuSeparator />
         <DropdownMenuItem
           onClick={() => {
@@ -263,7 +263,7 @@ export default function WatchNowButton({
               Enjoy this preview trailer for {show.title}
             </DialogDescription>
           </DialogHeader>
-          
+
           {!trailerData ? (
             <div className="aspect-video bg-black rounded-lg flex items-center justify-center">
               <div className="text-center text-white">
@@ -323,11 +323,11 @@ export default function WatchNowButton({
 }
 
 // Quick watch button for minimal UI contexts
-export function QuickWatchButton({ 
-  show, 
-  className = "" 
-}: { 
-  show: WatchNowButtonProps['show']; 
+export function QuickWatchButton({
+  show,
+  className = ""
+}: {
+  show: WatchNowButtonProps['show'];
   className?: string;
 }) {
   const platforms = getAllAvailablePlatforms(show.streamingPlatforms || []);
@@ -349,12 +349,12 @@ export function QuickWatchButton({
 }
 
 // Platform indicator badges for show cards
-export function StreamingBadges({ 
-  platforms, 
+export function StreamingBadges({
+  platforms,
   maxShow = 3,
   showWatchButton = false,
-  show 
-}: { 
+  show
+}: {
   platforms: StreamingPlatform[];
   maxShow?: number;
   showWatchButton?: boolean;
@@ -401,7 +401,7 @@ export function StreamingBadges({
           </Badge>
         )}
       </div>
-      
+
       {showWatchButton && show && (
         <QuickWatchButton show={show} />
       )}

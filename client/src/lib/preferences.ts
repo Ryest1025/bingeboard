@@ -1,6 +1,6 @@
-*
+/**
  * Preferences API Logic
- * 
+ *
  * Centralized logic for handling user preferences across multiple storage backends
  * Created: August 5, 2025
  */

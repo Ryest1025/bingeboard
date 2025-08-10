@@ -4,9 +4,9 @@ export { CustomListFilterPanel } from './CustomListFilterPanel';
 export { WatchlistQuickFilter } from './WatchlistQuickFilter';
 
 // Export types
-export type { 
+export type {
   RecommendationFilters,
   FriendFeedFilters,
   CustomListFilters,
-  WatchlistFilters 
+  WatchlistFilters
 } from './types';

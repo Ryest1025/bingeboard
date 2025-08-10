@@ -50,7 +50,7 @@ export default function ModernHomeClean() {
   
   // Fetch trending shows
   useEffect(() => {
-    safeFetch('/api/tmdb/trending').then(data => {
+    safeFetch('/api/content/trending-enhanced').then(data => {
       if (data) setTrendingData(data);
     });
   }, []);

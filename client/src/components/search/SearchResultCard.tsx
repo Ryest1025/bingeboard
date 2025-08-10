@@ -23,22 +23,21 @@ interface SearchResultCardProps {
 
 export function SearchResultCard({ show, genres, onHover, onClick, isHovered }: SearchResultCardProps) {
   const title = show.title || show.name || 'Unknown Title';
-  const posterUrl = show.poster_path 
+  const posterUrl = show.poster_path
     ? `https://image.tmdb.org/t/p/w92${show.poster_path}`
     : null;
-  const releaseYear = show.release_date || show.first_air_date 
+  const releaseYear = show.release_date || show.first_air_date
     ? new Date(show.release_date || show.first_air_date!).getFullYear()
     : null;
-  
-  const showGenres = show.genre_ids?.slice(0, 2).map(id => 
+
+  const showGenres = show.genre_ids?.slice(0, 2).map(id =>
     genres.find(g => g.id === id)?.name
   ).filter(Boolean) || [];
 
   return (
     <div
-      className={`flex items-center gap-3 p-3 cursor-pointer transition-all duration-200 rounded-lg ${
-        isHovered ? 'bg-white/10' : 'hover:bg-white/5'
-      }`}
+      className={`flex items-center gap-3 p-3 cursor-pointer transition-all duration-200 rounded-lg ${isHovered ? 'bg-white/10' : 'hover:bg-white/5'
+        }`}
       onMouseEnter={() => onHover(show)}
       onMouseLeave={() => onHover(null)}
       onClick={() => onClick(show)}
@@ -46,8 +45,8 @@ export function SearchResultCard({ show, genres, onHover, onClick, isHovered }: 
       {/* Poster */}
       <div className="flex-shrink-0 w-12 h-16 bg-slate-700 rounded overflow-hidden">
         {posterUrl ? (
-          <img 
-            src={posterUrl} 
+          <img
+            src={posterUrl}
             alt={title}
             className="w-full h-full object-cover"
           />
@@ -69,7 +68,7 @@ export function SearchResultCard({ show, genres, onHover, onClick, isHovered }: 
             </span>
           )}
         </div>
-        
+
         <div className="flex items-center gap-2 mb-1">
           {show.vote_average && show.vote_average > 0 && (
             <div className="flex items-center gap-1 text-yellow-400 text-xs">

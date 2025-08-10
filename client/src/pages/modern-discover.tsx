@@ -256,9 +256,9 @@ export default function ModernDiscover() {
 
   // Fetch popular shows from TMDB
   const { data: popularData } = useQuery({
-    queryKey: ["/api/tmdb/discover/tv"],
+    queryKey: ["/api/content/discover-enhanced/tv"],
     queryFn: async () => {
-      const response = await fetch("/api/tmdb/discover/tv");
+      const response = await fetch("/api/content/discover-enhanced/tv");
       if (!response.ok) throw new Error("Failed to fetch popular shows");
       return response.json();
     },
@@ -271,10 +271,10 @@ export default function ModernDiscover() {
     !!(popularData as any)?.results
   );  // Search functionality using TMDB (more reliable than Watchmode API)
   const { data: searchData, isLoading: searchLoading } = useQuery({
-    queryKey: ["/api/tmdb/search", searchQuery],
+    queryKey: ["/api/streaming/enhanced-search", searchQuery],
     queryFn: () => {
       if (!searchQuery.trim()) return null;
-      return fetch(`/api/tmdb/search?query=${encodeURIComponent(searchQuery)}&mediaType=tv`).then(res => res.json());
+      return fetch(`/api/streaming/enhanced-search?query=${encodeURIComponent(searchQuery)}&mediaType=tv`).then(res => res.json());
     },
     enabled: !!searchQuery.trim(),
     staleTime: 300000
@@ -293,8 +293,8 @@ export default function ModernDiscover() {
 
   // Upcoming movies data
   const { data: upcomingMoviesData } = useQuery({
-    queryKey: ["/api/tmdb/movie/upcoming"],
-    queryFn: () => fetch('/api/tmdb/movie/upcoming').then(res => res.json()),
+    queryKey: ["/api/streaming/comprehensive/movie/upcoming"],
+    queryFn: () => fetch('/api/streaming/comprehensive/movie/upcoming').then(res => res.json()),
     staleTime: 300000
   });
 
@@ -566,17 +566,17 @@ export default function ModernDiscover() {
                     {stickyFilterSummary}
                   </div>
                   <div className="flex items-center gap-2 flex-shrink-0">
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
+                    <Button
+                      variant="outline"
+                      size="sm"
                       onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
                       className="text-xs h-6"
                     >
                       Edit
                     </Button>
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
+                    <Button
+                      variant="ghost"
+                      size="sm"
                       onClick={handleClearAllDiscoverFilters}
                       className="text-red-400 hover:text-red-300 text-xs h-6"
                     >
@@ -609,7 +609,7 @@ export default function ModernDiscover() {
 
             {/* Filter Badges - Show active filters */}
             {hasActiveFilters && (
-              <FilterBadges 
+              <FilterBadges
                 filters={discoverFilters}
                 onRemoveFilter={handleRemoveDiscoverFilter}
                 onClearAll={handleClearAllDiscoverFilters}

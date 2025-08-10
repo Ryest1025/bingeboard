@@ -144,7 +144,7 @@ export class AdSelector {
 
   private static getActiveAds(): AdContent[] {
     const activePartners = this.getActivePartners().map(p => p.id);
-    return AD_CONTENT.filter(ad => 
+    return AD_CONTENT.filter(ad =>
       ad.active && activePartners.includes(ad.partnerId)
     );
   }
@@ -156,12 +156,12 @@ export class AdSelector {
 
     // If user has preferences, try to match them
     if (userPreferences && userPreferences.length > 0) {
-      const matchingAds = activeAds.filter(ad => 
-        ad.targetAudience?.some(audience => 
+      const matchingAds = activeAds.filter(ad =>
+        ad.targetAudience?.some(audience =>
           userPreferences.includes(audience)
         )
       );
-      
+
       if (matchingAds.length > 0) {
         return this.weightedRandomSelection(matchingAds);
       }
@@ -203,7 +203,7 @@ export class AdSelector {
 
     // Try to get ads from different partners for variety
     for (let i = 0; i < count && i < activeAds.length; i++) {
-      const availableAds = activeAds.filter(ad => 
+      const availableAds = activeAds.filter(ad =>
         !usedPartners.has(ad.partnerId) && !selectedAds.includes(ad)
       );
 
@@ -295,13 +295,13 @@ export class RevenueCalculator {
 
     // Base revenue per view (CPM model)
     const baseRevenue = 0.002; // $0.002 per view
-    
+
     // Completion bonus
     const completionMultiplier = completed ? 1.5 : 0.7;
-    
+
     // Partner commission rate affects our revenue
     const partnerMultiplier = partner.commissionRate || 0.05;
-    
+
     return baseRevenue * completionMultiplier * (1 + partnerMultiplier);
   }
 
@@ -315,10 +315,10 @@ export class RevenueCalculator {
 
     // Base click revenue (CPC model)
     const baseClickRevenue = 0.05; // $0.05 per click
-    
+
     // Partner-specific multiplier
     const partnerMultiplier = partner.commissionRate || 0.05;
-    
+
     return baseClickRevenue * (1 + partnerMultiplier * 2);
   }
 }

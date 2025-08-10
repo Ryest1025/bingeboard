@@ -47,9 +47,9 @@ export const CustomListFilterPanel: React.FC<CustomListFilterPanelProps> = ({
     onChange?.(clearedFilters);
   };
 
-  const hasActiveFilters = 
-    filters.visibility !== 'all' || 
-    filters.collaborative !== null || 
+  const hasActiveFilters =
+    filters.visibility !== 'all' ||
+    filters.collaborative !== null ||
     filters.tags.length > 0 ||
     filters.sortBy !== 'updated';
 
@@ -80,11 +80,10 @@ export const CustomListFilterPanel: React.FC<CustomListFilterPanelProps> = ({
               key={value}
               variant={filters.visibility === value ? "default" : "outline"}
               size="sm"
-              className={`flex items-center gap-1.5 ${
-                filters.visibility === value 
-                  ? 'bg-blue-600 text-white border-blue-500' 
+              className={`flex items-center gap-1.5 ${filters.visibility === value
+                  ? 'bg-blue-600 text-white border-blue-500'
                   : 'bg-transparent border-gray-600 text-gray-300 hover:border-blue-500 hover:text-blue-300'
-              }`}
+                }`}
               onClick={() => updateFilter('visibility', value)}
             >
               <Icon className="h-3.5 w-3.5" />
@@ -107,11 +106,10 @@ export const CustomListFilterPanel: React.FC<CustomListFilterPanelProps> = ({
               key={String(value)}
               variant={filters.collaborative === value ? "default" : "outline"}
               size="sm"
-              className={`flex items-center gap-1.5 ${
-                filters.collaborative === value 
-                  ? 'bg-purple-600 text-white border-purple-500' 
+              className={`flex items-center gap-1.5 ${filters.collaborative === value
+                  ? 'bg-purple-600 text-white border-purple-500'
                   : 'bg-transparent border-gray-600 text-gray-300 hover:border-purple-500 hover:text-purple-300'
-              }`}
+                }`}
               onClick={() => updateFilter('collaborative', value)}
             >
               <Users className="h-3.5 w-3.5" />
@@ -130,11 +128,10 @@ export const CustomListFilterPanel: React.FC<CustomListFilterPanelProps> = ({
               key={tag}
               variant={filters.tags.includes(tag) ? "default" : "outline"}
               size="sm"
-              className={`text-xs flex items-center gap-1 ${
-                filters.tags.includes(tag) 
-                  ? 'bg-teal-600 text-white border-teal-500' 
+              className={`text-xs flex items-center gap-1 ${filters.tags.includes(tag)
+                  ? 'bg-teal-600 text-white border-teal-500'
                   : 'bg-transparent border-gray-600 text-gray-300 hover:border-teal-500 hover:text-teal-300'
-              }`}
+                }`}
               onClick={() => toggleTag(tag)}
             >
               <Tag className="h-3 w-3" />

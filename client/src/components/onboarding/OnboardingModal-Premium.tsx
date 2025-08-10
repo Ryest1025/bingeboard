@@ -1652,7 +1652,7 @@ export default function OnboardingModal({ isOpen, onComplete, userDisplayName, u
             favoriteTeams: formData.favoriteTeams,
             viewingHabits: {
               preferredTime: "evening",
-              bingeDuration: "2-3 hours", 
+              bingeDuration: "2-3 hours",
               weeklyGoal: "5-10 hours"
             },
             theme: formData.theme,

@@ -22,30 +22,30 @@ export const CustomListFilterPanel: React.FC = () => {
   } = useDashboardFilters();
 
   return (
-    <motion.div 
+    <motion.div
       className="flex flex-wrap items-center gap-4 p-4"
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
     >
       <div className="flex items-center gap-2">
-        <Switch 
-          checked={showPublicLists} 
+        <Switch
+          checked={showPublicLists}
           onCheckedChange={(checked) => setFilter('showPublicLists', checked)}
           className="data-[state=checked]:bg-blue-600"
         />
         <span className="text-sm text-gray-300">Public Lists</span>
       </div>
-      
+
       <div className="flex items-center gap-2">
-        <Switch 
-          checked={showCollaborativeLists} 
+        <Switch
+          checked={showCollaborativeLists}
           onCheckedChange={(checked) => setFilter('showCollaborativeLists', checked)}
           className="data-[state=checked]:bg-purple-600"
         />
         <span className="text-sm text-gray-300">Collaborative</span>
       </div>
-      
+
       <div className="flex items-center gap-2">
         <SortAsc className="h-4 w-4 text-gray-400" />
         <Select value={listSortBy} onValueChange={(value) => setFilter('listSortBy', value)}>
@@ -54,9 +54,9 @@ export const CustomListFilterPanel: React.FC = () => {
           </SelectTrigger>
           <SelectContent className="bg-gray-800 border-gray-700">
             {sortOptions.map(({ value, label }) => (
-              <SelectItem 
-                key={value} 
-                value={value} 
+              <SelectItem
+                key={value}
+                value={value}
                 className="text-white hover:bg-gray-700 focus:bg-gray-700"
               >
                 {label}

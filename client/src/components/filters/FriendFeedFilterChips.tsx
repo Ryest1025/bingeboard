@@ -31,7 +31,7 @@ export const FriendFeedFilterChips: React.FC<FriendFeedFilterChipsProps> = ({
     const newTypes = filters.activityTypes.includes(typeId)
       ? filters.activityTypes.filter(id => id !== typeId)
       : [...filters.activityTypes, typeId];
-    
+
     const newFilters = { ...filters, activityTypes: newTypes };
     setFilters(newFilters);
     onChange?.(newFilters);
@@ -68,8 +68,8 @@ export const FriendFeedFilterChips: React.FC<FriendFeedFilterChipsProps> = ({
                   size="sm"
                   className={`
                     flex items-center gap-1.5 px-3 py-1.5 rounded-full transition-all
-                    ${isActive 
-                      ? `bg-${color}-500/20 text-${color}-300 border border-${color}-500/30` 
+                    ${isActive
+                      ? `bg-${color}-500/20 text-${color}-300 border border-${color}-500/30`
                       : 'bg-gray-700/50 text-gray-400 hover:bg-gray-600/50 hover:text-gray-300'
                     }
                   `}
@@ -95,8 +95,8 @@ export const FriendFeedFilterChips: React.FC<FriendFeedFilterChipsProps> = ({
             size="sm"
             className={`
               flex items-center gap-1.5 px-3 py-1.5 rounded-full transition-all
-              ${filters.closeFriendsOnly 
-                ? 'bg-pink-500/20 text-pink-300 border border-pink-500/30' 
+              ${filters.closeFriendsOnly
+                ? 'bg-pink-500/20 text-pink-300 border border-pink-500/30'
                 : 'bg-gray-700/50 text-gray-400 hover:bg-gray-600/50 hover:text-gray-300'
               }
             `}

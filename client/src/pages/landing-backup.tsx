@@ -259,7 +259,7 @@ export default function Landing() {
 
   // Fetch trending shows safely
   useEffect(() => {
-    safeFetch('/api/tmdb/trending').then(data => {
+    safeFetch('/api/content/trending-enhanced').then(data => {
       if (data) setTrendingShows(data);
     });
   }, []);

@@ -288,8 +288,8 @@ export default function Signup() {
                       type="button"
                       variant={formData.favoriteGenres.includes(genre) ? "default" : "outline"}
                       className={`text-sm ${formData.favoriteGenres.includes(genre)
-                          ? "bg-gradient-to-r from-teal-600 to-blue-600 text-white"
-                          : "border-slate-700 text-gray-300 hover:text-white"
+                        ? "bg-gradient-to-r from-teal-600 to-blue-600 text-white"
+                        : "border-slate-700 text-gray-300 hover:text-white"
                         }`}
                       onClick={() => toggleGenre(genre)}
                     >
@@ -317,8 +317,8 @@ export default function Signup() {
                       type="button"
                       variant={formData.watchingGoals === goal ? "default" : "outline"}
                       className={`w-full justify-start text-left ${formData.watchingGoals === goal
-                          ? "bg-gradient-to-r from-teal-600 to-blue-600 text-white"
-                          : "border-slate-700 text-gray-300 hover:text-white"
+                        ? "bg-gradient-to-r from-teal-600 to-blue-600 text-white"
+                        : "border-slate-700 text-gray-300 hover:text-white"
                         }`}
                       onClick={() => setFormData(prev => ({ ...prev, watchingGoals: goal }))}
                     >
@@ -346,8 +346,8 @@ export default function Signup() {
                       type="button"
                       variant={formData.experience === exp ? "default" : "outline"}
                       className={`w-full justify-start text-left ${formData.experience === exp
-                          ? "bg-gradient-to-r from-teal-600 to-blue-600 text-white"
-                          : "border-slate-700 text-gray-300 hover:text-white"
+                        ? "bg-gradient-to-r from-teal-600 to-blue-600 text-white"
+                        : "border-slate-700 text-gray-300 hover:text-white"
                         }`}
                       onClick={() => setFormData(prev => ({ ...prev, experience: exp }))}
                     >

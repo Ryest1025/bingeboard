@@ -37,24 +37,24 @@ export default function DiscoverPage() {
     queryKey: ['discover-content', filters, searchQuery],
     queryFn: async () => {
       const params = new URLSearchParams();
-      
+
       // Build comprehensive query parameters
       if (filters.genres.length) params.set('genres', filters.genres.join(','));
       if (filters.platforms.length) params.set('platforms', filters.platforms.join(','));
       if (filters.countries.length) params.set('countries', filters.countries.join(','));
       if (filters.sports.length) params.set('sports', filters.sports.join(','));
       if (searchQuery) params.set('query', searchQuery);
-      
+
       params.set('limit', '50'); // More results for discovery
-      
+
       const response = await fetch(`/api/content/discover?${params.toString()}`, {
         credentials: 'include'
       });
-      
+
       if (!response.ok) {
         throw new Error('Failed to fetch discover content');
       }
-      
+
       return response.json();
     },
     enabled: hasActiveFilters || searchQuery.length > 0 // Only fetch when filters or search active
@@ -76,7 +76,7 @@ export default function DiscoverPage() {
   return (
     <div className="min-h-screen bg-gray-900 text-white">
       <div className="max-w-7xl mx-auto px-4 md:px-6 py-6">
-        
+
         {/* Header */}
         <div className="mb-6">
           <h1 className="text-3xl font-bold mb-2 flex items-center gap-2">
@@ -95,17 +95,17 @@ export default function DiscoverPage() {
                 {stickyFilterSummary}
               </div>
               <div className="flex items-center gap-2 flex-shrink-0">
-                <Button 
-                  variant="outline" 
-                  size="sm" 
+                <Button
+                  variant="outline"
+                  size="sm"
                   onClick={() => setShowFilters(!showFilters)}
                   className="text-xs h-6"
                 >
                   Edit
                 </Button>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
+                <Button
+                  variant="ghost"
+                  size="sm"
                   onClick={clearFilters}
                   className="text-red-400 hover:text-red-300 text-xs h-6"
                 >
@@ -209,7 +209,7 @@ export default function DiscoverPage() {
                   </span>
                 </h2>
               </div>
-              
+
               <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
                 {discoverResults.results.map((item: any) => (
                   <Card key={item.id} className="bg-gray-800 border-gray-700 hover:bg-gray-750 transition-colors">
@@ -225,7 +225,7 @@ export default function DiscoverPage() {
                     <CardContent className="p-3">
                       <h3 className="font-medium text-sm truncate">{item.title || item.name}</h3>
                       <p className="text-xs text-gray-400 mt-1">
-                        {item.release_date || item.first_air_date ? 
+                        {item.release_date || item.first_air_date ?
                           new Date(item.release_date || item.first_air_date).getFullYear() : ''
                         }
                       </p>

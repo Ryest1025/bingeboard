@@ -58,16 +58,16 @@ export function useFilters({
   useEffect(() => {
     if (syncWithUrl && typeof window !== 'undefined') {
       const params = new URLSearchParams();
-      
+
       if (filters.genres.length > 0) params.set('genres', filters.genres.join(','));
       if (filters.platforms.length > 0) params.set('platforms', filters.platforms.join(','));
       if (filters.countries.length > 0) params.set('countries', filters.countries.join(','));
       if (filters.sports.length > 0) params.set('sports', filters.sports.join(','));
 
-      const newUrl = params.toString() ? 
-        `${window.location.pathname}?${params.toString()}` : 
+      const newUrl = params.toString() ?
+        `${window.location.pathname}?${params.toString()}` :
         window.location.pathname;
-      
+
       window.history.replaceState({}, '', newUrl);
     }
   }, [filters, syncWithUrl]);

@@ -4,6 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Play, Plus, Check, Share, Eye, Heart, ThumbsUp, ThumbsDown, Star } from "lucide-react";
+import PlatformBadges from "@/components/search/PlatformBadges";
 import { useRecommendationActions } from "@/hooks/useRecommendationActions";
 import { useQuickFeedback } from "@/components/common/UserFeedback";
 
@@ -13,10 +14,10 @@ export interface Show {
   overview?: string;
   posterPath?: string;
   rating?: string | number;
-  streamingPlatforms?: Array<{ 
-    provider_id: number; 
-    provider_name: string; 
-    logo_path?: string 
+  streamingPlatforms?: Array<{
+    provider_id: number;
+    provider_name: string;
+    logo_path?: string
   }>;
   hasTrailer?: boolean;
   trailerKey?: string;
@@ -50,7 +51,7 @@ export default function RecommendationCard({
 }: RecommendationCardProps) {
   const [hovered, setHovered] = useState(false);
   const [showQuickActions, setShowQuickActions] = useState(false);
-  
+
   // Use centralized actions unless custom ones are provided
   const actions = useRecommendationActions({
     onSuccess: (action) => onInteraction?.(action, show.tmdbId),
@@ -109,7 +110,7 @@ export default function RecommendationCard({
   // Style variants
   const getCardStyles = () => {
     const baseStyles = "recommendation-card glass-effect border-white/10 flex-shrink-0 transition-all duration-300 hover:scale-105 cursor-pointer group";
-    
+
     switch (variant) {
       case 'compact':
         return `${baseStyles} w-36 md:w-40`;
@@ -191,7 +192,7 @@ export default function RecommendationCard({
                 <Eye className="w-5 h-5" />
               </Button>
             </div>
-            
+
             {/* Quick Feedback Row */}
             <div className="flex gap-1">
               <Button
@@ -236,29 +237,21 @@ export default function RecommendationCard({
             </div>
           </div>
         </div>
-        <div className="p-3">
-          <h3 className="font-semibold mb-1 truncate cursor-pointer hover:text-binge-purple transition-colors" onClick={handlePosterClick}>
-            {show.title}
-          </h3>
-          <div className="flex items-center justify-between mb-1">
-            <span className="text-xs text-gray-400 font-medium">
-              {show.rating ? <>{show.rating}★</> : null}
-            </span>
-            {/* Streaming Platforms */}
-            {show.streamingPlatforms && show.streamingPlatforms.length > 0 && (
-              <div className="flex items-center space-x-1">
-                {show.streamingPlatforms.slice(0, 2).map((platform, idx) => (
-                  <div key={idx} className="w-6 h-4 rounded bg-white p-0.5 flex-shrink-0">
-                    {platform.logo_path ? (
-                      <img src={platform.logo_path} alt={platform.provider_name} className="w-full h-full object-contain rounded" />
-                    ) : (
-                      <span className="text-[7px] font-bold text-gray-700">{platform.provider_name?.charAt(0) || '?'}</span>
-                    )}
-                  </div>
-                ))}
-              </div>
+        <div className="p-3 space-y-2">
+          <div className="flex items-start justify-between gap-2">
+            <h3 className="font-semibold text-sm leading-tight line-clamp-2 cursor-pointer hover:text-binge-purple transition-colors" onClick={handlePosterClick}>
+              {show.title}
+            </h3>
+            {show.rating && (
+              <span className="flex items-center text-[10px] font-medium text-yellow-400"><Star className="w-3 h-3 mr-0.5" />{show.rating}</span>
             )}
           </div>
+          {show.streamingPlatforms && show.streamingPlatforms.length > 0 && (
+            <PlatformBadges platforms={show.streamingPlatforms} maxVisible={4} size="xs" />
+          )}
+          {show.overview && (
+            <p className="text-[11px] text-gray-400 line-clamp-3">{show.overview}</p>
+          )}
         </div>
       </CardContent>
     </Card>

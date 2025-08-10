@@ -74,7 +74,7 @@ export function useViewingHistory(limit = 50) {
     queryKey: ['viewing-history', limit],
     queryFn: async (): Promise<ViewingHistoryEntry[]> => {
       console.log('📺 Fetching viewing history...');
-      
+
       const response = await fetch(`/api/viewing-history?limit=${limit}`, {
         credentials: 'include',
       });
@@ -84,7 +84,7 @@ export function useViewingHistory(limit = 50) {
       }
 
       const data = await response.json();
-      
+
       if (!data.success) {
         throw new Error(data.message || 'Failed to fetch viewing history');
       }
@@ -103,7 +103,7 @@ export function useContinueWatching(limit = 10) {
     queryKey: ['continue-watching', limit],
     queryFn: async (): Promise<ContinueWatchingItem[]> => {
       console.log('▶️ Fetching continue watching list...');
-      
+
       try {
         const response = await fetch(`/api/continue-watching?limit=${limit}`, {
           credentials: 'include',
@@ -115,7 +115,7 @@ export function useContinueWatching(limit = 10) {
         }
 
         const data = await response.json();
-        
+
         if (!data.success) {
           console.warn('Continue watching API returned error, using fallback data');
           return getFallbackContinueWatching();
@@ -200,7 +200,7 @@ export function useUpdateProgress() {
   return useMutation({
     mutationFn: async (progressData: ProgressUpdate) => {
       console.log('⏱️ Updating viewing progress...', progressData);
-      
+
       const response = await fetch('/api/progress/update', {
         method: 'POST',
         headers: {
@@ -215,7 +215,7 @@ export function useUpdateProgress() {
       }
 
       const data = await response.json();
-      
+
       if (!data.success) {
         throw new Error(data.message || 'Failed to update progress');
       }
@@ -239,7 +239,7 @@ export function useAddToHistory() {
   return useMutation({
     mutationFn: async (historyData: NewHistoryEntry) => {
       console.log('📺 Adding to viewing history...', historyData);
-      
+
       const response = await fetch('/api/viewing-history', {
         method: 'POST',
         headers: {
@@ -254,7 +254,7 @@ export function useAddToHistory() {
       }
 
       const data = await response.json();
-      
+
       if (!data.success) {
         throw new Error(data.message || 'Failed to add to history');
       }
@@ -276,7 +276,7 @@ export function useCurrentProgress() {
     queryKey: ['current-progress'],
     queryFn: async (): Promise<ContinueWatchingItem[]> => {
       console.log('⏱️ Fetching current viewing progress...');
-      
+
       try {
         const response = await fetch('/api/progress/current', {
           credentials: 'include',
@@ -288,7 +288,7 @@ export function useCurrentProgress() {
         }
 
         const data = await response.json();
-        
+
         if (!data.success) {
           console.warn('Current progress API returned error, using fallback data');
           return getFallbackCurrentProgress();
@@ -355,7 +355,7 @@ export function useImportHistory() {
   return useMutation({
     mutationFn: async (entries: NewHistoryEntry[]) => {
       console.log(`📤 Importing ${entries.length} viewing history entries...`);
-      
+
       const response = await fetch('/api/viewing-history/import', {
         method: 'POST',
         headers: {
@@ -370,7 +370,7 @@ export function useImportHistory() {
       }
 
       const data = await response.json();
-      
+
       if (!data.success) {
         throw new Error(data.message || 'Failed to import history');
       }
@@ -392,14 +392,14 @@ export function formatViewingTime(minutes: number): string {
   if (minutes < 60) {
     return `${minutes}m`;
   }
-  
+
   const hours = Math.floor(minutes / 60);
   const remainingMinutes = minutes % 60;
-  
+
   if (remainingMinutes === 0) {
     return `${hours}h`;
   }
-  
+
   return `${hours}h ${remainingMinutes}m`;
 }
 

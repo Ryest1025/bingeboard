@@ -6,12 +6,12 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { StreamingMarqueeSection } from '@/components/streaming-marquee-section';
-import { 
-  Play, 
-  Search, 
-  Clock, 
-  Star, 
-  Users, 
+import {
+  Play,
+  Search,
+  Clock,
+  Star,
+  Users,
   Settings,
   LogIn,
   TrendingUp,
@@ -40,7 +40,7 @@ const getFirebaseAuth = async () => {
 const createBackendSession = async (firebaseUser: any) => {
   try {
     const idToken = await firebaseUser.getIdToken();
-    
+
     const response = await fetch('/api/auth/firebase-session', {
       method: 'POST',
       headers: {
@@ -96,9 +96,9 @@ export default function MobileApp() {
   const [loading, setLoading] = useState(false);
 
   // Debug auth state
-  console.log('Mobile App - Auth State:', { 
-    user: !!user, 
-    isAuthenticated, 
+  console.log('Mobile App - Auth State:', {
+    user: !!user,
+    isAuthenticated,
     isLoading,
     willRedirectToDashboard: isAuthenticated && !isLoading && !!user
   });
@@ -209,7 +209,7 @@ export default function MobileApp() {
             <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-teal-500/10 rounded-full blur-3xl"></div>
             <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl"></div>
           </div>
-          
+
           <div className="relative z-10 w-full px-4 py-8">
             <div className="max-w-md mx-auto text-center space-y-8">
               {/* Logo & Title */}
@@ -231,12 +231,12 @@ export default function MobileApp() {
                         <div className="absolute -bottom-2 right-1/4 w-1 h-1 bg-slate-700"></div>
                       </div>
                     </div>
-                    
+
                     {/* Glow effect */}
                     <div className="absolute inset-0 w-20 h-16 bg-gradient-to-br from-teal-400 to-blue-500 blur-lg opacity-25 scale-110"></div>
                   </div>
                 </div>
-                
+
                 <h1 className="text-4xl font-bold">
                   <span className="font-black bg-gradient-to-r from-teal-400 to-cyan-300 bg-clip-text text-transparent">Binge</span>
                   <span className="font-light text-white">Board</span>
@@ -248,7 +248,7 @@ export default function MobileApp() {
                   </span>
                 </p>
                 <p className="text-gray-400 text-sm leading-relaxed">
-                  Track shows, discover content, and never lose your place again. 
+                  Track shows, discover content, and never lose your place again.
                   The smarter way to manage your entertainment.
                 </p>
               </div>
@@ -256,20 +256,20 @@ export default function MobileApp() {
               {/* Login Section */}
               <div className="space-y-6">
                 <div className="space-y-3">
-                  <Button 
+                  <Button
                     onClick={handleGoogleLogin}
                     disabled={loading}
-                    size="lg" 
+                    size="lg"
                     variant="outline"
                     className="border-gray-700 bg-white/5 hover:bg-white/10 text-white px-6 py-4 w-full"
                   >
                     <SiGoogle className="h-5 w-5 mr-3" />
                     Continue with Google
                   </Button>
-                  <Button 
+                  <Button
                     onClick={handleFacebookLogin}
                     disabled={loading}
-                    size="lg" 
+                    size="lg"
                     variant="outline"
                     className="border-gray-700 bg-blue-600/20 hover:bg-blue-600/30 text-white px-6 py-4 w-full"
                   >
@@ -277,7 +277,7 @@ export default function MobileApp() {
                     Continue with Facebook
                   </Button>
                 </div>
-                
+
                 {/* OR Separator */}
                 <div className="relative">
                   <div className="absolute inset-0 flex items-center">
@@ -287,20 +287,20 @@ export default function MobileApp() {
                     <span className="bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 px-2 text-gray-400">Or</span>
                   </div>
                 </div>
-                
+
                 {/* Email Login Options */}
                 <div className="space-y-3">
-                  <Button 
+                  <Button
                     onClick={() => setLocation('/login-simple')}
-                    size="lg" 
+                    size="lg"
                     className="bg-gradient-to-r from-teal-600 via-cyan-600 to-blue-600 hover:from-teal-700 hover:via-cyan-700 hover:to-blue-700 text-white px-8 py-4 text-lg font-semibold w-full"
                   >
                     Join Now
                   </Button>
-                  <Button 
+                  <Button
                     onClick={() => setLocation('/login-simple')}
-                    size="lg" 
-                    variant="outline" 
+                    size="lg"
+                    variant="outline"
                     className="border-teal-400/30 text-teal-300 hover:bg-teal-500/10 px-8 py-4 text-lg w-full"
                   >
                     Log In
@@ -319,13 +319,13 @@ export default function MobileApp() {
               Everything You Need in <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-400 to-blue-500">One Place</span>
             </h3>
           </div>
-          
+
           {/* Edge-to-edge marquee */}
           <div className="relative overflow-hidden">
             {/* Fade gradients */}
             <div className="absolute left-0 top-0 w-12 h-full bg-gradient-to-r from-slate-950 via-slate-950/80 to-transparent z-10 pointer-events-none"></div>
             <div className="absolute right-0 top-0 w-12 h-full bg-gradient-to-l from-slate-950 via-slate-950/80 to-transparent z-10 pointer-events-none"></div>
-            
+
             {/* Scrolling platforms - faster animation with reliable CDN logos */}
             <div className="flex space-x-6 py-4" style={{ animation: 'marquee-left 15s linear infinite' }}>
               {/* Netflix */}
@@ -388,7 +388,7 @@ export default function MobileApp() {
                   <span className="text-white font-bold text-xs">STARZ</span>
                 </div>
               </div>
-              
+
               {/* Repeat for seamless loop */}
               <div className="flex-shrink-0 w-16 h-12 flex items-center justify-center">
                 <div className="w-12 h-8 bg-red-600 rounded-sm flex items-center justify-center">
@@ -437,7 +437,7 @@ export default function MobileApp() {
                 </span>
               </h2>
             </div>
-            
+
             <div className="grid grid-cols-1 gap-6">
               <FeatureCard
                 icon={Play}

@@ -59,8 +59,8 @@ export const WatchlistQuickFilter: React.FC<WatchlistQuickFilterProps> = ({
               size={compact ? "sm" : "default"}
               className={`
                 flex items-center gap-1.5 px-3 py-2 rounded-lg transition-all whitespace-nowrap
-                ${isActive 
-                  ? `bg-${color}-500/20 text-${color}-300 border border-${color}-500/30` 
+                ${isActive
+                  ? `bg-${color}-500/20 text-${color}-300 border border-${color}-500/30`
                   : 'bg-gray-700/30 text-gray-400 hover:bg-gray-600/50 hover:text-gray-300'
                 }
               `}
@@ -92,8 +92,8 @@ export const WatchlistQuickFilter: React.FC<WatchlistQuickFilterProps> = ({
                   size="sm"
                   className={`
                     flex items-center gap-1 px-2 py-1 rounded-md transition-all text-xs
-                    ${isActive 
-                      ? 'bg-teal-500/20 text-teal-300 border border-teal-500/30' 
+                    ${isActive
+                      ? 'bg-teal-500/20 text-teal-300 border border-teal-500/30'
                       : 'bg-gray-700/30 text-gray-400 hover:bg-gray-600/50 hover:text-gray-300'
                     }
                   `}
@@ -105,7 +105,7 @@ export const WatchlistQuickFilter: React.FC<WatchlistQuickFilterProps> = ({
               );
             })}
           </div>
-          
+
           {hasActiveFilters && (
             <Button
               variant="ghost"

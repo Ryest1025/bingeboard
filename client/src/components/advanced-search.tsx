@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,6 +9,8 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Search, Filter, Star, Calendar, Tv } from "lucide-react";
 import { RecommendationCard, RecommendationGrid, SectionTitle } from "@/components/common";
+import { enhancedSearchApi, EnhancedSearchFilters, EnhancedSearchResult, unwrapOrUndefined } from "@/lib/search-api";
+import { useBatchStreaming } from "@/hooks/useBatchStreaming";
 
 interface AdvancedSearchProps {
   onClose?: () => void;
@@ -25,26 +27,44 @@ export default function AdvancedSearch({ onClose }: AdvancedSearchProps) {
   const [searchExecuted, setSearchExecuted] = useState(false);
 
   // Fetch genres and networks for filters
-  const { data: genres = [] } = useQuery({
+  const { data: genres = [] } = useQuery<any[]>({
     queryKey: ['/api/search/genres'],
   });
 
-  const { data: networks = [] } = useQuery({
+  const { data: networks = [] } = useQuery<any[]>({
     queryKey: ['/api/search/networks'],
   });
 
-  // Search results
-  const { data: searchResults, isLoading, refetch } = useQuery({
-    queryKey: ['/api/search/advanced', {
-      query: searchQuery,
-      genres: selectedGenres.join(','),
-      networks: selectedNetworks.join(','),
-      yearFrom: yearFrom || undefined,
-      yearTo: yearTo || undefined,
-      rating: minRating || undefined,
-      sortBy
-    }],
-    enabled: false, // Only run when manually triggered
+  // Build filters for enhanced search API
+  const filters: EnhancedSearchFilters = {
+    query: searchQuery || undefined,
+    genres: selectedGenres.length ? selectedGenres : undefined,
+    releaseYear: yearFrom ? parseInt(yearFrom) : undefined,
+    ratingRange: minRating ? [parseFloat(minRating), 10] : undefined,
+    sortBy: sortBy || undefined,
+  };
+
+  // Enhanced search results using unified ApiResult pattern (unwrapped here)
+  const { data: searchResultData, isLoading, refetch } = useQuery<EnhancedSearchResult | undefined>({
+    queryKey: ['enhanced-search', filters],
+    enabled: false, // manual trigger
+    queryFn: async () => unwrapOrUndefined<EnhancedSearchResult>(await enhancedSearchApi(filters)),
+    staleTime: 1000 * 60 * 2,
+  });
+
+  // Prepare batch items for streaming availability once search results are present
+  const batchItems = useMemo(() => {
+    if (!searchResultData?.results) return [];
+    return searchResultData.results.slice(0, 20).map(r => ({
+      tmdbId: Number(r.id),
+      title: r.title,
+      mediaType: r.type
+    }));
+  }, [searchResultData]);
+
+  const { data: availabilityMap, isLoading: isBatchLoading } = useBatchStreaming(batchItems, {
+    enabled: searchExecuted && batchItems.length > 0,
+    staleTime: 60_000
   });
 
   const handleSearch = () => {
@@ -53,16 +73,16 @@ export default function AdvancedSearch({ onClose }: AdvancedSearchProps) {
   };
 
   const handleGenreToggle = (genreName: string) => {
-    setSelectedGenres(prev => 
-      prev.includes(genreName) 
+    setSelectedGenres(prev =>
+      prev.includes(genreName)
         ? prev.filter(g => g !== genreName)
         : [...prev, genreName]
     );
   };
 
   const handleNetworkToggle = (networkName: string) => {
-    setSelectedNetworks(prev => 
-      prev.includes(networkName) 
+    setSelectedNetworks(prev =>
+      prev.includes(networkName)
         ? prev.filter(n => n !== networkName)
         : [...prev, networkName]
     );
@@ -223,8 +243,8 @@ export default function AdvancedSearch({ onClose }: AdvancedSearchProps) {
 
           {/* Action Buttons */}
           <div className="flex space-x-2">
-            <Button 
-              onClick={handleSearch} 
+            <Button
+              onClick={handleSearch}
               disabled={isLoading}
               className="flex-1 bg-gradient-purple hover:opacity-90"
             >
@@ -241,39 +261,45 @@ export default function AdvancedSearch({ onClose }: AdvancedSearchProps) {
       {searchExecuted && (
         <div className="space-y-4">
           <Separator />
-          
+
           {isLoading ? (
             <div className="text-center py-8">
               <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4" />
               <p className="text-muted-foreground">Searching...</p>
             </div>
-          ) : searchResults?.results ? (
+          ) : searchResultData?.results ? (
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-semibold">
-                  Search Results ({searchResults.totalResults} found)
+                  Search Results ({searchResultData.totalResults} found)
                 </h3>
-                {searchResults.totalPages > 1 && (
+                {(searchResultData as any)?.totalPages > 1 && (
                   <p className="text-sm text-muted-foreground">
-                    Page 1 of {searchResults.totalPages}
+                    Page 1 of {(searchResultData as any).totalPages}
                   </p>
                 )}
               </div>
 
-              {searchResults.results.length > 0 ? (
-                <RecommendationGrid 
-                  shows={searchResults.results.map((show: any) => ({
-                    tmdbId: show.tmdbId,
-                    title: show.title,
-                    posterPath: show.posterPath,
-                    rating: show.rating,
-                    streamingPlatforms: show.streamingPlatforms
-                  }))}
+              {searchResultData.results.length > 0 ? (
+                <RecommendationGrid
+                  shows={searchResultData.results.map((show: any) => {
+                    const tmdbId = Number(show.id);
+                    const streaming = availabilityMap?.get(tmdbId)?.platforms || [];
+                    return {
+                      tmdbId,
+                      title: show.title,
+                      posterPath: show.poster,
+                      rating: show.vote_average,
+                      streamingPlatforms: streaming
+                    };
+                  })}
                   columns={{ sm: 1, md: 2, lg: 3, xl: 4 }}
                   onInteraction={(action, tmdbId) => {
                     console.log(`Search result interaction: ${action} on ${tmdbId}`);
                   }}
                 />
+              ) : isBatchLoading ? (
+                <div className="text-center py-8 text-muted-foreground">Loading streaming platforms...</div>
               ) : (
                 <div className="text-center py-8">
                   <p className="text-muted-foreground">

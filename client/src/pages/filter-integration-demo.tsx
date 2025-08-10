@@ -5,12 +5,12 @@ import { useFilterOptions } from '@/hooks/useFilterOptions';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { 
-  Sparkles, 
-  Eye, 
-  Monitor, 
-  Smartphone, 
-  Settings, 
+import {
+  Sparkles,
+  Eye,
+  Monitor,
+  Smartphone,
+  Settings,
   Code,
   CheckCircle,
   Filter,
@@ -87,7 +87,7 @@ export default function FilterIntegrationDemo() {
   return (
     <div className="min-h-screen bg-gray-900 text-white p-6">
       <div className="max-w-7xl mx-auto space-y-8">
-        
+
         {/* Header */}
         <div className="text-center space-y-4">
           <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-red-400 bg-clip-text text-transparent">
@@ -116,7 +116,7 @@ export default function FilterIntegrationDemo() {
                 </div>
                 <p className="text-sm text-gray-400">4 API endpoints with React Query caching</p>
               </div>
-              
+
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
                   <Monitor className="h-4 w-4 text-green-400" />
@@ -124,7 +124,7 @@ export default function FilterIntegrationDemo() {
                 </div>
                 <p className="text-sm text-gray-400">Cross-session state management</p>
               </div>
-              
+
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
                   <Smartphone className="h-4 w-4 text-purple-400" />
@@ -132,7 +132,7 @@ export default function FilterIntegrationDemo() {
                 </div>
                 <p className="text-sm text-gray-400">Responsive design with collapsible sections</p>
               </div>
-              
+
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
                   <Code className="h-4 w-4 text-orange-400" />
@@ -156,7 +156,7 @@ export default function FilterIntegrationDemo() {
             </p>
           </CardHeader>
           <CardContent className="space-y-4">
-            
+
             {/* Dashboard Implementation */}
             <div className="space-y-4">
               <div className="flex items-center justify-between">
@@ -169,7 +169,7 @@ export default function FilterIntegrationDemo() {
                 </p>
               </div>
 
-              <FilterBadges 
+              <FilterBadges
                 filters={dashboardFilters}
                 onRemoveFilter={handleRemoveDashboardFilter}
                 onClearAll={handleClearDashboardFilters}
@@ -220,7 +220,7 @@ export default function FilterIntegrationDemo() {
                 📋 Dashboard Integration Code
               </summary>
               <pre className="text-xs text-gray-300 overflow-x-auto">
-{`<EnhancedFilterSystem
+                {`<EnhancedFilterSystem
   persistKey="dashboard-filters"
   showAdvanced={true}
   onFiltersChange={(filters) => {
@@ -246,7 +246,7 @@ export default function FilterIntegrationDemo() {
             </p>
           </CardHeader>
           <CardContent className="space-y-4">
-            
+
             {/* Discover Implementation */}
             <div className="space-y-4">
               <div className="flex items-center justify-between">
@@ -259,7 +259,7 @@ export default function FilterIntegrationDemo() {
                 </p>
               </div>
 
-              <FilterBadges 
+              <FilterBadges
                 filters={discoverFilters}
                 onRemoveFilter={handleRemoveDiscoverFilter}
                 onClearAll={handleClearDiscoverFilters}
@@ -312,7 +312,7 @@ export default function FilterIntegrationDemo() {
                 📋 Discover Integration Code
               </summary>
               <pre className="text-xs text-gray-300 overflow-x-auto">
-{`<EnhancedFilterSystem
+                {`<EnhancedFilterSystem
   persistKey="discover-filters"
   showAdvanced={true}
   defaultExpanded={true}
@@ -338,7 +338,7 @@ export default function FilterIntegrationDemo() {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              
+
               {/* UX Guidelines */}
               <div className="space-y-4">
                 <h4 className="font-semibold text-white">📱 UX & Layout</h4>
@@ -373,7 +373,7 @@ export default function FilterIntegrationDemo() {
             <span className="text-lg font-semibold text-green-400">Implementation Complete</span>
           </div>
           <p className="text-gray-400">
-            Enhanced filter system is production-ready with dynamic data loading, localStorage persistence, 
+            Enhanced filter system is production-ready with dynamic data loading, localStorage persistence,
             and comprehensive UX flow for both Dashboard and Discover pages.
           </p>
         </div>

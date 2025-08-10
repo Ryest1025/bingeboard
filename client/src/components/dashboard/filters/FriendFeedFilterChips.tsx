@@ -23,8 +23,8 @@ export const FriendFeedFilterChips: React.FC = () => {
             onClick={() => setFilter('friendActivity', filter)}
             className={`
               whitespace-nowrap transition-all
-              ${friendActivity === filter 
-                ? 'bg-blue-600 text-white border-blue-500 shadow-lg' 
+              ${friendActivity === filter
+                ? 'bg-blue-600 text-white border-blue-500 shadow-lg'
                 : 'bg-gray-700/50 text-gray-300 border-gray-600 hover:bg-gray-600/50 hover:border-blue-500 hover:text-blue-300'
               }
             `}

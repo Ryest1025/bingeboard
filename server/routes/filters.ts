@@ -12,12 +12,12 @@ import { isAuthenticated } from "../auth";
  */
 
 export function registerFilterRoutes(app: Express) {
-  
+
   // Get available genres
   app.get('/api/filters/genres', async (req, res) => {
     try {
       console.log('🎭 Fetching filter genres...');
-      
+
       // You can fetch from TMDB or use a predefined list
       // For now, using a curated list of popular genres
       const genres = [
@@ -44,10 +44,10 @@ export function registerFilterRoutes(app: Express) {
       res.json(genres);
     } catch (error) {
       console.error('❌ Error fetching genres:', error);
-      res.status(500).json({ 
-        success: false, 
+      res.status(500).json({
+        success: false,
         message: 'Failed to fetch genres',
-        error: (error as Error).message 
+        error: (error as Error).message
       });
     }
   });
@@ -56,7 +56,7 @@ export function registerFilterRoutes(app: Express) {
   app.get('/api/filters/platforms', async (req, res) => {
     try {
       console.log('📺 Fetching streaming platforms...');
-      
+
       // Popular streaming platforms with TMDB provider IDs
       const platforms = [
         { id: 8, name: 'Netflix', provider_id: 8 },
@@ -74,10 +74,10 @@ export function registerFilterRoutes(app: Express) {
       res.json(platforms);
     } catch (error) {
       console.error('❌ Error fetching platforms:', error);
-      res.status(500).json({ 
-        success: false, 
+      res.status(500).json({
+        success: false,
         message: 'Failed to fetch platforms',
-        error: (error as Error).message 
+        error: (error as Error).message
       });
     }
   });
@@ -86,7 +86,7 @@ export function registerFilterRoutes(app: Express) {
   app.get('/api/filters/countries', async (req, res) => {
     try {
       console.log('🌍 Fetching countries...');
-      
+
       // Popular countries for content filtering
       const countries = [
         { code: 'US', name: 'United States' },
@@ -111,10 +111,10 @@ export function registerFilterRoutes(app: Express) {
       res.json(countries);
     } catch (error) {
       console.error('❌ Error fetching countries:', error);
-      res.status(500).json({ 
-        success: false, 
+      res.status(500).json({
+        success: false,
         message: 'Failed to fetch countries',
-        error: (error as Error).message 
+        error: (error as Error).message
       });
     }
   });
@@ -123,7 +123,7 @@ export function registerFilterRoutes(app: Express) {
   app.get('/api/filters/sports', async (req, res) => {
     try {
       console.log('⚽ Fetching sports categories...');
-      
+
       // Popular sports for filtering
       const sports = [
         { id: 1, name: 'Football', category: 'American Sports' },
@@ -146,10 +146,10 @@ export function registerFilterRoutes(app: Express) {
       res.json(sports);
     } catch (error) {
       console.error('❌ Error fetching sports:', error);
-      res.status(500).json({ 
-        success: false, 
+      res.status(500).json({
+        success: false,
         message: 'Failed to fetch sports',
-        error: (error as Error).message 
+        error: (error as Error).message
       });
     }
   });

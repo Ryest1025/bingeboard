@@ -14,7 +14,7 @@ import { isAuthenticated } from "../auth";
  */
 
 export function registerViewingHistoryRoutes(app: Express) {
-  
+
   // Get user's viewing history
   app.get('/api/viewing-history', isAuthenticated, async (req: any, res) => {
     try {
@@ -52,7 +52,7 @@ export function registerViewingHistoryRoutes(app: Express) {
           platform: "Netflix"
         }
       ];
-      
+
       console.log(`✅ Found ${mockHistory.length} viewing history entries`);
 
       res.json({
@@ -63,10 +63,10 @@ export function registerViewingHistoryRoutes(app: Express) {
 
     } catch (error) {
       console.error('❌ Error fetching viewing history:', error);
-      res.status(500).json({ 
-        success: false, 
+      res.status(500).json({
+        success: false,
         message: 'Failed to fetch viewing history',
-        error: (error as Error).message 
+        error: (error as Error).message
       });
     }
   });
@@ -106,10 +106,10 @@ export function registerViewingHistoryRoutes(app: Express) {
 
     } catch (error) {
       console.error('❌ Error creating viewing history entry:', error);
-      res.status(500).json({ 
-        success: false, 
+      res.status(500).json({
+        success: false,
         message: 'Failed to create viewing history entry',
-        error: (error as Error).message 
+        error: (error as Error).message
       });
     }
   });
@@ -172,10 +172,10 @@ export function registerViewingHistoryRoutes(app: Express) {
 
     } catch (error) {
       console.error('❌ Error fetching continue watching list:', error);
-      res.status(500).json({ 
-        success: false, 
+      res.status(500).json({
+        success: false,
         message: 'Failed to fetch continue watching list',
-        error: (error as Error).message 
+        error: (error as Error).message
       });
     }
   });
@@ -184,15 +184,15 @@ export function registerViewingHistoryRoutes(app: Express) {
   app.post('/api/progress/update', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims?.sub || req.user.id;
-      const { 
-        showId, 
-        tmdbId, 
-        seasonNumber, 
-        episodeNumber, 
-        progressPercentage, 
-        duration, 
+      const {
+        showId,
+        tmdbId,
+        seasonNumber,
+        episodeNumber,
+        progressPercentage,
+        duration,
         watchedDuration,
-        completed 
+        completed
       } = req.body;
 
       console.log(`⏱️ Updating progress for user: ${userId}`, {
@@ -223,10 +223,10 @@ export function registerViewingHistoryRoutes(app: Express) {
 
     } catch (error) {
       console.error('❌ Error updating progress:', error);
-      res.status(500).json({ 
-        success: false, 
+      res.status(500).json({
+        success: false,
         message: 'Failed to update progress',
-        error: (error as Error).message 
+        error: (error as Error).message
       });
     }
   });
@@ -268,10 +268,10 @@ export function registerViewingHistoryRoutes(app: Express) {
 
     } catch (error) {
       console.error('❌ Error fetching current progress:', error);
-      res.status(500).json({ 
-        success: false, 
+      res.status(500).json({
+        success: false,
         message: 'Failed to fetch current progress',
-        error: (error as Error).message 
+        error: (error as Error).message
       });
     }
   });
@@ -317,10 +317,10 @@ export function registerViewingHistoryRoutes(app: Express) {
 
     } catch (error) {
       console.error('❌ Error importing viewing history:', error);
-      res.status(500).json({ 
-        success: false, 
+      res.status(500).json({
+        success: false,
         message: 'Failed to import viewing history',
-        error: (error as Error).message 
+        error: (error as Error).message
       });
     }
   });

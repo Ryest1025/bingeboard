@@ -26,8 +26,8 @@ export default function SearchBar() {
             className="w-full pl-10 pr-4 py-3 bg-slate-800/50 border border-slate-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
           />
         </div>
-        <Button 
-          type="submit" 
+        <Button
+          type="submit"
           className="bg-cyan-600 hover:bg-cyan-700 px-6 py-3"
         >
           Search

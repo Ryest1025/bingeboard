@@ -3,12 +3,12 @@ import { useLocation } from 'wouter';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { StreamingMarqueeSection } from '@/components/streaming-marquee-section';
-import { 
-  Smartphone, 
-  TestTube, 
-  LogIn, 
-  Activity, 
-  Settings, 
+import {
+  Smartphone,
+  TestTube,
+  LogIn,
+  Activity,
+  Settings,
   Monitor,
   ArrowRight,
   Cloud,
@@ -28,12 +28,12 @@ export default function MobileHub() {
     isCodespaces: window.location.hostname.includes('.app.github.dev'),
     isMobile: /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)
   });
-  
+
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
     });
-    
+
     return () => unsubscribe();
   }, []);
 
@@ -111,12 +111,12 @@ export default function MobileHub() {
           <p className="text-gray-300 text-lg">
             Mobile-optimized tools and testing suite for BingeBoard
           </p>
-          
+
           {/* Environment Info Banner */}
           <div className={`mt-4 p-3 rounded-lg text-sm ${envInfo.isCodespaces ? 'bg-indigo-900/30 border border-indigo-800' : 'bg-gray-800 border border-gray-700'}`}>
             <div className="flex items-center justify-center mb-2">
-              {envInfo.isCodespaces ? 
-                <Cloud className="h-4 w-4 text-indigo-400 mr-2" /> : 
+              {envInfo.isCodespaces ?
+                <Cloud className="h-4 w-4 text-indigo-400 mr-2" /> :
                 <Smartphone className="h-4 w-4 text-gray-400 mr-2" />
               }
               <span className="font-medium">
@@ -128,10 +128,10 @@ export default function MobileHub() {
               <div className={envInfo.isHttps ? 'text-green-400' : 'text-yellow-400'}>
                 {envInfo.protocol.replace(':', '')}
               </div>
-              
+
               <div className="text-right text-gray-400">Device:</div>
               <div>{envInfo.isMobile ? 'Mobile 📱' : 'Desktop 🖥️'}</div>
-              
+
               <div className="text-right text-gray-400">Domain:</div>
               <div className="truncate max-w-[150px]">{envInfo.hostname}</div>
             </div>
@@ -151,7 +151,7 @@ export default function MobileHub() {
             </h3>
             <p className="text-gray-400 text-sm">Supports 50+ streaming platforms</p>
           </div>
-          
+
           {/* Streaming Icons Row */}
           <div className="overflow-hidden relative">
             <div className="flex animate-marquee-left space-x-6 py-4">
@@ -205,7 +205,7 @@ export default function MobileHub() {
         {/* Mobile Options Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
           {mobileOptions.map((option, index) => (
-            <Card 
+            <Card
               key={index}
               className="bg-gray-800 border-gray-700 hover:bg-gray-750 transition-all duration-200 cursor-pointer transform hover:scale-105"
               onClick={() => setLocation(option.path)}
@@ -224,9 +224,9 @@ export default function MobileHub() {
                 <p className="text-gray-300 text-sm mb-3">
                   {option.description}
                 </p>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
+                <Button
+                  variant="outline"
+                  size="sm"
                   className="w-full border-gray-600 text-gray-300 hover:bg-gray-700"
                   onClick={(e) => {
                     e.stopPropagation();
@@ -262,8 +262,8 @@ export default function MobileHub() {
               <div>
                 <p className="text-gray-400">Device Type</p>
                 <p className="text-white font-medium">
-                  {/Android|webOS|iPhone|iPad|iPod|BlackBerry|Windows Phone|Mobile/i.test(navigator.userAgent) 
-                    ? 'Mobile' 
+                  {/Android|webOS|iPhone|iPad|iPod|BlackBerry|Windows Phone|Mobile/i.test(navigator.userAgent)
+                    ? 'Mobile'
                     : 'Desktop'
                   }
                 </p>
@@ -280,8 +280,8 @@ export default function MobileHub() {
 
         {/* Back to Main */}
         <div className="text-center">
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             onClick={() => setLocation('/')}
             className="border-gray-600 text-gray-300 hover:bg-gray-700"
           >

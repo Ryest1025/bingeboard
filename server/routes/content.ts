@@ -65,14 +65,14 @@ const platformMap: Record<string, string[]> = {
  */
 export const getDashboardContent = async (req: Request, res: Response) => {
   try {
-    const { 
-      genres, platforms, countries, sports, 
-      'genres[]': genresArray, 'platforms[]': platformsArray, 
+    const {
+      genres, platforms, countries, sports,
+      'genres[]': genresArray, 'platforms[]': platformsArray,
       'countries[]': countriesArray, 'sports[]': sportsArray,
-      limit = '20', include_user_context = 'false' 
+      limit = '20', include_user_context = 'false'
     } = req.query;
 
-    console.log('🎯 Dashboard content request:', { 
+    console.log('🎯 Dashboard content request:', {
       genres, platforms, countries, sports,
       genresArray, platformsArray, countriesArray, sportsArray
     });
@@ -103,9 +103,9 @@ export const getDashboardContent = async (req: Request, res: Response) => {
     // Filter by genres
     if (genreList.length > 0) {
       const genreIds = genreList.flatMap(genre => genreMap[genre.trim()] || []);
-      
+
       if (genreIds.length > 0) {
-        filteredContent = filteredContent.filter(item => 
+        filteredContent = filteredContent.filter(item =>
           item.genre_ids.some(id => genreIds.includes(id))
         );
         console.log(`🎭 Filtered by genres [${genreList.join(', ')}]: ${filteredContent.length} results`);
@@ -122,13 +122,13 @@ export const getDashboardContent = async (req: Request, res: Response) => {
         'disney+': [4],
         'amazon prime': [1, 2, 3, 4]
       };
-      
+
       const availableIds = new Set<number>();
       platformList.forEach(platform => {
         const ids = platformMockData[platform.toLowerCase()] || [];
         ids.forEach((id: number) => availableIds.add(id));
       });
-      
+
       if (availableIds.size > 0) {
         filteredContent = filteredContent.filter(item => availableIds.has(item.id));
         console.log(`📺 Filtered by platforms [${platformList.join(', ')}]: ${filteredContent.length} results`);
@@ -198,7 +198,7 @@ export const getDashboardContent = async (req: Request, res: Response) => {
     res.json(response);
   } catch (error) {
     console.error('❌ Dashboard content error:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to fetch dashboard content',
       message: error instanceof Error ? error.message : 'Unknown error'
     });
@@ -228,9 +228,9 @@ export const getDiscoverContent = async (req: Request, res: Response) => {
     if (genres && typeof genres === 'string') {
       const genreList = safeStringSplit(genres);
       const genreIds = genreList.flatMap(genre => genreMap[genre.trim()] || []);
-      
+
       if (genreIds.length > 0) {
-        filteredContent = filteredContent.filter(item => 
+        filteredContent = filteredContent.filter(item =>
           item.genre_ids.some(id => genreIds.includes(id))
         );
       }
@@ -250,7 +250,7 @@ export const getDiscoverContent = async (req: Request, res: Response) => {
     // Generate more results for discover
     const extendedContent = [];
     const limitNum = parseInt(limit as string);
-    
+
     for (let i = 0; i < limitNum; i++) {
       const baseItem = filteredContent[i % filteredContent.length];
       extendedContent.push({
@@ -280,7 +280,7 @@ export const getDiscoverContent = async (req: Request, res: Response) => {
     res.json(response);
   } catch (error) {
     console.error('❌ Discover content error:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to fetch discover content',
       message: error instanceof Error ? error.message : 'Unknown error'
     });
@@ -312,7 +312,7 @@ export const getSearchContent = async (req: Request, res: Response) => {
       const title = (item.title || item.name || '').toLowerCase();
       const overview = (item.overview || '').toLowerCase();
       const searchTerm = q.toLowerCase();
-      
+
       return title.includes(searchTerm) || overview.includes(searchTerm);
     });
 
@@ -320,9 +320,9 @@ export const getSearchContent = async (req: Request, res: Response) => {
     if (genres && typeof genres === 'string') {
       const genreList = safeStringSplit(genres);
       const genreIds = genreList.flatMap(genre => genreMap[genre.trim()] || []);
-      
+
       if (genreIds.length > 0) {
-        filteredContent = filteredContent.filter(item => 
+        filteredContent = filteredContent.filter(item =>
           item.genre_ids.some(id => genreIds.includes(id))
         );
       }
@@ -347,7 +347,7 @@ export const getSearchContent = async (req: Request, res: Response) => {
     res.json(response);
   } catch (error) {
     console.error('❌ Search content error:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to search content',
       message: error instanceof Error ? error.message : 'Unknown error'
     });

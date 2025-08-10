@@ -56,10 +56,10 @@ export const RecommendationFilter: React.FC<RecommendationFilterProps> = ({
     onChange?.(newFilters);
   };
 
-  const hasActiveFilters = 
-    preferredGenres.length > 0 || 
-    activePlatforms.length > 0 || 
-    userMood !== null || 
+  const hasActiveFilters =
+    preferredGenres.length > 0 ||
+    activePlatforms.length > 0 ||
+    userMood !== null ||
     filters.hideWatched;
 
   const clearFilters = () => {
@@ -120,11 +120,10 @@ export const RecommendationFilter: React.FC<RecommendationFilterProps> = ({
                       key={mood}
                       variant={userMood === mood ? "default" : "outline"}
                       size="sm"
-                      className={`text-xs ${
-                        userMood === mood 
-                          ? 'bg-purple-600 text-white border-purple-500' 
+                      className={`text-xs ${userMood === mood
+                          ? 'bg-purple-600 text-white border-purple-500'
                           : 'bg-transparent border-gray-600 text-gray-300 hover:border-purple-500 hover:text-purple-300'
-                      }`}
+                        }`}
                       onClick={() => setFilter('userMood', userMood === mood ? null : mood)}
                     >
                       {mood}
@@ -142,11 +141,10 @@ export const RecommendationFilter: React.FC<RecommendationFilterProps> = ({
                       key={genre}
                       variant={preferredGenres.includes(genre) ? "default" : "outline"}
                       size="sm"
-                      className={`text-xs ${
-                        preferredGenres.includes(genre) 
-                          ? 'bg-blue-600 text-white border-blue-500' 
+                      className={`text-xs ${preferredGenres.includes(genre)
+                          ? 'bg-blue-600 text-white border-blue-500'
                           : 'bg-transparent border-gray-600 text-gray-300 hover:border-blue-500 hover:text-blue-300'
-                      }`}
+                        }`}
                       onClick={() => toggle(genre, preferredGenres, 'preferredGenres')}
                     >
                       {genre}
@@ -164,11 +162,10 @@ export const RecommendationFilter: React.FC<RecommendationFilterProps> = ({
                       key={platform}
                       variant={activePlatforms.includes(platform) ? "default" : "outline"}
                       size="sm"
-                      className={`text-xs ${
-                        activePlatforms.includes(platform) 
-                          ? 'bg-orange-600 text-white border-orange-500' 
+                      className={`text-xs ${activePlatforms.includes(platform)
+                          ? 'bg-orange-600 text-white border-orange-500'
                           : 'bg-transparent border-gray-600 text-gray-300 hover:border-orange-500 hover:text-orange-300'
-                      }`}
+                        }`}
                       onClick={() => toggle(platform, activePlatforms, 'activePlatforms')}
                     >
                       {platform}

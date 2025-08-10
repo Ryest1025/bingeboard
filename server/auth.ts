@@ -36,10 +36,10 @@ export function getSession() {
 
   // Use SQLite session store for persistence across restarts
   console.log('✅ Using SQLite session store (sessions will persist across restarts)');
-  
+
   // Dynamically load SQLite session store
   const SQLiteStore = require('connect-sqlite3')(session);
-  
+
   const store = new SQLiteStore({
     db: 'sessions.db',
     table: 'sessions',
@@ -79,7 +79,7 @@ async function verifyPassword(password: string, hashedPassword: string): Promise
 
 export async function setupAuth(app: Express) {
   app.set("trust proxy", 1);
-  
+
   // Add middleware to log all incoming requests and their paths
   app.use((req, res, next) => {
     if (req.path.startsWith('/api/user') || req.path.startsWith('/api/auth')) {
@@ -87,7 +87,7 @@ export async function setupAuth(app: Express) {
     }
     next();
   });
-  
+
   app.use(getSession());
 
   // Add middleware to verify session is working after session middleware
@@ -104,14 +104,14 @@ export async function setupAuth(app: Express) {
 
 export const isAuthenticated: RequestHandler = async (req, res, next) => {
   const endpoint = req.originalUrl || req.url;
-  
+
   // First check session availability 
   console.log(`🔐 [${endpoint}] Session availability:`, {
     hasSession: !!(req as any).session,
     sessionID: (req as any).sessionID,
     sessionKeys: (req as any).session ? Object.keys((req as any).session) : 'no session'
   });
-  
+
   // Extract session user with detailed debugging
   const session = (req as any).session;
   const sessionUser = session?.user;
@@ -128,18 +128,18 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
 
   console.log(`🔐 Authentication middleware [${endpoint}] - Session user:`, sessionUser ? 'Present' : 'undefined');
   console.log(`🔐 Authentication middleware [${endpoint}] - Auth header:`, authHeader ? 'Bearer token present' : 'No auth header');
-  
+
   // Apply session recovery logic to all endpoints, not just user-preferences
   if (!sessionUser && !authHeader && session) {
     console.log('🔐 No user found but session exists - attempting session recovery');
-    
+
     // Try to regenerate session if it exists but user is missing
     if (session && !session.user) {
       console.log('🔐 Session exists but user is undefined - potential race condition');
-      
+
       // Small delay to allow session to stabilize
       await new Promise(resolve => setTimeout(resolve, 50));
-      
+
       // Re-check session after delay
       const recoveredUser = (req as any).session?.user;
       if (recoveredUser) {

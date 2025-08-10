@@ -712,12 +712,12 @@ export default function Landing() {
 
             <div className="flex space-x-4 overflow-x-auto pb-4 scrollbar-hide">
               {trendingShows.results?.filter(show => show && show.vote_average != null).slice(0, 8).map((show) => (
-                <RecommendationCard 
-                  key={show.id} 
+                <RecommendationCard
+                  key={show.id}
                   show={{
                     tmdbId: show.id,
                     title: show.name || show.title || 'Unknown Title',
-                    posterPath: show.poster_path 
+                    posterPath: show.poster_path
                       ? `https://image.tmdb.org/t/p/w300${show.poster_path}`
                       : undefined,
                     rating: show.vote_average?.toFixed(1) || 'N/A',

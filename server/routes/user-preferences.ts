@@ -13,7 +13,7 @@ import { isAuthenticated } from "../auth";
  */
 
 export function registerUserPreferencesRoutes(app: Express) {
-  
+
   // Get complete user preferences
   app.get('/api/user/preferences', isAuthenticated, async (req: any, res) => {
     try {
@@ -27,7 +27,7 @@ export function registerUserPreferencesRoutes(app: Express) {
       // If no preferences exist, create defaults
       if (!preferences) {
         console.log('📋 No preferences found, creating defaults...');
-        
+
         const defaultPreferences = {
           userId,
           preferredGenres: [],
@@ -68,9 +68,9 @@ export function registerUserPreferencesRoutes(app: Express) {
         watchingHabits,
         // Add derived data
         hasCompletedOnboarding: preferences?.onboardingCompleted || false,
-        preferenceCount: (preferences?.preferredGenres?.length || 0) + 
-                        (preferences?.preferredNetworks?.length || 0) +
-                        (preferences?.favoriteTeams?.length || 0),
+        preferenceCount: (preferences?.preferredGenres?.length || 0) +
+          (preferences?.preferredNetworks?.length || 0) +
+          (preferences?.favoriteTeams?.length || 0),
         lastUpdated: preferences?.updatedAt || new Date().toISOString()
       };
 
@@ -83,10 +83,10 @@ export function registerUserPreferencesRoutes(app: Express) {
 
     } catch (error) {
       console.error('❌ Error fetching user preferences:', error);
-      res.status(500).json({ 
-        success: false, 
+      res.status(500).json({
+        success: false,
         message: 'Failed to fetch user preferences',
-        error: (error as Error).message 
+        error: (error as Error).message
       });
     }
   });
@@ -124,10 +124,10 @@ export function registerUserPreferencesRoutes(app: Express) {
 
     } catch (error) {
       console.error('❌ Error updating user preferences:', error);
-      res.status(500).json({ 
-        success: false, 
+      res.status(500).json({
+        success: false,
         message: 'Failed to update user preferences',
-        error: (error as Error).message 
+        error: (error as Error).message
       });
     }
   });
@@ -207,10 +207,10 @@ export function registerUserPreferencesRoutes(app: Express) {
 
     } catch (error) {
       console.error('❌ Error syncing onboarding data:', error);
-      res.status(500).json({ 
-        success: false, 
+      res.status(500).json({
+        success: false,
         message: 'Failed to sync onboarding data',
-        error: (error as Error).message 
+        error: (error as Error).message
       });
     }
   });
@@ -236,7 +236,7 @@ export function registerUserPreferencesRoutes(app: Express) {
 
       // Get viewing statistics
       const viewingHistory = await storage.getUserViewingHistory(userId, 10);
-      
+
       // Parse watching habits
       let watchingHabits = {};
       try {
@@ -254,13 +254,13 @@ export function registerUserPreferencesRoutes(app: Express) {
         displayName: `${user.firstName} ${user.lastName}`.trim() || user.email,
         profileImageUrl: user.profileImageUrl,
         createdAt: user.createdAt,
-        
+
         // Preferences
         preferences: preferences ? {
           ...preferences,
           watchingHabits
         } : null,
-        
+
         // Derived stats
         stats: {
           hasCompletedOnboarding: preferences?.onboardingCompleted || false,
@@ -281,10 +281,10 @@ export function registerUserPreferencesRoutes(app: Express) {
 
     } catch (error) {
       console.error('❌ Error fetching user profile:', error);
-      res.status(500).json({ 
-        success: false, 
+      res.status(500).json({
+        success: false,
         message: 'Failed to fetch user profile',
-        error: (error as Error).message 
+        error: (error as Error).message
       });
     }
   });
@@ -298,7 +298,7 @@ export function registerUserPreferencesRoutes(app: Express) {
 
       // Get viewing history
       const viewingHistory = await storage.getUserViewingHistory(userId, 100);
-      
+
       // Get preferences
       const preferences = await storage.getUserPreferences(userId);
 
@@ -319,8 +319,8 @@ export function registerUserPreferencesRoutes(app: Express) {
       let favoriteGenres = [];
       try {
         if (preferences?.preferredGenres) {
-          favoriteGenres = typeof preferences.preferredGenres === 'string' 
-            ? JSON.parse(preferences.preferredGenres) 
+          favoriteGenres = typeof preferences.preferredGenres === 'string'
+            ? JSON.parse(preferences.preferredGenres)
             : preferences.preferredGenres;
         }
       } catch (error) {
@@ -356,10 +356,10 @@ export function registerUserPreferencesRoutes(app: Express) {
 
     } catch (error) {
       console.error('❌ Error generating user stats:', error);
-      res.status(500).json({ 
-        success: false, 
+      res.status(500).json({
+        success: false,
         message: 'Failed to generate user stats',
-        error: (error as Error).message 
+        error: (error as Error).message
       });
     }
   });

@@ -1,0 +1,281 @@
+{
+  "migration_config": {
+    "project_name": "BingeBoard Multi-API Migration",
+    "version": "1.0.0",
+    "description": "Comprehensive migration from TMDB-only to Multi-API system (TMDB + Watchmode + Utelly)",
+    
+    "api_migrations": {
+      "search_endpoints": {
+        "current": "/api/tmdb/search",
+        "new": "/api/streaming/enhanced-search",
+        "features_added": [
+          "Comprehensive streaming availability from 3 APIs",
+          "Affiliate link generation with commission tracking",
+          "Revenue potential calculation",
+          "Platform availability badges",
+          "Performance caching with 30-minute TTL"
+        ],
+        "breaking_changes": false,
+        "backward_compatible": true
+      },
+      
+      "show_details": {
+        "current": "/api/tmdb/{type}/{id}",
+        "new": "/api/streaming/comprehensive/{type}/{id}",
+        "features_added": [
+          "Multi-API streaming platform data",
+          "Affiliate URL generation with tracking",
+          "Commission rate information",
+          "Platform-specific deep links",
+          "Monetization metrics and analytics"
+        ],
+        "parameters_added": [
+          "?includeAffiliate=true",
+          "?title={show_title}",
+          "?userId={user_id}"
+        ]
+      },
+      
+      "trending_content": {
+        "current": "/api/tmdb/trending",
+        "new": "/api/content/trending-enhanced", 
+        "features_added": [
+          "Streaming availability for trending content",
+          "Revenue potential scoring",
+          "Platform availability badges",
+          "Affiliate opportunity indicators"
+        ]
+      },
+      
+      "discover_content": {
+        "current": "/api/tmdb/discover",
+        "new": "/api/content/discover-enhanced",
+        "features_added": [
+          "Multi-platform filtering",
+          "Affiliate revenue optimization",
+          "Streaming availability filters",
+          "Monetization potential scoring"
+        ]
+      }
+    },
+
+    "client_component_updates": {
+      "search_components": [
+        {
+          "file": "client/src/components/search/BrandedSearchBar.tsx",
+          "updates": [
+            "Use enhanced search endpoint with streaming data",
+            "Display streaming platform badges in results",
+            "Add affiliate revenue indicators",
+            "Implement platform availability filtering"
+          ]
+        },
+        {
+          "file": "client/src/components/search/BrandedShowModal.tsx", 
+          "updates": [
+            "Use comprehensive streaming endpoint",
+            "Display all available platforms with affiliate links",
+            "Show commission rates and revenue potential",
+            "Track affiliate clicks and conversions"
+          ]
+        },
+        {
+          "file": "client/src/lib/search-api.ts",
+          "updates": [
+            "Replace all TMDB-only calls with Multi-API endpoints",
+            "Add streaming data to search results format", 
+            "Implement affiliate URL generation",
+            "Add caching for streaming availability"
+          ]
+        }
+      ],
+      
+      "dashboard_components": [
+        {
+          "file": "client/src/pages/dashboard.tsx",
+          "updates": [
+            "Use trending-enhanced endpoint",
+            "Display streaming availability for all content",
+            "Add affiliate opportunity indicators",
+            "Implement revenue tracking widgets"
+          ]
+        }
+      ],
+      
+      "discovery_components": [
+        {
+          "file": "client/src/pages/modern-discover.tsx",
+          "updates": [
+            "Use discover-enhanced endpoint with multi-platform data",
+            "Add streaming platform filters",
+            "Display affiliate revenue potential",
+            "Implement platform-specific browsing"
+          ]
+        }
+      ]
+    },
+
+    "server_route_updates": {
+      "core_routes": {
+        "file": "server/routes.ts",
+        "new_endpoints": [
+          "/api/streaming/enhanced-search",
+          "/api/streaming/comprehensive/:type/:id", 
+          "/api/streaming/batch-availability",
+          "/api/content/trending-enhanced",
+          "/api/content/discover-enhanced",
+          "/api/monetization/affiliate-click-tracking",
+          "/api/monetization/revenue-analytics"
+        ],
+        "enhanced_features": [
+          "Multi-API streaming data integration",
+          "Affiliate link generation and tracking",
+          "Revenue optimization algorithms",
+          "Performance caching with Redis-like TTL",
+          "Batch processing for multiple titles",
+          "Commission rate management"
+        ]
+      }
+    },
+
+    "new_features_enabled": {
+      "affiliate_monetization": {
+        "platforms_supported": [
+          "Netflix", "Amazon Prime Video", "Hulu", "Disney+", 
+          "HBO Max", "Apple TV+", "Paramount+", "Peacock"
+        ],
+        "commission_rates": {
+          "Netflix": 8.5,
+          "Amazon Prime Video": 4.5,
+          "Hulu": 6.0,
+          "Disney+": 7.2,
+          "HBO Max": 9.0,
+          "Apple TV+": 5.0,
+          "Paramount+": 5.5,
+          "Peacock": 4.8
+        },
+        "tracking_features": [
+          "Click tracking with unique IDs",
+          "Conversion rate monitoring", 
+          "Revenue per platform analytics",
+          "User engagement metrics"
+        ]
+      },
+      
+      "streaming_coverage": {
+        "primary_api": "TMDB (for show metadata)",
+        "streaming_apis": [
+          "Watchmode (primary streaming availability)",
+          "Utelly (secondary streaming availability)",
+          "TMDB Watch Providers (tertiary streaming data)"
+        ],
+        "coverage_areas": [
+          "United States (primary)",
+          "Canada (secondary)",
+          "United Kingdom (planned)",
+          "Australia (planned)"
+        ]
+      },
+      
+      "performance_optimizations": {
+        "caching_strategy": {
+          "streaming_data": "30 minutes TTL",
+          "show_metadata": "24 hours TTL", 
+          "affiliate_links": "1 hour TTL",
+          "batch_requests": "15 minutes TTL"
+        },
+        "batch_processing": {
+          "max_batch_size": 20,
+          "rate_limiting": "500ms between batches",
+          "parallel_requests": 5,
+          "timeout_per_request": "10 seconds"
+        }
+      }
+    },
+
+    "migration_steps": [
+      {
+        "step": 1,
+        "name": "Create backup of current files",
+        "description": "Backup all files that will be modified during migration"
+      },
+      {
+        "step": 2, 
+        "name": "Add enhanced API endpoints",
+        "description": "Create new Multi-API endpoints in server routes"
+      },
+      {
+        "step": 3,
+        "name": "Update client-side API calls", 
+        "description": "Replace TMDB-only calls with Multi-API endpoints"
+      },
+      {
+        "step": 4,
+        "name": "Enhance components with streaming data",
+        "description": "Update UI components to display streaming availability"
+      },
+      {
+        "step": 5,
+        "name": "Implement affiliate tracking",
+        "description": "Add affiliate link generation and click tracking"
+      },
+      {
+        "step": 6,
+        "name": "Add performance optimizations",
+        "description": "Implement caching and batch processing"
+      },
+      {
+        "step": 7,
+        "name": "Create migration utilities",
+        "description": "Build status checking and rollback tools"
+      },
+      {
+        "step": 8,
+        "name": "Generate migration report",
+        "description": "Document all changes and provide next steps"
+      }
+    ],
+
+    "testing_checklist": [
+      "✅ Search functionality works with streaming data",
+      "✅ Show details modal displays all available platforms", 
+      "✅ Affiliate links generate correctly with tracking",
+      "✅ Dashboard shows enhanced trending with streaming info",
+      "✅ Discovery page filters by streaming platforms",
+      "✅ Batch streaming availability requests work",
+      "✅ Caching reduces API calls and improves performance",
+      "✅ Revenue tracking and monetization metrics function",
+      "✅ All existing functionality remains intact",
+      "✅ Error handling gracefully falls back to TMDB-only data"
+    ],
+
+    "rollback_plan": {
+      "trigger_conditions": [
+        "More than 50% of API calls failing",
+        "Significant performance degradation",
+        "Critical functionality broken",
+        "User experience severely impacted"
+      ],
+      "rollback_steps": [
+        "1. Stop the application server",
+        "2. Run: node migration-rollback.js <backup-directory>",
+        "3. Restart the server",
+        "4. Verify all functionality is restored",
+        "5. Investigate and fix issues before re-attempting migration"
+      ],
+      "recovery_time": "< 5 minutes",
+      "data_loss_risk": "None (all data preserved in backup)"
+    },
+
+    "post_migration_optimizations": [
+      "Monitor API usage and optimize rate limiting",
+      "Fine-tune caching TTL values based on usage patterns", 
+      "Implement additional streaming APIs for better coverage",
+      "Add more affiliate platforms and commission optimization",
+      "Create analytics dashboard for monetization metrics",
+      "Implement A/B testing for affiliate link placement",
+      "Add geographic-based streaming availability",
+      "Optimize batch processing for larger datasets"
+    ]
+  }
+}

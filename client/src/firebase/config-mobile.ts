@@ -3,11 +3,11 @@ export * from './config';
 
 /**
  * 📱 MOBILE FIREBASE CONFIG
- * 
+ *
  * ✅ Imports all Firebase configuration from main config.ts
  * ✅ Maintains compatibility with mobile-specific import patterns
  * ✅ Firebase v12 async initialization compatible
- * 
+ *
  * Status: ✅ RESTORED - Imports from main config
  */
 

@@ -5,7 +5,7 @@ import { useDebounce } from './useDebounce';
 
 export const useDashboardFeed = () => {
   const filters = useDashboardFilters();
-  
+
   // Debounce filters to prevent excessive API calls
   const debouncedFilters = useDebounce(filters, 300); // 300ms debounce
 
@@ -14,15 +14,15 @@ export const useDashboardFeed = () => {
     queryFn: async () => {
       // Build query parameters from debounced filters
       const params = new URLSearchParams();
-      
+
       // Add filter arrays
-      debouncedFilters.activePlatforms.forEach(platform => 
+      debouncedFilters.activePlatforms.forEach(platform =>
         params.append('platforms[]', platform)
       );
-      debouncedFilters.preferredGenres.forEach(genre => 
+      debouncedFilters.preferredGenres.forEach(genre =>
         params.append('genres[]', genre)
       );
-      
+
       // Add other filters
       if (debouncedFilters.userMood) {
         params.set('mood', debouncedFilters.userMood);
@@ -40,7 +40,7 @@ export const useDashboardFeed = () => {
         const res = await fetch(`/api/dashboard/feed?${params.toString()}`, {
           credentials: 'include'
         });
-        
+
         if (res.ok) {
           const data = await res.json();
           console.log('✅ Dashboard feed data received:', data);
@@ -61,7 +61,7 @@ export const useDashboardFeed = () => {
           },
           {
             id: 2,
-            title: 'Mock Content 2', 
+            title: 'Mock Content 2',
             description: `Platforms: ${debouncedFilters.activePlatforms.join(', ') || 'All'}`,
             type: 'friend_activity'
           },

@@ -6,7 +6,7 @@ export default function SimpleLogin() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [formError, setFormError] = useState("");
-  
+
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -218,9 +218,9 @@ export default function SimpleLogin() {
                 alignItems: 'center',
                 justifyContent: 'center'
               }}>
-                <span style={{ 
-                  color: 'white', 
-                  fontWeight: 'bold', 
+                <span style={{
+                  color: 'white',
+                  fontWeight: 'bold',
                   fontSize: '14px',
                   textShadow: '0 0 6px rgba(0,0,0,0.8), 0 0 2px rgba(255,255,255,0.3)'
                 }}>B</span>
@@ -313,7 +313,7 @@ export default function SimpleLogin() {
               </div>
             </>
           )}
-          
+
           <div style={styles.formGroup}>
             <label style={styles.label}>Email</label>
             <input
@@ -326,7 +326,7 @@ export default function SimpleLogin() {
               required
             />
           </div>
-          
+
           <div style={styles.formGroup}>
             <label style={styles.label}>Password</label>
             <div style={styles.passwordGroup}>
@@ -336,7 +336,7 @@ export default function SimpleLogin() {
                 value={formData.password}
                 onChange={handleChange}
                 placeholder="Enter your password"
-                style={{...styles.input, paddingRight: '40px'}}
+                style={{ ...styles.input, paddingRight: '40px' }}
                 required
               />
               <button
@@ -359,7 +359,7 @@ export default function SimpleLogin() {
                   value={formData.confirmPassword}
                   onChange={handleChange}
                   placeholder="Confirm your password"
-                  style={{...styles.input, paddingRight: '40px'}}
+                  style={{ ...styles.input, paddingRight: '40px' }}
                   required
                 />
                 <button

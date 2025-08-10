@@ -40,7 +40,7 @@ let authCache: any = null;
 
 export const getAuthInstance = async () => {
   if (authCache) return authCache;
-  
+
   try {
     const { getAuth } = await import('firebase/auth');
     authCache = getAuth(app);

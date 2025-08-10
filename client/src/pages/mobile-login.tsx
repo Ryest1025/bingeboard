@@ -22,7 +22,7 @@ export default function MobileLogin() {
   const [isLogin, setIsLogin] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  
+
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -33,14 +33,14 @@ export default function MobileLogin() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.email || !formData.password) return;
-    
+
     setLoading(true);
-    
+
     try {
-      const result = isLogin 
+      const result = isLogin
         ? await signInWithEmailAndPassword(auth, formData.email, formData.password)
         : await createUserWithEmailAndPassword(auth, formData.email, formData.password);
-      
+
       if (result.user) {
         toast({
           title: isLogin ? "Login Successful" : "Registration Successful",
@@ -90,7 +90,7 @@ export default function MobileLogin() {
               </div>
             </div>
           </div>
-          
+
           <div>
             <h1 className="text-2xl font-black text-white">
               <span className="bg-gradient-to-r from-teal-500 to-blue-600 bg-clip-text text-transparent">Binge</span>
@@ -98,22 +98,22 @@ export default function MobileLogin() {
             </h1>
             <p className="text-slate-400 text-sm mt-1">Entertainment Hub</p>
           </div>
-          
+
           <div className="bg-teal-500/20 text-teal-400 px-3 py-1 rounded-full text-xs">
             {deviceType} Optimized
           </div>
         </CardHeader>
-        
+
         <CardContent className="space-y-6">
           <div className="flex space-x-2">
-            <Button 
+            <Button
               variant={isLogin ? "default" : "outline"}
               className="flex-1"
               onClick={() => setIsLogin(true)}
             >
               Log In
             </Button>
-            <Button 
+            <Button
               variant={!isLogin ? "default" : "outline"}
               className="flex-1"
               onClick={() => setIsLogin(false)}
@@ -121,7 +121,7 @@ export default function MobileLogin() {
               Sign Up
             </Button>
           </div>
-          
+
           <form onSubmit={handleSubmit} className="space-y-4">
             {!isLogin && (
               <div className="grid grid-cols-2 gap-4">
@@ -131,7 +131,7 @@ export default function MobileLogin() {
                     id="firstName"
                     type="text"
                     value={formData.firstName}
-                    onChange={(e) => setFormData({...formData, firstName: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
                     className="bg-slate-900/50 border-slate-700"
                     required={!isLogin}
                   />
@@ -142,14 +142,14 @@ export default function MobileLogin() {
                     id="lastName"
                     type="text"
                     value={formData.lastName}
-                    onChange={(e) => setFormData({...formData, lastName: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
                     className="bg-slate-900/50 border-slate-700"
                     required={!isLogin}
                   />
                 </div>
               </div>
             )}
-            
+
             <div>
               <Label htmlFor="email">Email</Label>
               <div className="relative">
@@ -158,14 +158,14 @@ export default function MobileLogin() {
                   id="email"
                   type="email"
                   value={formData.email}
-                  onChange={(e) => setFormData({...formData, email: e.target.value})}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   className="bg-slate-900/50 border-slate-700 pl-10"
                   placeholder="your@email.com"
                   required
                 />
               </div>
             </div>
-            
+
             <div>
               <Label htmlFor="password">Password</Label>
               <div className="relative">
@@ -174,7 +174,7 @@ export default function MobileLogin() {
                   id="password"
                   type={showPassword ? "text" : "password"}
                   value={formData.password}
-                  onChange={(e) => setFormData({...formData, password: e.target.value})}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                   className="bg-slate-900/50 border-slate-700 pl-10 pr-10"
                   placeholder="••••••••"
                   required
@@ -188,29 +188,29 @@ export default function MobileLogin() {
                 </button>
               </div>
             </div>
-            
-            <Button 
-              type="submit" 
+
+            <Button
+              type="submit"
               className="w-full bg-gradient-to-r from-teal-500 to-blue-600 hover:from-teal-600 hover:to-blue-700"
               disabled={loading}
             >
               {loading ? "Please wait..." : isLogin ? "Log In" : "Create Account"}
             </Button>
           </form>
-          
+
           <div className="text-center">
             <p className="text-slate-400 text-sm">
               {isLogin ? "Don't have an account?" : "Already have an account?"}
             </p>
-            <Button 
-              variant="link" 
+            <Button
+              variant="link"
               className="text-teal-400 hover:text-teal-300"
               onClick={() => setIsLogin(!isLogin)}
             >
               {isLogin ? "Sign up here" : "Log in here"}
             </Button>
           </div>
-          
+
           <div className="text-center text-xs text-slate-500">
             <p>Secure authentication • No domain issues</p>
           </div>

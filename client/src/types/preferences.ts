@@ -45,9 +45,9 @@ export interface FirestorePreferencesDocument {
 }
 
 // Viewing style options
-export type ViewingStyleOption = 
+export type ViewingStyleOption =
   | 'binge-worthy'
-  | 'quick-watches' 
+  | 'quick-watches'
   | 'highly-rated'
   | 'new-releases';
 

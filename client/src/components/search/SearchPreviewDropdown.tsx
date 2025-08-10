@@ -25,13 +25,13 @@ interface SearchResult {
   overview?: string;
 }
 
-export function SearchPreviewDropdown({ 
-  query, 
-  isVisible, 
-  onSelectShow, 
-  onHoverShow, 
+export function SearchPreviewDropdown({
+  query,
+  isVisible,
+  onSelectShow,
+  onHoverShow,
   onClose,
-  hoveredShow 
+  hoveredShow
 }: SearchPreviewDropdownProps) {
   const [results, setResults] = useState<SearchResult[]>([]);
   const [genres, setGenres] = useState<{ id: number; name: string }[]>([]);
@@ -91,17 +91,17 @@ export function SearchPreviewDropdown({
         fetch('/api/tmdb/genre/tv/list').then(r => r.json()),
         fetch('/api/tmdb/genre/movie/list').then(r => r.json())
       ]);
-      
+
       const allGenres = [
         ...(tvGenres.genres || []),
         ...(movieGenres.genres || [])
       ];
-      
+
       // Remove duplicates
-      const uniqueGenres = allGenres.filter((genre, index, arr) => 
+      const uniqueGenres = allGenres.filter((genre, index, arr) =>
         arr.findIndex(g => g.id === genre.id) === index
       );
-      
+
       setGenres(uniqueGenres);
     } catch (error) {
       console.error('Failed to fetch genres:', error);
@@ -145,7 +145,7 @@ export function SearchPreviewDropdown({
         trimmed,
         ...recentSearches.filter(s => s !== trimmed)
       ].slice(0, 5);
-      
+
       setRecentSearches(updated);
       localStorage.setItem('bingeboard_recent_searches', JSON.stringify(updated));
     } catch (error) {
@@ -202,7 +202,7 @@ export function SearchPreviewDropdown({
                 Results for "{query}"
               </span>
             </div>
-            
+
             {results.map((show, index) => (
               <SearchResultCard
                 key={show.id}

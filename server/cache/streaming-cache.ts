@@ -69,16 +69,16 @@ class StreamingCache {
     // Cleanup if cache is getting too large
     if (this.cache.size >= this.MAX_CACHE_SIZE) {
       this.cleanup();
-      
+
       // If still too large, clear oldest entries
       if (this.cache.size >= this.MAX_CACHE_SIZE) {
         const entries: [string, CacheEntry][] = [];
         this.cache.forEach((entry, key) => {
           entries.push([key, entry]);
         });
-        
+
         entries.sort((a, b) => a[1].timestamp - b[1].timestamp);
-        
+
         // Remove oldest 20% of entries
         const toRemove = Math.floor(entries.length * 0.2);
         for (let i = 0; i < toRemove; i++) {

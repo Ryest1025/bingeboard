@@ -6,13 +6,13 @@ import { Play, Plus, Star, X, ExternalLink, Calendar, Clock, Users, Globe, Youtu
 import TrailerButton from "@/components/trailer-button";
 import { TrailerWithAds } from "@/components/ad-player";
 import { useAuth } from "@/hooks/useAuth";
-import { 
-  getShowTitle, 
-  getShowPosterUrl, 
-  getShowOverview, 
-  getShowRating, 
+import {
+  getShowTitle,
+  getShowPosterUrl,
+  getShowOverview,
+  getShowRating,
   getStreamingPlatforms,
-  getShowId 
+  getShowId
 } from "@/utils/show-utils";
 import { getBestTrailer, getYouTubeEmbedUrl, trackTrailerView } from "@/lib/trailerUtils";
 
@@ -49,7 +49,7 @@ interface ShowDetailsModalProps {
 // Genre mapping for display
 const GENRE_MAP: { [key: number]: string } = {
   28: "Action",
-  12: "Adventure", 
+  12: "Adventure",
   16: "Animation",
   35: "Comedy",
   80: "Crime",
@@ -77,13 +77,13 @@ const GENRE_MAP: { [key: number]: string } = {
   10768: "War & Politics"
 };
 
-export default function ShowDetailsModal({ 
-  show, 
-  open, 
-  onClose, 
-  onAddToList, 
+export default function ShowDetailsModal({
+  show,
+  open,
+  onClose,
+  onAddToList,
   onWatchNow,
-  onWatchTrailer 
+  onWatchTrailer
 }: ShowDetailsModalProps) {
   const [activeTab, setActiveTab] = useState<'details' | 'trailer'>('details');
   const [trailerData, setTrailerData] = useState<any>(null);
@@ -112,11 +112,11 @@ export default function ShowDetailsModal({
 
   const fetchTrailer = async () => {
     if (!showId) return;
-    
+
     setLoadingTrailer(true);
     try {
       const trailer = await getBestTrailer(showId, 'tv');
-      
+
       if (trailer) {
         setTrailerData({
           key: trailer.key,
@@ -190,15 +190,15 @@ export default function ShowDetailsModal({
               <X className="w-4 h-4" />
             </Button>
           </div>
-          
+
           {/* Tab Navigation */}
           <div className="flex items-center gap-1 bg-slate-800 p-1 rounded-lg w-fit">
             <Button
               variant={activeTab === 'details' ? 'default' : 'ghost'}
               size="sm"
               onClick={() => setActiveTab('details')}
-              className={activeTab === 'details' 
-                ? "bg-slate-600 text-white" 
+              className={activeTab === 'details'
+                ? "bg-slate-600 text-white"
                 : "text-gray-400 hover:text-white hover:bg-slate-700"
               }
             >
@@ -209,8 +209,8 @@ export default function ShowDetailsModal({
               variant={activeTab === 'trailer' ? 'default' : 'ghost'}
               size="sm"
               onClick={handleWatchTrailer}
-              className={activeTab === 'trailer' 
-                ? "bg-slate-600 text-white" 
+              className={activeTab === 'trailer'
+                ? "bg-slate-600 text-white"
                 : "text-gray-400 hover:text-white hover:bg-slate-700"
               }
             >
@@ -242,7 +242,7 @@ export default function ShowDetailsModal({
                     <span>{formattedDate}</span>
                   </div>
                 )}
-                
+
                 {formattedRuntime && (
                   <div className="flex items-center gap-1 text-gray-400">
                     <Clock className="w-4 h-4" />
@@ -292,23 +292,23 @@ export default function ShowDetailsModal({
 
               {/* Action Buttons */}
               <div className="flex items-center gap-3 flex-wrap">
-                <Button 
+                <Button
                   className="bg-cyan-600 hover:bg-cyan-700 text-white"
                   onClick={handleWatchNow}
                 >
                   <Play className="w-4 h-4 mr-2" /> Watch Now
                 </Button>
-                
-                <Button 
-                  variant="outline" 
+
+                <Button
+                  variant="outline"
                   className="border-slate-600 text-white hover:border-slate-400 hover:bg-slate-800"
                   onClick={handleAddToList}
                 >
                   <Plus className="w-4 h-4 mr-2" /> Add to Watch Later
                 </Button>
 
-                <Button 
-                  variant="ghost" 
+                <Button
+                  variant="ghost"
                   className="text-gray-400 hover:text-white hover:bg-slate-800"
                   onClick={handleWatchTrailer}
                 >
@@ -322,7 +322,7 @@ export default function ShowDetailsModal({
                   <span className="text-sm font-medium text-gray-300">Available on:</span>
                   <div className="flex gap-2 flex-wrap">
                     {streamingPlatforms.slice(0, 8).map((platform: any, index: number) => (
-                      <div 
+                      <div
                         key={index}
                         className="flex items-center gap-2 bg-slate-800 rounded-lg px-3 py-2 hover:bg-slate-700 transition-colors cursor-pointer"
                         onClick={() => handleWatchNow()}
@@ -431,26 +431,26 @@ export default function ShowDetailsModal({
                     </TrailerWithAds>
                   </div>
                 )}
-                
+
                 {/* Action buttons below trailer */}
                 <div className="flex items-center gap-3 justify-center">
-                  <Button 
+                  <Button
                     className="bg-cyan-600 hover:bg-cyan-700 text-white"
                     onClick={handleWatchNow}
                   >
                     <Play className="w-4 h-4 mr-2" /> Watch Now
                   </Button>
-                  
-                  <Button 
-                    variant="outline" 
+
+                  <Button
+                    variant="outline"
                     className="border-slate-600 text-white hover:border-slate-400 hover:bg-slate-800"
                     onClick={handleAddToList}
                   >
                     <Plus className="w-4 h-4 mr-2" /> Add to Watch Later
                   </Button>
-                  
-                  <Button 
-                    variant="ghost" 
+
+                  <Button
+                    variant="ghost"
                     className="text-gray-400 hover:text-white hover:bg-slate-800"
                     onClick={() => setActiveTab('details')}
                   >
@@ -463,8 +463,8 @@ export default function ShowDetailsModal({
                 <div className="flex flex-col items-center gap-3 text-center">
                   <Film className="w-12 h-12 text-gray-500" />
                   <p className="text-gray-400">No trailer available for this show</p>
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     className="border-slate-600 text-white hover:border-slate-400"
                     onClick={() => setActiveTab('details')}
                   >

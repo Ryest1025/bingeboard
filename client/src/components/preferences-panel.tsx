@@ -45,10 +45,10 @@ export default function PreferencesPanel({ isOpen, onClose, onSave }: Preference
   const queryClient = useQueryClient();
   const [selectedGenres, setSelectedGenres] = useState<number[]>([]);
   const [viewingPreferences, setViewingPreferences] = useState<string[]>([]);
-  
+
   // Initialize Firestore
   const db = getFirestore(app);
-  
+
   // React Query mutation for saving preferences
   const savePreferencesMutation = useMutation({
     mutationFn: async (preferences: UserPreferences) => {
@@ -56,10 +56,10 @@ export default function PreferencesPanel({ isOpen, onClose, onSave }: Preference
         try {
           // Save to Firebase Firestore first
           const userDocRef = doc(db, "userPreferences", user.id);
-          
+
           // Check if document exists
           const userDocSnap = await getDoc(userDocRef);
-          
+
           if (userDocSnap.exists()) {
             // Update existing document
             await updateDoc(userDocRef, {
@@ -103,7 +103,7 @@ export default function PreferencesPanel({ isOpen, onClose, onSave }: Preference
           return preferences;
         } catch (firestoreError) {
           console.error('❌ Firestore save failed:', firestoreError);
-          
+
           // Fallback to backend API
           const response = await fetch('/api/user/preferences', {
             method: 'POST',
@@ -158,7 +158,7 @@ export default function PreferencesPanel({ isOpen, onClose, onSave }: Preference
           try {
             const userDocRef = doc(db, "userPreferences", user.id);
             const userDocSnap = await getDoc(userDocRef);
-            
+
             if (userDocSnap.exists()) {
               const data = userDocSnap.data();
               if (data.preferences) {
@@ -177,7 +177,7 @@ export default function PreferencesPanel({ isOpen, onClose, onSave }: Preference
             const response = await fetch('/api/user/preferences', {
               credentials: 'include',
             });
-            
+
             if (response.ok) {
               const data = await response.json();
               if (data.preferences) {
@@ -191,7 +191,7 @@ export default function PreferencesPanel({ isOpen, onClose, onSave }: Preference
             console.warn('⚠️ API load failed, using localStorage:', apiError);
           }
         }
-        
+
         // Final fallback to localStorage
         const stored = localStorage.getItem('userPreferences');
         if (stored) {
@@ -209,11 +209,11 @@ export default function PreferencesPanel({ isOpen, onClose, onSave }: Preference
       loadPreferences();
     }
   }, [isOpen, isAuthenticated, user, db]);
-  
+
   if (!isOpen) return null;
 
   const toggleGenre = (genreId: number) => {
-    setSelectedGenres(prev => 
+    setSelectedGenres(prev =>
       prev.includes(genreId)
         ? prev.filter(id => id !== genreId)
         : [...prev, genreId]
@@ -234,18 +234,18 @@ export default function PreferencesPanel({ isOpen, onClose, onSave }: Preference
       viewingStyle: viewingPreferences,
       defaultRecommendationMode: 'ai'
     };
-    
+
     try {
       console.log('💾 Saving preferences:', preferences);
-      
+
       // Use React Query mutation
       await savePreferencesMutation.mutateAsync(preferences);
-      
+
       // Call parent onSave callback if provided
       if (onSave) {
         await onSave(preferences);
       }
-      
+
       onClose();
     } catch (error) {
       console.error('Failed to save preferences:', error);
@@ -256,14 +256,14 @@ export default function PreferencesPanel({ isOpen, onClose, onSave }: Preference
   return (
     <AnimatePresence>
       {isOpen && (
-        <motion.div 
+        <motion.div
           className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.2 }}
         >
-          <motion.div 
+          <motion.div
             className="bg-gray-800 max-w-2xl w-full max-h-[80vh] overflow-y-auto rounded-xl"
             initial={{ scale: 0.95, opacity: 0, y: 20 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
@@ -272,7 +272,7 @@ export default function PreferencesPanel({ isOpen, onClose, onSave }: Preference
           >
             <div className="p-6">
               <div className="flex items-center justify-between mb-6">
-                <motion.h2 
+                <motion.h2
                   className="text-2xl font-bold flex items-center gap-2"
                   initial={{ x: -20, opacity: 0 }}
                   animate={{ x: 0, opacity: 1 }}
@@ -281,7 +281,7 @@ export default function PreferencesPanel({ isOpen, onClose, onSave }: Preference
                   <Heart className="h-6 w-6 text-red-400" />
                   Your Preferences
                 </motion.h2>
-                <Button 
+                <Button
                   onClick={onClose}
                   className="text-gray-400 hover:text-white text-2xl bg-transparent border-none p-0 h-auto"
                   variant="ghost"
@@ -291,7 +291,7 @@ export default function PreferencesPanel({ isOpen, onClose, onSave }: Preference
               </div>
 
               {/* Favorite Genres */}
-              <motion.div 
+              <motion.div
                 className="mb-8"
                 initial={{ y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
@@ -309,11 +309,10 @@ export default function PreferencesPanel({ isOpen, onClose, onSave }: Preference
                       <Button
                         onClick={() => toggleGenre(genre.id)}
                         variant="secondary"
-                        className={`p-3 transition-all duration-200 text-left justify-between h-auto w-full ${
-                          selectedGenres.includes(genre.id)
+                        className={`p-3 transition-all duration-200 text-left justify-between h-auto w-full ${selectedGenres.includes(genre.id)
                             ? 'bg-blue-600 hover:bg-blue-700 text-white border-blue-500'
                             : 'bg-gray-700 hover:bg-gray-600 text-gray-300'
-                        }`}
+                          }`}
                       >
                         <div className="flex items-center justify-between w-full">
                           <div>
@@ -339,7 +338,7 @@ export default function PreferencesPanel({ isOpen, onClose, onSave }: Preference
               </motion.div>
 
               {/* Quick Preferences */}
-              <motion.div 
+              <motion.div
                 className="mb-8"
                 initial={{ y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
@@ -353,19 +352,18 @@ export default function PreferencesPanel({ isOpen, onClose, onSave }: Preference
                     { id: 'highly-rated', title: 'Highly rated only', desc: 'Only show me content rated 7.5+ on IMDb' },
                     { id: 'new-releases', title: 'New releases first', desc: 'Prioritize content from the last 2 years' }
                   ].map((preference, index) => (
-                    <motion.label 
+                    <motion.label
                       key={preference.id}
-                      className={`flex items-center gap-3 p-3 cursor-pointer transition-all duration-200 rounded-lg ${
-                        viewingPreferences.includes(preference.id) 
-                          ? 'bg-blue-600 hover:bg-blue-700 text-white' 
+                      className={`flex items-center gap-3 p-3 cursor-pointer transition-all duration-200 rounded-lg ${viewingPreferences.includes(preference.id)
+                          ? 'bg-blue-600 hover:bg-blue-700 text-white'
                           : 'bg-gray-700 hover:bg-gray-600'
-                      }`}
+                        }`}
                       initial={{ x: -20, opacity: 0 }}
                       animate={{ x: 0, opacity: 1 }}
                       transition={{ delay: 0.2 + (index * 0.1) }}
                     >
-                      <input 
-                        type="checkbox" 
+                      <input
+                        type="checkbox"
                         className="w-4 h-4"
                         checked={viewingPreferences.includes(preference.id)}
                         onChange={() => toggleViewingPreference(preference.id)}
@@ -388,37 +386,37 @@ export default function PreferencesPanel({ isOpen, onClose, onSave }: Preference
                 </div>
               </motion.div>
 
-          {/* Save Button */}
-          <motion.div 
-            className="space-y-3"
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.3 }}
-          >
-            <Button 
-              onClick={handleSave}
-              disabled={savePreferencesMutation.isPending}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 disabled:opacity-50"
-              size="lg"
-            >
-              {savePreferencesMutation.isPending ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Saving Preferences...
-                </>
-              ) : (
-                'Save My Preferences'
-              )}
-            </Button>
-            <div className="text-center">
-              <button
-                onClick={onClose}
-                className="text-gray-400 hover:text-white text-sm underline"
+              {/* Save Button */}
+              <motion.div
+                className="space-y-3"
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.3 }}
               >
-                Cancel and close
-              </button>
-            </div>
-          </motion.div>
+                <Button
+                  onClick={handleSave}
+                  disabled={savePreferencesMutation.isPending}
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 disabled:opacity-50"
+                  size="lg"
+                >
+                  {savePreferencesMutation.isPending ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Saving Preferences...
+                    </>
+                  ) : (
+                    'Save My Preferences'
+                  )}
+                </Button>
+                <div className="text-center">
+                  <button
+                    onClick={onClose}
+                    className="text-gray-400 hover:text-white text-sm underline"
+                  >
+                    Cancel and close
+                  </button>
+                </div>
+              </motion.div>
             </div>
           </motion.div>
         </motion.div>

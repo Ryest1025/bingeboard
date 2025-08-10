@@ -198,8 +198,8 @@ export default function OnboardingModal({ isOpen, onComplete, userDisplayName }:
                       key={genre}
                       variant={formData.favoriteGenres.includes(genre) ? "default" : "secondary"}
                       className={`cursor-pointer transition-all duration-300 text-center py-4 px-6 text-sm font-medium rounded-xl hover:scale-105 ${formData.favoriteGenres.includes(genre)
-                          ? 'bg-gradient-to-r from-teal-600 to-blue-600 hover:from-teal-700 hover:to-blue-700 text-white shadow-lg'
-                          : 'bg-slate-700/50 hover:bg-slate-600/50 text-gray-300 hover:text-white border border-slate-600/50'
+                        ? 'bg-gradient-to-r from-teal-600 to-blue-600 hover:from-teal-700 hover:to-blue-700 text-white shadow-lg'
+                        : 'bg-slate-700/50 hover:bg-slate-600/50 text-gray-300 hover:text-white border border-slate-600/50'
                         }`}
                       onClick={() => toggleSelection(genre, 'favoriteGenres')}
                     >
@@ -237,8 +237,8 @@ export default function OnboardingModal({ isOpen, onComplete, userDisplayName }:
                   key={type}
                   variant={formData.contentTypes.includes(type) ? "default" : "secondary"}
                   className={`cursor-pointer transition-all duration-300 text-center py-6 px-4 text-sm font-medium rounded-xl hover:scale-105 ${formData.contentTypes.includes(type)
-                      ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg'
-                      : 'bg-slate-700/50 hover:bg-purple-500/20 text-gray-300 hover:text-white border border-slate-600/50'
+                    ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg'
+                    : 'bg-slate-700/50 hover:bg-purple-500/20 text-gray-300 hover:text-white border border-slate-600/50'
                     }`}
                   onClick={() => toggleSelection(type, 'contentTypes')}
                 >
@@ -268,8 +268,8 @@ export default function OnboardingModal({ isOpen, onComplete, userDisplayName }:
                   key={platform}
                   variant={formData.streamingPlatforms.includes(platform) ? "default" : "secondary"}
                   className={`cursor-pointer transition-all duration-300 text-center py-6 px-4 text-sm font-medium rounded-xl hover:scale-105 ${formData.streamingPlatforms.includes(platform)
-                      ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white shadow-lg'
-                      : 'bg-slate-700/50 hover:bg-blue-500/20 text-gray-300 hover:text-white border border-slate-600/50'
+                    ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white shadow-lg'
+                    : 'bg-slate-700/50 hover:bg-blue-500/20 text-gray-300 hover:text-white border border-slate-600/50'
                     }`}
                   onClick={() => toggleSelection(platform, 'streamingPlatforms')}
                 >
@@ -307,8 +307,8 @@ export default function OnboardingModal({ isOpen, onComplete, userDisplayName }:
                       variant={formData.privacy === option.value ? "default" : "outline"}
                       onClick={() => setFormData(prev => ({ ...prev, privacy: option.value }))}
                       className={`w-full text-left justify-start transition-all duration-300 hover:scale-105 py-4 px-6 rounded-xl ${formData.privacy === option.value
-                          ? 'bg-gradient-to-r from-teal-500 to-emerald-500 text-white shadow-lg'
-                          : 'bg-slate-700/50 hover:bg-teal-500/20 text-gray-300 hover:text-white border border-slate-600/50'
+                        ? 'bg-gradient-to-r from-teal-500 to-emerald-500 text-white shadow-lg'
+                        : 'bg-slate-700/50 hover:bg-teal-500/20 text-gray-300 hover:text-white border border-slate-600/50'
                         }`}
                     >
                       <span className="mr-3">{option.icon}</span>
@@ -409,8 +409,8 @@ export default function OnboardingModal({ isOpen, onComplete, userDisplayName }:
                       key={goal}
                       variant={formData.watchingGoals.includes(goal) ? "default" : "secondary"}
                       className={`cursor-pointer transition-all duration-300 text-left py-4 px-6 text-sm font-medium rounded-xl hover:scale-105 ${formData.watchingGoals.includes(goal)
-                          ? 'bg-gradient-to-r from-red-500 to-pink-500 text-white shadow-lg'
-                          : 'bg-slate-700/50 hover:bg-red-500/20 text-gray-300 hover:text-white border border-slate-600/50'
+                        ? 'bg-gradient-to-r from-red-500 to-pink-500 text-white shadow-lg'
+                        : 'bg-slate-700/50 hover:bg-red-500/20 text-gray-300 hover:text-white border border-slate-600/50'
                         }`}
                       onClick={() => toggleSelection(goal, 'watchingGoals')}
                     >
@@ -429,8 +429,8 @@ export default function OnboardingModal({ isOpen, onComplete, userDisplayName }:
                       key={option}
                       variant={formData.trackingPreferences.includes(option) ? "default" : "secondary"}
                       className={`cursor-pointer transition-all duration-300 text-center py-4 px-4 text-sm font-medium rounded-xl hover:scale-105 ${formData.trackingPreferences.includes(option)
-                          ? 'bg-gradient-to-r from-teal-600 to-cyan-600 text-white shadow-lg'
-                          : 'bg-slate-700/50 hover:bg-teal-600/20 text-gray-300 hover:text-white border border-slate-600/50'
+                        ? 'bg-gradient-to-r from-teal-600 to-cyan-600 text-white shadow-lg'
+                        : 'bg-slate-700/50 hover:bg-teal-600/20 text-gray-300 hover:text-white border border-slate-600/50'
                         }`}
                       onClick={() => toggleSelection(option, 'trackingPreferences')}
                     >
@@ -556,8 +556,8 @@ export default function OnboardingModal({ isOpen, onComplete, userDisplayName }:
                 <div
                   key={i}
                   className={`w-3 h-3 rounded-full transition-all duration-300 ${i + 1 <= currentStep
-                      ? 'bg-gradient-to-r from-teal-500 via-cyan-500 to-blue-500 shadow-lg'
-                      : 'bg-gray-600'
+                    ? 'bg-gradient-to-r from-teal-500 via-cyan-500 to-blue-500 shadow-lg'
+                    : 'bg-gray-600'
                     }`}
                 />
               ))}

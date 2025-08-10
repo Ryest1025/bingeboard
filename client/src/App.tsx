@@ -130,15 +130,15 @@ function Router() {
         )}
 
       <main className={`flex-1 ${(isAuthenticated &&
-          location !== "/landing" &&
-          location !== "/" &&
-          location !== "/discover" &&
-          location !== "/upcoming" &&
-          location !== "/activity" &&
-          location !== "/friends" &&
-          location !== "/dashboard")
-          ? "pt-16 pb-20 md:pb-20"
-          : "pt-0 pb-0"
+        location !== "/landing" &&
+        location !== "/" &&
+        location !== "/discover" &&
+        location !== "/upcoming" &&
+        location !== "/activity" &&
+        location !== "/friends" &&
+        location !== "/dashboard")
+        ? "pt-16 pb-20 md:pb-20"
+        : "pt-0 pb-0"
         }`}>
         <Switch>
           {/* Public routes - always accessible */}

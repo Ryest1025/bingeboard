@@ -11,7 +11,7 @@ import {
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
 import { Search, Bell, LogOut, User, Settings, Menu, X } from "lucide-react";
-import { EnhancedSearchBar } from "@/components/search/EnhancedSearchBar";
+import BrandedSearchBar from "@/components/search/BrandedSearchBar";
 
 export default function NavigationHeader() {
   const [location, setLocation] = useLocation();
@@ -76,13 +76,13 @@ export default function NavigationHeader() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ 
-          showId, 
+        body: JSON.stringify({
+          showId,
           status: 'want_to_watch',
-          tmdbId: showId 
+          tmdbId: showId
         })
       });
-      
+
       if (response.ok) {
         // You can add a toast notification here
         console.log('Added to watchlist successfully');
@@ -95,10 +95,10 @@ export default function NavigationHeader() {
   const handleWatchNow = async (show: any) => {
     // Import the utility functions
     const { getShowTitle, getStreamingPlatforms } = await import("@/utils/show-utils");
-    
+
     const title = getShowTitle(show);
     const streamingPlatforms = getStreamingPlatforms(show);
-    
+
     // Generate platform-specific URL
     const getPlatformDirectUrl = (platformName: string, title: string): string => {
       const encodedTitle = encodeURIComponent(title);
@@ -188,7 +188,7 @@ export default function NavigationHeader() {
 
           {/* Center: Enhanced Search */}
           <div className="hidden sm:block flex-1 max-w-md mx-8">
-            <EnhancedSearchBar 
+            <BrandedSearchBar
               placeholder="Search shows, movies..."
               onAddToWatchlist={handleAddToWatchlist}
               onWatchNow={handleWatchNow}
@@ -262,7 +262,7 @@ export default function NavigationHeader() {
           <div className="md:hidden border-t border-white/10 py-4">
             {/* Mobile Enhanced Search */}
             <div className="mb-4">
-              <EnhancedSearchBar 
+              <BrandedSearchBar
                 placeholder="Search shows, movies..."
                 onAddToWatchlist={handleAddToWatchlist}
                 onWatchNow={handleWatchNow}

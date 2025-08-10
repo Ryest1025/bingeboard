@@ -6,10 +6,10 @@ import EnhancedFilterSystem from '@/components/common/EnhancedFilterSystem';
 import { FilterBadges, type FilterValues } from '@/components/common/FilterBadges';
 import { useDashboardContent } from '@/hooks/useFilteredContent';
 import { getFilterSummary } from '@/utils/filterUtils';
-import { 
-  Sparkles, 
-  Eye, 
-  Loader2, 
+import {
+  Sparkles,
+  Eye,
+  Loader2,
   Filter,
   Play,
   Plus,
@@ -23,7 +23,7 @@ import {
  */
 export default function DashboardIntegrationExample() {
   const [showFilters, setShowFilters] = useState(false);
-  
+
   // Use the specialized dashboard content hook
   const {
     content: dashboardContent,
@@ -48,7 +48,7 @@ export default function DashboardIntegrationExample() {
   return (
     <div className="min-h-screen bg-gray-900 text-white p-6">
       <div className="max-w-7xl mx-auto space-y-8">
-        
+
         {/* Header */}
         <div className="text-center space-y-2">
           <h1 className="text-3xl font-bold">Dashboard Integration Example</h1>
@@ -70,10 +70,10 @@ export default function DashboardIntegrationExample() {
               </p>
             </div>
           </CardHeader>
-          
+
           <CardContent className="space-y-4">
             {/* Filter Badges */}
-            <FilterBadges 
+            <FilterBadges
               filters={appliedFilters}
               onRemoveFilter={handleRemoveFilter}
               onClearAll={clearFilters}
@@ -141,7 +141,7 @@ export default function DashboardIntegrationExample() {
                         {/* Mock poster */}
                         <div className="aspect-[2/3] bg-gray-600 rounded mb-2 flex items-center justify-center relative overflow-hidden">
                           {item.poster_path ? (
-                            <img 
+                            <img
                               src={`https://image.tmdb.org/t/p/w300${item.poster_path}`}
                               alt={item.title || item.name}
                               className="w-full h-full object-cover"
@@ -149,7 +149,7 @@ export default function DashboardIntegrationExample() {
                           ) : (
                             <Play className="h-8 w-8 text-gray-400" />
                           )}
-                          
+
                           {/* Hover overlay */}
                           <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                             <div className="flex gap-1">
@@ -165,12 +165,12 @@ export default function DashboardIntegrationExample() {
                             </div>
                           </div>
                         </div>
-                        
+
                         {/* Content info */}
                         <h4 className="text-sm font-medium line-clamp-2 mb-1">
                           {item.title || item.name || `Content ${index + 1}`}
                         </h4>
-                        
+
                         <div className="flex items-center justify-between text-xs text-gray-400">
                           {item.vote_average && (
                             <div className="flex items-center gap-1">
@@ -188,21 +188,21 @@ export default function DashboardIntegrationExample() {
                       </div>
                     </div>
                   )) || (
-                    // Fallback content if no API data
-                    Array.from({ length: 12 }, (_, index) => (
-                      <div key={index} className="bg-gray-700/50 rounded-lg p-3">
-                        <div className="aspect-[2/3] bg-gray-600 rounded mb-2 flex items-center justify-center">
-                          <Sparkles className="h-8 w-8 text-gray-400" />
+                      // Fallback content if no API data
+                      Array.from({ length: 12 }, (_, index) => (
+                        <div key={index} className="bg-gray-700/50 rounded-lg p-3">
+                          <div className="aspect-[2/3] bg-gray-600 rounded mb-2 flex items-center justify-center">
+                            <Sparkles className="h-8 w-8 text-gray-400" />
+                          </div>
+                          <h4 className="text-sm font-medium mb-1">
+                            {hasFilters ? 'Filtered' : 'AI'} Recommendation {index + 1}
+                          </h4>
+                          <p className="text-xs text-gray-500">
+                            {hasFilters ? 'Matching your filters' : 'Personalized for you'}
+                          </p>
                         </div>
-                        <h4 className="text-sm font-medium mb-1">
-                          {hasFilters ? 'Filtered' : 'AI'} Recommendation {index + 1}
-                        </h4>
-                        <p className="text-xs text-gray-500">
-                          {hasFilters ? 'Matching your filters' : 'Personalized for you'}
-                        </p>
-                      </div>
-                    ))
-                  )}
+                      ))
+                    )}
                 </div>
 
                 {/* Load More */}
@@ -237,7 +237,7 @@ export default function DashboardIntegrationExample() {
           <CardContent>
             <div className="bg-gray-900 rounded-lg p-4 overflow-x-auto">
               <pre className="text-sm text-gray-300">
-{`// Dashboard Integration
+                {`// Dashboard Integration
 const {
   content,
   isLoading,

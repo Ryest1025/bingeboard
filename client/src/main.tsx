@@ -17,7 +17,7 @@ const setupGlobalFirebase = async () => {
   try {
     // Wait for Firebase to be properly initialized
     await new Promise(resolve => setTimeout(resolve, 1000));
-    
+
     // Use mobile-safe Firebase config to avoid getModularInstance errors
     const { auth, getAuthInstance } = await import('@/firebase/config-mobile');
     const authInstance = getAuthInstance();

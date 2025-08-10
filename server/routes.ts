@@ -313,21 +313,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (includeStreaming && result.results) {
         const itemsToEnrich = Math.min(8, result.results.length); // Only first 8 for better performance
         console.log(`🎬 Enriching ${itemsToEnrich} shows with streaming data...`);
-        
+
         // Process in parallel batches of 5 for optimal performance
         const batchSize = 5;
         const enrichedResults = [];
-        
+
         for (let i = 0; i < itemsToEnrich; i += batchSize) {
           const batch = result.results.slice(i, i + batchSize);
-          
+
           const batchPromises = batch.map(async (item: any, batchIndex: number) => {
             const globalIndex = i + batchIndex + 1;
             try {
               const itemMediaType = item.title ? 'movie' : 'tv';
               const title = item.title || item.name || '';
               console.log(`📺 [${globalIndex}/${itemsToEnrich}] Getting streaming for: "${title}" (ID: ${item.id})`);
-              
+
               const streamingData = await MultiAPIStreamingService.getComprehensiveAvailability(
                 item.id,
                 title,
@@ -351,22 +351,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
               return item;
             }
           });
-          
+
           const batchResults = await Promise.all(batchPromises);
           enrichedResults.push(...batchResults);
-          
+
           // Small delay between batches to avoid rate limits
           if (i + batchSize < itemsToEnrich) {
             await new Promise(resolve => setTimeout(resolve, 50));
           }
         }
-        
+
         // Replace enriched items and keep the rest unchanged
         result.results = [
           ...enrichedResults,
           ...result.results.slice(itemsToEnrich)
         ];
-        
+
         console.log(`✅ Streaming enrichment complete. Processing time optimized for spotlight display.`);
       }
 
@@ -406,27 +406,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Enhanced genres endpoint used by dashboard (adds custom genres like Sports and caching hint)
+  app.get('/api/content/genres-enhanced/:type/list', async (req, res) => {
+    try {
+      const { type } = req.params;
+      if (type !== 'tv' && type !== 'movie') {
+        return res.status(400).json({ message: 'Type must be either "tv" or "movie"' });
+      }
+
+      const base = await tmdbService.getGenres(type as 'tv' | 'movie');
+      const genres = Array.isArray((base as any).genres) ? (base as any).genres.slice() : [];
+
+      // Inject custom genre(s) if not present
+      if (!genres.find((g: any) => g.name === 'Sports')) {
+        genres.push({ id: 99999, name: 'Sports' });
+      }
+
+      res.setHeader('Cache-Control', 'public, max-age=3600');
+      res.json({ genres, source: 'enhanced', count: genres.length });
+    } catch (error) {
+      console.error('Enhanced genres error:', error);
+      res.status(500).json({ message: 'Failed to fetch enhanced genres' });
+    }
+  });
+
   app.get('/api/tmdb/discover/:type', async (req, res) => {
     try {
       const { type } = req.params;
       const filters = req.query;
       const includeStreaming = req.query.includeStreaming === 'true';
-      
+
       if (type === 'tv' || type === 'movie') {
         const result = await tmdbService.discover(type as 'tv' | 'movie', filters);
-        
+
         // PERFORMANCE OPTIMIZATION: Only enrich first 8 items for spotlight display
         if (includeStreaming && result.results) {
           const itemsToEnrich = Math.min(8, result.results.length); // Reduced from 20 to 8
           console.log(`🔍 Enriching ${itemsToEnrich} discover results with streaming data...`);
-          
+
           // Process in batches for better performance
           const batchSize = 4;
           const enrichedResults = [];
-          
+
           for (let i = 0; i < itemsToEnrich; i += batchSize) {
             const batch = result.results.slice(i, i + batchSize);
-            
+
             const batchPromises = batch.map(async (item: any, batchIndex: number) => {
               const globalIndex = i + batchIndex + 1;
               try {
@@ -450,25 +474,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 return item;
               }
             });
-            
+
             const batchResults = await Promise.all(batchPromises);
             enrichedResults.push(...batchResults);
-            
+
             // Small delay between batches
             if (i + batchSize < itemsToEnrich) {
               await new Promise(resolve => setTimeout(resolve, 50));
             }
           }
-          
+
           // Replace enriched items and keep the rest unchanged
           result.results = [
             ...enrichedResults,
             ...result.results.slice(itemsToEnrich)
           ];
-          
+
           console.log(`✅ Streaming enrichment complete. First item platforms:`, enrichedResults[0]?.streamingPlatforms?.length || 0);
         }
-        
+
         res.json(result);
       } else {
         res.status(400).json({ message: 'Type must be either "tv" or "movie"' });
@@ -528,6 +552,92 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Multi-API Trailer Aggregation (initial TMDB-only implementation with future expansion hooks)
+  app.get('/api/multi-api/trailer/:type/:id', async (req, res) => {
+    try {
+      const { type, id } = req.params;
+      const title = (req.query.title as string) || '';
+      if (type !== 'tv' && type !== 'movie') {
+        return res.status(400).json({ message: 'Type must be either "tv" or "movie"' });
+      }
+
+      // Primary source: TMDB videos
+      let tmdbVideos: any = null;
+      try {
+        tmdbVideos = await tmdbService.getVideos(type as 'tv' | 'movie', parseInt(id));
+      } catch (e) {
+        console.warn('⚠️ TMDB videos fetch failed for trailer aggregation:', (e as Error).message);
+      }
+
+      // Placeholder monetization heuristic (stub) - will integrate real data later
+      const assessMonetization = (video: any): { monetized: boolean; monetizationScore: number } => {
+        // Basic heuristic: official trailers maybe monetizable later; score reserved
+        const isOfficial = !!video.official;
+        const name = (video.name || '').toLowerCase();
+        const looksLikeOfficial = name.includes('official trailer');
+        const monetized = false; // Always false until affiliate / ad data integrated
+        const monetizationScore = (isOfficial || looksLikeOfficial) ? 0.6 : 0.2; // Placeholder scoring
+        return { monetized, monetizationScore };
+      };
+
+      const trailers: any[] = [];
+      if (tmdbVideos?.results?.length) {
+        for (const v of tmdbVideos.results) {
+          if ((v.type === 'Trailer' || v.type === 'Teaser') && v.site === 'YouTube' && v.key) {
+            const monetizationMeta = assessMonetization(v);
+            trailers.push({
+              source: 'tmdb',
+              platform: 'youtube',
+              videoType: v.type.toLowerCase(),
+              key: v.key,
+              name: v.name,
+              official: !!v.official,
+              published_at: v.published_at || null,
+              url: `https://www.youtube.com/watch?v=${v.key}`,
+              embeddableUrl: `https://www.youtube.com/embed/${v.key}`,
+              monetized: monetizationMeta.monetized,
+              monetizationScore: monetizationMeta.monetizationScore
+            });
+          }
+        }
+      }
+
+      // Select primary trailer preference order: official trailer > trailer > teaser > first
+      const primaryTrailer = trailers
+        .sort((a, b) => (b.monetizationScore ?? 0) - (a.monetizationScore ?? 0))
+        .find(t => t.videoType === 'trailer' && t.official) ||
+        trailers.find(t => t.videoType === 'trailer') ||
+        trailers.find(t => t.videoType === 'teaser') ||
+        trailers[0] || null;
+
+      res.setHeader('Cache-Control', 'public, max-age=1800'); // 30 min cache
+      return res.json({
+        id: parseInt(id),
+        type,
+        title,
+        trailers,
+        primaryTrailer,
+        stats: {
+          total: trailers.length,
+          monetized: trailers.filter(t => t.monetized).length
+        },
+        sources: {
+          tmdb: true,
+          youtube_api: false, // placeholder for future direct YouTube Data API integration
+          external_affiliate: false
+        },
+        monetization: {
+          strategy: 'heuristic-stub',
+          notes: 'Monetization flags are placeholders; integration with partner APIs pending.'
+        },
+        generatedAt: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('Multi-API trailer aggregation error:', error);
+      res.status(500).json({ message: 'Failed to aggregate trailers' });
+    }
+  });
+
   // Get comprehensive streaming availability from all APIs
   app.get('/api/streaming/comprehensive/:type/:id', async (req, res) => {
     try {
@@ -554,6 +664,139 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Comprehensive streaming availability error:', error);
       res.status(500).json({ message: 'Failed to fetch streaming availability' });
+    }
+  });
+
+  // Batch streaming availability endpoint
+  // POST /api/streaming/batch-availability
+  // Body: { items: [{ tmdbId:number; title:string; mediaType:'movie'|'tv'; imdbId?:string }] }
+  app.post('/api/streaming/batch-availability', async (req, res) => {
+    const started = Date.now();
+    try {
+      const items = Array.isArray(req.body?.items) ? req.body.items : [];
+      if (items.length === 0) {
+        return res.status(400).json({ message: 'items array required' });
+      }
+      // Basic validation & limits
+      const MAX_ITEMS = 25;
+      if (items.length > MAX_ITEMS) {
+        return res.status(400).json({ message: `Too many items (max ${MAX_ITEMS})` });
+      }
+      const sanitized = items
+        .filter((it: any) => it && typeof it.tmdbId === 'number' && it.title && (it.mediaType === 'movie' || it.mediaType === 'tv'))
+        .map((it: any) => ({ tmdbId: it.tmdbId, title: it.title, mediaType: it.mediaType, imdbId: it.imdbId }));
+      if (sanitized.length === 0) {
+        return res.status(400).json({ message: 'No valid items provided' });
+      }
+
+      const availabilityMap = await MultiAPIStreamingService.getBatchAvailability(sanitized);
+      const results: Record<string, any> = {};
+      availabilityMap.forEach((value, key) => {
+        results[key] = value;
+      });
+      const duration = Date.now() - started;
+      res.json({
+        results,
+        order: sanitized.map((i: any) => i.tmdbId),
+        stats: {
+          requested: items.length,
+          processed: sanitized.length,
+          returned: availabilityMap.size,
+          durationMs: duration
+        }
+      });
+    } catch (error) {
+      console.error('Batch availability error:', error);
+      res.status(500).json({ message: 'Failed to fetch batch availability' });
+    }
+  });
+
+  // Enhanced multi-API search endpoint leveraging TMDB + streaming availability
+  // GET /api/streaming/enhanced-search?query=...&type=multi|movie|tv
+  app.get('/api/streaming/enhanced-search', async (req, res) => {
+    try {
+      const query = (req.query.query || req.query.q || '').toString().trim();
+      const mediaType = (req.query.type || req.query.mediaType || 'multi').toString();
+      if (!query || query.length < 2) {
+        return res.json({ results: [] });
+      }
+
+      const searchResponse = await tmdbService.search(query, { mediaType: mediaType as any, page: 1 });
+      const rawResults: any[] = (searchResponse.results || []).slice(0, 20);
+
+      // Enrich first 8 results with streaming data (performance conscious)
+      const ENRICH_LIMIT = 8;
+      const enriched = await Promise.all(rawResults.map(async (item, index) => {
+        const base: any = { ...item };
+        base.media_type = base.media_type || (base.title ? 'movie' : 'tv');
+        if (index < ENRICH_LIMIT) {
+          try {
+            const streamingData = await MultiAPIStreamingService.getComprehensiveAvailability(
+              base.id,
+              base.title || base.name || '',
+              base.media_type === 'movie' ? 'movie' : 'tv'
+            );
+            base.streaming = streamingData.platforms || [];
+            base.streamingStats = {
+              totalPlatforms: streamingData.totalPlatforms,
+              affiliatePlatforms: streamingData.affiliatePlatforms,
+              premiumPlatforms: streamingData.premiumPlatforms,
+              freePlatforms: streamingData.freePlatforms,
+              sources: streamingData.sources
+            };
+          } catch (e) {
+            // Non-fatal; skip enrichment for this item
+          }
+        }
+        return base;
+      }));
+
+      res.json({ results: enriched });
+    } catch (error) {
+      console.error('Enhanced streaming search error:', error);
+      res.status(500).json({ message: 'Failed to perform enhanced streaming search' });
+    }
+  });
+
+  // NEW: Enhanced filtered search (POST) under /api/streaming namespace
+  // Mirrors legacy /api/content/enhanced-search but aligned with streaming multi-API naming
+  app.post('/api/streaming/enhanced-search', async (req, res) => {
+    try {
+      const filters = req.body || {};
+      const tmdbService = new TMDBService();
+
+      const discoverParams: any = {
+        page: 1,
+        sort_by: filters.sortBy || 'popularity.desc'
+      };
+      if (filters.genres?.length > 0) discoverParams.with_genres = filters.genres.join(',');
+      if (filters.ratingRange) {
+        discoverParams['vote_average.gte'] = filters.ratingRange[0];
+        discoverParams['vote_average.lte'] = filters.ratingRange[1];
+      }
+      if (filters.releaseYear) discoverParams.primary_release_year = filters.releaseYear;
+      if (filters.providers?.length > 0) {
+        discoverParams.with_watch_providers = filters.providers.join('|');
+        discoverParams.watch_region = 'US';
+      }
+
+      const [tvResults, movieResults] = await Promise.all([
+        tmdbService.discover('tv', discoverParams),
+        tmdbService.discover('movie', discoverParams)
+      ]);
+
+      const combinedResults = [
+        ...(tvResults.results || []).map((item: any) => ({ ...item, media_type: 'tv' })),
+        ...(movieResults.results || []).map((item: any) => ({ ...item, media_type: 'movie' }))
+      ].slice(0, 20);
+
+      res.json({
+        results: combinedResults,
+        totalResults: (tvResults.total_results || 0) + (movieResults.total_results || 0)
+      });
+    } catch (error) {
+      console.error('Error performing streaming enhanced filtered search:', error);
+      res.status(500).json({ error: 'Failed to perform enhanced filtered search' });
     }
   });
 
@@ -605,7 +848,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log('🔍 Session check endpoint called');
       console.log('📋 Session exists:', !!(req as any).session);
       console.log('📋 Session user:', (req as any).session?.user?.email);
-      
+
       if ((req as any).session?.user) {
         const sessionUser = (req as any).session.user;
         console.log('✅ Valid session found for:', sessionUser.email);
@@ -1143,48 +1386,73 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Debug endpoint to set a test password for a user
-  app.post('/api/debug/set-password', async (req, res) => {
+  // Debug: get user by email (optionally create)
+  app.post('/api/debug/user-by-email', async (req, res) => {
     try {
-      const { email, password = 'test123' } = req.body;
+      const { email, createIfMissing = false, firstName, lastName, password } = req.body || {};
+      if (!email) return res.status(400).json({ error: 'Email is required' });
 
-      if (!email) {
-        return res.status(400).json({ error: 'Email is required' });
+      let user = await storage.getUserByEmail(email);
+      if (!user && createIfMissing) {
+        console.log('🔧 Creating missing user for debug:', email);
+        const id = `manual_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+        user = await storage.upsertUser({
+          id,
+          email,
+          firstName: firstName || null,
+          lastName: lastName || null,
+          authProvider: 'email',
+          username: (firstName || email.split('@')[0]),
+          profileImageUrl: null,
+          phoneNumber: null
+        });
+        if (password) {
+          const { hashPassword } = await import('./auth');
+          const hashedPassword = await hashPassword(password);
+          user = (await storage.updateUserPassword(email, hashedPassword)) || user;
+        }
       }
 
-      console.log(`🔧 Setting test password for: ${email}`);
+      if (!user) return res.status(404).json({ error: 'User not found' });
 
-      // Find user by email
-      const user = await storage.getUserByEmail(email);
-      if (!user) {
-        console.log(`❌ No user found for email: ${email}`);
-        return res.status(404).json({ error: 'User not found' });
-      }
-
-      // Hash the password
-      const { hashPassword } = await import('./auth');
-      const hashedPassword = await hashPassword(password);
-
-      // Update user with password hash
-      const updatedUser = await storage.upsertUser({
-        ...user,
-        passwordHash: hashedPassword,
-        authProvider: 'email' // Ensure it's set to email for password login
-      });
-
-      console.log(`✅ Password set for user: ${email}`);
       res.json({
-        message: 'Password set successfully',
         user: {
-          id: updatedUser.id,
-          email: updatedUser.email,
-          hasPassword: !!updatedUser.passwordHash
+          id: user.id,
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          username: user.username,
+          hasPassword: !!user.passwordHash
         }
       });
+    } catch (err: any) {
+      console.error('❌ /api/debug/user-by-email error', err);
+      res.status(500).json({ error: err.message });
+    }
+  });
 
-    } catch (error: any) {
-      console.error('❌ Error setting password:', error);
-      res.status(500).json({ error: error.message });
+  // Debug endpoint to set / reset a test password for a user (uses dedicated updater)
+  app.post('/api/debug/set-password', async (req, res) => {
+    try {
+      const { email, password = 'test123' } = req.body || {};
+      if (!email) return res.status(400).json({ error: 'Email is required' });
+      console.log(`🔧 Setting password for ${email}`);
+
+      const user = await storage.getUserByEmail(email);
+      if (!user) return res.status(404).json({ error: 'User not found' });
+
+      const { hashPassword } = await import('./auth');
+      const hashedPassword = await hashPassword(password);
+      const updated = await storage.updateUserPassword(email, hashedPassword);
+
+      if (!updated) return res.status(500).json({ error: 'Failed to update password' });
+      res.json({
+        message: 'Password set',
+        user: { id: updated.id, email: updated.email, hasPassword: !!updated.passwordHash }
+      });
+    } catch (err: any) {
+      console.error('❌ /api/debug/set-password error', err);
+      res.status(500).json({ error: err.message });
     }
   });
 
@@ -1430,7 +1698,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/user/lists', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims?.sub || req.user.id;
-      
+
       // Mock user lists - replace with actual database queries
       const mockUserLists = [
         { id: 1, name: "Sci-Fi Favorites", itemCount: 12 },
@@ -1441,7 +1709,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // TODO: Replace with actual database query
       // const lists = await storage.getUserLists(userId);
-      
+
       res.json({ lists: mockUserLists });
     } catch (error) {
       console.error('Error fetching user lists:', error);
@@ -1457,13 +1725,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/recommendations/because-you-watched', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims?.sub || req.user.id;
-      
+
       // Use TMDB to get real recommendations
       const tmdbService = new TMDBService();
-      
+
       // Get popular TV shows as recommendations (later can be personalized)
       const popularShows = await tmdbService.getPopular('tv');
-      
+
       // Transform TMDB data to match our expected format
       const recommendations = {
         shows: popularShows.results.slice(0, 8).map((show: any) => ({
@@ -1478,7 +1746,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           media_type: 'tv'
         }))
       };
-      
+
       res.json(recommendations);
     } catch (error) {
       console.error('Error fetching recommendations:', error);
@@ -1541,7 +1809,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           preferredGenres: rawUserPreferences.preferredGenres,
           genresType: typeof rawUserPreferences.preferredGenres
         });
-        
+
         let parsedGenres = [];
         if (rawUserPreferences.preferredGenres) {
           if (typeof rawUserPreferences.preferredGenres === 'string') {
@@ -1557,7 +1825,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             console.log('✅ Genres already an array:', parsedGenres);
           }
         }
-        
+
         let parsedNetworks = [];
         if (rawUserPreferences.preferredNetworks) {
           if (typeof rawUserPreferences.preferredNetworks === 'string') {
@@ -1571,13 +1839,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
             parsedNetworks = rawUserPreferences.preferredNetworks;
           }
         }
-        
+
         userPreferences = {
           ...rawUserPreferences,
           preferredGenres: parsedGenres,
           preferredNetworks: parsedNetworks
         };
-        
+
         console.log('🔍 Final parsed preferences:', {
           preferredGenres: userPreferences.preferredGenres,
           genresType: typeof userPreferences.preferredGenres,
@@ -1671,11 +1939,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
             // Genre matching (major factor)
             const itemGenres = (details as any).genres?.map((g: any) => g.name) || [];
             let genreMatches = [];
-            
+
             // Safely check preferred genres - handle both array and string cases
             if (userPreferences?.preferredGenres) {
               let preferredGenresList = userPreferences.preferredGenres;
-              
+
               // If still a string, parse it
               if (typeof preferredGenresList === 'string') {
                 try {
@@ -1685,7 +1953,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   preferredGenresList = [];
                 }
               }
-              
+
               // Now safely use the array
               if (Array.isArray(preferredGenresList)) {
                 genreMatches = itemGenres.filter((genre: string) =>
@@ -1698,7 +1966,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 console.warn('⚠️ preferredGenres is not an array after parsing:', typeof preferredGenresList, preferredGenresList);
               }
             }
-            
+
             aiScore += genreMatches.length * 15; // +15 per genre match
 
             // Popularity boost
@@ -2167,8 +2435,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const data = await continueWatchingResponse.json();
         res.json({
           currentlyWatching: data.continueWatching || [],
-          message: data.continueWatching?.length > 0 ? 
-            `Found ${data.continueWatching.length} shows to continue watching` : 
+          message: data.continueWatching?.length > 0 ?
+            `Found ${data.continueWatching.length} shows to continue watching` :
             "No shows in progress - start watching to see progress here"
         });
       } else {
@@ -2215,19 +2483,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Enhanced Features API Routes
-  
+
   // Moods API
   app.get('/api/moods', async (req, res) => {
     try {
       console.log('🎭 Fetching moods from database...');
-      
+
       // Use raw SQL with sqlite instance
       if (!sqlite) throw new Error('SQLite database not available');
-      
+
       // First check if table exists and get its structure
       const tableInfo = sqlite.prepare('PRAGMA table_info(moods)').all();
       console.log('🎭 Moods table structure:', tableInfo);
-      
+
       // Simple query first
       const result = sqlite.prepare('SELECT * FROM moods ORDER BY name ASC LIMIT 10').all();
       console.log('🎭 Found', result.length, 'moods');
@@ -2266,14 +2534,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const user_id = req.user?.id;
 
       if (!user_id || !content_id || !content_type || rating === undefined || !feedback_type) {
-        return res.status(400).json({ 
-          error: 'Missing required fields: content_id, content_type, rating, feedback_type' 
+        return res.status(400).json({
+          error: 'Missing required fields: content_id, content_type, rating, feedback_type'
         });
       }
 
       // Insert feedback using raw SQL
       if (!sqlite) throw new Error('SQLite database not available');
-      
+
       const insertStmt = sqlite.prepare(`
         INSERT OR REPLACE INTO user_feedback (
           user_id, content_id, content_type, rating, feedback_type, 
@@ -2305,18 +2573,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         'feedback_submitted',
         'content',
         content_id,
-        JSON.stringify({ 
-          content_type, 
-          rating, 
-          feedback_type, 
-          watch_status 
+        JSON.stringify({
+          content_type,
+          rating,
+          feedback_type,
+          watch_status
         })
       );
 
-      res.status(201).json({ 
-        success: true, 
+      res.status(201).json({
+        success: true,
         feedback_id: result.lastInsertRowid,
-        message: 'Feedback submitted successfully' 
+        message: 'Feedback submitted successfully'
       });
     } catch (error) {
       console.error('Error submitting feedback:', error);
@@ -2342,7 +2610,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       if (!sqlite) throw new Error('SQLite database not available');
       const presets = sqlite.prepare(query).all(user_id) as any[];
-      
+
       // Parse filters JSON
       const parsedPresets = presets.map((preset: any) => ({
         ...preset,
@@ -2369,8 +2637,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const user_id = req.user?.id;
 
       if (!user_id || !name || !filters) {
-        return res.status(400).json({ 
-          error: 'Missing required fields: name, filters' 
+        return res.status(400).json({
+          error: 'Missing required fields: name, filters'
         });
       }
 
@@ -2390,10 +2658,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         is_public || false
       );
 
-      res.status(201).json({ 
-        success: true, 
+      res.status(201).json({
+        success: true,
         preset_id: result.lastInsertRowid,
-        message: 'Filter preset created successfully' 
+        message: 'Filter preset created successfully'
       });
     } catch (error) {
       console.error('Error creating filter preset:', error);
@@ -2414,7 +2682,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         FROM user_collections uc
         WHERE uc.user_id = ?
       `;
-      
+
       const params: any[] = [user_id];
 
       // Handle soft delete filter
@@ -2446,7 +2714,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       if (!sqlite) throw new Error('SQLite database not available');
       const collections = sqlite.prepare(query).all(...params) as any[];
-      
+
       // Parse tags JSON
       const parsedCollections = collections.map((collection: any) => ({
         ...collection,
@@ -2473,8 +2741,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const user_id = req.user?.id;
 
       if (!user_id || !name) {
-        return res.status(400).json({ 
-          error: 'Missing required fields: name' 
+        return res.status(400).json({
+          error: 'Missing required fields: name'
         });
       }
 
@@ -2494,10 +2762,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         tags ? JSON.stringify(tags) : null
       );
 
-      res.status(201).json({ 
-        success: true, 
+      res.status(201).json({
+        success: true,
         collection_id: result.lastInsertRowid,
-        message: 'Collection created successfully' 
+        message: 'Collection created successfully'
       });
     } catch (error) {
       console.error('Error creating collection:', error);
@@ -2509,7 +2777,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/collections/tags', isAuthenticated, async (req: any, res) => {
     try {
       if (!sqlite) throw new Error('SQLite database not available');
-      
+
       // Get all unique tags from user_collections
       const tagsResult = sqlite.prepare(`
         SELECT DISTINCT json_extract(tags.value, '$') as tag
@@ -2517,9 +2785,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         WHERE user_id = ? AND tags.value IS NOT NULL
         ORDER BY tag ASC
       `).all(req.user?.id || 'user-id');
-      
+
       const tags = tagsResult.map((row: any) => row.tag).filter(Boolean);
-      
+
       res.json({ tags });
     } catch (error) {
       console.error('Error fetching collection tags:', error);
@@ -2535,7 +2803,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/tmdb/spotlight', async (req, res) => {
     try {
       const tmdbService = new TMDBService();
-      
+
       // Get trending TV shows and movies
       const [trendingTV, trendingMovies] = await Promise.all([
         tmdbService.getTrending('tv', 'day'),
@@ -2544,18 +2812,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Combine and get top 10 trending items
       const allTrending = [...(trendingTV.results || []), ...(trendingMovies.results || [])].slice(0, 10);
-      
+
       // Enrich with streaming provider data
       const enrichedTrending = await Promise.all(
         allTrending.map(async (item: any) => {
           try {
             const mediaType = item.media_type || (item.title ? 'movie' : 'tv');
             const watchProviders = await tmdbService.getWatchProviders(mediaType, item.id);
-            
+
             // Extract streaming platforms from watch providers
-            const providers = watchProviders?.results?.US;
+            const providers = (watchProviders as any)?.results?.US;
             const streamingPlatforms = [];
-            
+
             if (providers?.flatrate) {
               streamingPlatforms.push(...providers.flatrate.map((p: any) => ({
                 name: p.provider_name,
@@ -2571,7 +2839,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 type: 'buy'
               })));
             }
-            
+
             return {
               ...item,
               streamingPlatforms,
@@ -2646,10 +2914,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Enhanced filter search endpoint
   app.post('/api/content/enhanced-search', async (req, res) => {
+    console.warn('[DEPRECATION] /api/content/enhanced-search is deprecated. Use /api/streaming/enhanced-search (POST) instead.');
     try {
       const filters = req.body;
       const tmdbService = new TMDBService();
-      
+
       // Build TMDB discover query from enhanced filters
       const discoverParams: any = {
         page: 1,
@@ -2699,11 +2968,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/content/new-releases', async (req, res) => {
     try {
       const tmdbService = new TMDBService();
-      
+
       // Get current date and 30 days ago
       const today = new Date();
       const thirtyDaysAgo = new Date(today.getTime() - (30 * 24 * 60 * 60 * 1000));
-      
+
       const discoverParams = {
         'primary_release_date.gte': thirtyDaysAgo.toISOString().split('T')[0],
         'primary_release_date.lte': today.toISOString().split('T')[0],
@@ -2713,11 +2982,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const [newMovies, newTVShows] = await Promise.all([
         tmdbService.discover('movie', discoverParams),
-        tmdbService.discover('tv', { 
-          ...discoverParams, 
-          'first_air_date.gte': discoverParams['primary_release_date.gte'],
-          'first_air_date.lte': discoverParams['primary_release_date.lte']
-        })
+        tmdbService.discover('tv', {
+          ...(discoverParams as any),
+          'first_air_date.gte': (discoverParams as any)['primary_release_date.gte'],
+          'first_air_date.lte': (discoverParams as any)['primary_release_date.lte']
+        } as any)
       ]);
 
       const releases = [
@@ -2744,11 +3013,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       console.log(`📝 Adding item to list: User ${userId}, List ${listId}, Item ${itemId} (${itemType})`);
-      
+
       // TODO: Replace with actual database implementation
       // For now, return success to unblock the UI
-      res.json({ 
-        success: true, 
+      res.json({
+        success: true,
         message: 'Item added to list successfully',
         listId: listId,
         itemId: itemId,
@@ -2766,11 +3035,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { listId, itemId } = req.params;
 
       console.log(`🗑️ Removing item from list: User ${userId}, List ${listId}, Item ${itemId}`);
-      
+
       // TODO: Replace with actual database implementation
       // For now, return success to unblock the UI
-      res.json({ 
-        success: true, 
+      res.json({
+        success: true,
         message: 'Item removed from list successfully',
         listId: listId,
         itemId: itemId
@@ -2791,7 +3060,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       console.log(`📝 Creating new list: User ${userId}, Name: ${name}`);
-      
+
       // TODO: Replace with actual database implementation
       // For now, return mock data to unblock the UI
       const newList = {
@@ -2802,9 +3071,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         isPublic: isPublic || false,
         createdAt: new Date().toISOString()
       };
-      
-      res.json({ 
-        success: true, 
+
+      res.json({
+        success: true,
         message: 'List created successfully',
         list: newList
       });
@@ -2820,10 +3089,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { listId } = req.params;
 
       console.log(`📋 Fetching items for list: User ${userId}, List ${listId}`);
-      
+
       // TODO: Replace with actual database implementation
       // For now, return empty array to unblock the UI
-      res.json({ 
+      res.json({
         items: [],
         listId: listId,
         totalCount: 0
@@ -2838,16 +3107,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/sports/highlights', isAuthenticated, async (req: any, res) => {
     try {
       console.log('🏈 Fetching sports highlights for user:', req.user?.email);
-      
+
       // Get recent games from multiple sports
       const [nflGames, nbaGames, mlbGames] = await Promise.all([
         sportsService.getUpcomingGames('NFL', 3),
-        sportsService.getUpcomingGames('NBA', 3), 
+        sportsService.getUpcomingGames('NBA', 3),
         sportsService.getUpcomingGames('MLB', 3)
       ]);
-      
+
       const allGames = [...nflGames, ...nbaGames, ...mlbGames];
-      
+
       // Transform the data to include highlight-style information
       const processedHighlights = allGames.map((game: any) => ({
         id: game.idEvent || `highlight_${game.idHomeTeam}_${game.idAwayTeam}`,
@@ -2864,7 +3133,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           score: game.intHomeScore
         },
         awayTeam: {
-          name: game.strAwayTeam, 
+          name: game.strAwayTeam,
           logo: game.strAwayTeamBadge,
           score: game.intAwayScore
         },
@@ -2877,7 +3146,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }));
 
       console.log('✅ Sports highlights processed:', processedHighlights.length, 'items');
-      
+
       res.json(processedHighlights.slice(0, 10)); // Limit to 10 highlights
     } catch (error) {
       console.error('❌ Error fetching sports highlights:', error);
@@ -2889,9 +3158,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/sports/tv-schedule', isAuthenticated, async (req: any, res) => {
     try {
       console.log('📺 Fetching sports TV schedule');
-      
+
       const schedule = await sportsService.getTodaysTvSchedule();
-      
+
       res.json(schedule);
     } catch (error) {
       console.error('❌ Error fetching sports TV schedule:', error);
@@ -2904,22 +3173,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { category } = req.params;
       console.log('🎯 Fetching sports highlights for category:', category);
-      
+
       // Map category to sport type
       const sportMapping: { [key: string]: string } = {
         'nfl': 'NFL',
-        'nba': 'NBA', 
+        'nba': 'NBA',
         'mlb': 'MLB',
         'nhl': 'NHL',
         'tennis': 'Tennis'
       };
-      
+
       const sport = sportMapping[category.toLowerCase()];
-      
+
       if (!sport) {
         return res.status(400).json({ error: 'Invalid sports category' });
       }
-      
+
       // Get games for specific sport
       const highlights = await sportsService.getUpcomingGames(sport, 7);
       const filteredHighlights = highlights.map((game: any) => ({

@@ -29,9 +29,9 @@ export default function WelcomeCard({ user }: WelcomeCardProps) {
         }
         return 'there';
     };
-    
+
     const firstName = getName();
-    
+
     return (
         <p className="text-gray-400 text-3xl font-medium">
             Welcome back, {firstName}!

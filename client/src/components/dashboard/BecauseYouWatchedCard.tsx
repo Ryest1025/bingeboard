@@ -8,8 +8,8 @@ export default function BecauseYouWatchedCard() {
   const { data: recommendationsData, isLoading, error } = useQuery({
     queryKey: ["/api/recommendations/because-you-watched"],
     queryFn: async () => {
-      const res = await fetch("/api/recommendations/because-you-watched", { 
-        credentials: "include" 
+      const res = await fetch("/api/recommendations/because-you-watched", {
+        credentials: "include"
       });
       if (!res.ok) throw new Error("Failed to fetch recommendations");
       return res.json();

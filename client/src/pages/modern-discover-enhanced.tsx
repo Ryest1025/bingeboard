@@ -196,22 +196,22 @@ export default function ModernDiscoverEnhanced() {
 
   // Enhanced queries with better error handling
   const { data: trendingData, isLoading: trendingLoading } = useQuery({
-    queryKey: ["/api/tmdb/trending"],
+    queryKey: ["/api/content/trending-enhanced"],
     staleTime: 300000,
     retry: 2
   });
 
   const { data: popularData, isLoading: popularLoading } = useQuery({
-    queryKey: ["/api/tmdb/discover/tv"],
+    queryKey: ["/api/content/discover-enhanced/tv"],
     staleTime: 300000,
     retry: 2
   });
 
   const { data: searchData, isLoading: searchLoading } = useQuery({
-    queryKey: ["/api/tmdb/search", searchQuery],
+    queryKey: ["/api/streaming/enhanced-search", searchQuery],
     queryFn: () => {
       if (!searchQuery.trim()) return Promise.resolve({ results: [] });
-      return fetch(`/api/tmdb/search?query=${encodeURIComponent(searchQuery)}&mediaType=tv`).then(res => res.json());
+      return fetch(`/api/streaming/enhanced-search?query=${encodeURIComponent(searchQuery)}&mediaType=tv`).then(res => res.json());
     },
     enabled: !!searchQuery.trim(),
     staleTime: 300000

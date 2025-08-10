@@ -24,25 +24,25 @@ export const GENRES: Genre[] = [
 ];
 
 export const VIEWING_PREFERENCES: ViewingPreference[] = [
-  { 
-    id: 'binge-worthy', 
-    title: 'Binge-worthy series', 
-    desc: 'Shows with multiple seasons to dive into' 
+  {
+    id: 'binge-worthy',
+    title: 'Binge-worthy series',
+    desc: 'Shows with multiple seasons to dive into'
   },
-  { 
-    id: 'quick-watches', 
-    title: 'Quick watches', 
-    desc: 'Movies and limited series under 3 hours' 
+  {
+    id: 'quick-watches',
+    title: 'Quick watches',
+    desc: 'Movies and limited series under 3 hours'
   },
-  { 
-    id: 'highly-rated', 
-    title: 'Highly rated only', 
-    desc: 'Only show me content rated 7.5+ on IMDb' 
+  {
+    id: 'highly-rated',
+    title: 'Highly rated only',
+    desc: 'Only show me content rated 7.5+ on IMDb'
   },
-  { 
-    id: 'new-releases', 
-    title: 'New releases first', 
-    desc: 'Prioritize content from the last 2 years' 
+  {
+    id: 'new-releases',
+    title: 'New releases first',
+    desc: 'Prioritize content from the last 2 years'
   }
 ];
 

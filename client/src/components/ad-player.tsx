@@ -19,8 +19,8 @@ interface AdPlayerProps {
 
 // Remove the sample ads array since we're using the config system
 
-export default function AdPlayer({ 
-  onAdComplete, 
+export default function AdPlayer({
+  onAdComplete,
   onSkip,
   skipAfter = 5,
   duration = 15,
@@ -34,7 +34,7 @@ export default function AdPlayer({
   const [isPlaying, setIsPlaying] = useState(false);
   const [showClickOverlay, setShowClickOverlay] = useState(false);
   const [adStartTime, setAdStartTime] = useState<number>(0);
-  
+
   const videoRef = useRef<HTMLVideoElement>(null);
   const { toast } = useToast();
   const { user } = useAuth();
@@ -45,7 +45,7 @@ export default function AdPlayer({
     if (selectedAd) {
       setCurrentAd(selectedAd);
       setTimeLeft(selectedAd.duration);
-      
+
       // Track ad view
       if (user) {
         AdAnalytics.trackAdView(selectedAd.id, user.id || user.uid, 'trailer-monetization');
@@ -102,11 +102,11 @@ export default function AdPlayer({
     if (currentAd?.clickUrl && user) {
       // Track ad click for revenue analytics
       AdAnalytics.trackAdClick(currentAd.id, user.id || user.uid, currentAd.clickUrl);
-      
+
       console.log('💰 Ad clicked - Estimated revenue:', RevenueCalculator.calculateClickRevenue(currentAd.id));
-      
+
       window.open(currentAd.clickUrl, '_blank');
-      
+
       toast({
         title: "Opening advertiser page",
         description: "You'll continue to your trailer after the ad",
@@ -165,7 +165,7 @@ export default function AdPlayer({
 
             {/* Click Overlay */}
             {showClickOverlay && currentAd.clickUrl && (
-              <div 
+              <div
                 className="absolute inset-0 bg-black/20 flex items-center justify-center cursor-pointer"
                 onClick={handleAdClick}
                 onMouseLeave={() => setShowClickOverlay(false)}
@@ -195,7 +195,7 @@ export default function AdPlayer({
                   Revenue: ${RevenueCalculator.calculateAdRevenue(currentAd.id, false).toFixed(3)}
                 </Badge>
               </div>
-              
+
               <div className="flex items-center gap-2">
                 <Button
                   variant="ghost"
@@ -205,7 +205,7 @@ export default function AdPlayer({
                 >
                   {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
                 </Button>
-                
+
                 {canSkip && (
                   <Button
                     variant="secondary"
@@ -224,7 +224,7 @@ export default function AdPlayer({
             <div className="absolute bottom-4 left-4 right-4 space-y-2">
               {/* Progress Bar */}
               <Progress value={progress} className="h-1" />
-              
+
               <div className="flex items-center justify-between text-white text-sm">
                 <div className="flex items-center gap-2">
                   {currentAd.clickUrl && (
@@ -239,7 +239,7 @@ export default function AdPlayer({
                     </Button>
                   )}
                 </div>
-                
+
                 <div className="text-right">
                   <div className="text-xs opacity-75">Ad ends in</div>
                   <div className="font-medium">{timeLeft}s</div>
@@ -303,7 +303,7 @@ export function TrailerWithAds({ trailerUrl, showTitle, children }: TrailerWithA
             Watch a short ad to continue to "{showTitle}" trailer
           </div>
         </div>
-        <AdPlayer 
+        <AdPlayer
           onAdComplete={handleAdComplete}
           onSkip={handleSkipAd}
         />

@@ -25,12 +25,12 @@ interface RecommendationModalProps {
   onWatchNow?: (show: Show) => void;
 }
 
-export default function RecommendationModal({ 
-  show, 
-  open, 
-  onClose, 
-  onAddToList, 
-  onWatchNow 
+export default function RecommendationModal({
+  show,
+  open,
+  onClose,
+  onAddToList,
+  onWatchNow
 }: RecommendationModalProps) {
   const [trailerModalOpen, setTrailerModalOpen] = useState(false);
 
@@ -88,23 +88,23 @@ export default function RecommendationModal({
               <p className="text-gray-300 text-sm line-clamp-6">{overview || "No description available"}</p>
 
               <div className="flex items-center gap-4 flex-wrap">
-                <Button 
+                <Button
                   className="bg-cyan-600 hover:bg-cyan-700"
                   onClick={handleWatchNow}
                 >
                   <Play className="w-4 h-4 mr-2" /> Watch Now
                 </Button>
-                
-                <Button 
-                  variant="outline" 
+
+                <Button
+                  variant="outline"
                   className="border-slate-600 text-white hover:border-slate-400"
                   onClick={handleAddToList}
                 >
                   <Plus className="w-4 h-4 mr-2" /> Add to List
                 </Button>
 
-                <Button 
-                  variant="ghost" 
+                <Button
+                  variant="ghost"
                   className="text-gray-400 hover:text-white"
                   onClick={handleTrailerClick}
                 >
@@ -127,7 +127,7 @@ export default function RecommendationModal({
                   <span className="text-sm font-medium text-gray-300">Available on:</span>
                   <div className="flex gap-2 flex-wrap">
                     {streamingPlatforms.slice(0, 6).map((platform: any, index: number) => (
-                      <div 
+                      <div
                         key={index}
                         className="flex items-center gap-2 bg-slate-800 rounded-lg px-3 py-2"
                       >
@@ -168,7 +168,7 @@ export default function RecommendationModal({
               </Button>
             </div>
           </DialogHeader>
-          
+
           <div className="aspect-video bg-black rounded-lg flex items-center justify-center">
             {/* Placeholder for trailer video */}
             <div className="text-center text-gray-400">

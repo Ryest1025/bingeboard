@@ -51,7 +51,7 @@ export default function QuickStatsCard({ stats }: QuickStatsCardProps) {
             <span className="text-2xl font-bold text-white">{watchedHours}h</span>
           </div>
         </div>
-        
+
         <div className="text-center">
           <div className="text-white font-medium">{totalShows}</div>
           <div className="text-gray-400 text-sm">shows & movies watched</div>

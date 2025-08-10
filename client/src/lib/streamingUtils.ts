@@ -89,12 +89,12 @@ const STREAMING_PLATFORMS: Record<string, StreamingLink> = {
 };
 
 export function getStreamingLink(
-  platformName: string, 
-  showTitle: string, 
+  platformName: string,
+  showTitle: string,
   tmdbId?: number
 ): string {
   const platform = STREAMING_PLATFORMS[platformName];
-  
+
   if (!platform) {
     // Fallback to generic search
     return `https://www.google.com/search?q=${encodeURIComponent(showTitle + ' streaming')}`;
@@ -118,21 +118,21 @@ export function getStreamingLink(
 }
 
 export function openStreamingApp(
-  platformName: string, 
-  showTitle: string, 
+  platformName: string,
+  showTitle: string,
   tmdbId?: number
 ): void {
   const link = getStreamingLink(platformName, showTitle, tmdbId);
-  
+
   console.log(`Opening: ${platformName} for show: ${showTitle}`);
-  
+
   // Enhanced window opening with specific parameters for better compatibility
   const windowFeatures = 'width=1280,height=720,scrollbars=yes,resizable=yes,toolbar=yes,menubar=yes,location=yes';
-  
+
   try {
     // Try to open in new window/tab with enhanced parameters
     const newWindow = window.open(link, '_blank', windowFeatures);
-    
+
     // Check if window opened successfully
     if (newWindow) {
       // Focus the new window
@@ -153,7 +153,7 @@ export function openStreamingApp(
     tempLink.href = link;
     tempLink.target = '_blank';
     tempLink.rel = 'noopener noreferrer';
-    
+
     // Add to DOM temporarily
     document.body.appendChild(tempLink);
     tempLink.click();
@@ -172,7 +172,7 @@ export function getPrimaryStreamingPlatform(platforms: StreamingPlatform[]): Str
 
   // Priority order for major platforms
   const priorityPlatforms = [
-    'Netflix', 'Amazon Prime Video', 'Disney Plus', 'HBO Max', 
+    'Netflix', 'Amazon Prime Video', 'Disney Plus', 'HBO Max',
     'Hulu', 'Apple TV Plus', 'Paramount Plus', 'Peacock'
   ];
 
@@ -181,7 +181,7 @@ export function getPrimaryStreamingPlatform(platforms: StreamingPlatform[]): Str
     const platform = platforms.find(p => {
       if (!p || !p.provider_name) return false;
       return p.provider_name.toLowerCase().includes(priority.toLowerCase()) ||
-             priority.toLowerCase().includes(p.provider_name.toLowerCase());
+        priority.toLowerCase().includes(p.provider_name.toLowerCase());
     });
     if (platform) return platform;
   }
@@ -192,12 +192,12 @@ export function getPrimaryStreamingPlatform(platforms: StreamingPlatform[]): Str
 
 export function getAllAvailablePlatforms(platforms: StreamingPlatform[]): StreamingPlatform[] {
   if (!platforms || !Array.isArray(platforms)) return [];
-  
+
   // Filter to only supported platforms
   return platforms.filter(platform => {
     if (!platform || !platform.provider_name) return false;
-    
-    return Object.keys(STREAMING_PLATFORMS).some(supportedName => 
+
+    return Object.keys(STREAMING_PLATFORMS).some(supportedName =>
       platform.provider_name.toLowerCase().includes(supportedName.toLowerCase()) ||
       supportedName.toLowerCase().includes(platform.provider_name.toLowerCase())
     );
@@ -247,7 +247,7 @@ export function getWatchNowText(platformName: string): string {
 // Get direct platform URLs for streaming services
 export function getPlatformDirectUrl(platformName: string, title: string): string {
   const encodedTitle = encodeURIComponent(title);
-  
+
   const platformUrls: { [key: string]: string } = {
     'Netflix': `https://www.netflix.com/search?q=${encodedTitle}`,
     'Disney Plus': `https://www.disneyplus.com/search?q=${encodedTitle}`,
@@ -267,6 +267,6 @@ export function getPlatformDirectUrl(platformName: string, title: string): strin
     'Showtime': `https://www.showtime.com/search?q=${encodedTitle}`,
     'Starz': `https://www.starz.com/search?query=${encodedTitle}`
   };
-  
+
   return platformUrls[platformName] || `https://www.netflix.com/search?q=${encodedTitle}`;
 }

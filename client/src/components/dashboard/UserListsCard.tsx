@@ -21,8 +21,8 @@ export default function UserListsCard({ lists, onCreate }: UserListsCardProps) {
   const { data: listsData, isLoading } = useQuery({
     queryKey: ["/api/user/lists"],
     queryFn: async () => {
-      const res = await fetch("/api/user/lists", { 
-        credentials: "include" 
+      const res = await fetch("/api/user/lists", {
+        credentials: "include"
       });
       if (!res.ok) throw new Error("Failed to fetch user lists");
       return res.json();
@@ -105,7 +105,7 @@ export default function UserListsCard({ lists, onCreate }: UserListsCardProps) {
                       <span className="text-xs text-gray-400">{index}</span>
                     </div>
                   ))}
-                  <button 
+                  <button
                     className="w-10 h-14 border-2 border-dashed border-slate-600 flex items-center justify-center hover:border-slate-500 transition flex-shrink-0"
                     onClick={() => console.log('Add to list:', list.name)}
                   >

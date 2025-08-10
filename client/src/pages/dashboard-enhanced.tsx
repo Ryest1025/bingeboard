@@ -10,9 +10,9 @@ export default function EnhancedDashboard() {
 
   // Fetch genres dynamically from TMDB
   const { data: genresData, isLoading: genresLoading } = useQuery({
-    queryKey: ["/api/tmdb/genre/tv/list"],
+    queryKey: ["/api/content/genres-enhanced/tv/list"],
     queryFn: async () => {
-      const res = await fetch("/api/tmdb/genre/tv/list");
+      const res = await fetch("/api/content/genres-enhanced/tv/list");
       if (!res.ok) throw new Error("Failed to fetch genres");
       const data = await res.json();
       return data;
@@ -27,31 +27,31 @@ export default function EnhancedDashboard() {
 
   // Fetch trending/spotlight data filtered by genre with streaming data
   const { data: spotlightData, isLoading: spotlightLoading } = useQuery({
-    queryKey: ["/api/tmdb/trending", selectedGenre],
+    queryKey: ["/api/content/trending-enhanced", selectedGenre],
     queryFn: async () => {
       console.log("🎬 Enhanced Dashboard - Fetching spotlight for genre:", selectedGenre);
-      
+
       let url;
       if (selectedGenre === "all") {
         // Use trending for "all" genres with streaming data
         url = `/api/trending/tv/day?includeStreaming=true`;
       } else {
         // Use discover API for specific genres with streaming data
-        url = `/api/tmdb/discover/tv?with_genres=${selectedGenre}&sort_by=popularity.desc&includeStreaming=true`;
+        url = `/api/content/discover-enhanced/tv?with_genres=${selectedGenre}&sort_by=popularity.desc&includeStreaming=true`;
       }
-      
+
       console.log("🔗 Enhanced Dashboard - Spotlight URL:", url);
-      
+
       const res = await fetch(url);
       if (!res.ok) {
         console.error("❌ Enhanced Dashboard - Spotlight fetch failed:", res.status);
         throw new Error("Failed to fetch trending");
       }
-      
+
       const data = await res.json();
       console.log("📊 Enhanced Dashboard - API response:", data);
       console.log("🎯 Enhanced Dashboard - First show streaming platforms:", data.results?.[0]?.streaming_platforms || data.results?.[0]?.streamingPlatforms || "none");
-      
+
       return data;
     },
     enabled: !!isAuthenticated,
@@ -61,8 +61,8 @@ export default function EnhancedDashboard() {
   const { data: aiRecommendations } = useQuery({
     queryKey: ["/api/recommendations/ai", selectedGenre],
     queryFn: async () => {
-      const res = await fetch(`/api/recommendations/because-you-watched?genre=${selectedGenre}`, { 
-        credentials: "include" 
+      const res = await fetch(`/api/recommendations/because-you-watched?genre=${selectedGenre}`, {
+        credentials: "include"
       });
       if (!res.ok) throw new Error("Failed to fetch AI recommendations");
       return res.json();
@@ -132,7 +132,7 @@ export default function EnhancedDashboard() {
   return (
     <div className="min-h-screen bg-gray-900 text-white">
       <NavigationHeader />
-      
+
       <main className="max-w-7xl mx-auto px-6 py-8 pt-24">
         {/* Header with Search */}
         <div className="flex items-center justify-between mb-8">
@@ -165,11 +165,10 @@ export default function EnhancedDashboard() {
                   <button
                     key={genre.id}
                     onClick={() => setSelectedGenre(genre.id.toString())}
-                    className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all ${
-                      selectedGenre === genre.id.toString()
+                    className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all ${selectedGenre === genre.id.toString()
                         ? "bg-blue-600 text-white"
                         : "bg-gray-800 text-gray-300 hover:bg-gray-700"
-                    }`}
+                      }`}
                   >
                     {genre.name}
                   </button>
@@ -186,7 +185,7 @@ export default function EnhancedDashboard() {
                   </span>
                   <span className="text-gray-300 text-sm">Trending</span>
                 </div>
-                
+
                 {featuredShow ? (
                   <div className="flex gap-6">
                     <div className="flex-1">
@@ -259,26 +258,26 @@ export default function EnhancedDashboard() {
                     <h4 className="text-sm font-medium truncate">{show.title || show.name}</h4>
                   </div>
                 )) || (
-                  // Default shows
-                  [
-                    { name: "Better Call Saul", rating: "8.8" },
-                    { name: "The Sopranos", rating: "9.2" },
-                    { name: "Fargo", rating: "8.9" },
-                    { name: "Ozark", rating: "8.4" }
-                  ].map((show, index) => (
-                    <div key={index} className="group cursor-pointer">
-                      <div className="relative overflow-hidden rounded-lg mb-2">
-                        <div className="w-full aspect-[2/3] bg-gradient-to-br from-gray-700 to-gray-600 flex items-center justify-center">
-                          <span className="text-gray-400 text-sm">{show.name}</span>
+                    // Default shows
+                    [
+                      { name: "Better Call Saul", rating: "8.8" },
+                      { name: "The Sopranos", rating: "9.2" },
+                      { name: "Fargo", rating: "8.9" },
+                      { name: "Ozark", rating: "8.4" }
+                    ].map((show, index) => (
+                      <div key={index} className="group cursor-pointer">
+                        <div className="relative overflow-hidden rounded-lg mb-2">
+                          <div className="w-full aspect-[2/3] bg-gradient-to-br from-gray-700 to-gray-600 flex items-center justify-center">
+                            <span className="text-gray-400 text-sm">{show.name}</span>
+                          </div>
+                          <div className="absolute top-2 left-2 bg-gray-900 bg-opacity-75 px-2 py-1 rounded text-xs font-medium">
+                            {show.rating}
+                          </div>
                         </div>
-                        <div className="absolute top-2 left-2 bg-gray-900 bg-opacity-75 px-2 py-1 rounded text-xs font-medium">
-                          {show.rating}
-                        </div>
+                        <h4 className="text-sm font-medium truncate">{show.name}</h4>
                       </div>
-                      <h4 className="text-sm font-medium truncate">{show.name}</h4>
-                    </div>
-                  ))
-                )}
+                    ))
+                  )}
               </div>
             </div>
           </div>

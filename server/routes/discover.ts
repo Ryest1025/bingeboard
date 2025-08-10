@@ -31,17 +31,17 @@ const discoverQuerySchema = z.object({
 router.get('/discover', async (req, res) => {
   try {
     const validated = discoverQuerySchema.parse(req.query);
-    
+
     // Parse filter arrays
     const genres = validated.genres ? validated.genres.split(',').map(g => g.trim()) : [];
     const platforms = validated.platforms ? validated.platforms.split(',').map(p => p.trim()) : [];
     const countries = validated.countries ? validated.countries.split(',').map(c => c.trim()) : [];
     const sports = validated.sports ? validated.sports.split(',').map(s => s.trim()) : [];
-    
+
     const limit = parseInt(validated.limit || '20');
     const page = parseInt(validated.page || '1');
     const sortBy = validated.sort_by || 'popularity.desc';
-    
+
     // Build TMDB API request parameters
     const tmdbParams = new URLSearchParams({
       api_key: process.env.TMDB_API_KEY!,
@@ -50,7 +50,7 @@ router.get('/discover', async (req, res) => {
       include_adult: 'false',
       include_video: 'false'
     });
-    
+
     // Add genre filtering
     if (genres.length > 0) {
       // Map genre names to TMDB genre IDs (simplified mapping)
@@ -75,22 +75,22 @@ router.get('/discover', async (req, res) => {
         'war': '10752',
         'western': '37'
       };
-      
+
       const genreIds = genres
         .map(genre => genreMapping[genre.toLowerCase()])
         .filter(Boolean);
-      
+
       if (genreIds.length > 0) {
         tmdbParams.set('with_genres', genreIds.join(','));
       }
     }
-    
+
     // Add country filtering
     if (countries.length > 0) {
       // Use ISO country codes for TMDB
       tmdbParams.set('with_origin_country', countries.join(','));
     }
-    
+
     // Handle search query vs discover
     let tmdbUrl: string;
     if (validated.query) {
@@ -100,17 +100,17 @@ router.get('/discover', async (req, res) => {
       // Use discover endpoint for filtered browsing
       tmdbUrl = `https://api.themoviedb.org/3/discover/movie?${tmdbParams.toString()}`;
     }
-    
+
     console.log('🔍 Discover API request:', tmdbUrl);
-    
+
     const tmdbResponse = await fetch(tmdbUrl);
-    
+
     if (!tmdbResponse.ok) {
       throw new Error(`TMDB API error: ${tmdbResponse.status}`);
     }
-    
+
     const tmdbData = await tmdbResponse.json();
-    
+
     // Enhanced results with platform availability (mock data for now)
     const enhancedResults = tmdbData.results.map((item: any) => ({
       ...item,
@@ -128,25 +128,25 @@ router.get('/discover', async (req, res) => {
         user_rating: null // User's rating if any
       } : null
     }));
-    
+
     // Apply platform filtering on enhanced results
-    const filteredResults = platforms.length > 0 
-      ? enhancedResults.filter((item: any) => 
-          item.available_platforms.some((platform: string) => 
-            platforms.includes(platform.toLowerCase())
-          )
+    const filteredResults = platforms.length > 0
+      ? enhancedResults.filter((item: any) =>
+        item.available_platforms.some((platform: string) =>
+          platforms.includes(platform.toLowerCase())
         )
+      )
       : enhancedResults;
-    
+
     // Apply sports filtering
     const sportsFilteredResults = sports.length > 0
       ? filteredResults.filter((item: any) =>
-          item.sports_categories.some((sport: string) =>
-            sports.includes(sport.toLowerCase())
-          )
+        item.sports_categories.some((sport: string) =>
+          sports.includes(sport.toLowerCase())
         )
+      )
       : filteredResults;
-    
+
     const response = {
       results: sportsFilteredResults.slice(0, limit),
       total_results: sportsFilteredResults.length,
@@ -165,25 +165,25 @@ router.get('/discover', async (req, res) => {
         has_user_context: !!req.user
       }
     };
-    
+
     console.log('✅ Discover response:', {
       results_count: response.results.length,
       filters: response.filters_applied,
       user: req.user?.email || 'anonymous'
     });
-    
+
     res.json(response);
-    
+
   } catch (error) {
     console.error('❌ Discover API error:', error);
-    
+
     if (error instanceof z.ZodError) {
       return res.status(400).json({
         error: 'Invalid query parameters',
         details: error.errors
       });
     }
-    
+
     res.status(500).json({
       error: 'Failed to fetch discover content',
       message: error instanceof Error ? error.message : 'Unknown error'
@@ -243,10 +243,10 @@ router.get('/discover/filters', async (req, res) => {
         { value: 'boxing', label: 'Boxing', count: 67 }
       ]
     };
-    
+
     console.log('✅ Filter options fetched for discover');
     res.json(filterOptions);
-    
+
   } catch (error) {
     console.error('❌ Failed to fetch filter options:', error);
     res.status(500).json({

@@ -1,9 +1,21 @@
+// Enhanced show details with comprehensive streaming data
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Play, Plus, Star, Calendar, Clock, ExternalLink, X } from 'lucide-react';
 import { getStreamingPlatforms, getStreamingLogo } from '@/utils/show-utils';
+import { StreamingPlatformsDisplay } from '@/components/streaming/StreamingPlatformsDisplay';
+
+const fetchEnhancedShowDetails = async (id: number, type: 'tv' | 'movie', title: string) => {
+  const response = await fetch(`/api/streaming/comprehensive/${type}/${id}?title=${encodeURIComponent(title)}&includeAffiliate=true`);
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch enhanced show details');
+  }
+
+  return response.json();
+};
 
 interface ShowDetailsModalProps {
   show: any;
@@ -25,7 +37,7 @@ export function ShowDetailsModal({ show, isOpen, onClose, onAddToWatchlist, onWa
 
   const fetchShowDetails = async () => {
     if (!show) return;
-    
+
     setLoading(true);
     try {
       const mediaType = show.media_type || (show.title ? 'movie' : 'tv');
@@ -44,19 +56,19 @@ export function ShowDetailsModal({ show, isOpen, onClose, onAddToWatchlist, onWa
   if (!show) return null;
 
   const title = show.title || show.name || 'Unknown Title';
-  const posterUrl = show.poster_path 
+  const posterUrl = show.poster_path
     ? `https://image.tmdb.org/t/p/w500${show.poster_path}`
     : null;
   const backdropUrl = (details?.backdrop_path || show.backdrop_path)
     ? `https://image.tmdb.org/t/p/w1280${details.backdrop_path || show.backdrop_path}`
     : null;
-  
+
   const releaseDate = details?.release_date || details?.first_air_date || show.release_date || show.first_air_date;
   const rating = details?.vote_average || show.vote_average;
   const runtime = details?.runtime || details?.episode_run_time?.[0];
   const genres = details?.genres || [];
   const overview = details?.overview || show.overview;
-  
+
   const streamingPlatforms = getStreamingPlatforms(details || show);
 
   return (
@@ -66,15 +78,15 @@ export function ShowDetailsModal({ show, isOpen, onClose, onAddToWatchlist, onWa
         <div className="relative -m-6 mb-4">
           {backdropUrl && (
             <div className="relative h-64 overflow-hidden rounded-t-lg">
-              <img 
-                src={backdropUrl} 
+              <img
+                src={backdropUrl}
                 alt={title}
                 className="w-full h-full object-cover"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/50 to-transparent" />
             </div>
           )}
-          
+
           {/* Close button */}
           <Button
             variant="ghost"
@@ -91,8 +103,8 @@ export function ShowDetailsModal({ show, isOpen, onClose, onAddToWatchlist, onWa
           {/* Poster */}
           <div className="flex-shrink-0">
             {posterUrl ? (
-              <img 
-                src={posterUrl} 
+              <img
+                src={posterUrl}
                 alt={title}
                 className="w-48 h-72 object-cover rounded-lg"
               />
@@ -107,7 +119,7 @@ export function ShowDetailsModal({ show, isOpen, onClose, onAddToWatchlist, onWa
           <div className="flex-1">
             <DialogHeader className="mb-4">
               <DialogTitle className="text-2xl font-bold text-white mb-2">{title}</DialogTitle>
-              
+
               {/* Meta info */}
               <div className="flex items-center gap-4 text-sm text-gray-400">
                 {releaseDate && (
@@ -160,34 +172,21 @@ export function ShowDetailsModal({ show, isOpen, onClose, onAddToWatchlist, onWa
             {streamingPlatforms.length > 0 && (
               <div className="mb-6">
                 <h4 className="text-sm font-medium text-gray-400 mb-2">Available on:</h4>
-                <div className="flex flex-wrap gap-2">
-                  {streamingPlatforms.slice(0, 6).map((platform: any, index: number) => (
-                    <div key={index} className="flex items-center gap-2 bg-slate-700 px-3 py-2 rounded-lg">
-                      <img
-                        src={getStreamingLogo(platform)}
-                        alt={platform.name || platform.provider_name}
-                        className="w-5 h-5 rounded"
-                      />
-                      <span className="text-sm text-gray-300">
-                        {platform.name || platform.provider_name}
-                      </span>
-                    </div>
-                  ))}
-                </div>
+                <StreamingPlatformsDisplay platforms={streamingPlatforms} />
               </div>
             )}
 
             {/* Action Buttons */}
             <div className="flex gap-3">
-              <Button 
+              <Button
                 onClick={() => onWatchNow?.(show)}
                 className="bg-cyan-600 hover:bg-cyan-700 text-white px-6"
               >
                 <Play className="w-4 h-4 mr-2" />
                 Watch Now
               </Button>
-              
-              <Button 
+
+              <Button
                 variant="outline"
                 onClick={() => onAddToWatchlist?.(show.id)}
                 className="border-gray-600 text-gray-300 hover:bg-slate-700"
@@ -196,7 +195,7 @@ export function ShowDetailsModal({ show, isOpen, onClose, onAddToWatchlist, onWa
                 Add to Watchlist
               </Button>
 
-              <Button 
+              <Button
                 variant="ghost"
                 onClick={() => window.open(`/show/${show.id}`, '_blank')}
                 className="text-gray-400 hover:text-white hover:bg-slate-700"

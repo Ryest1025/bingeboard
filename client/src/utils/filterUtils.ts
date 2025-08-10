@@ -31,11 +31,11 @@ export const buildFilterQuery = (filters: FilterValues): URLSearchParams => {
  */
 export const fetchFilteredDashboardContent = async (filters: FilterValues) => {
   const query = buildFilterQuery(filters);
-  
+
   // Add dashboard-specific parameters
   query.append("type", "recommendations");
   query.append("limit", "20");
-  
+
   const res = await fetch(`/api/dashboard/content?${query.toString()}`);
   if (!res.ok) {
     throw new Error(`Failed to fetch dashboard content: ${res.statusText}`);
@@ -48,12 +48,12 @@ export const fetchFilteredDashboardContent = async (filters: FilterValues) => {
  */
 export const fetchFilteredDiscoverContent = async (filters: FilterValues) => {
   const query = buildFilterQuery(filters);
-  
+
   // Add discover-specific parameters
   query.append("type", "discover");
   query.append("limit", "50");
   query.append("sort_by", "popularity.desc");
-  
+
   const res = await fetch(`/api/discover/content?${query.toString()}`);
   if (!res.ok) {
     throw new Error(`Failed to fetch discover content: ${res.statusText}`);
@@ -65,17 +65,17 @@ export const fetchFilteredDiscoverContent = async (filters: FilterValues) => {
  * Generic content fetcher with custom endpoint
  */
 export const fetchFilteredContent = async (
-  endpoint: string, 
+  endpoint: string,
   filters: FilterValues,
   additionalParams: Record<string, string> = {}
 ) => {
   const query = buildFilterQuery(filters);
-  
+
   // Add any additional parameters
   Object.entries(additionalParams).forEach(([key, value]) => {
     query.append(key, value);
   });
-  
+
   const res = await fetch(`${endpoint}?${query.toString()}`);
   if (!res.ok) {
     throw new Error(`Failed to fetch content from ${endpoint}: ${res.statusText}`);
@@ -126,7 +126,7 @@ export const hasActiveFilters = (filters: FilterValues): boolean => {
  */
 export const getFilterSummary = (filters: FilterValues): string => {
   const parts: string[] = [];
-  
+
   if (filters.genres.length > 0) {
     parts.push(`${filters.genres.length} genre${filters.genres.length !== 1 ? 's' : ''}`);
   }
@@ -143,6 +143,6 @@ export const getFilterSummary = (filters: FilterValues): string => {
   if (parts.length === 0) return "No filters applied";
   if (parts.length === 1) return parts[0];
   if (parts.length === 2) return parts.join(" and ");
-  
+
   return parts.slice(0, -1).join(", ") + ", and " + parts[parts.length - 1];
 };
