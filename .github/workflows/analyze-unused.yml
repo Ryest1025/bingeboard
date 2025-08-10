@@ -67,6 +67,15 @@ jobs:
           echo "report_body<<'EOF'" >> $GITHUB_OUTPUT
           echo "$ESCAPED" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
+          # If summary-latest.txt exists, capture it for second section
+          if [ -f analysis/summary-latest.txt ]; then
+            SECOND=$(sed 's/`/\\`/g' analysis/summary-latest.txt | head -n 60)
+            echo "report_delta<<'EOF'" >> $GITHUB_OUTPUT
+            echo "$SECOND" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+          else
+            echo "report_delta=No diff summary available." >> $GITHUB_OUTPUT
+          fi
       
       - name: Comment on PR with analysis report summary
         if: github.event_name == 'pull_request'
@@ -81,6 +90,12 @@ jobs:
             <details><summary>Summary (first report excerpt)</summary>
 
             ${{ steps.summary.outputs.report_body }}
+
+            </details>
+
+            <details><summary>Unused Export Delta vs Baseline</summary>
+
+            ${{ steps.summary.outputs.report_delta }}
 
             </details>
 
