@@ -455,6 +455,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // NEW: Combined genres endpoint merging TV + Movie genres to ensure broader coverage (Thriller, Romance, etc.)
   app.get('/api/content/genres-combined/list', async (_req, res) => {
     try {
+  console.log('🎬 Combined genres endpoint hit');
       const tv = await tmdbService.getGenres('tv');
       const movie = await tmdbService.getGenres('movie');
       const map = new Map<number, string>();
@@ -478,6 +479,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error('Combined genres error:', e);
       res.status(500).json({ message: 'Failed to fetch combined genres' });
     }
+  });
+
+  // Backwards-compatible alias (some clients may request with /api/content/genres-combined/tv/list erroneously)
+  app.get('/api/content/genres-combined/:maybeType/list', async (req, res, next) => {
+    const { maybeType } = req.params;
+    // Only treat as alias if param looks like media type, otherwise skip
+    if (maybeType === 'tv' || maybeType === 'movie') {
+      console.log('🎬 Combined genres alias hit with type param:', maybeType);
+      return (app as any)._router.handle({
+        ...req,
+        method: 'GET',
+        url: '/api/content/genres-combined/list'
+      }, res, next);
+    }
+    next();
   });
 
   app.get('/api/tmdb/discover/:type', async (req, res) => {

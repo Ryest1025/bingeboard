@@ -10,12 +10,17 @@ export default function EnhancedDashboard() {
 
   // Fetch genres dynamically from TMDB
   const { data: genresData, isLoading: genresLoading } = useQuery({
-    queryKey: ["/api/content/genres-enhanced/tv/list"],
+    queryKey: ["/api/content/genres-combined/list"],
     queryFn: async () => {
-      const res = await fetch("/api/content/genres-enhanced/tv/list");
+      // Try combined endpoint first
+      let res = await fetch("/api/content/genres-combined/list");
+      if (!res.ok) {
+        // Fallback to legacy enhanced TV list
+        console.warn('⚠️ Combined genres endpoint failed, falling back to enhanced tv list', res.status);
+        res = await fetch("/api/content/genres-enhanced/tv/list");
+      }
       if (!res.ok) throw new Error("Failed to fetch genres");
-      const data = await res.json();
-      return data;
+      return res.json();
     },
   });
 
