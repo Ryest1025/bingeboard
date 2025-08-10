@@ -40,17 +40,31 @@ jobs:
         run: npm ci
 
       - name: Run unused code analysis
+        id: analyze
         run: |
           chmod +x ./scripts/analyze-unused.sh
-          ./scripts/analyze-unused.sh
-        continue-on-error: true
+          # Allow configurable thresholds via workflow/env or matrix in future
+          ./scripts/analyze-unused.sh || EXIT_CODE=$?
+          EXIT_CODE=${EXIT_CODE:-0}
+          echo "Analyzer exit code: $EXIT_CODE"
+          # Map exit codes to outputs
+          if [ "$EXIT_CODE" -eq 1 ]; then
+            echo "status=FAIL" >> $GITHUB_OUTPUT
+          elif [ "$EXIT_CODE" -eq 2 ]; then
+            echo "status=WARN" >> $GITHUB_OUTPUT
+          else
+            echo "status=PASS" >> $GITHUB_OUTPUT
+          fi
+          # Preserve exit code but don't fail job yet; we'll decide later
+          echo "exit_code=$EXIT_CODE" >> $GITHUB_OUTPUT
+          # Always exit 0 here to continue steps; final fail gate below
+          exit 0
 
       - name: Upload analysis reports
         uses: actions/upload-artifact@v3
         with:
           name: unused-code-reports
           path: analysis/report-*.md
-
       - name: Build inline summary (best-effort)
         if: github.event_name == 'pull_request'
         id: summary
@@ -60,14 +74,11 @@ jobs:
             echo "report_body=No report markdown generated." >> $GITHUB_OUTPUT
             exit 0
           fi
-          # Extract top section (up to first blank line after a heading block) and limit lines
-            awk 'NR==1, /^$/ {print}' "$REPORT_FILE" | head -n 40 > /tmp/summary.md
-          # Basic sanitization for GitHub comment body
+          awk 'NR==1, /^$/ {print}' "$REPORT_FILE" | head -n 40 > /tmp/summary.md
           ESCAPED=$(sed 's/`/\\`/g' /tmp/summary.md)
           echo "report_body<<'EOF'" >> $GITHUB_OUTPUT
           echo "$ESCAPED" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
-          # If summary-latest.txt exists, capture it for second section
           if [ -f analysis/summary-latest.txt ]; then
             SECOND=$(sed 's/`/\\`/g' analysis/summary-latest.txt | head -n 60)
             echo "report_delta<<'EOF'" >> $GITHUB_OUTPUT
@@ -76,7 +87,8 @@ jobs:
           else
             echo "report_delta=No diff summary available." >> $GITHUB_OUTPUT
           fi
-      
+          echo "analyze_status=${{ steps.analyze.outputs.status }}" >> $GITHUB_OUTPUT
+
       - name: Comment on PR with analysis report summary
         if: github.event_name == 'pull_request'
         uses: peter-evans/create-or-update-comment@v4
@@ -87,20 +99,24 @@ jobs:
             ### Unused Code Analysis Report
             Results for Node.js versions tested: 16, 18, 20.
 
+            Overall status for this matrix leg: ${{ steps.analyze.outputs.status }}
+
             <details><summary>Summary (first report excerpt)</summary>
 
             ${{ steps.summary.outputs.report_body }}
 
             </details>
 
-            <details><summary>Unused Export Delta vs Baseline</summary>
+            <details><summary>Unused Export & Dependency Delta vs Baseline</summary>
 
             ${{ steps.summary.outputs.report_delta }}
 
             </details>
 
-            Full reports are available as workflow artifacts (unused-code-reports). If new unused exports were introduced, this PR should adjust code or intentionally update the baseline.
-      
-      - name: Fail job if unused exports baseline check failed
-        if: failure()
+            Full reports are available as workflow artifacts (unused-code-reports). If new unused exports or dependencies were introduced, this PR should adjust code or intentionally update the baseline.
+
+            Exit code legend: PASS=0 WARN=2 FAIL=1.
+
+      - name: Fail job if analysis status FAIL
+        if: steps.analyze.outputs.status == 'FAIL'
         run: exit 1
