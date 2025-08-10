@@ -64,7 +64,6 @@ localhost.csr
 
 # Archive directory
 archive/
-!archive/2025-08-10/**
 
 # Build artifacts
 android/build/
@@ -82,3 +81,10 @@ ios/build/
 # Documentation exports
 *.docx
 *.pdf
+
+# Unused analysis generated artifacts (keep baseline tracked)
+analysis/report-*.md
+analysis/tsprune-latest.txt
+depcheck-report.json
+
+# Keep: analysis/baseline-unused-exports.txt (DO NOT IGNORE)

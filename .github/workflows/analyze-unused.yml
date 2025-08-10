@@ -51,6 +51,23 @@ jobs:
           name: unused-code-reports
           path: analysis/report-*.md
 
+      - name: Build inline summary (best-effort)
+        if: github.event_name == 'pull_request'
+        id: summary
+        run: |
+          REPORT_FILE=$(ls -1 analysis/report-*.md 2>/dev/null | head -n1 || true)
+          if [ -z "$REPORT_FILE" ]; then
+            echo "report_body=No report markdown generated." >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          # Extract top section (up to first blank line after a heading block) and limit lines
+            awk 'NR==1, /^$/ {print}' "$REPORT_FILE" | head -n 40 > /tmp/summary.md
+          # Basic sanitization for GitHub comment body
+          ESCAPED=$(sed 's/`/\\`/g' /tmp/summary.md)
+          echo "report_body<<'EOF'" >> $GITHUB_OUTPUT
+          echo "$ESCAPED" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+      
       - name: Comment on PR with analysis report summary
         if: github.event_name == 'pull_request'
         uses: peter-evans/create-or-update-comment@v4
@@ -61,8 +78,13 @@ jobs:
             ### Unused Code Analysis Report
             Results for Node.js versions tested: 16, 18, 20.
 
-            <!-- Insert report content from analysis/report-*.md here -->
-            (Check attached workflow artifacts for full markdown reports.)
+            <details><summary>Summary (first report excerpt)</summary>
+
+            ${{ steps.summary.outputs.report_body }}
+
+            </details>
+
+            Full reports are available as workflow artifacts (unused-code-reports). If new unused exports were introduced, this PR should adjust code or intentionally update the baseline.
       
       - name: Fail job if unused exports baseline check failed
         if: failure()
