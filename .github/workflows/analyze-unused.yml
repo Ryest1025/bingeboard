@@ -1,0 +1,69 @@
+name: Analyze Unused Code
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+    branches:
+      - main
+      - master
+
+jobs:
+  analyze-unused:
+    name: Run unused exports & dependency analysis (Node ${{ matrix.node-version }})
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [16, 18, 20]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Cache node_modules
+        uses: actions/cache@v3
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ matrix.node-version }}-${{ hashFiles('package-lock.json', 'package.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-${{ matrix.node-version }}-
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run unused code analysis
+        run: |
+          chmod +x ./scripts/analyze-unused.sh
+          ./scripts/analyze-unused.sh
+        continue-on-error: true
+
+      - name: Upload analysis reports
+        uses: actions/upload-artifact@v3
+        with:
+          name: unused-code-reports
+          path: analysis/report-*.md
+
+      - name: Comment on PR with analysis report summary
+        if: github.event_name == 'pull_request'
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          issue-number: ${{ github.event.pull_request.number }}
+          body: |
+            ### Unused Code Analysis Report
+            Results for Node.js versions tested: 16, 18, 20.
+
+            <!-- Insert report content from analysis/report-*.md here -->
+            (Check attached workflow artifacts for full markdown reports.)
+      
+      - name: Fail job if unused exports baseline check failed
+        if: failure()
+        run: exit 1

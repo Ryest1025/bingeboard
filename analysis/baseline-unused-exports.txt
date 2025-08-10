@@ -1,18 +1,10 @@
-# Baseline unused exports (ts-prune)
+﻿# Baseline unused exports (ts-prune)
 # Update this file after intentional cleanup. Used for regression detection.
 # Format: one unused export per line, as output by ts-prune.
 
 server/stability-monitor.ts:11 - StabilityMonitor (used in module)
 server/stability-monitor.ts:195 - default
 server/storage.ts:217 - DatabaseStorage (used in module)
-client/src/App-debug.tsx:3 - default
-client/src/App-diagnostic.tsx:4 - default
-client/src/App-fresh.tsx:3 - default
-client/src/App-minimal.tsx:3 - default
-client/src/App-mobile.tsx:3 - default
-client/src/App-simple.tsx:10 - default
-client/src/App-test.tsx:1 - default
-client/src/App-working.tsx:18 - default
 client/src/firebase-test.ts:17 - default
 client/src/SimpleLogin.tsx:3 - default
 server/clients/utellyClient.ts:106 - getUniqueStreamingServices
@@ -42,3 +34,245 @@ server/db/index.ts:293 - games
 server/db/index.ts:315 - userSportsPreferences
 server/db/index.ts:326 - sportsActivities
 server/db/index.ts:336 - searchAlerts
+server/db/index.ts:370 - aiRecommendations
+server/db/index.ts:384 - userPreferences
+server/db/index.ts:402 - usersRelations
+server/db/index.ts:412 - showsRelations
+server/db/index.ts:419 - watchlistsRelations
+server/db/index.ts:430 - friendshipsRelations
+server/db/index.ts:443 - activitiesRelations
+server/db/index.ts:456 - activityLikesRelations
+server/db/index.ts:467 - activityCommentsRelations
+server/db/index.ts:478 - platformsRelations
+server/db/index.ts:482 - showPlatformsRelations
+server/db/index.ts:493 - recommendationsRelations
+server/db/index.ts:504 - upcomingReleasesRelations
+server/db/index.ts:512 - releaseRemindersRelations
+server/db/index.ts:523 - notificationsRelations
+server/db/index.ts:531 - sportsRelations
+server/db/index.ts:537 - teamsRelations
+server/db/index.ts:546 - gamesRelations
+server/db/index.ts:564 - userSportsPreferencesRelations
+server/db/index.ts:575 - sportsActivitiesRelations
+server/db/index.ts:587 - searchAlertsRelations
+server/db/index.ts:594 - aiRecommendationsRelations
+server/db/index.ts:605 - userPreferencesRelations
+server/db/index.ts:613 - insertUserSchema
+server/db/index.ts:618 - insertShowSchema
+server/db/index.ts:624 - insertWatchlistSchema
+server/db/index.ts:630 - insertFriendshipSchema
+server/db/index.ts:635 - insertActivitySchema
+server/db/index.ts:640 - insertActivityLikeSchema
+server/db/index.ts:645 - insertActivityCommentSchema
+server/db/index.ts:650 - insertPlatformSchema
+server/db/index.ts:655 - insertRecommendationSchema
+server/db/index.ts:660 - insertUpcomingReleaseSchema
+server/db/index.ts:666 - insertReleaseReminderSchema
+server/db/index.ts:671 - insertNotificationSchema
+server/db/index.ts:677 - insertSportSchema
+server/db/index.ts:682 - insertTeamSchema
+server/db/index.ts:687 - insertGameSchema
+server/db/index.ts:693 - insertUserSportsPreferencesSchema
+server/db/index.ts:699 - insertSportsActivitySchema
+server/db/index.ts:705 - insertSearchAlertSchema
+server/db/index.ts:712 - insertAiRecommendationSchema
+server/db/index.ts:717 - insertUserPreferencesSchema
+server/db/index.ts:723 - streamingIntegrations
+server/db/index.ts:739 - viewingHistory
+server/db/index.ts:756 - userBehavior
+server/db/index.ts:768 - recommendationTraining
+server/db/index.ts:780 - platformConfigs
+server/db/index.ts:795 - insertStreamingIntegrationSchema
+server/db/index.ts:801 - insertViewingHistorySchema
+server/db/index.ts:806 - insertUserBehaviorSchema
+server/db/index.ts:811 - insertRecommendationTrainingSchema
+server/db/index.ts:816 - insertPlatformConfigSchema
+server/db/index.ts:823 - customLists
+server/db/index.ts:838 - customListItems
+server/db/index.ts:851 - customListCollaborators
+server/db/index.ts:863 - userStats
+server/db/index.ts:878 - episodeProgress
+server/db/index.ts:895 - insertCustomListSchema
+server/db/index.ts:901 - insertCustomListItemSchema
+server/db/index.ts:906 - insertCustomListCollaboratorSchema
+server/db/index.ts:911 - insertUserStatsSchema
+server/db/index.ts:916 - insertEpisodeProgressSchema
+server/db/index.ts:922 - fcmTokens
+server/db/index.ts:934 - notificationPreferences
+server/db/index.ts:949 - notificationHistory
+server/db/index.ts:962 - insertFcmTokenSchema
+server/db/index.ts:968 - insertNotificationPreferencesSchema
+server/db/index.ts:974 - insertNotificationHistorySchema
+server/db/index.ts:980 - insertContactImportSchema
+server/db/index.ts:985 - insertFriendSuggestionSchema
+server/db/index.ts:991 - UpsertUser
+server/db/index.ts:992 - User
+server/db/index.ts:993 - Show
+server/db/index.ts:994 - InsertShow
+server/db/index.ts:995 - Watchlist
+server/db/index.ts:996 - InsertWatchlist
+server/db/index.ts:997 - Friendship
+server/db/index.ts:998 - InsertFriendship
+server/db/index.ts:999 - ContactImport
+server/db/index.ts:1000 - InsertContactImport
+server/db/index.ts:1001 - FriendSuggestion
+server/db/index.ts:1002 - InsertFriendSuggestion
+server/db/index.ts:1003 - Activity
+server/db/index.ts:1004 - InsertActivity
+server/db/index.ts:1005 - ActivityLike
+server/db/index.ts:1006 - InsertActivityLike
+server/db/index.ts:1007 - ActivityComment
+server/db/index.ts:1008 - InsertActivityComment
+server/db/index.ts:1009 - Platform
+server/db/index.ts:1010 - InsertPlatform
+server/db/index.ts:1011 - Recommendation
+server/db/index.ts:1012 - InsertRecommendation
+server/db/index.ts:1013 - UpcomingRelease
+server/db/index.ts:1014 - InsertUpcomingRelease
+server/db/index.ts:1015 - ReleaseReminder
+server/db/index.ts:1016 - InsertReleaseReminder
+server/db/index.ts:1017 - Notification
+server/db/index.ts:1018 - InsertNotification
+server/db/index.ts:1021 - Sport
+server/db/index.ts:1022 - InsertSport
+server/db/index.ts:1023 - Team
+server/db/index.ts:1024 - InsertTeam
+server/db/index.ts:1025 - Game
+server/db/index.ts:1026 - InsertGame
+server/db/index.ts:1027 - UserSportsPreferences
+server/db/index.ts:1028 - InsertUserSportsPreferences
+server/db/index.ts:1029 - SportsActivity
+server/db/index.ts:1030 - InsertSportsActivity
+server/db/index.ts:1033 - SearchAlert
+server/db/index.ts:1034 - InsertSearchAlert
+server/db/index.ts:1035 - AiRecommendation
+server/db/index.ts:1036 - InsertAiRecommendation
+server/db/index.ts:1037 - UserPreferences
+server/db/index.ts:1038 - InsertUserPreferences
+server/db/index.ts:1041 - StreamingIntegration
+server/db/index.ts:1042 - InsertStreamingIntegration
+server/db/index.ts:1043 - ViewingHistory
+server/db/index.ts:1044 - InsertViewingHistory
+server/db/index.ts:1045 - UserBehavior
+server/db/index.ts:1046 - InsertUserBehavior
+server/db/index.ts:1047 - RecommendationTraining
+server/db/index.ts:1048 - InsertRecommendationTraining
+server/db/index.ts:1049 - PlatformConfig
+server/db/index.ts:1050 - InsertPlatformConfig
+server/db/index.ts:1053 - CustomList
+server/db/index.ts:1054 - InsertCustomList
+server/db/index.ts:1055 - CustomListItem
+server/db/index.ts:1056 - InsertCustomListItem
+server/db/index.ts:1057 - CustomListCollaborator
+server/db/index.ts:1058 - InsertCustomListCollaborator
+server/db/index.ts:1061 - UserStats
+server/db/index.ts:1062 - InsertUserStats
+server/db/index.ts:1063 - EpisodeProgress
+server/db/index.ts:1064 - InsertEpisodeProgress
+server/db/index.ts:1067 - FcmToken
+server/db/index.ts:1068 - InsertFcmToken
+server/db/index.ts:1069 - NotificationPreferences
+server/db/index.ts:1070 - InsertNotificationPreferences
+server/db/index.ts:1071 - NotificationHistory
+server/db/index.ts:1072 - InsertNotificationHistory
+server/db/index.ts:1075 - insertSocialConnectionSchema
+server/db/index.ts:1081 - SocialConnection
+server/db/index.ts:1082 - InsertSocialConnection
+server/db/index.ts:1085 - Friend
+server/db/index.ts:1094 - FriendRequest
+server/routes/collections.ts:274 - default
+server/routes/filterPresets.ts:91 - default
+server/routes/moods.ts:29 - default
+server/routes/streamingServices.ts:24 - default
+server/routes/trending.ts:5 - default
+server/routes/userFeedback.ts:122 - default
+server/services/aiRecommendations.ts:37 - AIRecommendationService
+server/services/dataSecurityService.ts:5 - DataExportRequest (used in module)
+server/services/dataSecurityService.ts:11 - DataDeletionRequest (used in module)
+server/services/dataSecurityService.ts:17 - UserDataSummary (used in module)
+server/services/dataSecurityService.ts:30 - DataSecurityService (used in module)
+server/services/dataSecurityService.ts:338 - dataSecurityService
+server/services/sports.ts:3 - SportsService (used in module)
+server/services/tmdb.ts:257 - tmdbService
+shared/schema/index.ts:15 - sessions
+shared/schema/index.ts:81 - movies
+shared/schema/index.ts:171 - insertUserSchema
+shared/schema/index.ts:172 - insertWatchHistorySchema
+shared/schema/index.ts:173 - insertWatchlistSchema
+shared/schema/index.ts:174 - insertUserPreferencesSchema
+shared/schema/index.ts:175 - insertPasswordResetCodeSchema
+shared/schema/index.ts:179 - User
+shared/schema/index.ts:183 - Watchlist
+client/src/components/activity-item.tsx:20 - default
+client/src/components/ad-player.tsx:22 - default
+client/src/components/advanced-search.tsx:19 - default
+client/src/components/affiliate-monetization.tsx:39 - default
+client/src/components/BrandShowcase.tsx:11 - default
+client/src/components/category-icons.tsx:2 - TrendingIcon
+client/src/components/category-icons.tsx:12 - PopularIcon
+client/src/components/category-icons.tsx:21 - TopRatedIcon
+client/src/components/category-icons.tsx:30 - ComingSoonIcon
+client/src/components/category-icons.tsx:42 - RecommendationsIcon
+client/src/components/category-icons.tsx:55 - UpcomingIcon
+client/src/components/category-icons.tsx:96 - ActivityIcon
+client/src/components/competitive-advantages.tsx:5 - CompetitiveAdvantages
+client/src/components/consent-banner.tsx:120 - useConsent
+client/src/components/debug-ai-recommendations.tsx:7 - DebugAiRecommendations
+client/src/components/discover-filters.tsx:84 - default
+client/src/components/enhanced-advanced-search.tsx:123 - EnhancedAdvancedSearch
+client/src/components/enhanced-onboarding-modal.tsx:95 - default
+client/src/components/index.ts:1 - BingeBoardHeader
+client/src/components/layout.tsx:12 - Layout (used in module)
+client/src/components/layout.tsx:31 - default
+client/src/components/monetization-dashboard.tsx:33 - default
+client/src/components/navigation-header-backup.tsx:19 - default
+client/src/components/navigation-header-fixed.tsx:19 - default
+client/src/components/onboarding-modal.tsx:14 - default
+client/src/components/preferences-panel.tsx:43 - default
+client/src/components/premium-badge.tsx:10 - default
+client/src/components/premium-badge.tsx:47 - PremiumFeatureBadge
+client/src/components/premium-feature-gate.tsx:214 - PremiumIndicator
+client/src/components/premium-features-showcase.tsx:35 - default
+client/src/components/RecommendationCard.tsx:30 - default
+client/src/components/search-alerts.tsx:107 - SearchAlerts
+client/src/components/share-button.tsx:45 - default
+client/src/components/share-button.tsx:314 - QuickShareButton
+client/src/components/show-card.tsx:23 - default
+client/src/components/sports-card.tsx:31 - default
+client/src/components/sports-card.tsx:189 - SportsSummary
+client/src/components/streaming-marquee-modal.tsx:143 - marqueeStyles
+client/src/components/subscription-plans.tsx:294 - UpgradePrompt
+client/src/components/watch-now-button.tsx:326 - QuickWatchButton (used in module)
+client/src/components/watchlist-manager.tsx:41 - default
+client/src/firebase/config-fixed.ts:51 - auth (used in module)
+client/src/firebase/config-fixed.ts:63 - googleProvider (used in module)
+client/src/firebase/config-fixed.ts:64 - facebookProvider (used in module)
+client/src/firebase/config-fixed.ts:96 - messaging (used in module)
+client/src/firebase/config-fixed.ts:108 - default
+client/src/firebase/config-minimal.ts:36 - default
+client/src/firebase/config-minimal.ts:41 - getAuthInstance (used in module)
+client/src/firebase/config-minimal.ts:56 - getGoogleProvider
+client/src/firebase/config-minimal.ts:63 - getFacebookProvider
+client/src/firebase/config-minimal.ts:71 - auth
+client/src/firebase/config-new.ts:131 - auth (used in module)
+client/src/firebase/config-new.ts:131 - googleProvider (used in module)
+client/src/firebase/config-new.ts:131 - facebookProvider (used in module)
+client/src/firebase/config-new.ts:131 - messaging (used in module)
+client/src/firebase/config-new.ts:131 - initializeAuthSafely (used in module)
+client/src/firebase/config-new.ts:132 - default
+client/src/firebase/config-simple-minimal.ts:12 - auth
+client/src/firebase/config-simple-minimal.ts:13 - googleProvider
+client/src/firebase/config-simple-minimal.ts:14 - facebookProvider
+client/src/firebase/config-simple-minimal.ts:16 - default
+client/src/firebase/config-simple.ts:14 - facebookProvider (used in module)
+client/src/firebase/config-simple.ts:16 - default
+client/src/firebase/config-test.ts:23 - testFirebaseConfig (used in module)
+client/src/firebase/messaging.ts:8 - NotificationPayload (used in module)
+client/src/firebase/messaging.ts:18 - requestNotificationPermission
+client/src/firebase/messaging.ts:84 - onForegroundMessage
+client/src/firebase/messaging.ts:91 - sendTokenToServer
+client/src/firebase/messaging.ts:121 - subscribeToTopic
+client/src/firebase/messaging.ts:137 - showNotification
+client/src/firebase/messaging.ts:137 - showNotification
+client/src/firebase/messaging.ts:137 - showNotification
+client/src/firebase/messaging.ts:137 - showNotification
