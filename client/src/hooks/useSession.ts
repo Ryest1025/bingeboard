@@ -18,6 +18,7 @@ interface SessionData {
   message?: string;
 }
 
+/* ignore-unused-export (shared hook consumed by UI even if pruning heuristic flags) */
 export const useSession = () => {
   return useQuery<SessionData>({
     queryKey: ['session'],
@@ -44,20 +45,9 @@ export const useSession = () => {
 };
 
 // Utility hook for just checking authentication status
-export const useIsAuthenticated = () => {
-  const { data } = useSession();
-  return data?.authenticated ?? false;
-};
+// Internal helpers (not exported) retained for potential future use
+const useIsAuthenticated = () => { const { data } = useSession(); return data?.authenticated ?? false; };
+const useCurrentUser = () => { const { data } = useSession(); return data?.user; };
+const invalidateSession = (queryClient: any) => { queryClient.invalidateQueries(['session']); };
 
-// Utility hook for getting current user
-export const useCurrentUser = () => {
-  const { data } = useSession();
-  return data?.user;
-};
-
-// Manual session refresh utility
-export const invalidateSession = (queryClient: any) => {
-  queryClient.invalidateQueries(['session']);
-};
-
-export default useSession;
+// No default export – use named import only.

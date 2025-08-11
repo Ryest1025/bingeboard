@@ -52,6 +52,7 @@ interface TMDBWatchProvidersResponse {
 }
 
 // Simple logger interface for injection / test mocking
+/* ignore-unused-export (consumed indirectly by dependency injection & tests) */
 export interface Logger {
   info(message?: any, ...optional: any[]): void;
   warn(message?: any, ...optional: any[]): void;
@@ -61,6 +62,7 @@ export interface Logger {
 }
 
 // Export normalization helper for tests & external consumers (kept pure)
+/* ignore-unused-export (used by tests) */
 export function normalizePlatformName(name: string): string {
   const normalizations: Record<string, string> = {
     'Disney Plus': 'Disney+',

@@ -60,7 +60,8 @@ export default function useEnhancedSearch(filters: EnhancedSearchFilters) {
 }
 
 // Hook for batch streaming availability
-export function useBatchStreamingAvailability(titles: Array<{
+// Internal helper (not exported) – currently unused externally; export later if adopted.
+function useBatchStreamingAvailability(titles: Array<{
   tmdbId: number;
   title: string;
   mediaType: 'movie' | 'tv';

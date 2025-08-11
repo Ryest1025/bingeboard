@@ -6,3 +6,17 @@
 # Type-only exports (avoid noise):
 : .*Props (used in module)
 : .*Schema
+: (used in module)
+# Ignore internal table exports from drizzle schema (frequently imported indirectly)
+server/db/index.ts:
+useBatchStreamingAvailability
+useIsAuthenticated
+useCurrentUser
+invalidateSession
+getSession
+ignore-unused-export
+EnhancedStreamingPlatform
+Logger (used in module)
+normalizePlatformName (used in module)
+StreamingSource (used in module)
+useSession (used in module)

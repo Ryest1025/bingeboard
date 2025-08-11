@@ -159,4 +159,4 @@ export function EnhancedSearchErrorUI({
   );
 }
 
-export default EnhancedSearchErrorUI;
+// (No default export to reduce surface area for unused export detection.)

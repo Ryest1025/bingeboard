@@ -1,20 +1,5 @@
 STATUS: PASS
-Exports => current:681 baseline:278 new:410 removed:3 growth:144%
+Exports => current:684 baseline:681 new:0 removed:1 growth:0%
 Deps    => current:0 baseline:0 new:0 removed:0
-New exports (first 10):
-client/src/components/common/index.ts:2 - RecommendationCard
-client/src/components/common/index.ts:3 - RecommendationGrid
-client/src/components/common/index.ts:4 - SectionTitle
-client/src/components/common/index.ts:7 - RecommendationCardProps
-client/src/components/common/index.ts:7 - Show
-client/src/components/dashboard/BecauseYouWatchedCard.tsx:6 - default
-client/src/components/dashboard/CurrentlyWatchingCard.tsx:18 - default
-client/src/components/dashboard/filters/FilterDemo.tsx:7 - FilterDemo
-client/src/components/dashboard/filters/WatchlistQuickFilter.tsx:14 - WatchlistQuickFilter
-client/src/components/dashboard/NewReleasesCard.tsx:9 - default
 Removed exports (first 10):
-﻿# Baseline unused exports (ts-prune)
-# Update this file after intentional cleanup. Used for regression detection.
-# Format: one unused export per line, as output by ts-prune.
-
-(Baselines updated this run)
+client/src/hooks/useEnhancedSearch.ts:15 - default

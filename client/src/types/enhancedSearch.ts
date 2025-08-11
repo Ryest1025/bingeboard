@@ -1,3 +1,4 @@
+/* ignore-unused-export (value shape referenced indirectly in API results) */
 export interface StreamingSource {
   providerId?: string;
   name?: string;
