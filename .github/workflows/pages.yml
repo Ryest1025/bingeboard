@@ -28,8 +28,11 @@ jobs:
           node-version: 20
           cache: 'npm'
 
-      - name: Install dependencies
-        run: npm ci
+      - name: Install dependencies (verbose with version info)
+        run: |
+          echo "Node version: $(node -v)"
+          echo "NPM version: $(npm -v)"
+          npm ci --verbose
 
       - name: Create .env (Firebase config injected as Vite vars)
         run: |
