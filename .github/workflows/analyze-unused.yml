@@ -54,8 +54,13 @@ jobs:
       - name: Upload analysis reports
         uses: actions/upload-artifact@v4
         with:
-          name: unused-code-reports
+          name: unused-code-reports-${{ matrix.node-version }}
           path: analysis/report-*.md
+
+      - name: Print summary snippet
+        run: |
+          echo '--- analyzer summary (summary-latest.txt) ---'
+          if [ -f analysis/summary-latest.txt ]; then cat analysis/summary-latest.txt; else echo 'No summary file'; fi
 
       - name: Build inline summary (best-effort)
         if: github.event_name == 'pull_request'
@@ -81,8 +86,8 @@ jobs:
           fi
           echo "analyze_status=${{ steps.analyze.outputs.status }}" >> $GITHUB_OUTPUT
 
-      - name: Comment on PR with analysis report summary
-        if: github.event_name == 'pull_request'
+      - name: Comment on PR with analysis report summary (single node leg)
+        if: github.event_name == 'pull_request' && matrix.node-version == '20'
         uses: peter-evans/create-or-update-comment@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
