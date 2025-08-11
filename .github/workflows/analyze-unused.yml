@@ -129,8 +129,7 @@ jobs:
             Full reports are available as workflow artifacts (unused-code-reports). If new unused exports or dependencies were introduced, this PR should adjust code or intentionally update the baseline.
 
             Exit code legend: PASS=0 WARN=2 FAIL=1.
-
       - name: Fail job if analysis status FAIL
         # Only let the Node 20 leg fail the overall workflow; Node 18 is informational (engine warnings on deps needing Node 20)
-        if: ${{ steps.analyze.outputs.status == 'FAIL' && matrix.node-version == '20' }}
+        if: ${{ steps.analyze.outputs.status == 'FAIL' && matrix.allow-failure == false }}
         run: exit 1
