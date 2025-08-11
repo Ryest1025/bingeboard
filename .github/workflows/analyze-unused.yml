@@ -12,25 +12,18 @@ on:
 
 jobs:
   analyze-unused:
-    name: Run unused exports & dependency analysis (Node ${{ matrix.node-version }})
+    name: Run unused exports & dependency analysis (Node 20)
     runs-on: ubuntu-latest
-    continue-on-error: ${{ matrix.allow-failure }}
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - node-version: 18
-            allow-failure: true
-          - node-version: 20
-            allow-failure: false
+    concurrency:
+      group: analyze-unused-${{ github.ref }}
+      cancel-in-progress: true
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
-      - name: Setup Node.js ${{ matrix.node-version }}
+      - name: Setup Node.js 20
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: 20
           cache: 'npm'
 
       - name: Install dependencies
@@ -61,8 +54,8 @@ jobs:
             echo '--- report head (first 40 lines) ---'
             head -n 40 $(ls -1 analysis/report-*.md | head -n1)
           fi
-          # Fail immediately on Node 20 if FAIL; allow Node 18 (allow-failure) to continue
-          if [ "$STATUS" = "FAIL" ] && [ "${{ matrix.allow-failure }}" = "false" ]; then
+          # Fail immediately on FAIL status
+          if [ "$STATUS" = "FAIL" ]; then
             echo "Failing workflow (authoritative Node version)." >&2
             exit 1
           fi
@@ -74,7 +67,7 @@ jobs:
           echo '--- New unused exports (first 120 lines or fewer) ---'
           if [ -f /tmp/ts-prune-new.txt ] && [ -s /tmp/ts-prune-new.txt ]; then head -n 120 /tmp/ts-prune-new.txt; else echo 'None.'; fi
           echo '--- Removed unused exports (first 120 lines or fewer) ---'
-            if [ -f /tmp/ts-prune-removed.txt ] && [ -s /tmp/ts-prune-removed.txt ]; then head -n 120 /tmp/ts-prune-removed.txt; else echo 'None.'; fi
+          if [ -f /tmp/ts-prune-removed.txt ] && [ -s /tmp/ts-prune-removed.txt ]; then head -n 120 /tmp/ts-prune-removed.txt; else echo 'None.'; fi
           echo '--- Unused dependency diffs ---'
           if [ -f /tmp/dep-new.txt ] && [ -s /tmp/dep-new.txt ]; then echo 'New deps:'; cat /tmp/dep-new.txt; else echo 'No new deps.'; fi
           if [ -f /tmp/dep-removed.txt ] && [ -s /tmp/dep-removed.txt ]; then echo 'Removed deps:'; cat /tmp/dep-removed.txt; else echo 'No removed deps.'; fi
@@ -82,7 +75,7 @@ jobs:
       - name: Upload analysis reports
         uses: actions/upload-artifact@v4
         with:
-          name: unused-code-reports-${{ matrix.node-version }}
+          name: unused-code-reports
           path: analysis/report-*.md
 
       - name: Print summary snippet
@@ -93,9 +86,19 @@ jobs:
       - name: Upload summary snippet artifact
         uses: actions/upload-artifact@v4
         with:
-          name: unused-code-summary-${{ matrix.node-version }}
+          name: unused-code-summary
           path: analysis/summary-latest.txt
           if-no-files-found: warn
+
+      - name: Append summary to job summary
+        run: |
+          echo "## Unused Code Analysis" >> $GITHUB_STEP_SUMMARY
+          if [ -f analysis/summary-latest.txt ]; then
+            echo "" >> $GITHUB_STEP_SUMMARY
+            cat analysis/summary-latest.txt >> $GITHUB_STEP_SUMMARY
+          else
+            echo "No summary file generated." >> $GITHUB_STEP_SUMMARY
+          fi
 
       - name: Build inline summary (best-effort)
         if: github.event_name == 'pull_request'
@@ -121,17 +124,17 @@ jobs:
           fi
           echo "analyze_status=${{ steps.analyze.outputs.status }}" >> $GITHUB_OUTPUT
 
-      - name: Comment on PR with analysis report summary (single node leg)
-        if: github.event_name == 'pull_request' && matrix.node-version == '20'
+      - name: Comment on PR with analysis report summary
+        if: github.event_name == 'pull_request'
         uses: peter-evans/create-or-update-comment@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           issue-number: ${{ github.event.pull_request.number }}
           body: |
             ### Unused Code Analysis Report
-            Results for Node.js versions tested: 18, 20.
+            Results for Node.js version: 20.
 
-            Overall status for this matrix leg: ${{ steps.analyze.outputs.status }}
+            Overall status: ${{ steps.analyze.outputs.status }}
 
             <details><summary>Summary (first report excerpt)</summary>
 
@@ -145,6 +148,6 @@ jobs:
 
             </details>
 
-            Full reports are available as workflow artifacts (unused-code-reports). If new unused exports or dependencies were introduced, this PR should adjust code or intentionally update the baseline.
+            Full reports are available as workflow artifacts (unused-code-reports & unused-code-summary). If new unused exports or dependencies were introduced, this PR should adjust code or intentionally update the baseline.
 
             Exit code legend: PASS=0 WARN=2 FAIL=1.
