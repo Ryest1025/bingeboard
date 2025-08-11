@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 
+/* ignore-unused-export */
 export default function SimpleLogin() {
   const [isLogin, setIsLogin] = useState(true);
   const [showPassword, setShowPassword] = useState(false);

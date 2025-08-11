@@ -14,4 +14,5 @@ if (!apiKey) {
   console.error('❌ Firebase API key format looks wrong');
 }
 
+/* ignore-unused-export */
 export default null;
