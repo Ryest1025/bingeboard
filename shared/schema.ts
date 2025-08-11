@@ -16,6 +16,7 @@ import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
+/* ignore-unused-export (used for schema definition, migrations, or future extensibility) */
 // Session storage table (required for Replit Auth)
 export const sessions = pgTable(
   "sessions",
@@ -27,6 +28,7 @@ export const sessions = pgTable(
   (table) => [index("IDX_session_expire").on(table.expire)],
 );
 
+/* ignore-unused-export (used for schema definition, migrations, or future extensibility) */
 // User storage table (required for Replit Auth)
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().notNull(),
@@ -48,6 +50,7 @@ export const users = pgTable("users", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+/* ignore-unused-export (used for schema definition, migrations, or future extensibility) */
 // TV Shows table
 export const shows = pgTable("shows", {
   id: serial("id").primaryKey(),
@@ -66,6 +69,7 @@ export const shows = pgTable("shows", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+/* ignore-unused-export (used for schema definition, migrations, or future extensibility) */
 // Streaming platforms
 export const platforms = pgTable("platforms", {
   id: serial("id").primaryKey(),
@@ -75,6 +79,7 @@ export const platforms = pgTable("platforms", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+/* ignore-unused-export (used for schema definition, migrations, or future extensibility) */
 // Show streaming availability
 export const showPlatforms = pgTable(
   "show_platforms",
@@ -89,6 +94,7 @@ export const showPlatforms = pgTable(
   ]
 );
 
+/* ignore-unused-export (used for schema definition, migrations, or future extensibility) */
 // User watchlists
 export const watchlists = pgTable("watchlists", {
   id: serial("id").primaryKey(),
@@ -105,6 +111,7 @@ export const watchlists = pgTable("watchlists", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+/* ignore-unused-export (used for schema definition, migrations, or future extensibility) */
 // Friend connections
 export const friendships = pgTable(
   "friendships",
@@ -120,6 +127,7 @@ export const friendships = pgTable(
   ]
 );
 
+/* ignore-unused-export (used for schema definition, migrations, or future extensibility) */
 // Contact imports for friend discovery
 export const contactImports = pgTable("contact_imports", {
   id: serial("id").primaryKey(),
@@ -133,6 +141,7 @@ export const contactImports = pgTable("contact_imports", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+/* ignore-unused-export (used for schema definition, migrations, or future extensibility) */
 // Social network connections for friend discovery
 export const socialConnections = pgTable("social_connections", {
   id: serial("id").primaryKey(),
