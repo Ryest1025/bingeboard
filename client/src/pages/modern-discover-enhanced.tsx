@@ -202,7 +202,7 @@ export default function ModernDiscoverEnhanced() {
   });
 
   const { data: popularData, isLoading: popularLoading } = useQuery({
-    queryKey: ["/api/content/discover-enhanced/tv"],
+    queryKey: ["/api/streaming/enhanced-search?type=tv"],
     staleTime: 300000,
     retry: 2
   });

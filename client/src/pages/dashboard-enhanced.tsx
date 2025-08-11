@@ -39,10 +39,10 @@ export default function EnhancedDashboard() {
       let url;
       if (selectedGenre === "all") {
         // Use trending for "all" genres with streaming data
-        url = `/api/trending/tv/day?includeStreaming=true`;
+        url = `/api/streaming/enhanced-search?type=tv&includeStreaming=true`;
       } else {
         // Use discover API for specific genres with streaming data
-        url = `/api/content/discover-enhanced/tv?with_genres=${selectedGenre}&sort_by=popularity.desc&includeStreaming=true`;
+        url = `/api/streaming/enhanced-search?type=tv&includeStreaming=true`;
       }
 
       console.log("🔗 Enhanced Dashboard - Spotlight URL:", url);

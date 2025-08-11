@@ -511,13 +511,13 @@ function Dashboard() {
         if (selectedGenre === "all") {
           url = `/api/tmdb/spotlight`;
         } else {
-          url = `/api/content/discover-enhanced/tv?with_genres=${selectedGenre}&sort_by=popularity.desc`;
+          url = `/api/streaming/enhanced-search?type=tv&includeStreaming=true`;
         }
       } else if (spotlightFilterType === 'network') {
         if (selectedNetwork === "all") {
           url = `/api/tmdb/spotlight`;
         } else {
-          url = `/api/content/discover-enhanced/tv?with_networks=${selectedNetwork}&sort_by=popularity.desc`;
+          url = `/api/streaming/enhanced-search?type=tv&includeStreaming=true`;
         }
       }
 
@@ -571,9 +571,9 @@ function Dashboard() {
       console.log("🔄 Using TMDB discover as fallback for AI recommendations");
       let fallbackUrl;
       if (selectedRecommendationGenre === "all") {
-        fallbackUrl = '/api/content/discover-enhanced/tv?sort_by=vote_average.desc&vote_count.gte=100';
+        fallbackUrl = '/api/streaming/enhanced-search?type=tv&includeStreaming=true';
       } else {
-        fallbackUrl = `/api/content/discover-enhanced/tv?with_genres=${selectedRecommendationGenre}&sort_by=vote_average.desc&vote_count.gte=50`;
+        fallbackUrl = `/api/streaming/enhanced-search?type=tv&includeStreaming=true`;
       }
 
       const fallbackRes = await fetch(fallbackUrl);

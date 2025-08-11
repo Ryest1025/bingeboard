@@ -14,16 +14,11 @@ export default defineConfig({
     port: 3000, // Use port 3000 for frontend
     proxy: {
       '/api': {
-        // Use localhost (NOT 127.0.0.1) so Set-Cookie host matches frontend host and cookies are stored
-        target: 'http://localhost:5000',
+        target: 'http://127.0.0.1:5000', // Backend on port 5000
         changeOrigin: true,
         secure: false,
-        // Ensure any Set-Cookie without explicit domain rewrites to localhost to avoid 127.0.0.1 mismatch
-        cookieDomainRewrite: {
-          '127.0.0.1': 'localhost'
-        },
-        configure: () => {
-          console.log('🔗 API proxy configured: /api -> http://localhost:5000 (cookieDomainRewrite active)');
+        configure: (proxy, options) => {
+          console.log('🔗 API proxy configured: /api -> http://127.0.0.1:5000');
         }
       }
     }

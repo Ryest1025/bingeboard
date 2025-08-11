@@ -15,6 +15,8 @@ class StreamingCache {
   private cache = new Map<string, CacheEntry>();
   private readonly DEFAULT_TTL = 30 * 60 * 1000; // 30 minutes
   private readonly MAX_CACHE_SIZE = 1000; // Prevent memory issues
+  private hits = 0;
+  private misses = 0;
 
   /**
    * Generate cache key for streaming data
@@ -50,15 +52,18 @@ class StreamingCache {
     const entry = this.cache.get(key);
 
     if (!entry) {
+      this.misses++;
       return null;
     }
 
     if (!this.isValid(entry)) {
       this.cache.delete(key);
+      this.misses++;
       return null;
     }
 
     console.log(`📋 Cache HIT for ${mediaType}:${tmdbId}`);
+    this.hits++;
     return entry.data;
   }
 
@@ -120,7 +125,33 @@ class StreamingCache {
   getStats(): { size: number; maxSize: number; hitRate?: number } {
     return {
       size: this.cache.size,
-      maxSize: this.MAX_CACHE_SIZE
+      maxSize: this.MAX_CACHE_SIZE,
+      hitRate: (this.hits + this.misses) ? this.hits / (this.hits + this.misses) : undefined
+    };
+  }
+
+  /** Detailed stats including per-entry TTL info */
+  getDetailedStats(): {
+    size: number;
+    maxSize: number;
+    hits: number;
+    misses: number;
+    hitRate: number | null;
+    entries: Array<{ key: string; ageMs: number; ttlMs: number; expiresInMs: number }>;
+  } {
+    const now = Date.now();
+    const entries: Array<{ key: string; ageMs: number; ttlMs: number; expiresInMs: number }> = [];
+    this.cache.forEach((entry, key) => {
+      const age = now - entry.timestamp;
+      entries.push({ key, ageMs: age, ttlMs: entry.ttl, expiresInMs: Math.max(0, entry.ttl - age) });
+    });
+    return {
+      size: this.cache.size,
+      maxSize: this.MAX_CACHE_SIZE,
+      hits: this.hits,
+      misses: this.misses,
+      hitRate: (this.hits + this.misses) ? this.hits / (this.hits + this.misses) : null,
+      entries
     };
   }
 

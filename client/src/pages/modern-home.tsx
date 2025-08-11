@@ -260,7 +260,7 @@ export default function ModernHome() {
 
   // Fetch coming soon shows safely
   useEffect(() => {
-    safeFetch('/api/content/discover-enhanced/tv').then(data => {
+    safeFetch('/api/streaming/enhanced-search?type=tv&includeStreaming=true').then(data => {
       if (data) setComingSoonData(data);
     });
   }, []);

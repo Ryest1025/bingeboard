@@ -1,27 +1,19 @@
-import React from 'react';
+import React, { KeyboardEvent } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Star, Calendar, Play } from 'lucide-react';
+import type { EnhancedShow } from '@/types/enhancedSearch';
 
 interface SearchResultCardProps {
-  show: {
-    id: number;
-    title?: string;
-    name?: string;
-    poster_path?: string;
-    release_date?: string;
-    first_air_date?: string;
-    vote_average?: number;
-    genre_ids?: number[];
-    media_type?: 'movie' | 'tv';
-    overview?: string;
-  };
+  show: EnhancedShow;
   genres: { id: number; name: string }[];
-  onHover: (show: any) => void;
-  onClick: (show: any) => void;
+  onHover: (show: EnhancedShow | null) => void;
+  onClick: (show: EnhancedShow) => void;
   isHovered?: boolean;
+  active?: boolean;
+  id: string; // for aria-activedescendant target
 }
 
-export function SearchResultCard({ show, genres, onHover, onClick, isHovered }: SearchResultCardProps) {
+export function SearchResultCard({ show, genres, onHover, onClick, isHovered, active, id }: SearchResultCardProps) {
   const title = show.title || show.name || 'Unknown Title';
   const posterUrl = show.poster_path
     ? `https://image.tmdb.org/t/p/w92${show.poster_path}`
@@ -34,13 +26,30 @@ export function SearchResultCard({ show, genres, onHover, onClick, isHovered }: 
     genres.find(g => g.id === id)?.name
   ).filter(Boolean) || [];
 
+  const onKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      onClick(show);
+    }
+  };
+
   return (
     <div
-      className={`flex items-center gap-3 p-3 cursor-pointer transition-all duration-200 rounded-lg ${isHovered ? 'bg-white/10' : 'hover:bg-white/5'
-        }`}
+      id={id}
+      role="option"
+      aria-selected={!!active}
+      tabIndex={-1}
+      className={`flex items-center gap-3 p-3 cursor-pointer transition-colors duration-150 rounded-lg outline-none ${
+        active
+          ? 'bg-white/20 ring-2 ring-cyan-500/70'
+          : isHovered
+            ? 'bg-white/10 ring-1 ring-cyan-500/40'
+            : 'hover:bg-white/5'
+      }`}
       onMouseEnter={() => onHover(show)}
       onMouseLeave={() => onHover(null)}
       onClick={() => onClick(show)}
+      onKeyDown={onKeyDown}
     >
       {/* Poster */}
       <div className="flex-shrink-0 w-12 h-16 bg-slate-700 rounded overflow-hidden">

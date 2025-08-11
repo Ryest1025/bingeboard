@@ -171,11 +171,6 @@ export default function LoginSimple() {
         credentials: 'include'
       });
 
-      // Explicit raw payload JSON (sanitized password length only)
-      try {
-        console.log('🧪 Payload JSON:', JSON.stringify({ email: payload.email, passwordLength: (payload as any).password?.length }));
-      } catch {}
-
       const response = await fetch(endpoint, {
         method: "POST",
         headers: {

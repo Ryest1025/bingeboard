@@ -256,9 +256,9 @@ export default function ModernDiscover() {
 
   // Fetch popular shows from TMDB
   const { data: popularData } = useQuery({
-    queryKey: ["/api/content/discover-enhanced/tv"],
+    queryKey: ["/api/streaming/enhanced-search?type=tv"],
     queryFn: async () => {
-      const response = await fetch("/api/content/discover-enhanced/tv");
+      const response = await fetch("/api/streaming/enhanced-search?type=tv&includeStreaming=true");
       if (!response.ok) throw new Error("Failed to fetch popular shows");
       return response.json();
     },

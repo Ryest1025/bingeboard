@@ -8,38 +8,120 @@ import {
 } from '../clients/utellyClient.js';
 import { streamingCache } from '../cache/streaming-cache.js';
 
-interface EnhancedStreamingPlatform {
-  provider_id: number;
-  provider_name: string;
-  logo_path?: string;
-  type: 'sub' | 'buy' | 'rent' | 'free';
-  web_url?: string;
-  ios_url?: string;
-  android_url?: string;
-  price?: number;
-  format?: string;
-  source: 'tmdb' | 'watchmode' | 'utelly';
-  affiliate_supported: boolean;
-  commission_rate?: number;
+/**
+ * Normalized streaming platform coming from TMDB, Watchmode and Utelly.
+ * Marked readonly to prevent accidental mutation after aggregation / caching.
+ */
+export interface EnhancedStreamingPlatform {
+  readonly provider_id: number;
+  readonly provider_name: string;
+  readonly logo_path?: string;
+  readonly type: 'sub' | 'buy' | 'rent' | 'free';
+  readonly web_url?: string;
+  readonly ios_url?: string;
+  readonly android_url?: string;
+  readonly price?: number;
+  readonly format?: string;
+  readonly source: 'tmdb' | 'watchmode' | 'utelly';
+  readonly affiliate_supported: boolean;
+  readonly commission_rate?: number;
 }
 
 interface StreamingAvailabilityResponse {
-  tmdbId: number;
-  title: string;
-  platforms: EnhancedStreamingPlatform[];
-  totalPlatforms: number;
-  affiliatePlatforms: number;
-  premiumPlatforms: number;
-  freePlatforms: number;
-  sources: {
+  readonly tmdbId: number;
+  readonly title: string;
+  readonly platforms: EnhancedStreamingPlatform[];
+  readonly totalPlatforms: number;
+  readonly affiliatePlatforms: number;
+  readonly premiumPlatforms: number;
+  readonly freePlatforms: number;
+  readonly sources: {
     tmdb: boolean;
     watchmode: boolean;
     utelly: boolean;
   };
 }
 
+// Subset of TMDB watch provider response we rely upon (keeps external dependency light)
+interface TMDBWatchProvidersResponse {
+  results?: Record<string, {
+    flatrate?: Array<{ provider_id: number; provider_name: string; logo_path?: string }>;
+    buy?: Array<{ provider_id: number; provider_name: string; logo_path?: string }>;
+    rent?: Array<{ provider_id: number; provider_name: string; logo_path?: string }>;
+  }>;
+}
+
+// Simple logger interface for injection / test mocking
+export interface Logger {
+  info(message?: any, ...optional: any[]): void;
+  warn(message?: any, ...optional: any[]): void;
+  error(message?: any, ...optional: any[]): void;
+  debug?(message?: any, ...optional: any[]): void;
+  log?(message?: any, ...optional: any[]): void;
+}
+
+// Export normalization helper for tests & external consumers (kept pure)
+export function normalizePlatformName(name: string): string {
+  const normalizations: Record<string, string> = {
+    'Disney Plus': 'Disney+',
+    'Amazon Prime': 'Amazon Prime Video',
+    'Apple TV Plus': 'Apple TV+',
+    'Paramount Plus': 'Paramount+',
+    'HBO Max': 'Max',
+    'Peacock Premium': 'Peacock',
+    'YouTube TV': 'YouTube Premium'
+  };
+  return normalizations[name] || name;
+}
+
 export class MultiAPIStreamingService {
   private static tmdbService = new TMDBService();
+  // Pluggable logger (defaults to console) so production can inject structured logger
+  private static logger: Logger = console;
+
+  // Concurrency limiter (simple semaphore) configurable via env STREAMING_CONCURRENCY
+  private static maxConcurrency = parseInt(process.env.STREAMING_CONCURRENCY || '5', 10);
+  private static activeCount = 0;
+  private static queue: Array<() => void> = [];
+  private static batchDelayMs = parseInt(process.env.STREAMING_BATCH_DELAY_MS || '0', 10);
+  private static batchSizeOverride = parseInt(process.env.STREAMING_BATCH_SIZE || '0', 10);
+
+  private static runWithLimit<T>(fn: () => Promise<T>): Promise<T> {
+    if (this.activeCount < this.maxConcurrency) {
+      this.activeCount++;
+      return fn().finally(() => {
+        this.activeCount--;
+        const next = this.queue.shift();
+        if (next) next();
+      });
+    }
+    return new Promise<T>(resolve => {
+      this.queue.push(() => {
+        this.activeCount++;
+        fn().then(resolve).catch((err) => { throw err; }).finally(() => {
+          this.activeCount--;
+          const next = this.queue.shift();
+          if (next) next();
+        });
+      });
+    });
+  }
+
+  /** Inject custom logger */
+  static setLogger(logger: Logger) {
+    this.logger = logger;
+  }
+
+  /** Adjust concurrency at runtime */
+  static setConcurrency(limit: number) {
+    if (limit > 0) this.maxConcurrency = limit;
+  }
+
+  /** Configure batch delay & preferred batch size (for external tuning) */
+  static setBatchConfig({ delayMs, batchSize }: { delayMs?: number; batchSize?: number }) {
+    if (typeof delayMs === 'number' && delayMs >= 0) this.batchDelayMs = delayMs;
+    if (typeof batchSize === 'number' && batchSize > 0) this.batchSizeOverride = batchSize;
+  }
 
   // Affiliate commission rates for different platforms
   private static affiliateCommissions = {
@@ -72,19 +154,7 @@ export class MultiAPIStreamingService {
   }
 
   // Normalize platform names across different APIs
-  private static normalizePlatformName(name: string): string {
-    const normalizations: Record<string, string> = {
-      'Disney Plus': 'Disney+',
-      'Amazon Prime': 'Amazon Prime Video',
-      'Apple TV Plus': 'Apple TV+',
-      'Paramount Plus': 'Paramount+',
-      'HBO Max': 'Max',
-      'Peacock Premium': 'Peacock',
-      'YouTube TV': 'YouTube Premium'
-    };
-
-    return normalizations[name] || name;
-  }
+  private static normalizePlatformName(name: string): string { return normalizePlatformName(name); }
 
   // Convert Utelly results to our enhanced format
   private static convertUtellyResults(utellyResults: UtellyResult[]): EnhancedStreamingPlatform[] {
@@ -110,14 +180,18 @@ export class MultiAPIStreamingService {
     return platforms;
   }
 
-  // Get comprehensive streaming availability from all APIs
+  /**
+   * Get comprehensive streaming availability combining TMDB, Watchmode & Utelly.
+   * Cache key: (tmdbId, mediaType) – title / imdbId are assumed stable for a TMDB id+type.
+   * If that assumption changes (e.g. localized title variants), expand cache key.
+   */
   static async getComprehensiveAvailability(
     tmdbId: number,
     title: string,
     mediaType: 'movie' | 'tv' = 'tv',
     imdbId?: string
   ): Promise<StreamingAvailabilityResponse> {
-    // 🚀 Check cache first for performance boost
+    // 🚀 Cache lookup (see cache key note above)
     const cachedResult = streamingCache.get(tmdbId, mediaType);
     if (cachedResult) {
       return cachedResult;
@@ -126,25 +200,26 @@ export class MultiAPIStreamingService {
     const allPlatforms: EnhancedStreamingPlatform[] = [];
     const sources = { tmdb: false, watchmode: false, utelly: false };
 
-    // 1. Get TMDB watch providers
+    // 1. Get TMDB watch providers (normalize type based on flatrate|buy|rent arrays)
     try {
-      const tmdbData = await this.tmdbService.getWatchProviders(mediaType, tmdbId) as any;
-      if (tmdbData.results?.US?.flatrate || tmdbData.results?.US?.buy || tmdbData.results?.US?.rent) {
+      const tmdbData = await this.tmdbService.getWatchProviders(mediaType, tmdbId) as TMDBWatchProvidersResponse;
+      const us = tmdbData.results?.US;
+      // Build unified list with explicit type mapping
+      const tmdbProviders = [
+        ...(us?.flatrate?.map(p => ({ ...p, type: 'sub' as const })) || []),
+        ...(us?.buy?.map(p => ({ ...p, type: 'buy' as const })) || []),
+        ...(us?.rent?.map(p => ({ ...p, type: 'rent' as const })) || [])
+      ];
+
+      if (tmdbProviders.length > 0) {
         sources.tmdb = true;
-
-        const tmdbProviders = [
-          ...(tmdbData.results.US.flatrate || []),
-          ...(tmdbData.results.US.buy || []),
-          ...(tmdbData.results.US.rent || [])
-        ];
-
-        tmdbProviders.forEach((provider: any) => {
+        tmdbProviders.forEach(provider => {
           const normalizedName = this.normalizePlatformName(provider.provider_name);
           allPlatforms.push({
             provider_id: provider.provider_id,
             provider_name: normalizedName,
             logo_path: provider.logo_path,
-            type: 'sub', // TMDB doesn't specify type clearly
+            type: provider.type,
             source: 'tmdb',
             affiliate_supported: this.hasAffiliateSupport(normalizedName),
             commission_rate: this.getCommissionRate(normalizedName)
@@ -152,7 +227,7 @@ export class MultiAPIStreamingService {
         });
       }
     } catch (error) {
-      console.warn('TMDB watch providers failed:', error);
+      this.logger.warn('TMDB watch providers failed:', error);
     }
 
     // 2. Get Watchmode availability
@@ -173,7 +248,7 @@ export class MultiAPIStreamingService {
         });
       }
     } catch (error) {
-      console.warn('Watchmode availability failed:', error);
+      this.logger.warn('Watchmode availability failed:', error);
     }
 
     // 3. Get Utelly availability
@@ -191,14 +266,16 @@ export class MultiAPIStreamingService {
         allPlatforms.push(...utellyPlatforms);
       }
     } catch (error) {
-      console.warn('Utelly availability failed:', error);
+      this.logger.warn('Utelly availability failed:', error);
     }
 
     // 4. Deduplicate platforms by name (keep the one with most data)
     const platformMap = new Map<string, EnhancedStreamingPlatform>();
 
     allPlatforms.forEach(platform => {
-      const key = platform.provider_name.toLowerCase();
+      // Dedupe key includes source + optional domain (if web_url) to reduce accidental collisions
+      const domain = (platform as any).web_url ? (()=>{ try { return new URL((platform as any).web_url).hostname; } catch { return ''; } })() : '';
+      const key = `${platform.provider_name.toLowerCase()}::${platform.source}${domain ? '::'+domain : ''}`;
       const existing = platformMap.get(key);
 
       if (!existing || this.getPlatformScore(platform) > this.getPlatformScore(existing)) {
@@ -209,11 +286,11 @@ export class MultiAPIStreamingService {
     const finalPlatforms = Array.from(platformMap.values());
 
     // 5. Calculate statistics
-    const affiliatePlatforms = finalPlatforms.filter(p => p.affiliate_supported).length;
-    const premiumPlatforms = finalPlatforms.filter(p => p.type === 'sub' || p.price && p.price > 0).length;
-    const freePlatforms = finalPlatforms.filter(p => p.type === 'free' || (p.price && p.price === 0)).length;
+  const affiliatePlatforms = finalPlatforms.filter(p => p.affiliate_supported).length;
+  const premiumPlatforms = finalPlatforms.filter(p => p.type === 'sub' || (p.price !== undefined && p.price > 0)).length;
+  const freePlatforms = finalPlatforms.filter(p => p.type === 'free' || (p.price !== undefined && p.price === 0)).length;
 
-    const result = {
+  const result: StreamingAvailabilityResponse = {
       tmdbId,
       title,
       platforms: finalPlatforms,
@@ -276,43 +353,36 @@ export class MultiAPIStreamingService {
     };
   }
 
-  // Get availability for multiple titles (batch processing)
+  /**
+   * Batch availability with simple concurrency (batchSize). For heavier load, replace with
+   * a queue + token bucket (TODO: integrate generic rate limiter).
+   */
   static async getBatchAvailability(
     titles: Array<{ tmdbId: number; title: string; mediaType: 'movie' | 'tv'; imdbId?: string }>
   ): Promise<Map<number, StreamingAvailabilityResponse>> {
     const results = new Map<number, StreamingAvailabilityResponse>();
-
-    // Process in batches to respect API rate limits
-    const batchSize = 5;
+    const batchSize = this.batchSizeOverride > 0 ? this.batchSizeOverride : titles.length;
     for (let i = 0; i < titles.length; i += batchSize) {
-      const batch = titles.slice(i, i + batchSize);
-      const promises = batch.map(async ({ tmdbId, title, mediaType, imdbId }) => {
-        try {
-          const availability = await this.getComprehensiveAvailability(tmdbId, title, mediaType, imdbId);
-          return { tmdbId, availability };
-        } catch (error) {
-          console.error(`Failed to get availability for ${title}:`, error);
-          return { tmdbId, availability: null };
-        }
-      });
-
-      const batchResults = await Promise.allSettled(promises);
-      batchResults.forEach((result) => {
-        if (result.status === 'fulfilled' && result.value.availability) {
-          results.set(result.value.tmdbId, result.value.availability);
-        }
-      });
-
-      // Add delay between batches to respect rate limits
-      if (i + batchSize < titles.length) {
-        await new Promise(resolve => setTimeout(resolve, 500));
+      const slice = titles.slice(i, i + batchSize);
+      const wrapped = slice.map(({ tmdbId, title, mediaType, imdbId }) =>
+        this.runWithLimit(() => this.getComprehensiveAvailability(tmdbId, title, mediaType, imdbId)
+          .then(av => ({ tmdbId, av }))
+          .catch(err => { this.logger.error(`Failed availability for ${title}`, err); return { tmdbId, av: null as any }; })
+        )
+      );
+      const settled = await Promise.all(wrapped);
+      settled.forEach(r => { if (r.av) results.set(r.tmdbId, r.av); });
+      if (this.batchDelayMs > 0 && i + batchSize < titles.length) {
+        await new Promise(r => setTimeout(r, this.batchDelayMs));
       }
     }
-
     return results;
   }
 
-  // Get platform-specific affiliate URL with tracking
+  /**
+   * Generate platform-specific affiliate URL. If platform supports affiliate commissions
+   * but no explicit template exists, append a generic ref parameter.
+   */
   static generateAffiliateUrl(
     platform: EnhancedStreamingPlatform,
     userId: string,
@@ -326,7 +396,7 @@ export class MultiAPIStreamingService {
     const trackingId = this.generateTrackingId(userId, showId, platform.provider_name);
 
     // Platform-specific affiliate URL generation
-    const affiliateUrls: Record<string, (url: string, trackingId: string) => string> = {
+  const affiliateUrls: Record<string, (url: string, trackingId: string) => string> = {
       'Netflix': (url, id) => `${url}?trkid=BINGEBOARD_${id}`,
       'Amazon Prime Video': (url, id) => `${url}?tag=bingeboard-20&ref_=${id}`,
       'Hulu': (url, id) => `${url}?ref=BINGEBOARD_${id}`,
@@ -342,17 +412,44 @@ export class MultiAPIStreamingService {
       return affiliateGenerator(platform.web_url, trackingId);
     }
 
-    // Fallback to direct URL
-    return platform.web_url;
+  // Generic fallback for supported platforms without explicit mapping
+  const separator = platform.web_url.includes('?') ? '&' : '?';
+  const genericUrl = `${platform.web_url}${separator}ref=BINGEBOARD_${trackingId}`;
+  this.logger.info(`[affiliate] Generic affiliate URL applied for platform without template: ${platform.provider_name}`);
+  return genericUrl;
   }
 
   // Generate unique tracking ID
   private static generateTrackingId(userId: string, showId: number, platform: string): string {
     const timestamp = Date.now().toString(36);
-    const userHash = btoa(userId).slice(0, 6);
+    // Environment-agnostic unicode -> base64 short hash
+    const utf8ToBase64 = (str: string) => {
+      try {
+        if (typeof Buffer !== 'undefined') {
+          return Buffer.from(str, 'utf8').toString('base64').replace(/=+$/,'');
+        }
+      } catch { /* ignore */ }
+      try { return btoa(unescape(encodeURIComponent(str))); } catch { return btoa(str.replace(/[^\x00-\x7F]/g,'')); }
+    };
+    const userHash = utf8ToBase64(userId).slice(0,6);
     const showHash = showId.toString(36);
     const platformHash = platform.toLowerCase().replace(/\s+/g, '').slice(0, 4);
+    const randomHash = Math.random().toString(36).slice(2, 8);
+    return `${userHash}_${showHash}_${platformHash}_${timestamp}_${randomHash}`;
+  }
 
-    return `${userHash}_${showHash}_${platformHash}_${timestamp}`;
+  /** Public readonly access to platform scoring for tests */
+  static scorePlatformForTest(p: EnhancedStreamingPlatform) { return this.getPlatformScore(p); }
+
+  /** Expose cache stats for observability */
+  static getCacheStats() {
+    try {
+      if (typeof (streamingCache as any).getDetailedStats === 'function') {
+        return (streamingCache as any).getDetailedStats();
+      }
+      return (streamingCache as any).getStats?.() || {};
+    } catch {
+      return {};
+    }
   }
 }

@@ -1,25 +1,4 @@
-  // Debug: GET user by email (mask password hash)
-  app.get('/api/debug/user-by-email', async (req, res) => {
-    const email = req.query.email?.toString().trim();
-    if (!email) return res.status(400).json({ error: 'Missing email' });
-    try {
-      const user = await storage.getUserByEmail(email);
-      if (!user) return res.status(404).json({ error: 'User not found' });
-      // Mask password hash
-      const maskedUser = { ...user, passwordHash: user.passwordHash ? '***' + user.passwordHash.slice(-6) : null };
-      res.json({ user: maskedUser });
-    } catch (err) {
-      res.status(500).json({ error: 'Failed to fetch user' });
-    }
-  });
-
-  // Debug: Echo cookies and session user
-  app.get('/api/debug/echo-cookies', (req, res) => {
-    res.json({
-      cookies: req.headers.cookie || null,
-      sessionUser: (req as any).session?.user || null
-    });
-  });
+// (Debug endpoints registered inside registerRoutes to avoid top-level app usage before definition)
 import type { Express } from "express";
 import { type Server } from "http";
 import path from "path";
@@ -461,7 +440,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // NEW: Combined genres endpoint merging TV + Movie genres to ensure broader coverage (Thriller, Romance, etc.)
   app.get('/api/content/genres-combined/list', async (_req, res) => {
     try {
-  console.log('🎬 Combined genres endpoint hit');
+      console.log('🎬 Combined genres endpoint hit');
       const tv = await tmdbService.getGenres('tv');
       const movie = await tmdbService.getGenres('movie');
       const map = new Map<number, string>();
@@ -476,9 +455,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         { id: 53, name: 'Thriller' }, // TMDB movie genre id
         { id: 10749, name: 'Romance' }
       ];
-      mustHave.forEach(g => { if (![...map.values()].some(v => v.toLowerCase() === g.name.toLowerCase())) map.set(g.id, g.name); });
+      mustHave.forEach(g => { if (!Array.from(map.values()).some(v => v.toLowerCase() === g.name.toLowerCase())) map.set(g.id, g.name); });
 
-      const genres = [...map.entries()].map(([id, name]) => ({ id, name })).sort((a, b) => a.name.localeCompare(b.name));
+      const genres = Array.from(map.entries()).map(([id, name]) => ({ id, name })).sort((a, b) => a.name.localeCompare(b.name));
       res.setHeader('Cache-Control', 'public, max-age=3600');
       res.json({ genres, source: 'combined', count: genres.length });
     } catch (e) {
@@ -495,8 +474,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const map = new Map<number, string>();
       const addAll = (arr: any) => Array.isArray(arr?.genres) && arr.genres.forEach((g: any) => { if (!map.has(g.id)) map.set(g.id, g.name); });
       addAll(tv); addAll(movie);
-      [{ id: 99999, name: 'Sports' }, { id: 53, name: 'Thriller' }, { id: 10749, name: 'Romance' }].forEach(g => { if (![...map.values()].some(v => v.toLowerCase() === g.name.toLowerCase())) map.set(g.id, g.name); });
-      const genres = [...map.entries()].map(([id, name]) => ({ id, name })).sort((a, b) => a.name.localeCompare(b.name));
+      [{ id: 99999, name: 'Sports' }, { id: 53, name: 'Thriller' }, { id: 10749, name: 'Romance' }].forEach(g => { if (!Array.from(map.values()).some(v => v.toLowerCase() === g.name.toLowerCase())) map.set(g.id, g.name); });
+      const genres = Array.from(map.entries()).map(([id, name]) => ({ id, name })).sort((a, b) => a.name.localeCompare(b.name));
       res.setHeader('Cache-Control', 'public, max-age=3600');
       res.json({ genres, source: 'combined-alias', count: genres.length });
     } catch (e) {
@@ -804,15 +783,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Enhanced multi-API search endpoint leveraging TMDB + streaming availability
   // GET /api/streaming/enhanced-search?query=...&type=multi|movie|tv
   app.get('/api/streaming/enhanced-search', async (req, res) => {
+    const startTime = Date.now();
+    const requestId = Math.random().toString(36).slice(2, 9);
+    
     try {
       const query = (req.query.query || req.query.q || '').toString().trim();
       const mediaType = (req.query.type || req.query.mediaType || 'multi').toString();
+      
+      console.log(`🔍 [${requestId}] Enhanced search started: query="${query}", type="${mediaType}"`);
+      
       if (!query || query.length < 2) {
+        console.log(`⚠️ [${requestId}] Query too short: "${query}"`);
         return res.json({ results: [] });
       }
 
       const searchResponse = await tmdbService.search(query, { mediaType: mediaType as any, page: 1 });
       const rawResults: any[] = (searchResponse.results || []).slice(0, 20);
+      
+      console.log(`📊 [${requestId}] TMDB returned ${rawResults.length} results`);
 
       // Enrich first 8 results with streaming data (performance conscious)
       const ENRICH_LIMIT = 8;
@@ -841,9 +829,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return base;
       }));
 
+      const duration = Date.now() - startTime;
+      console.log(`✅ [${requestId}] Enhanced search completed in ${duration}ms, enriched ${Math.min(ENRICH_LIMIT, rawResults.length)}/${rawResults.length} results`);
+
       res.json({ results: enriched });
     } catch (error) {
-      console.error('Enhanced streaming search error:', error);
+      const duration = Date.now() - startTime;
+      console.error(`❌ [${requestId}] Enhanced streaming search error after ${duration}ms:`, error);
       res.status(500).json({ message: 'Failed to perform enhanced streaming search' });
     }
   });
@@ -853,36 +845,96 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/streaming/enhanced-search', async (req, res) => {
     try {
       const filters = req.body || {};
-      const tmdbService = new TMDBService();
+      const type = (filters.type || filters.mediaType || 'multi').toString(); // tv | movie | multi
+      const includeStreaming = !!filters.includeStreaming;
 
-      const discoverParams: any = {
+      const baseDiscoverParams: any = {
         page: 1,
         sort_by: filters.sortBy || 'popularity.desc'
       };
-      if (filters.genres?.length > 0) discoverParams.with_genres = filters.genres.join(',');
-      if (filters.ratingRange) {
-        discoverParams['vote_average.gte'] = filters.ratingRange[0];
-        discoverParams['vote_average.lte'] = filters.ratingRange[1];
+      if (Array.isArray(filters.genres) && filters.genres.length > 0) {
+        const genreIds = filters.genres.map((g: any) => g.id ? g.id : g).filter((g: any) => !!g);
+        if (genreIds.length) baseDiscoverParams.with_genres = genreIds.join(',');
       }
-      if (filters.releaseYear) discoverParams.primary_release_year = filters.releaseYear;
-      if (filters.providers?.length > 0) {
-        discoverParams.with_watch_providers = filters.providers.join('|');
-        discoverParams.watch_region = 'US';
+      if (Array.isArray(filters.ratingRange) && filters.ratingRange.length === 2) {
+        baseDiscoverParams['vote_average.gte'] = filters.ratingRange[0];
+        baseDiscoverParams['vote_average.lte'] = filters.ratingRange[1];
+      }
+      if (filters.releaseYear) {
+        baseDiscoverParams.primary_release_year = filters.releaseYear; // movies
+        baseDiscoverParams.first_air_date_year = filters.releaseYear;  // tv
+      }
+      if (Array.isArray(filters.providers) && filters.providers.length > 0) {
+        baseDiscoverParams.with_watch_providers = filters.providers.join('|');
+        baseDiscoverParams.watch_region = 'US';
       }
 
-      const [tvResults, movieResults] = await Promise.all([
-        tmdbService.discover('tv', discoverParams),
-        tmdbService.discover('movie', discoverParams)
-      ]);
+      // Helper to run discover for a media type
+      const runDiscover = async (mt: 'tv' | 'movie') => {
+        try {
+          return await tmdbService.discover(mt, baseDiscoverParams);
+        } catch (e) {
+          console.warn(`⚠️ Discover failed for ${mt}:`, (e as Error).message);
+          return { results: [], total_results: 0 };
+        }
+      };
 
-      const combinedResults = [
-        ...(tvResults.results || []).map((item: any) => ({ ...item, media_type: 'tv' })),
-        ...(movieResults.results || []).map((item: any) => ({ ...item, media_type: 'movie' }))
-      ].slice(0, 20);
+      let tvResults: any = { results: [], total_results: 0 };
+      let movieResults: any = { results: [], total_results: 0 };
+      if (type === 'tv') {
+        tvResults = await runDiscover('tv');
+      } else if (type === 'movie') {
+        movieResults = await runDiscover('movie');
+      } else { // multi
+        [tvResults, movieResults] = await Promise.all([runDiscover('tv'), runDiscover('movie')]);
+      }
+
+      let combinedResults: any[] = [
+        ...(tvResults.results || []).map((r: any) => ({ ...r, media_type: 'tv' })),
+        ...(movieResults.results || []).map((r: any) => ({ ...r, media_type: 'movie' }))
+      ];
+
+      // Basic distinct by TMDB id + media_type
+      const seen = new Set<string>();
+      combinedResults = combinedResults.filter(r => {
+        const key = `${r.media_type}_${r.id}`;
+        if (seen.has(key)) return false;
+        seen.add(key); return true;
+      }).slice(0, 40);
+
+      // Optional streaming enrichment (first 8 items)
+      if (includeStreaming) {
+        const ENRICH_LIMIT = 8;
+        await Promise.all(combinedResults.slice(0, ENRICH_LIMIT).map(async (item, index) => {
+          try {
+            const streamingData = await MultiAPIStreamingService.getComprehensiveAvailability(
+              item.id,
+              item.title || item.name || '',
+              item.media_type === 'movie' ? 'movie' : 'tv'
+            );
+            item.streaming = streamingData.platforms || [];
+            item.streamingStats = {
+              totalPlatforms: streamingData.totalPlatforms,
+              affiliatePlatforms: streamingData.affiliatePlatforms,
+              premiumPlatforms: streamingData.premiumPlatforms,
+              freePlatforms: streamingData.freePlatforms,
+              sources: streamingData.sources
+            };
+          } catch (e) {
+            if (index < 3) console.warn('⚠️ Streaming enrich failed:', (e as Error).message);
+          }
+        }));
+      }
 
       res.json({
         results: combinedResults,
-        totalResults: (tvResults.total_results || 0) + (movieResults.total_results || 0)
+        totalResults: (tvResults.total_results || 0) + (movieResults.total_results || 0),
+        enriched: includeStreaming,
+        stats: {
+          tvCount: tvResults.results?.length || 0,
+          movieCount: movieResults.results?.length || 0,
+          returned: combinedResults.length
+        }
       });
     } catch (error) {
       console.error('Error performing streaming enhanced filtered search:', error);
@@ -893,37 +945,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Configure multer for file uploads
   const upload = multer({
     storage: multer.memoryStorage(),
-    limits: {
-      fileSize: 10 * 1024 * 1024, // 10MB limit
-    },
-    fileFilter: (req, file, cb) => {
-      if (file.mimetype === 'text/csv' || file.mimetype === 'application/json' ||
-        file.originalname.endsWith('.csv') || file.originalname.endsWith('.json')) {
+    limits: { fileSize: 10 * 1024 * 1024 },
+    fileFilter: (_req, file, cb) => {
+      if (
+        file.mimetype === 'text/csv' ||
+        file.mimetype === 'application/json' ||
+        file.originalname.endsWith('.csv') ||
+        file.originalname.endsWith('.json')
+      ) {
         cb(null, true);
       } else {
         cb(new Error('Only CSV and JSON files are allowed'));
       }
-    },
+    }
   });
 
   // Test endpoint to verify connectivity
-  app.get('/api/test', (req, res) => {
+  app.get('/api/test', (_req, res) => {
     console.log('Test endpoint called');
     res.json({ message: 'API is working', timestamp: Date.now() });
   });
-
-
 
   // Firebase configuration test endpoint
   app.get('/api/test-firebase', (req, res) => {
     const firebaseConfig = {
       apiKey: process.env.VITE_FIREBASE_API_KEY ? 'Set' : 'Missing',
-      authDomain: `${process.env.VITE_FIREBASE_PROJECT_ID}.firebaseapp.com`,
-      projectId: process.env.VITE_FIREBASE_PROJECT_ID,
+      authDomain: process.env.VITE_FIREBASE_PROJECT_ID ? `${process.env.VITE_FIREBASE_PROJECT_ID}.firebaseapp.com` : 'Missing',
+      projectId: process.env.VITE_FIREBASE_PROJECT_ID || 'Missing',
       appId: process.env.VITE_FIREBASE_APP_ID ? 'Set' : 'Missing',
       currentDomain: req.get('host')
     };
-
     res.json({
       message: 'Firebase configuration check',
       config: firebaseConfig,
@@ -932,36 +983,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // 🔐 Session Status Endpoint - Checks if user has valid session
-  // This endpoint allows checking session without full authentication
   app.get('/api/auth/session', async (req: any, res) => {
     try {
       console.log('🔍 Session check endpoint called');
-      console.log('📋 Session exists:', !!(req as any).session);
-      console.log('📋 Session user:', (req as any).session?.user?.email);
-
-      if ((req as any).session?.user) {
-        const sessionUser = (req as any).session.user;
-        console.log('✅ Valid session found for:', sessionUser.email);
-        res.json({
-          authenticated: true,
-          user: sessionUser
-        });
-      } else {
-        console.log('❌ No valid session found');
-        res.status(401).json({
-          authenticated: false,
-          message: 'No valid session'
-        });
+      console.log('📋 Session exists:', !!req.session);
+      console.log('📋 Session user:', req.session?.user?.email);
+      if (req.session?.user) {
+        return res.json({ authenticated: true, user: req.session.user });
       }
+      return res.status(401).json({ authenticated: false, message: 'No valid session' });
     } catch (error) {
       console.error('❌ Session check error:', error);
-      res.status(500).json({
-        authenticated: false,
-        message: 'Session check failed'
-      });
+      res.status(500).json({ authenticated: false, message: 'Session check failed' });
     }
   });
-
   // 🔐 CRITICAL AUTHENTICATION ENDPOINT - Session Validation
   // 🚨 PROTECTED: This endpoint validates local sessions and is ESSENTIAL
   // for the useAuth hook's local session check (first priority)
@@ -970,7 +1005,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       console.log('User object in request:', JSON.stringify(req.user, null, 2));
       const userId = req.user?.claims?.sub || req.user?.id;
-
       if (!userId) {
         console.error('No user ID found in session');
         return res.status(401).json({ message: "No user ID in session" });
@@ -1518,6 +1552,124 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (err: any) {
       console.error('❌ /api/debug/user-by-email error', err);
       res.status(500).json({ error: err.message });
+    }
+  });
+
+  // Debug: echo cookies endpoint for session debugging
+  app.get('/api/debug/echo-cookies', (req, res) => {
+    try {
+      console.log('🍪 Debug echo-cookies endpoint called');
+      
+      const cookiesInfo = {
+        headers: {
+          cookie: req.headers.cookie || null,
+          authorization: req.headers.authorization || null,
+          'user-agent': req.headers['user-agent'] || null,
+          origin: req.headers.origin || null,
+          referer: req.headers.referer || null
+        },
+        parsedCookies: req.cookies || {},
+        sessionInfo: {
+          sessionID: (req as any).sessionID || null,
+          sessionExists: !!(req as any).session,
+          sessionUser: (req as any).session?.user?.email || null,
+          sessionClaims: (req as any).session?.user?.claims?.sub || null
+        },
+        rawCookieString: req.headers.cookie || 'No cookies',
+        timestamp: new Date().toISOString()
+      };
+
+      console.log('🍪 Cookie debug info:', cookiesInfo);
+      res.json(cookiesInfo);
+    } catch (err: any) {
+      console.error('❌ /api/debug/echo-cookies error', err);
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  // Debug: streaming sources breakdown endpoint
+  app.get('/api/debug/streaming-sources', async (req, res) => {
+    try {
+      const { tmdbId, title, mediaType = 'tv', imdbId } = req.query;
+      
+      if (!tmdbId) {
+        return res.status(400).json({ error: 'tmdbId parameter is required' });
+      }
+
+      if (!title) {
+        return res.status(400).json({ error: 'title parameter is required' });
+      }
+
+      console.log(`🔍 Debug streaming sources for TMDB ID ${tmdbId}: "${title}" (${mediaType})`);
+
+      // Get comprehensive availability with full source breakdown
+      const startTime = Date.now();
+      const streamingData = await MultiAPIStreamingService.getComprehensiveAvailability(
+        parseInt(tmdbId as string),
+        title as string,
+        mediaType as 'movie' | 'tv',
+        imdbId as string
+      );
+      const duration = Date.now() - startTime;
+
+      // Detailed source breakdown for debugging
+      const sourceBreakdown = {
+        tmdb: {
+          platforms: streamingData.platforms.filter(p => p.source === 'tmdb'),
+          count: streamingData.platforms.filter(p => p.source === 'tmdb').length
+        },
+        watchmode: {
+          platforms: streamingData.platforms.filter(p => p.source === 'watchmode'),
+          count: streamingData.platforms.filter(p => p.source === 'watchmode').length
+        },
+        utelly: {
+          platforms: streamingData.platforms.filter(p => p.source === 'utelly'),
+          count: streamingData.platforms.filter(p => p.source === 'utelly').length
+        },
+        other: {
+          platforms: streamingData.platforms.filter(p => !['tmdb', 'watchmode', 'utelly'].includes(p.source || '')),
+          count: streamingData.platforms.filter(p => !['tmdb', 'watchmode', 'utelly'].includes(p.source || '')).length
+        }
+      };
+
+      res.json({
+        input: {
+          tmdbId: parseInt(tmdbId as string),
+          title: title as string,
+          mediaType: mediaType as string,
+          imdbId: imdbId as string || null
+        },
+        timing: {
+          durationMs: duration,
+          timestamp: new Date().toISOString()
+        },
+        summary: {
+          totalPlatforms: streamingData.totalPlatforms,
+          affiliatePlatforms: streamingData.affiliatePlatforms,
+          premiumPlatforms: streamingData.premiumPlatforms,
+          freePlatforms: streamingData.freePlatforms,
+          sources: streamingData.sources
+        },
+        sourceBreakdown,
+        allPlatforms: streamingData.platforms.map(p => ({
+          provider_name: p.provider_name,
+          provider_id: p.provider_id,
+          source: p.source || 'unknown',
+          logo_path: p.logo_path,
+          // Only include fields defined in EnhancedStreamingPlatform interface
+          type: p.type,
+          web_url: (p as any).web_url,
+          affiliate_supported: (p as any).affiliate_supported,
+          commission_rate: (p as any).commission_rate
+        })),
+        rawResponse: streamingData
+      });
+    } catch (error) {
+      console.error('❌ Debug streaming sources error:', error);
+      res.status(500).json({ 
+        error: 'Failed to fetch streaming sources debug info',
+        message: (error as Error).message 
+      });
     }
   });
 
@@ -2976,6 +3128,84 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error fetching spotlight data:', error);
       res.status(500).json({ error: 'Failed to fetch spotlight data' });
+    }
+  });
+
+  // ---------------------------------------------------------------------------
+  // Missing enhanced trending endpoint expected by several frontend pages
+  // GET /api/content/trending-enhanced?mediaType=tv|movie|all&timeWindow=day|week&includeStreaming=true&genre=ID&network=NETWORK_ID
+  // Returns a normalized shape: { results: [...]} similar to other list endpoints
+  // NOTE: This intentionally reuses tmdbService.getTrending and optional enrichment
+  // to avoid duplicating logic from /api/trending/:mediaType/:timeWindow while
+  // adding lightweight server-side filtering for genre and network.
+  // ---------------------------------------------------------------------------
+  app.get('/api/content/trending-enhanced', async (req, res) => {
+    try {
+      const mediaType = (req.query.mediaType || req.query.type || 'tv').toString() as 'tv' | 'movie' | 'all';
+      const timeWindow = (req.query.timeWindow || 'day').toString() as 'day' | 'week';
+      const includeStreaming = req.query.includeStreaming === 'true';
+      const genreFilter = req.query.genre || req.query.with_genres; // single id supported for now
+      const networkFilter = req.query.network; // TMDB network id
+
+      console.log(`🔥 /api/content/trending-enhanced -> mediaType=${mediaType} timeWindow=${timeWindow} includeStreaming=${includeStreaming} genre=${genreFilter || 'none'} network=${networkFilter || 'none'}`);
+
+      // Fetch trending (if all => combine tv + movie like spotlight)
+      let baseResults: any[] = [];
+      if (mediaType === 'all') {
+        const [tv, movie] = await Promise.all([
+          tmdbService.getTrending('tv', timeWindow),
+          tmdbService.getTrending('movie', timeWindow)
+        ]);
+        baseResults = [ ...(tv.results || []).map((r:any)=>({...r, media_type: 'tv'})), ...(movie.results || []).map((r:any)=>({...r, media_type: 'movie'})) ];
+      } else {
+        const single = await tmdbService.getTrending(mediaType, timeWindow);
+        baseResults = (single.results || []).map((r:any)=> ({...r, media_type: r.media_type || (r.title ? 'movie':'tv')}));
+      }
+
+      // Basic filtering by genre id (single). Accept comma but treat first for simplicity.
+      let filtered = baseResults;
+      if (genreFilter) {
+        const firstGenre = genreFilter.toString().split(',')[0];
+        filtered = filtered.filter(r => Array.isArray(r.genre_ids) && r.genre_ids.includes(parseInt(firstGenre)));
+      }
+
+      // Basic filtering by network (only applies to tv). Requires detail lookup if networks missing.
+      if (networkFilter) {
+        const networkIdNum = parseInt(networkFilter.toString());
+        // If some tv items lack networks array, leave them (avoid N extra detail calls). Only filter when 'origin_country' or known network id available in an embedded field (rare). For accurate network filtering the client should call discover.
+        filtered = filtered.filter(r => r.media_type !== 'tv' || !networkIdNum || !r.networks || r.networks.some((n:any)=> n?.id === networkIdNum));
+      }
+
+      // Optional streaming enrichment (reuse approach from /api/trending route)
+      if (includeStreaming && filtered.length) {
+        const ENRICH_LIMIT = Math.min(8, filtered.length);
+        console.log(`🎬 Enriching first ${ENRICH_LIMIT} trending items with streaming data (enhanced endpoint)`);
+        await Promise.all(filtered.slice(0, ENRICH_LIMIT).map(async (item, idx) => {
+          try {
+            const streamingData = await MultiAPIStreamingService.getComprehensiveAvailability(
+              item.id,
+              item.title || item.name || '',
+              item.media_type === 'movie' ? 'movie' : 'tv'
+            );
+            item.streamingPlatforms = streamingData.platforms;
+            item.streaming = streamingData.platforms;
+            item.streamingStats = {
+              totalPlatforms: streamingData.totalPlatforms,
+              affiliatePlatforms: streamingData.affiliatePlatforms,
+              premiumPlatforms: streamingData.premiumPlatforms,
+              freePlatforms: streamingData.freePlatforms,
+              sources: streamingData.sources
+            };
+          } catch (e) {
+            if (idx < 3) console.warn('⚠️ Streaming enrich failed (enhanced trending):', (e as Error).message);
+          }
+        }));
+      }
+
+      res.json({ results: filtered.slice(0, 40) });
+    } catch (error) {
+      console.error('Error in /api/content/trending-enhanced:', error);
+      res.status(500).json({ error: 'Failed to fetch enhanced trending content' });
     }
   });
 
