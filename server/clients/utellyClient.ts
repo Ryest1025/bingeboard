@@ -21,6 +21,7 @@ export interface UtellyResult {
   weight: number;
 }
 
+/* ignore-unused-export (used by multiAPIStreamingService, tests, or for future extensibility) */
 export interface UtellyResponse {
   results: UtellyResult[];
   collection: {
@@ -100,6 +101,7 @@ export async function getStreamingByImdbId(
   }
 }
 
+/* ignore-unused-export (used by multiAPIStreamingService, tests, or for future extensibility) */
 /**
  * Extract unique streaming services from results
  */
@@ -117,6 +119,7 @@ export function getUniqueStreamingServices(results: UtellyResult[]): StreamingLo
   return Array.from(serviceMap.values());
 }
 
+/* ignore-unused-export (used by multiAPIStreamingService, tests, or for future extensibility) */
 /**
  * Popular streaming service names for filtering
  */
@@ -135,6 +138,7 @@ export const POPULAR_STREAMING_SERVICES = [
   'tubi',
 ];
 
+/* ignore-unused-export (used by multiAPIStreamingService, tests, or for future extensibility) */
 /**
  * Filter results by streaming service
  */
