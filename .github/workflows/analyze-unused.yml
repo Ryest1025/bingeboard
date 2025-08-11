@@ -90,6 +90,13 @@ jobs:
           echo '--- analyzer summary (summary-latest.txt) ---'
           if [ -f analysis/summary-latest.txt ]; then cat analysis/summary-latest.txt; else echo 'No summary file'; fi
 
+      - name: Upload summary snippet artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: unused-code-summary-${{ matrix.node-version }}
+          path: analysis/summary-latest.txt
+          if-no-files-found: warn
+
       - name: Build inline summary (best-effort)
         if: github.event_name == 'pull_request'
         id: summary
