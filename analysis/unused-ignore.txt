@@ -1,5 +1,9 @@
 # Lines here (substr match) will be filtered out of ts-prune output before diffing
-# Use for intentional demo/story exports, types, temporary placeholders.
+# Prefer naming conventions instead of listing individual symbols when possible:
+#   __experimental_  (temporary prototypes)
+#   _unused_         (short-lived staging code)
+#   Internal         (internal scaffolding awaiting integration)
+# Inline marker alternative: /* ignore-unused-export */ just above an export with a short reason.
 # Example patterns:
 # story
 # *.stories.tsx (NOTE: glob not supported; use literal fragments or exact lines.)
