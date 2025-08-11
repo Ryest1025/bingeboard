@@ -1,5 +1,15 @@
 # BingeBoard - TV Show Tracking Social Platform
 
+<!-- CI / Quality Status Badges -->
+<p align="left">
+   <a href="https://github.com/Ryest1025/bingeboard/actions/workflows/pages.yml">
+      <img alt="Pages Deploy" src="https://github.com/Ryest1025/bingeboard/actions/workflows/pages.yml/badge.svg" />
+   </a>
+   <a href="https://github.com/Ryest1025/bingeboard/actions/workflows/analyze-unused.yml">
+      <img alt="Analyze Unused Code" src="https://github.com/Ryest1025/bingeboard/actions/workflows/analyze-unused.yml/badge.svg" />
+   </a>
+</p>
+
 A cutting-edge social TV show tracking platform with robust multi-provider authentication and seamless user experience.
 
 ## 🚀 Features
