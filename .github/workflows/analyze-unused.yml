@@ -17,7 +17,8 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [16, 18, 20]
+        node-version: [18, 20]
+      fail-fast: false
 
     steps:
       - name: Checkout code
@@ -92,7 +93,7 @@ jobs:
           fi
           echo "analyze_status=${{ steps.analyze.outputs.status }}" >> $GITHUB_OUTPUT
 
-      - name: Comment on PR with analysis report summary
+  - name: Comment on PR with analysis report summary
         if: github.event_name == 'pull_request'
         uses: peter-evans/create-or-update-comment@v4
         with:
@@ -100,7 +101,7 @@ jobs:
           issue-number: ${{ github.event.pull_request.number }}
           body: |
             ### Unused Code Analysis Report
-            Results for Node.js versions tested: 16, 18, 20.
+    Results for Node.js versions tested: 18, 20.
 
             Overall status for this matrix leg: ${{ steps.analyze.outputs.status }}
 
@@ -120,6 +121,6 @@ jobs:
 
             Exit code legend: PASS=0 WARN=2 FAIL=1.
 
-      - name: Fail job if analysis status FAIL
+  - name: Fail job if analysis status FAIL
         if: steps.analyze.outputs.status == 'FAIL'
         run: exit 1

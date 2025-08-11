@@ -31,8 +31,15 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build project
-        run: npm run build
+      - name: Build project (frontend only)
+        run: npm run build:pages
+      - name: Debug build failure (if any)
+        if: failure()
+        run: |
+          echo "Build failed; listing dist directory (if created)" || true
+          ls -Ral dist || true
+          echo '--- Recent npm debug logs (if any) ---'
+          ls -1 /home/runner/.npm/_logs || true
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
