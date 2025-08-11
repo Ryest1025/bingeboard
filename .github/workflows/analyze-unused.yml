@@ -43,18 +43,30 @@ jobs:
           if [ "${{ github.ref }}" = "refs/heads/main" ]; then
             export STRICT_MAIN_NO_WARN=1
           fi
-          ./scripts/analyze-unused.sh || EXIT_CODE=$?
-          EXIT_CODE=${EXIT_CODE:-0}
-          echo "Analyzer exit code: $EXIT_CODE"
-          if [ "$EXIT_CODE" -eq 1 ]; then
-            echo "status=FAIL" >> $GITHUB_OUTPUT
-          elif [ "$EXIT_CODE" -eq 2 ]; then
-            echo "status=WARN" >> $GITHUB_OUTPUT
-          else
-            echo "status=PASS" >> $GITHUB_OUTPUT
-          fi
+          set +e
+          ./scripts/analyze-unused.sh
+          EXIT_CODE=$?
+          set -e
+          echo "Analyzer raw exit code: $EXIT_CODE"
+          case "$EXIT_CODE" in
+            0) STATUS=PASS ;;
+            1) STATUS=FAIL ;;
+            2) STATUS=WARN ;;
+            *) STATUS=FAIL ;;
+          esac
+          echo "status=$STATUS" >> $GITHUB_OUTPUT
           echo "exit_code=$EXIT_CODE" >> $GITHUB_OUTPUT
-          exit 0
+          # Print head of report for quick visibility
+          if ls analysis/report-*.md >/dev/null 2>&1; then
+            echo '--- report head (first 40 lines) ---'
+            head -n 40 $(ls -1 analysis/report-*.md | head -n1)
+          fi
+          # Fail immediately on Node 20 if FAIL; allow Node 18 (allow-failure) to continue
+          if [ "$STATUS" = "FAIL" ] && [ "${{ matrix.allow-failure }}" = "false" ]; then
+            echo "Failing workflow (authoritative Node version)." >&2
+            exit 1
+          fi
+          # Do not fail on WARN; WARN just surfaces in outputs.
 
       - name: Debug unused export diffs (on WARN/FAIL)
         if: steps.analyze.outputs.status != 'PASS'
@@ -129,7 +141,3 @@ jobs:
             Full reports are available as workflow artifacts (unused-code-reports). If new unused exports or dependencies were introduced, this PR should adjust code or intentionally update the baseline.
 
             Exit code legend: PASS=0 WARN=2 FAIL=1.
-      - name: Fail job if analysis status FAIL
-        # Only let the Node 20 leg fail the overall workflow; Node 18 is informational (engine warnings on deps needing Node 20)
-        if: ${{ steps.analyze.outputs.status == 'FAIL' && matrix.allow-failure == false }}
-        run: exit 1
