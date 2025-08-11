@@ -156,7 +156,10 @@ export const FilterTabs = ({ categories, activeTab, onTabChange }) => {
 ```typescript
 // Built-in themes
 import { darkTheme, lightTheme, netflixTheme, spotifyTheme } from 'react-advanced-filters/themes';
+```
 
+{% raw %}
+```tsx
 <EnhancedFilterSystem
   theme={darkTheme}
   // or custom theme
@@ -166,6 +169,7 @@ import { darkTheme, lightTheme, netflixTheme, spotifyTheme } from 'react-advance
   }}
 />
 ```
+{% endraw %}
 
 ## 📖 **Documentation Structure:**
 
