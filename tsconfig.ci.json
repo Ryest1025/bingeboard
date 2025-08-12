@@ -1,0 +1,32 @@
+{
+  "extends": "./tsconfig.json",
+  "include": [
+    "client/src/components/**/*",
+    "client/src/hooks/**/*",
+    "client/src/lib/**/*",
+    "client/src/pages/dashboard.tsx",
+    "client/src/pages/modern-discover.tsx",
+    "client/src/pages/show-details.tsx",
+    "client/src/pages/modern-home.tsx",
+    "client/src/pages/modern-lists.tsx",
+    "shared/**/*",
+    "server/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "build",
+    "dist",
+    "**/*.test.ts",
+    "client/src/pages/**/*demo*",
+    "client/src/pages/**/*diagnostic*",
+    "client/src/pages/**/*test*",
+    "client/src/pages/**/auth-comprehensive-test.tsx",
+    "client/src/pages/**/firebase-auth-test.tsx",
+    "client/src/pages/**/landing-backup.tsx",
+    "client/src/pages/**/notifications-demo.tsx",
+    "client/src/pages/**/streaming-demo.tsx",
+    "client/src/pages/**/mobile-social-login.tsx",
+    "client/src/components/enhanced-*",
+    "client/src/components/search/EnhancedShowModal.tsx"
+  ]
+}

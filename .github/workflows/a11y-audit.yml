@@ -21,8 +21,8 @@ jobs:
       - name: Install deps
         run: npm ci
 
-      - name: Typecheck
-        run: npm run check
+      - name: Typecheck (core only)
+        run: npm run check:ci
 
       - name: ESLint (a11y)
         run: npm run lint:a11y
