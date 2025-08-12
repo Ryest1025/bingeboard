@@ -1,6 +1,10 @@
 import { Switch, Route, useLocation } from "wouter";
 import React, { Suspense, useState, useEffect, lazy } from "react";
 import { SafeQueryProvider } from "./lib/safeQueryClient";
+import { GenreProvider } from '@/context/GenreContext';
+import { DashboardFilterProvider } from '@/components/dashboard/filters/DashboardFilterProvider';
+import { useMemo } from 'react';
+import { ModalVariantProvider } from '@/context/ModalVariantContext';
 // import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/useAuth";
@@ -252,12 +256,20 @@ function Router() {
 export default function App() {
   return (
     <SafeQueryProvider>
-      <TooltipProvider>
-        <ErrorBoundary>
-          <Router />
-          {/* <Toaster /> */}
-        </ErrorBoundary>
-      </TooltipProvider>
+      <GenreProvider>
+        <DashboardFilterProvider>
+          <ModalVariantProvider>
+            <TooltipProvider>
+              <ErrorBoundary>
+                <Router />
+                {/* Hidden attribute still present for quick manual QA */}
+                <div data-modal-variant-ctx style={{ display: 'none' }} />
+                {/* <Toaster /> */}
+              </ErrorBoundary>
+            </TooltipProvider>
+          </ModalVariantProvider>
+        </DashboardFilterProvider>
+      </GenreProvider>
     </SafeQueryProvider>
   );
 }

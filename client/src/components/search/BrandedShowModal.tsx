@@ -1,6 +1,10 @@
 // components/search/BrandedShowModal.tsx - BingeBoard Branded Show Modal
-import React, { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+// TODO (A/B Experiment Prep): Once all redesigned pages are finalized, wire an experiment toggle
+// to switch between this full modal and BrandedShowModalLite across Dashboard & Discover.
+// Include instrumentation: modal_open, watchlist_add, watch_click with { variant: 'full' | 'lite' }.
+// Ensure DashboardFilterProvider wraps routes before enabling Lite variant globally.
+import React, { useState, useEffect } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Star, Calendar, Clock, Play, Plus, ExternalLink, X, Heart } from "lucide-react";
@@ -12,6 +16,7 @@ import useShowDetails from "@/hooks/useShowDetails";
 import { colors, gradients, radii, spacing, shadows } from "@/styles/tokens";
 import useTrailer from '@/hooks/useTrailer';
 import { StreamingPlatformsDisplay } from '@/components/streaming/StreamingPlatformsDisplay';
+import { trackEvent } from '@/lib/analytics';
 
 const fetchEnhancedShowDetails = async (id: number, type: 'tv' | 'movie', title: string) => {
   const response = await fetch(`/api/streaming/comprehensive/${type}/${id}?title=${encodeURIComponent(title)}&includeAffiliate=true`);
@@ -45,6 +50,13 @@ export default function BrandedShowModal({
   const queryClient = useQueryClient();
 
   const { data: show, isLoading } = useShowDetails(showId, showType);
+
+  // Fire modal_open when it becomes visible with a show
+  useEffect(() => {
+    if (open && show) {
+      trackEvent('modal_open', { showId: show.id, showTitle: show.title, variant: 'full' });
+    }
+  }, [open, show]);
 
   // Watchlist mutation with optimistic updates
   const addToWatchlistMutation = useMutation({
@@ -82,6 +94,7 @@ export default function BrandedShowModal({
     if (show) {
       addToWatchlistMutation.mutate(parseInt(show.id));
       onAddToWatchlist?.(parseInt(show.id));
+  trackEvent('watchlist_add', { showId: show.id, showTitle: show.title, variant: 'full' });
     }
   };
 
@@ -94,11 +107,15 @@ export default function BrandedShowModal({
 
   const handleWatchTrailer = () => {
     setShowTrailer(true);
+    if (show) {
+      trackEvent('watch_trailer', { showId: show.id, showTitle: show.title, variant: 'full' });
+    }
   };
 
   const handleWatchNow = () => {
     if (show) {
       onWatchNow?.(show);
+  trackEvent('watch_click', { showId: show.id, showTitle: show.title, variant: 'full' });
     }
   };
 
@@ -125,6 +142,10 @@ export default function BrandedShowModal({
             >
               <DialogHeader>
                 <DialogTitle className="sr-only">Loading show details</DialogTitle>
+                {/* Provide description node early so aria-describedby always points to an existing element */}
+                <DialogDescription id={mainDescriptionId} className="sr-only">
+                  Loading show details
+                </DialogDescription>
               </DialogHeader>
               <div
                 className="animate-spin w-12 h-12 border-4 rounded-full mx-auto mb-6"
@@ -201,10 +222,10 @@ export default function BrandedShowModal({
                           </span>
                         )}
                       </DialogTitle>
-                      {/* Hidden accessible description for screen readers */}
-                      <p id={mainDescriptionId} className="sr-only">
+                      {/* Accessible description (Radix compliant) */}
+                      <DialogDescription id={mainDescriptionId} className="sr-only">
                         {show.synopsis || 'Show details dialog'}
-                      </p>
+                      </DialogDescription>
                     </DialogHeader>
 
                     <div className="flex items-center gap-6 text-lg">
@@ -305,21 +326,25 @@ export default function BrandedShowModal({
                         transition={{ delay: 0.5, duration: 0.3 }}
                         className="flex flex-wrap gap-3"
                       >
-                        {show.genres.map((genreId: number) => (
-                          <Badge
-                            key={genreId}
-                            variant="secondary"
-                            className="px-3 py-1 text-sm font-medium"
-                            style={{
-                              backgroundColor: colors.secondaryLight,
-                              color: colors.text,
-                              border: `1px solid ${colors.border}`,
-                              borderRadius: radii.lg,
-                            }}
-                          >
-                            {genreId}
-                          </Badge>
-                        ))}
+                        {show.genres.map((raw: any) => {
+                          const key = typeof raw === 'object' ? (raw.id ?? raw.name) : raw;
+                          const label = typeof raw === 'object' ? (raw.name || raw.id) : raw;
+                          return (
+                            <Badge
+                              key={key}
+                              variant="secondary"
+                              className="px-3 py-1 text-sm font-medium"
+                              style={{
+                                backgroundColor: colors.secondaryLight,
+                                color: colors.text,
+                                border: `1px solid ${colors.border}`,
+                                borderRadius: radii.lg,
+                              }}
+                            >
+                              {label}
+                            </Badge>
+                          );
+                        })}
                       </motion.div>
                     )}
 
@@ -520,6 +545,15 @@ export default function BrandedShowModal({
                         }}
                         onClick={() => {
                           if (platform.web_url) {
+                            // Track platform redirect with variant
+                            if (show) {
+                              trackEvent('platform_redirect', {
+                                showId: show.id,
+                                showTitle: show.title,
+                                platform: platform.provider_name,
+                                variant: 'full',
+                              });
+                            }
                             window.open(platform.web_url, '_blank');
                           } else {
                             handleWatchNow();

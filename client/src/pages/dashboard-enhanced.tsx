@@ -171,8 +171,8 @@ export default function EnhancedDashboard() {
                     key={genre.id}
                     onClick={() => setSelectedGenre(genre.id.toString())}
                     className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all ${selectedGenre === genre.id.toString()
-                        ? "bg-blue-600 text-white"
-                        : "bg-gray-800 text-gray-300 hover:bg-gray-700"
+                      ? "bg-blue-600 text-white"
+                      : "bg-gray-800 text-gray-300 hover:bg-gray-700"
                       }`}
                   >
                     {genre.name}

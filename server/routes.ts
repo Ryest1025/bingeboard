@@ -108,6 +108,75 @@ export async function registerRoutes(app: Express): Promise<Server> {
     next();
   });
 
+  // Behavior tracking endpoints (single + batch)
+  app.post('/api/behavior/track', isAuthenticated, async (req: any, res) => {
+    try {
+      const { trackingEventSchema } = await import('../shared/tracking');
+      const userId = req.user?.claims?.sub || req.user?.id;
+      if (!userId) return res.status(401).json({ message: 'Unauthorized' });
+
+      const parsed = trackingEventSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ message: 'Invalid tracking payload', issues: parsed.error.issues });
+      }
+
+      const evt = parsed.data;
+      await storage.trackUserBehavior({
+        userId,
+        actionType: evt.actionType,
+        targetType: evt.targetType,
+        targetId: evt.targetId,
+        metadata: {
+          ...evt.metadata,
+          sessionId: evt.sessionId,
+          timestamp: evt.timestamp || new Date().toISOString(),
+        },
+        sessionId: evt.sessionId,
+      });
+      return res.json({ ok: true });
+    } catch (e: any) {
+      console.error('❌ /api/behavior/track error', e);
+      return res.status(500).json({ message: 'Failed to track behavior' });
+    }
+  });
+
+  app.post('/api/behavior/track-batch', isAuthenticated, async (req: any, res) => {
+    try {
+      const { trackingEventSchema } = await import('../shared/tracking');
+      const userId = req.user?.claims?.sub || req.user?.id;
+      if (!userId) return res.status(401).json({ message: 'Unauthorized' });
+
+      const events = Array.isArray(req.body?.events) ? req.body.events : [];
+      if (!events.length) return res.status(400).json({ message: 'events array required' });
+
+      // Validate all; collect good ones only
+      const valid = [] as any[];
+      for (const raw of events) {
+        const parsed = trackingEventSchema.safeParse(raw);
+        if (parsed.success) valid.push(parsed.data);
+      }
+      if (!valid.length) return res.status(400).json({ message: 'No valid events' });
+
+      await Promise.all(valid.slice(0, 200).map((evt) => storage.trackUserBehavior({
+        userId,
+        actionType: evt.actionType,
+        targetType: evt.targetType,
+        targetId: evt.targetId,
+        metadata: {
+          ...evt.metadata,
+          sessionId: evt.sessionId,
+          timestamp: evt.timestamp || new Date().toISOString(),
+        },
+        sessionId: evt.sessionId,
+      })));
+
+      return res.json({ ok: true, stored: valid.length });
+    } catch (e: any) {
+      console.error('❌ /api/behavior/track-batch error', e);
+      return res.status(500).json({ message: 'Failed to track batch behavior' });
+    }
+  });
+
   // Firebase authentication only
 
   // Firebase session creation endpoint
@@ -785,13 +854,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/streaming/enhanced-search', async (req, res) => {
     const startTime = Date.now();
     const requestId = Math.random().toString(36).slice(2, 9);
-    
+
     try {
       const query = (req.query.query || req.query.q || '').toString().trim();
       const mediaType = (req.query.type || req.query.mediaType || 'multi').toString();
-      
+
       console.log(`🔍 [${requestId}] Enhanced search started: query="${query}", type="${mediaType}"`);
-      
+
       if (!query || query.length < 2) {
         console.log(`⚠️ [${requestId}] Query too short: "${query}"`);
         return res.json({ results: [] });
@@ -799,7 +868,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const searchResponse = await tmdbService.search(query, { mediaType: mediaType as any, page: 1 });
       const rawResults: any[] = (searchResponse.results || []).slice(0, 20);
-      
+
       console.log(`📊 [${requestId}] TMDB returned ${rawResults.length} results`);
 
       // Enrich first 8 results with streaming data (performance conscious)
@@ -1559,7 +1628,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/debug/echo-cookies', (req, res) => {
     try {
       console.log('🍪 Debug echo-cookies endpoint called');
-      
+
       const cookiesInfo = {
         headers: {
           cookie: req.headers.cookie || null,
@@ -1591,7 +1660,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/debug/streaming-sources', async (req, res) => {
     try {
       const { tmdbId, title, mediaType = 'tv', imdbId } = req.query;
-      
+
       if (!tmdbId) {
         return res.status(400).json({ error: 'tmdbId parameter is required' });
       }
@@ -1666,9 +1735,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     } catch (error) {
       console.error('❌ Debug streaming sources error:', error);
-      res.status(500).json({ 
+      res.status(500).json({
         error: 'Failed to fetch streaming sources debug info',
-        message: (error as Error).message 
+        message: (error as Error).message
       });
     }
   });
@@ -3156,10 +3225,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           tmdbService.getTrending('tv', timeWindow),
           tmdbService.getTrending('movie', timeWindow)
         ]);
-        baseResults = [ ...(tv.results || []).map((r:any)=>({...r, media_type: 'tv'})), ...(movie.results || []).map((r:any)=>({...r, media_type: 'movie'})) ];
+        baseResults = [...(tv.results || []).map((r: any) => ({ ...r, media_type: 'tv' })), ...(movie.results || []).map((r: any) => ({ ...r, media_type: 'movie' }))];
       } else {
         const single = await tmdbService.getTrending(mediaType, timeWindow);
-        baseResults = (single.results || []).map((r:any)=> ({...r, media_type: r.media_type || (r.title ? 'movie':'tv')}));
+        baseResults = (single.results || []).map((r: any) => ({ ...r, media_type: r.media_type || (r.title ? 'movie' : 'tv') }));
       }
 
       // Basic filtering by genre id (single). Accept comma but treat first for simplicity.
@@ -3173,7 +3242,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (networkFilter) {
         const networkIdNum = parseInt(networkFilter.toString());
         // If some tv items lack networks array, leave them (avoid N extra detail calls). Only filter when 'origin_country' or known network id available in an embedded field (rare). For accurate network filtering the client should call discover.
-        filtered = filtered.filter(r => r.media_type !== 'tv' || !networkIdNum || !r.networks || r.networks.some((n:any)=> n?.id === networkIdNum));
+        filtered = filtered.filter(r => r.media_type !== 'tv' || !networkIdNum || !r.networks || r.networks.some((n: any) => n?.id === networkIdNum));
       }
 
       // Optional streaming enrichment (reuse approach from /api/trending route)

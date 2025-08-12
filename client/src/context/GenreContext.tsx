@@ -13,7 +13,7 @@ const GenreContext = createContext<GenreContextValue>({
   genres: [],
   loading: false,
   error: null,
-  refresh: () => {}
+  refresh: () => { }
 });
 
 // Module-level cache
@@ -28,8 +28,8 @@ async function loadGenres(): Promise<Genre[]> {
       const res = await fetch('/api/content/genres-combined/list');
       if (!res.ok) throw new Error('Failed to fetch genres');
       const data = await res.json();
-  cachedGenres = data.genres || [];
-  return cachedGenres ?? [];
+      cachedGenres = data.genres || [];
+      return cachedGenres ?? [];
     } catch (e) {
       console.error('loadGenres error:', e);
       cachedGenres = [];

@@ -276,8 +276,8 @@ export class MultiAPIStreamingService {
 
     allPlatforms.forEach(platform => {
       // Dedupe key includes source + optional domain (if web_url) to reduce accidental collisions
-      const domain = (platform as any).web_url ? (()=>{ try { return new URL((platform as any).web_url).hostname; } catch { return ''; } })() : '';
-      const key = `${platform.provider_name.toLowerCase()}::${platform.source}${domain ? '::'+domain : ''}`;
+      const domain = (platform as any).web_url ? (() => { try { return new URL((platform as any).web_url).hostname; } catch { return ''; } })() : '';
+      const key = `${platform.provider_name.toLowerCase()}::${platform.source}${domain ? '::' + domain : ''}`;
       const existing = platformMap.get(key);
 
       if (!existing || this.getPlatformScore(platform) > this.getPlatformScore(existing)) {
@@ -288,11 +288,11 @@ export class MultiAPIStreamingService {
     const finalPlatforms = Array.from(platformMap.values());
 
     // 5. Calculate statistics
-  const affiliatePlatforms = finalPlatforms.filter(p => p.affiliate_supported).length;
-  const premiumPlatforms = finalPlatforms.filter(p => p.type === 'sub' || (p.price !== undefined && p.price > 0)).length;
-  const freePlatforms = finalPlatforms.filter(p => p.type === 'free' || (p.price !== undefined && p.price === 0)).length;
+    const affiliatePlatforms = finalPlatforms.filter(p => p.affiliate_supported).length;
+    const premiumPlatforms = finalPlatforms.filter(p => p.type === 'sub' || (p.price !== undefined && p.price > 0)).length;
+    const freePlatforms = finalPlatforms.filter(p => p.type === 'free' || (p.price !== undefined && p.price === 0)).length;
 
-  const result: StreamingAvailabilityResponse = {
+    const result: StreamingAvailabilityResponse = {
       tmdbId,
       title,
       platforms: finalPlatforms,
@@ -398,7 +398,7 @@ export class MultiAPIStreamingService {
     const trackingId = this.generateTrackingId(userId, showId, platform.provider_name);
 
     // Platform-specific affiliate URL generation
-  const affiliateUrls: Record<string, (url: string, trackingId: string) => string> = {
+    const affiliateUrls: Record<string, (url: string, trackingId: string) => string> = {
       'Netflix': (url, id) => `${url}?trkid=BINGEBOARD_${id}`,
       'Amazon Prime Video': (url, id) => `${url}?tag=bingeboard-20&ref_=${id}`,
       'Hulu': (url, id) => `${url}?ref=BINGEBOARD_${id}`,
@@ -414,11 +414,11 @@ export class MultiAPIStreamingService {
       return affiliateGenerator(platform.web_url, trackingId);
     }
 
-  // Generic fallback for supported platforms without explicit mapping
-  const separator = platform.web_url.includes('?') ? '&' : '?';
-  const genericUrl = `${platform.web_url}${separator}ref=BINGEBOARD_${trackingId}`;
-  this.logger.info(`[affiliate] Generic affiliate URL applied for platform without template: ${platform.provider_name}`);
-  return genericUrl;
+    // Generic fallback for supported platforms without explicit mapping
+    const separator = platform.web_url.includes('?') ? '&' : '?';
+    const genericUrl = `${platform.web_url}${separator}ref=BINGEBOARD_${trackingId}`;
+    this.logger.info(`[affiliate] Generic affiliate URL applied for platform without template: ${platform.provider_name}`);
+    return genericUrl;
   }
 
   // Generate unique tracking ID
@@ -428,12 +428,12 @@ export class MultiAPIStreamingService {
     const utf8ToBase64 = (str: string) => {
       try {
         if (typeof Buffer !== 'undefined') {
-          return Buffer.from(str, 'utf8').toString('base64').replace(/=+$/,'');
+          return Buffer.from(str, 'utf8').toString('base64').replace(/=+$/, '');
         }
       } catch { /* ignore */ }
-      try { return btoa(unescape(encodeURIComponent(str))); } catch { return btoa(str.replace(/[^\x00-\x7F]/g,'')); }
+      try { return btoa(unescape(encodeURIComponent(str))); } catch { return btoa(str.replace(/[^\x00-\x7F]/g, '')); }
     };
-    const userHash = utf8ToBase64(userId).slice(0,6);
+    const userHash = utf8ToBase64(userId).slice(0, 6);
     const showHash = showId.toString(36);
     const platformHash = platform.toLowerCase().replace(/\s+/g, '').slice(0, 4);
     const randomHash = Math.random().toString(36).slice(2, 8);

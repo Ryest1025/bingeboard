@@ -197,14 +197,32 @@ export default function ModernDiscoverEnhanced() {
   // Enhanced queries with better error handling
   const { data: trendingData, isLoading: trendingLoading } = useQuery({
     queryKey: ["/api/content/trending-enhanced"],
+    queryFn: async () => {
+      try {
+        const res = await fetch('/api/content/trending-enhanced');
+        if (!res.ok) return { results: [] } as TMDBResponse;
+        return res.json();
+      } catch {
+        return { results: [] } as TMDBResponse;
+      }
+    },
     staleTime: 300000,
-    retry: 2
+    retry: 0
   });
 
   const { data: popularData, isLoading: popularLoading } = useQuery({
     queryKey: ["/api/streaming/enhanced-search?type=tv"],
+    queryFn: async () => {
+      try {
+        const res = await fetch('/api/streaming/enhanced-search?type=tv');
+        if (!res.ok) return { results: [] } as TMDBResponse;
+        return res.json();
+      } catch {
+        return { results: [] } as TMDBResponse;
+      }
+    },
     staleTime: 300000,
-    retry: 2
+    retry: 0
   });
 
   const { data: searchData, isLoading: searchLoading } = useQuery({
@@ -219,18 +237,32 @@ export default function ModernDiscoverEnhanced() {
 
   const { data: moodSpecificData, isLoading: moodLoading } = useQuery({
     queryKey: ["/api/tmdb/mood-content", selectedMood],
-    queryFn: () => {
-      if (!selectedMood) return Promise.resolve({ results: [] });
-      return fetch(`/api/tmdb/mood-content?mood=${selectedMood}`).then(res => res.json());
+    queryFn: async () => {
+      if (!selectedMood) return { results: [] } as TMDBResponse;
+      try {
+        const res = await fetch(`/api/tmdb/mood-content?mood=${selectedMood}`);
+        if (!res.ok) return { results: [] } as TMDBResponse;
+        return res.json();
+      } catch {
+        return { results: [] } as TMDBResponse;
+      }
     },
     enabled: !!selectedMood,
-    staleTime: 300000
+    staleTime: 300000,
+    retry: 0
   });
 
   const { data: userPreferences } = useQuery({
-    queryKey: ["/api/user-preferences"],
+    queryKey: ["/api/user/preferences"],
     enabled: !!user,
-    staleTime: 600000
+    staleTime: 600000,
+    retry: 0,
+    queryFn: async () => {
+      const res = await fetch("/api/user/preferences", { credentials: 'include' });
+      if (!res.ok) return {};
+      const data = await res.json();
+      return (data as any).preferences || data || {};
+    }
   });
 
   // Enhanced content filtering logic
@@ -463,8 +495,8 @@ export default function ModernDiscoverEnhanced() {
                       variant="outline"
                       onClick={() => handleMoodFilter(mood.id)}
                       className={`relative overflow-hidden border-2 transition-all duration-300 hover:scale-105 h-12 ${isSelected
-                          ? `bg-gradient-to-r ${mood.color} border-transparent text-white shadow-lg`
-                          : `${mood.bgColor} ${mood.borderColor} ${mood.textColor} hover:${mood.bgColor} hover:border-opacity-50`
+                        ? `bg-gradient-to-r ${mood.color} border-transparent text-white shadow-lg`
+                        : `${mood.bgColor} ${mood.borderColor} ${mood.textColor} hover:${mood.bgColor} hover:border-opacity-50`
                         }`}
                     >
                       <Icon className="h-4 w-4 mr-2" />
