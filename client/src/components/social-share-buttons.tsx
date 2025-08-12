@@ -158,7 +158,7 @@ export default function SocialShareButtons({
   }
 
   async function useNativeShare() {
-    if (navigator.share) {
+    if (typeof navigator !== 'undefined' && typeof navigator.share === 'function') {
       try {
         await navigator.share({
           title: title,
@@ -181,7 +181,7 @@ export default function SocialShareButtons({
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-48">
           {/* Native share if available */}
-          {navigator.share && (
+          {typeof navigator !== 'undefined' && typeof navigator.share === 'function' && (
             <>
               <DropdownMenuItem onClick={useNativeShare}>
                 <Send className="mr-2 h-4 w-4" />
@@ -217,7 +217,7 @@ export default function SocialShareButtons({
             <Share2 className="h-4 w-4" />
             Share this {type}
           </h4>
-          {navigator.share && (
+          {typeof navigator !== 'undefined' && typeof navigator.share === 'function' && (
             <Button variant="outline" size="sm" onClick={useNativeShare}>
               <Send className="h-4 w-4 mr-2" />
               Share

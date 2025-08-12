@@ -223,7 +223,7 @@ export default function ModernDiscover() {
   const handleDiscoverFiltersApply = (filters: FilterValues) => {
     setDiscoverFilters(filters); // Update state and trigger the filter change
     // Trigger filtered content fetch
-  if (import.meta.env.DEV) console.debug('[discover] applying filters', filters);
+    if (import.meta.env.DEV) console.debug('[discover] applying filters', filters);
   };
 
   const handleRemoveDiscoverFilter = (type: keyof FilterValues, value: string) => {
@@ -436,12 +436,12 @@ export default function ModernDiscover() {
 
   // Handle functions for Watch Now and Add to List
   const handleWatchNow = (show: any, platform: any) => {
-  if (import.meta.env.DEV) console.debug('[discover] opening platform', platform.provider_name, 'for show', show.title || show.name);
+    if (import.meta.env.DEV) console.debug('[discover] opening platform', platform.provider_name, 'for show', show.title || show.name);
     window.open(`https://www.${platform.provider_name.toLowerCase().replace(/\s+/g, '')}.com`, '_blank');
   };
 
   const handleAddToWatchlist = (show: any) => {
-  if (import.meta.env.DEV) console.debug('[discover] add to watchlist', show.title || show.name);
+    if (import.meta.env.DEV) console.debug('[discover] add to watchlist', show.title || show.name);
     // This would connect to the actual watchlist API
   };
 
@@ -451,11 +451,11 @@ export default function ModernDiscover() {
 
   const handleMoreFilters = () => {
     setShowAdvancedFilters(!showAdvancedFilters);
-  if (import.meta.env.DEV) console.debug('[discover] toggle advanced filters', !showAdvancedFilters);
+    if (import.meta.env.DEV) console.debug('[discover] toggle advanced filters', !showAdvancedFilters);
   };
 
   const handleTrendingView = () => {
-  if (import.meta.env.DEV) console.debug('[discover] trending view toggle');
+    if (import.meta.env.DEV) console.debug('[discover] trending view toggle');
     setSelectedMood(null);
     setSearchQuery("");
     // Toggle trending view - if already showing trending, go back to default
@@ -474,7 +474,7 @@ export default function ModernDiscover() {
     const calendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(`${showTitle} - New Episode`)}&dates=${startDate}/${endDate}&details=${encodeURIComponent(`New episode of ${showTitle} releases today!`)}&location=Streaming`;
 
     window.open(calendarUrl, '_blank');
-  if (import.meta.env.DEV) console.debug('[discover] calendar reminder', showTitle);
+    if (import.meta.env.DEV) console.debug('[discover] calendar reminder', showTitle);
   };
 
   // Handle text notification opt-in for upcoming shows
@@ -496,7 +496,7 @@ export default function ModernDiscover() {
       });
 
       if (response.ok) {
-  if (import.meta.env.DEV) console.debug('[discover] text reminders enabled', showTitle);
+        if (import.meta.env.DEV) console.debug('[discover] text reminders enabled', showTitle);
         // Could show a toast notification here
       }
     } catch (error) {
@@ -508,19 +508,19 @@ export default function ModernDiscover() {
   const filteredContent = (() => {
     // If user is actively searching, show search results
     if (searchQuery.trim() && searchResults.length > 0) {
-  if (import.meta.env.DEV) console.debug('[discover] showing search results for', searchQuery);
+      if (import.meta.env.DEV) console.debug('[discover] showing search results for', searchQuery);
       return searchResults.slice(0, 4);
     }
 
     // If mood filter is selected, use mood-specific API data
     if (selectedMood && moodSpecificData?.results) {
-  if (import.meta.env.DEV) console.debug('[discover] using mood releases', selectedMood, moodSpecificData.results.length);
+      if (import.meta.env.DEV) console.debug('[discover] using mood releases', selectedMood, moodSpecificData.results.length);
       return moodSpecificData.results.slice(0, 4);
     }
 
     // If trending view is active, show trending content
     if (showTrending && (trendingData as any)?.results) {
-  if (import.meta.env.DEV) console.debug('[discover] showing trending subset');
+      if (import.meta.env.DEV) console.debug('[discover] showing trending subset');
       return (trendingData as any).results.slice(0, 4);
     }
 
@@ -530,18 +530,26 @@ export default function ModernDiscover() {
 
   return (
     <div className="min-h-screen bg-gray-900 text-white overflow-x-hidden">
+      {/* Accessible skip links */}
+      <nav aria-label="Skip links" className="sr-only focus-within:not-sr-only focus-within:fixed focus-within:top-2 focus-within:left-2 focus-within:z-[200] bg-gray-800/95 rounded shadow px-4 py-3 space-y-2">
+        <a href="#discover-search" className="block underline focus:outline-none focus:ring-2 focus:ring-teal-400 rounded px-1">Skip to search</a>
+        <a href="#mood-filters" className="block underline focus:outline-none focus:ring-2 focus:ring-teal-400 rounded px-1">Skip to mood filters</a>
+        <a href="#advanced-filters" className="block underline focus:outline-none focus:ring-2 focus:ring-teal-400 rounded px-1">Skip to filter system</a>
+        <a href="#top-picks" className="block underline focus:outline-none focus:ring-2 focus:ring-teal-400 rounded px-1">Skip to top picks</a>
+        <a href="#trending" className="block underline focus:outline-none focus:ring-2 focus:ring-teal-400 rounded px-1">Skip to trending</a>
+      </nav>
       <NavigationHeader />
 
       <main className="max-w-7xl mx-auto px-4 md:px-6 py-6 pb-24">
 
         {/* Header */}
-        <div className="mb-6">
+        <div className="mb-6" id="page-top">
           <h1 className="text-3xl font-bold mb-2 flex items-center gap-2">
             <Search className="h-8 w-8 text-blue-400" />
             Discover
           </h1>
           <p className="text-gray-400">Find your next favorite show or movie</p>
-          <div className="mt-4">
+          <div className="mt-4" id="discover-search">
             <BrandedSearchBar
               placeholder="Search shows, movies, people..."
               onQueryChange={(val) => setSearchQuery(val)}
@@ -553,9 +561,30 @@ export default function ModernDiscover() {
           </div>
         </div>
 
+        {/* Quick section nav */}
+        <nav aria-label="Discover sections" className="mb-8 hidden sm:block">
+          <ul className="flex flex-wrap gap-2 text-xs">
+            {[
+              ['Mood', '#mood-filters'],
+              ['Filters', '#advanced-filters'],
+              ['Top Picks', '#top-picks'],
+              ['Trending', '#trending'],
+              ['Upcoming TV', '#upcoming-tv'],
+              ['Upcoming Movies', '#upcoming-movies'],
+              ['Hidden Gems', '#hidden-gems']
+            ].map(([label, href]) => (
+              <li key={href}>
+                <a href={href as string} className="px-3 py-1 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-colors focus:outline-none focus:ring-2 focus:ring-teal-400">
+                  {label}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </nav>
+
         {/* Mood-Based Filters */}
-        <div className="space-y-4">
-          <h2 className="text-xl font-bold text-white flex items-center gap-2">
+        <div id="mood-filters" className="space-y-4" role="region" aria-labelledby="mood-heading">
+          <h2 id="mood-heading" className="text-xl font-bold text-white flex items-center gap-2">
             <Sparkles className="h-5 w-5 text-teal-400" />
             What's Your Mood?
           </h2>
@@ -583,7 +612,7 @@ export default function ModernDiscover() {
         </div>
 
         {/* STRATEGIC FILTER SYSTEM INTEGRATION */}
-        <div className="space-y-4">
+        <div id="advanced-filters" className="space-y-4" role="region" aria-labelledby="filter-heading">
           {/* Sticky Filter Summary Bar */}
           {stickyFilterSummary && (
             <div className="sticky top-0 z-40 bg-gray-900/80 backdrop-blur-sm border border-white/10 px-4 py-3 mb-6 rounded-lg">
@@ -615,7 +644,7 @@ export default function ModernDiscover() {
           )}
 
           <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-bold text-white flex items-center gap-2">
+            <h2 id="filter-heading" className="text-2xl font-bold text-white flex items-center gap-2">
               <Filter className="h-6 w-6 text-blue-400" />
               Find Something to Watch
               {hasActiveFilters && (
@@ -692,9 +721,9 @@ export default function ModernDiscover() {
         </div>
 
         {/* Top Picks Today */}
-        <div className="space-y-4">
+        <div id="top-picks" className="space-y-4" role="region" aria-labelledby="top-picks-heading">
           <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-bold text-white flex items-center gap-2">
+            <h2 id="top-picks-heading" className="text-2xl font-bold text-white flex items-center gap-2">
               <TrendingUp className="h-6 w-6 text-orange-400" />
               {searchQuery.trim() ? `Search Results for "${searchQuery}"` :
                 selectedMood ? `${moodFilters.find(m => m.id === selectedMood)?.label} Picks` :
@@ -757,6 +786,7 @@ export default function ModernDiscover() {
                               src={`https://image.tmdb.org/t/p/w185${show.poster_path}`}
                               alt={show.name || show.title}
                               className="w-full h-full object-cover"
+                              loading="lazy"
                             />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center">
@@ -865,13 +895,13 @@ export default function ModernDiscover() {
         </div>
 
         {/* What's Trending Section - Moved below Top Picks */}
-        <div className="mb-8">
+        <div id="trending" className="mb-8" role="region" aria-labelledby="trending-heading">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 bg-gradient-to-br from-teal-500 to-blue-600 rounded-lg flex items-center justify-center">
                 <TrendingUp className="h-4 w-4 text-white" />
               </div>
-              <h2 className="text-xl font-bold text-white">
+              <h2 id="trending-heading" className="text-xl font-bold text-white">
                 What's Trending
               </h2>
             </div>
@@ -903,9 +933,9 @@ export default function ModernDiscover() {
 
         {/* Upcoming TV Shows Section */}
         {upcomingShows && upcomingShows.length > 0 && (
-          <div className="space-y-6">
+          <div id="upcoming-tv" className="space-y-6" role="region" aria-labelledby="upcoming-tv-heading">
             <div className="flex items-center justify-between">
-              <h2 className="text-xl font-bold text-white flex items-center gap-2">
+              <h2 id="upcoming-tv-heading" className="text-xl font-bold text-white flex items-center gap-2">
                 <div className="w-8 h-8 bg-gradient-to-br from-teal-500 to-cyan-500 rounded-lg flex items-center justify-center">
                   <Tv className="h-4 w-4 text-white" />
                 </div>
@@ -928,6 +958,7 @@ export default function ModernDiscover() {
                           src={show.posterPath ? `https://image.tmdb.org/t/p/w200${show.posterPath}` : '/placeholder-poster.png'}
                           alt={show.title || show.name}
                           className="w-16 h-24 object-cover rounded-md opacity-0 transition-opacity duration-300"
+                          loading="lazy"
                           onLoad={(e) => {
                             e.currentTarget.style.opacity = '1';
                           }}
@@ -1022,9 +1053,9 @@ export default function ModernDiscover() {
 
         {/* Upcoming Movies Section */}
         {upcomingMovies && upcomingMovies.length > 0 && (
-          <div className="space-y-6">
+          <div id="upcoming-movies" className="space-y-6" role="region" aria-labelledby="upcoming-movies-heading">
             <div className="flex items-center justify-between">
-              <h2 className="text-xl font-bold text-white flex items-center gap-2">
+              <h2 id="upcoming-movies-heading" className="text-xl font-bold text-white flex items-center gap-2">
                 <div className="w-8 h-8 bg-gradient-to-br from-teal-500 to-cyan-500 rounded-lg flex items-center justify-center">
                   <Film className="h-4 w-4 text-white" />
                 </div>
@@ -1047,6 +1078,7 @@ export default function ModernDiscover() {
                           src={movie.posterPath ? `https://image.tmdb.org/t/p/w200${movie.posterPath}` : '/placeholder-poster.png'}
                           alt={movie.title || movie.name}
                           className="w-16 h-24 object-cover rounded-md opacity-0 transition-opacity duration-300"
+                          loading="lazy"
                           onLoad={(e) => {
                             e.currentTarget.style.opacity = '1';
                           }}
@@ -1182,13 +1214,13 @@ export default function ModernDiscover() {
         )}
 
         {/* Hidden Gems - Last Section */}
-        <div className="mb-8">
+        <div id="hidden-gems" className="mb-8" role="region" aria-labelledby="hidden-gems-heading">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 bg-gradient-to-br from-teal-500 to-blue-600 rounded-lg flex items-center justify-center">
                 <Sparkles className="h-4 w-4 text-white" />
               </div>
-              <h2 className="text-xl font-bold text-white">
+              <h2 id="hidden-gems-heading" className="text-xl font-bold text-white">
                 Hidden Gems
               </h2>
             </div>

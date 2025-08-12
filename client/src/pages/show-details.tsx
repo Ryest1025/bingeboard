@@ -22,19 +22,36 @@ import {
   ArrowLeft 
 } from "lucide-react";
 
+// Minimal shape for show details (all optional for resilience to partial payloads)
+interface StreamingPlatformInfo { id?: number | string; logoPath?: string; name?: string }
+interface ShowInfo {
+  title?: string;
+  overview?: string;
+  rating?: number | string;
+  firstAirDate?: string;
+  numberOfSeasons?: number;
+  numberOfEpisodes?: number;
+  status?: string;
+  backdropPath?: string;
+  posterPath?: string;
+  tmdbId?: number;
+  genres?: string[];
+  streamingPlatforms?: StreamingPlatformInfo[];
+}
+
 export default function ShowDetails() {
   const { id } = useParams<{ id: string }>();
   const { toast } = useToast();
 
   // Fetch show details
-  const { data: show, isLoading: showLoading } = useQuery({
+  const { data: show, isLoading: showLoading } = useQuery<ShowInfo | null>({
     queryKey: [`/api/shows/${id}`],
     enabled: !!id,
   });
 
   // Add to watchlist mutation
   const addToWatchlist = useMutation({
-    mutationFn: async (data: { tmdbId: number; status: string }) => {
+    mutationFn: async (data: { tmdbId?: number; status: string }) => {
       const response = await fetch('/api/watchlist', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -136,10 +153,10 @@ export default function ShowDetails() {
             <div className="absolute inset-0 bg-gradient-to-r from-binge-dark via-transparent to-binge-dark z-10"></div>
             <div className="absolute inset-0 bg-gradient-to-t from-binge-dark via-transparent to-transparent z-10"></div>
             
-            {show.backdropPath ? (
+      {show?.backdropPath ? (
               <img 
-                src={show.backdropPath} 
-                alt={`${show.title} backdrop`} 
+        src={show.backdropPath} 
+        alt={`${show.title || 'Show'} backdrop`} 
                 className="w-full h-full object-cover"
               />
             ) : (
@@ -152,31 +169,31 @@ export default function ShowDetails() {
               <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
                 <div className="max-w-3xl">
                   <h1 className="text-4xl md:text-6xl font-bold mb-4">
-                    {show.title}
+                    {show?.title}
                   </h1>
                   <p className="text-lg md:text-xl text-gray-300 mb-6 leading-relaxed">
-                    {show.overview || "No description available."}
+                    {show?.overview || "No description available."}
                   </p>
                   <div className="flex flex-wrap items-center gap-4 mb-8">
-                    {show.rating && (
+                    {show?.rating && (
                       <div className="flex items-center space-x-2">
                         <Star className="w-5 h-5 text-yellow-400 fill-current" />
                         <span className="font-semibold">{show.rating}</span>
                       </div>
                     )}
-                    {show.firstAirDate && (
+                    {show?.firstAirDate && (
                       <div className="flex items-center space-x-2">
                         <Calendar className="w-5 h-5 text-gray-400" />
                         <span className="text-gray-400">{new Date(show.firstAirDate).getFullYear()}</span>
                       </div>
                     )}
-                    {show.numberOfSeasons && (
+                    {show?.numberOfSeasons && (
                       <div className="flex items-center space-x-2">
                         <Film className="w-5 h-5 text-gray-400" />
                         <span className="text-gray-400">{show.numberOfSeasons} Season{show.numberOfSeasons !== 1 ? 's' : ''}</span>
                       </div>
                     )}
-                    {show.status && (
+                    {show?.status && (
                       <Badge variant="outline" className="text-binge-green border-binge-green">
                         {show.status}
                       </Badge>
@@ -184,21 +201,21 @@ export default function ShowDetails() {
                   </div>
                   
                   {/* Streaming Platforms */}
-                  {show.streamingPlatforms && show.streamingPlatforms.length > 0 && (
+                  {show?.streamingPlatforms && show.streamingPlatforms.length > 0 && (
                     <div className="mb-6">
                       <h4 className="text-lg font-semibold mb-3">Available On</h4>
                       <div className="flex flex-wrap gap-3">
-                        {show.streamingPlatforms.map((platform: any) => (
+                        {show.streamingPlatforms.map((platform: StreamingPlatformInfo) => (
                           <div 
-                            key={platform.id}
+                            key={String(platform.id)}
                             className="flex items-center space-x-2 bg-white/10 rounded-lg px-3 py-2 backdrop-blur"
                           >
                             <img
-                              src={platform.logoPath}
-                              alt={platform.name}
+                              src={platform.logoPath || ''}
+                              alt={platform.name || 'Platform'}
                               className="w-6 h-6 rounded"
                             />
-                            <span className="text-sm font-medium">{platform.name}</span>
+                            <span className="text-sm font-medium">{platform.name || 'Unknown'}</span>
                           </div>
                         ))}
                       </div>
@@ -209,9 +226,14 @@ export default function ShowDetails() {
                     {/* Watch Now Button - Priority placement */}
                     <WatchNowButton 
                       show={{
-                        title: show.title,
-                        tmdbId: show.tmdbId,
-                        streamingPlatforms: show.streamingPlatforms
+                        title: show?.title || 'Untitled',
+                        tmdbId: show?.tmdbId,
+                        // Normalize to expected shape (provider_id, provider_name, logo_path)
+                        streamingPlatforms: (show?.streamingPlatforms || []).map(p => ({
+                          provider_id: p.id ?? p.name ?? 'unknown',
+                          provider_name: p.name ?? 'Unknown',
+                          logo_path: p.logoPath || ''
+                        })) as any
                       }}
                       variant="default"
                       size="lg"
@@ -219,7 +241,7 @@ export default function ShowDetails() {
                     />
                     
                     <Button 
-                      onClick={() => addToWatchlist.mutate({ tmdbId: show.tmdbId, status: 'want_to_watch' })}
+                      onClick={() => addToWatchlist.mutate({ tmdbId: show?.tmdbId, status: 'want_to_watch' })}
                       disabled={addToWatchlist.isPending}
                       variant="outline"
                       className="glass-effect hover:bg-white/10 px-6 py-3 rounded-lg font-semibold"
@@ -233,7 +255,7 @@ export default function ShowDetails() {
                       Watch Trailer
                     </Button>
                     <SocialShareButtons
-                      title={show.title}
+                      title={show.title || 'Untitled'}
                       description={show.overview || "Check out this show on BingeBoard!"}
                       type="show"
                       compact={true}
@@ -253,7 +275,7 @@ export default function ShowDetails() {
             <div className="lg:col-span-2">
               
               {/* Genres */}
-              {show.genres && show.genres.length > 0 && (
+              {show?.genres && show.genres.length > 0 && (
                 <div className="mb-8">
                   <h2 className="text-xl font-semibold mb-4">Genres</h2>
                   <div className="flex flex-wrap gap-3">
@@ -270,25 +292,25 @@ export default function ShowDetails() {
               <div className="mb-8">
                 <h2 className="text-xl font-semibold mb-4">Details</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {show.firstAirDate && (
+                  {show?.firstAirDate && (
                     <div>
                       <div className="text-sm text-gray-400 mb-1">First Air Date</div>
                       <div className="font-medium">{new Date(show.firstAirDate).toLocaleDateString()}</div>
                     </div>
                   )}
-                  {show.numberOfSeasons && (
+                  {show?.numberOfSeasons && (
                     <div>
                       <div className="text-sm text-gray-400 mb-1">Number of Seasons</div>
                       <div className="font-medium">{show.numberOfSeasons}</div>
                     </div>
                   )}
-                  {show.numberOfEpisodes && (
+                  {show?.numberOfEpisodes && (
                     <div>
                       <div className="text-sm text-gray-400 mb-1">Total Episodes</div>
                       <div className="font-medium">{show.numberOfEpisodes}</div>
                     </div>
                   )}
-                  {show.status && (
+                  {show?.status && (
                     <div>
                       <div className="text-sm text-gray-400 mb-1">Status</div>
                       <div className="font-medium">{show.status}</div>
@@ -315,7 +337,7 @@ export default function ShowDetails() {
               {/* Poster */}
               <Card className="glass-effect border-white/10 mb-6">
                 <CardContent className="p-0">
-                  {show.posterPath ? (
+                  {show?.posterPath ? (
                     <img 
                       src={show.posterPath} 
                       alt={`${show.title} poster`} 
@@ -336,21 +358,21 @@ export default function ShowDetails() {
                   <div className="space-y-3">
                     <div className="flex justify-between">
                       <span className="text-gray-400">Rating</span>
-                      <span className="font-medium">{show.rating || 'N/A'}</span>
+                      <span className="font-medium">{show?.rating || 'N/A'}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-400">Year</span>
                       <span className="font-medium">
-                        {show.firstAirDate ? new Date(show.firstAirDate).getFullYear() : 'N/A'}
+                        {show?.firstAirDate ? new Date(show.firstAirDate).getFullYear() : 'N/A'}
                       </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-400">Seasons</span>
-                      <span className="font-medium">{show.numberOfSeasons || 'N/A'}</span>
+                      <span className="font-medium">{show?.numberOfSeasons || 'N/A'}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-400">Episodes</span>
-                      <span className="font-medium">{show.numberOfEpisodes || 'N/A'}</span>
+                      <span className="font-medium">{show?.numberOfEpisodes || 'N/A'}</span>
                     </div>
                   </div>
                 </CardContent>

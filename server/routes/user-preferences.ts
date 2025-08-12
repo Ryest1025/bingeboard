@@ -73,7 +73,7 @@ export function registerUserPreferencesRoutes(app: Express) {
             try {
               normalizedGenres = JSON.parse(preferences.preferredGenres);
             } catch {
-              normalizedGenres = preferences.preferredGenres.split(',').map(s => s.trim());
+              normalizedGenres = (preferences.preferredGenres as string).split(',').map((s: string) => s.trim());
             }
           }
         }
