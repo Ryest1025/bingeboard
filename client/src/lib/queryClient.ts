@@ -28,13 +28,9 @@ export async function apiRequest(
 }
 
 type UnauthorizedBehavior = "returnNull" | "throw";
-export const getQueryFn: <T>(options: {
-  on401: UnauthorizedBehavior;
-}) => QueryFunction<T> =
-  ({ on401: unauthorizedBehavior }) =>
-  async ({ queryKey }) => {
-    // Always wrap in try-catch to prevent any unhandled promise rejections
-    return new Promise((resolve) => {
+export const getQueryFn = <T>({ on401 }: { on401: UnauthorizedBehavior }): QueryFunction<T | null> => {
+  return async ({ queryKey }) => {
+    return new Promise<T | null>((resolve) => {
       // Build full URL from relative path
       const endpoint = queryKey[0] as string;
       const fullUrl = endpoint.startsWith('http') ? endpoint : API_CONFIG.getApiUrl(endpoint);
@@ -46,22 +42,22 @@ export const getQueryFn: <T>(options: {
       })
       .then(async (res) => {
         // Handle 401 responses
-        if (unauthorizedBehavior === "returnNull" && res.status === 401) {
+        if (on401 === "returnNull" && res.status === 401) {
           console.log("✅ 401 handled, returning null");
-          resolve(null);
+          resolve(null as unknown as T);
           return;
         }
 
         // Handle other HTTP errors
         if (!res.ok) {
           const text = (await res.text()) || res.statusText;
-          if (unauthorizedBehavior === "returnNull") {
+          if (on401 === "returnNull") {
             console.log("✅ HTTP error handled, returning null:", res.status, text);
-            resolve(null);
+            resolve(null as unknown as T);
             return;
           }
           // For throw behavior, still resolve to prevent unhandled rejection
-          resolve(null);
+          resolve(null as unknown as T);
           return;
         }
 
@@ -70,17 +66,20 @@ export const getQueryFn: <T>(options: {
           const data = await res.json();
           resolve(data);
         } catch (jsonError) {
-          console.log("✅ JSON parse error handled, returning null:", jsonError.message);
-          resolve(null);
+          const err = jsonError as Error;
+          console.log("✅ JSON parse error handled, returning null:", err.message);
+          resolve(null as unknown as T);
         }
       })
       .catch((networkError) => {
         // Handle network errors (CORS, connection issues, etc.)
-        console.log("✅ Network error handled, returning null:", networkError.message);
-        resolve(null);
+        const err = networkError as Error;
+        console.log("✅ Network error handled, returning null:", err.message);
+        resolve(null as unknown as T);
       });
     });
   };
+};
 
 export const queryClient = new QueryClient({
   defaultOptions: {
@@ -91,13 +90,11 @@ export const queryClient = new QueryClient({
       staleTime: Infinity,
       retry: false,
       // Prevent unhandled promise rejections
-      throwOnError: false,
-      useErrorBoundary: false,
+  throwOnError: false,
     },
     mutations: {
       retry: false,
-      throwOnError: false,
-      useErrorBoundary: false,
+  throwOnError: false,
     },
   },
 });

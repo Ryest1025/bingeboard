@@ -54,7 +54,8 @@ jobs:
             echo '--- report head (first 40 lines) ---'
             head -n 40 $(ls -1 analysis/report-*.md | head -n1)
           fi
-          # Fail immediately on FAIL status
+          # Only fail the job if analyzer exit code is 1 (unused export regression).
+          # Ignore archived/missing files which are informational.
           if [ "$STATUS" = "FAIL" ]; then
             echo "Failing workflow (authoritative Node version)." >&2
             exit 1

@@ -3,6 +3,8 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { vi, describe, it, expect, beforeEach } from "vitest";
 import BrandedSearchBar from "@/components/search/BrandedSearchBar";
+import { ModalVariantProvider } from '@/context/ModalVariantContext';
+import { DashboardFilterProvider } from '@/components/dashboard/filters/DashboardFilterProvider';
 
 // Mock the hooks
 vi.mock("@/hooks/useSearchShows", () => ({
@@ -75,6 +77,21 @@ vi.mock("react-player", () => ({
   default: ({ url }: { url: string }) => <div data-testid="react-player">Player: {url}</div>
 }));
 
+// Mock auth to avoid network/fetch + window access in jsdom
+vi.mock('@/hooks/useAuth', () => {
+  const mockValue = {
+    user: null,
+    authState: { isAuthenticated: false, user: null, loading: false },
+    signIn: vi.fn(),
+    signOut: vi.fn(),
+  };
+  return {
+    __esModule: true,
+    default: () => mockValue,
+    useAuth: () => mockValue,
+  };
+});
+
 const createTestQueryClient = () => new QueryClient({
   defaultOptions: {
     queries: { retry: false },
@@ -86,7 +103,11 @@ const renderWithProviders = (component: React.ReactElement) => {
   const queryClient = createTestQueryClient();
   return render(
     <QueryClientProvider client={queryClient}>
-      {component}
+      <DashboardFilterProvider>
+        <ModalVariantProvider>
+          {component}
+        </ModalVariantProvider>
+      </DashboardFilterProvider>
     </QueryClientProvider>
   );
 };

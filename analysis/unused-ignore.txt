@@ -24,3 +24,18 @@ Logger (used in module)
 normalizePlatformName (used in module)
 StreamingSource (used in module)
 useSession (used in module)
+
+# App variant shells (kept intentionally for quick manual environment switching / future experiments)
+client/src/App-debug.tsx:
+client/src/App-diagnostic.tsx:
+client/src/App-fresh.tsx:
+client/src/App-minimal.tsx:
+client/src/App-mobile.tsx:
+client/src/App-simple.tsx:
+client/src/App-test.tsx:
+client/src/App-working.tsx:
+
+# Experimental or legacy streaming service client utilities retained for reference
+server/clients/utellyClient.ts:
+server/stability-monitor.ts:
+server/storage.ts:

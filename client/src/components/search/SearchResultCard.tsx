@@ -39,13 +39,12 @@ export function SearchResultCard({ show, genres, onHover, onClick, isHovered, ac
       role="option"
       aria-selected={!!active}
       tabIndex={-1}
-      className={`flex items-center gap-3 p-3 cursor-pointer transition-colors duration-150 rounded-lg outline-none ${
-        active
+      className={`flex items-center gap-3 p-3 cursor-pointer transition-colors duration-150 rounded-lg outline-none ${active
           ? 'bg-white/20 ring-2 ring-cyan-500/70'
           : isHovered
             ? 'bg-white/10 ring-1 ring-cyan-500/40'
             : 'hover:bg-white/5'
-      }`}
+        }`}
       onMouseEnter={() => onHover(show)}
       onMouseLeave={() => onHover(null)}
       onClick={() => onClick(show)}

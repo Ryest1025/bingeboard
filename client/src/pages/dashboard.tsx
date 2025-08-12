@@ -1048,15 +1048,21 @@ function Dashboard() {
                   return (
                     <div key={index} className="group cursor-pointer">
                       <div className="bg-gray-800 aspect-[2/3] mb-2 relative overflow-hidden hover:scale-105 transition-transform">
-                        <img
-                          src={showPoster || '/fallback-poster.jpg'}
-                          alt={showTitle}
-                          className="w-full h-full object-cover"
+                        <button
+                          type="button"
                           onClick={() => handleShowDetails(show)}
-                          onError={(e) => {
-                            e.currentTarget.src = '/fallback-poster.jpg';
-                          }}
-                        />
+                          aria-label={`Open details for ${showTitle}`}
+                          className="block w-full h-full text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[var(--bb-focus-ring)]"
+                        >
+                          <img
+                            src={showPoster || '/fallback-poster.jpg'}
+                            alt={showTitle}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              e.currentTarget.src = '/fallback-poster.jpg';
+                            }}
+                          />
+                        </button>
 
                         {/* Hover actions with working buttons */}
                         <div className="absolute inset-0 bg-black/80 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
@@ -1090,9 +1096,14 @@ function Dashboard() {
                           </button>
                         </div>
                       </div>
-                      <p className="text-sm font-medium line-clamp-2 group-hover:text-blue-400 transition-colors cursor-pointer" onClick={() => handleShowDetails(show)}>
+                      <button
+                        type="button"
+                        className="text-sm font-medium line-clamp-2 group-hover:text-blue-400 transition-colors text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[var(--bb-focus-ring)]"
+                        onClick={() => handleShowDetails(show)}
+                        aria-label={`Open details for ${showTitle}`}
+                      >
                         {showTitle}
-                      </p>
+                      </button>
 
                       {/* Streaming platforms */}
                       {showStreaming && showStreaming.length > 0 && (
