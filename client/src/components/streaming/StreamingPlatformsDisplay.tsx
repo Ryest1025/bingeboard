@@ -89,10 +89,14 @@ export const StreamingPlatformsDisplay: React.FC<StreamingPlatformsDisplayProps>
                   {platform.logo_path && (
                     // Decorative if text also present – keep empty alt
                     <img
-                      src={platform.logo_path}
+                      src={platform.logo_path.startsWith('http') ? platform.logo_path : `https://image.tmdb.org/t/p/w45${platform.logo_path}`}
                       alt=""
                       className="w-5 h-5 object-contain rounded mr-1"
                       aria-hidden="true"
+                      onError={(e) => {
+                        // Fallback to provider initials if logo fails to load
+                        (e.currentTarget as HTMLImageElement).style.display = 'none';
+                      }}
                     />
                   )}
                   <span className="platform-name truncate max-w-[8ch]" title={platform.provider_name}>

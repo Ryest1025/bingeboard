@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { 
-  getAuth, 
-  signInWithPopup, 
-  GoogleAuthProvider, 
+import {
+  getAuth,
+  signInWithPopup,
+  GoogleAuthProvider,
   FacebookAuthProvider,
   signOut,
   onAuthStateChanged,
-  type User 
+  type User
 } from "firebase/auth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -21,18 +21,18 @@ const auth = getAuth();
 
 export default function FirebaseAuthTest() {
   const { toast } = useToast();
-  
+
   // Firebase state
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(false);
   const [authStatus, setAuthStatus] = useState("Checking...");
-  
+
   // Email/Password login state
   const [loginEmail, setLoginEmail] = useState("rachel.gubin@gmail.com");
   const [loginPassword, setLoginPassword] = useState("");
   const [loginLoading, setLoginLoading] = useState(false);
   const [sessionUser, setSessionUser] = useState<any>(null);
-  
+
   // Password reset state
   const [resetEmail, setResetEmail] = useState("rachel.gubin@gmail.com");
   const [resetLoading, setResetLoading] = useState(false);
@@ -41,7 +41,7 @@ export default function FirebaseAuthTest() {
   const [resetCode, setResetCode] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [resetStep, setResetStep] = useState<'send' | 'verify'>('send');
-  
+
   // Debug state
   const [debugInfo, setDebugInfo] = useState<any>({});
   const [serverStatus, setServerStatus] = useState("Unknown");
@@ -68,7 +68,7 @@ export default function FirebaseAuthTest() {
       const response = await fetch('/api/user/profile', {
         credentials: 'include'
       });
-      
+
       if (response.ok) {
         const userData = await response.json();
         setSessionUser(userData);
@@ -84,7 +84,7 @@ export default function FirebaseAuthTest() {
     try {
       const provider = new GoogleAuthProvider();
       const result = await signInWithPopup(auth, provider);
-      
+
       toast({
         title: "Success!",
         description: `Welcome ${result.user.displayName || result.user.email}!`,
@@ -93,7 +93,7 @@ export default function FirebaseAuthTest() {
       // Test backend session creation
       const idToken = await result.user.getIdToken();
       console.log("Firebase ID Token:", idToken.substring(0, 50) + "...");
-      
+
       // Try to create backend session
       try {
         const response = await fetch('/api/auth/firebase', {
@@ -103,7 +103,7 @@ export default function FirebaseAuthTest() {
             'Authorization': `Bearer ${idToken}`
           },
           credentials: 'include',
-          body: JSON.stringify({ 
+          body: JSON.stringify({
             idToken,
             user: {
               uid: result.user.uid,
@@ -113,7 +113,7 @@ export default function FirebaseAuthTest() {
             }
           })
         });
-        
+
         if (response.ok) {
           const data = await response.json();
           console.log("✅ Backend session created:", data);
@@ -129,7 +129,7 @@ export default function FirebaseAuthTest() {
       } catch (backendError) {
         console.error("❌ Backend session error:", backendError);
       }
-      
+
     } catch (error: any) {
       console.error("Google sign-in error:", error);
       toast({
@@ -147,12 +147,12 @@ export default function FirebaseAuthTest() {
     try {
       const provider = new FacebookAuthProvider();
       const result = await signInWithPopup(auth, provider);
-      
+
       toast({
         title: "Success!",
         description: `Welcome ${result.user.displayName || result.user.email}!`,
       });
-      
+
     } catch (error: any) {
       console.error("Facebook sign-in error:", error);
       toast({
@@ -188,7 +188,7 @@ export default function FirebaseAuthTest() {
     setLoginLoading(true);
     try {
       console.log(`🔐 Attempting email login for: ${loginEmail}`);
-      
+
       const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: {
@@ -247,7 +247,7 @@ export default function FirebaseAuthTest() {
 
       if (resetMethod === 'email' && !resetEmail) {
         toast({
-          title: "Email Required", 
+          title: "Email Required",
           description: "Please enter your email for reset",
           variant: "destructive",
         });
@@ -256,7 +256,7 @@ export default function FirebaseAuthTest() {
       }
 
       console.log(`📧 Sending password reset via ${resetMethod} to: ${resetMethod === 'email' ? resetEmail : phoneNumber}`);
-      
+
       const response = await fetch('/api/auth/forgot-password', {
         method: 'POST',
         headers: {
@@ -271,7 +271,7 @@ export default function FirebaseAuthTest() {
 
       if (response.ok) {
         console.log(`✅ Password reset ${resetMethod} sent`);
-        
+
         if (resetMethod === 'sms') {
           setResetStep('verify');
           toast({
@@ -320,7 +320,7 @@ export default function FirebaseAuthTest() {
       }
 
       console.log(`🔐 Verifying SMS code and resetting password`);
-      
+
       const response = await fetch('/api/auth/reset-password', {
         method: 'POST',
         headers: {
@@ -356,7 +356,7 @@ export default function FirebaseAuthTest() {
     } catch (error) {
       console.error("❌ Password reset error:", error);
       toast({
-        title: "Reset Error", 
+        title: "Reset Error",
         description: "Network error occurred",
         variant: "destructive",
       });
@@ -369,7 +369,7 @@ export default function FirebaseAuthTest() {
   const simulateSms = async () => {
     try {
       console.log("🔧 Simulating SMS for testing...");
-      
+
       const response = await fetch('/api/debug/simulate-sms', {
         method: 'POST',
         headers: {
@@ -384,11 +384,11 @@ export default function FirebaseAuthTest() {
       if (response.ok) {
         const data = await response.json();
         console.log("✅ SMS simulation successful:", data);
-        
+
         // Auto-fill the code for testing convenience
         setResetCode(data.testCode);
         setResetStep('verify');
-        
+
         toast({
           title: "Test SMS Generated!",
           description: `Test code: ${data.testCode} (auto-filled)`,
@@ -417,13 +417,13 @@ export default function FirebaseAuthTest() {
     try {
       console.log("🔍 Checking server status...");
       const response = await fetch('/api/debug/users');
-      
+
       if (response.ok) {
         const data = await response.json();
         setServerStatus("Online ✅");
         setDebugInfo(prev => ({ ...prev, serverOnline: true, users: data }));
         console.log("✅ Server is online. Users found:", data);
-        
+
         toast({
           title: "Server Online!",
         });
@@ -437,9 +437,9 @@ export default function FirebaseAuthTest() {
     try {
       // Set a simple test password for debugging
       const testPassword = "test123";
-      
+
       console.log("🔧 Creating test password...");
-      
+
       const response = await fetch('/api/debug/set-password', {
         method: 'POST',
         headers: {
@@ -670,11 +670,10 @@ export default function FirebaseAuthTest() {
                       setResetMethod('email');
                       setResetStep('send');
                     }}
-                    className={`flex-1 ${
-                      resetMethod === 'email'
+                    className={`flex-1 ${resetMethod === 'email'
                         ? 'bg-blue-600 text-white'
                         : 'border-white/20 text-white hover:bg-white/10'
-                    }`}
+                      }`}
                   >
                     <Mail className="h-4 w-4 mr-2" />
                     Email Reset
@@ -686,11 +685,10 @@ export default function FirebaseAuthTest() {
                       setResetMethod('sms');
                       setResetStep('send');
                     }}
-                    className={`flex-1 ${
-                      resetMethod === 'sms'
+                    className={`flex-1 ${resetMethod === 'sms'
                         ? 'bg-green-600 text-white'
                         : 'border-white/20 text-white hover:bg-white/10'
-                    }`}
+                      }`}
                   >
                     <span className="mr-2">📱</span>
                     SMS Code
@@ -832,14 +830,14 @@ export default function FirebaseAuthTest() {
                   >
                     Check Server
                   </Button>
-                  
+
                   <Button
                     onClick={checkMyAccount}
                     className="bg-green-600 text-white hover:bg-green-700"
                   >
                     Check My Account
                   </Button>
-                  
+
                   <Button
                     onClick={createTestPassword}
                     className="bg-orange-600 text-white hover:bg-orange-700"

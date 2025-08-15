@@ -81,6 +81,7 @@ export default {
       fontFamily: {
         poppins: ['Poppins', 'sans-serif'],
         inter: ['Inter', 'sans-serif'],
+  display: ['Bebas Neue', 'Poppins', 'Inter', 'sans-serif'],
       },
       keyframes: {
         "accordion-down": {

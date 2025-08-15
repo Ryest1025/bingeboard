@@ -5,7 +5,7 @@ import { useContinueWatching, useCurrentProgress } from "@/hooks/useViewingHisto
 import { useFilterOptions } from "@/hooks/useFilterOptions";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { useFilters } from "@/hooks/useFilters";
-import NavigationHeader from "@/components/navigation-header";
+import AppLayout from "@/components/layouts/AppLayout";
 import Toast from "@/components/toast";
 import RecommendationModal from "@/components/recommendation-modal";
 import ShowDetailsModal from "@/components/show-details-modal";
@@ -801,9 +801,7 @@ function Dashboard() {
 
   // Main Dashboard
   return (
-    <div className="min-h-screen bg-gray-900 text-white overflow-x-hidden">
-      <NavigationHeader />
-
+    <AppLayout>
       <Toast
         isVisible={toast.isVisible}
         message={toast.message}
@@ -1429,7 +1427,7 @@ function Dashboard() {
                 )}
               </div>
 
-              {/* Your Lists Section */}
+              {/* Watchlists Section */}
               <div
                 className="bg-gray-800 p-4 hover:bg-gray-700 transition-all duration-200 cursor-pointer border-l-4 border-transparent hover:border-teal-500 group"
                 onClick={goToLists}
@@ -1437,7 +1435,7 @@ function Dashboard() {
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-3">
                     <List className="h-5 w-5 text-teal-400 group-hover:text-teal-300" />
-                    <h4 className="font-semibold text-white group-hover:text-teal-200">Your Lists</h4>
+                    <h4 className="font-semibold text-white group-hover:text-teal-200">Watchlists</h4>
                   </div>
                 </div>
 
@@ -1540,7 +1538,7 @@ function Dashboard() {
         type={toast.type}
         onClose={() => setToast(prev => ({ ...prev, isVisible: false }))}
       />
-    </div>
+    </AppLayout>
   );
 }
 

@@ -3,8 +3,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
-import NavigationHeader from "@/components/navigation-header";
-import MobileNav from "@/components/mobile-nav";
+import AppLayout from "@/components/layouts/AppLayout";
 import WatchNowButton, { StreamingBadges } from "@/components/watch-now-button";
 import SocialShareButtons from "@/components/social-share-buttons";
 import { Button } from "@/components/ui/button";
@@ -95,9 +94,8 @@ export default function ShowDetails() {
 
   if (showLoading) {
     return (
-      <div className="min-h-screen bg-binge-dark text-white">
-        <NavigationHeader />
-        <div className="pt-16">
+      <AppLayout>
+        <div className="pt-4">
           <div className="h-96 md:h-[500px] relative">
             <Skeleton className="w-full h-full" />
           </div>
@@ -118,16 +116,14 @@ export default function ShowDetails() {
             </div>
           </div>
         </div>
-        <MobileNav />
-      </div>
+      </AppLayout>
     );
   }
 
   if (!show) {
     return (
-      <div className="min-h-screen bg-binge-dark text-white">
-        <NavigationHeader />
-        <div className="pt-16 flex items-center justify-center min-h-[500px]">
+      <AppLayout>
+        <div className="pt-4 flex items-center justify-center min-h-[500px]">
           <div className="text-center">
             <h1 className="text-2xl font-bold mb-4">Show Not Found</h1>
             <p className="text-gray-400 mb-6">The show you're looking for doesn't exist.</p>
@@ -137,16 +133,13 @@ export default function ShowDetails() {
             </Button>
           </div>
         </div>
-        <MobileNav />
-      </div>
+      </AppLayout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-binge-dark text-white">
-      <NavigationHeader />
-      
-      <div className="pt-16 min-h-screen">
+    <AppLayout>
+      <div className="pt-4 min-h-screen">
         {/* Hero Section */}
         <div className="relative overflow-hidden">
           <div className="h-96 md:h-[500px] relative">
@@ -391,8 +384,6 @@ export default function ShowDetails() {
           </div>
         </div>
       </div>
-
-      <MobileNav />
-    </div>
+    </AppLayout>
   );
 }

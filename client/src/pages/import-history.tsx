@@ -1,14 +1,14 @@
 import { Link } from "wouter";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { TopNav } from "@/components/top-nav";
-import MobileNav from "@/components/mobile-nav";
+// // import { TopNav } from "@/components/top-nav"; // Auto-removed: TopNav handled by App.tsx // Auto-removed: TopNav handled by App.tsx
+// import MobileNav from "@/components/mobile-nav"; // Auto-removed: MobileNav handled by App.tsx
 import ViewingHistoryImport from "@/components/viewing-history-import";
 
 export default function ImportHistory() {
   return (
     <div className="min-h-screen bg-black text-white">
-      <TopNav />
+      {/* TopNav removed: handled by App.tsx */}
       
       <div className="container mx-auto px-4 pt-20 pb-24">
         <div className="max-w-4xl mx-auto space-y-6">
@@ -58,7 +58,7 @@ export default function ImportHistory() {
         </div>
       </div>
 
-      <MobileNav />
+      {/* MobileNav removed: handled by App.tsx */}
     </div>
   );
 }

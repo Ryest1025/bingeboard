@@ -12,9 +12,9 @@ import {
   Heart,
   ExternalLink
 } from "lucide-react";
-import { 
-  SiX, 
-  SiTelegram, 
+import {
+  SiX,
+  SiTelegram,
   SiWhatsapp,
   SiReddit,
   SiDiscord

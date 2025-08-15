@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { 
-  getAuth, 
-  signInWithPopup, 
-  GoogleAuthProvider, 
+import {
+  getAuth,
+  signInWithPopup,
+  GoogleAuthProvider,
   FacebookAuthProvider,
   signOut,
   onAuthStateChanged,
-  type User 
+  type User
 } from "firebase/auth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -21,29 +21,29 @@ const auth = getAuth();
 
 export default function AuthComprehensiveTest() {
   const { toast } = useToast();
-  
+
   // Firebase state
   const [firebaseUser, setFirebaseUser] = useState<User | null>(null);
   const [firebaseLoading, setFirebaseLoading] = useState(false);
-  
+
   // Email/Password login state
   const [loginEmail, setLoginEmail] = useState("rachel.gubin@gmail.com");
   const [loginPassword, setLoginPassword] = useState("");
   const [loginLoading, setLoginLoading] = useState(false);
   const [sessionUser, setSessionUser] = useState<any>(null);
-  
+
   // Password reset state
   const [resetEmail, setResetEmail] = useState("rachel.gubin@gmail.com");
   const [resetLoading, setResetLoading] = useState(false);
   const [resetToken, setResetToken] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [resetPasswordLoading, setResetPasswordLoading] = useState(false);
-  
+
   // SMS test state
   const [smsPhone, setSmsPhone] = useState("");
   const [smsCode, setSmsCode] = useState("");
   const [smsLoading, setSmsLoading] = useState(false);
-  
+
   // Debug state
   const [debugInfo, setDebugInfo] = useState<any>({});
 
@@ -67,7 +67,7 @@ export default function AuthComprehensiveTest() {
       const response = await fetch('/api/user/profile', {
         credentials: 'include'
       });
-      
+
       if (response.ok) {
         const user = await response.json();
         setSessionUser(user);
@@ -85,7 +85,7 @@ export default function AuthComprehensiveTest() {
     try {
       const provider = new GoogleAuthProvider();
       const result = await signInWithPopup(auth, provider);
-      
+
       toast({
         title: "Firebase Success!",
         description: `Welcome ${result.user.displayName || result.user.email}!`,
@@ -94,7 +94,7 @@ export default function AuthComprehensiveTest() {
       // Test backend session creation
       const idToken = await result.user.getIdToken();
       console.log("🔥 Firebase ID Token:", idToken.substring(0, 50) + "...");
-      
+
       try {
         const response = await fetch('/api/auth/firebase', {
           method: 'POST',
@@ -103,7 +103,7 @@ export default function AuthComprehensiveTest() {
             'Authorization': `Bearer ${idToken}`
           },
           credentials: 'include',
-          body: JSON.stringify({ 
+          body: JSON.stringify({
             idToken,
             user: {
               uid: result.user.uid,
@@ -113,7 +113,7 @@ export default function AuthComprehensiveTest() {
             }
           })
         });
-        
+
         if (response.ok) {
           const data = await response.json();
           console.log("✅ Backend session created:", data);
@@ -132,7 +132,7 @@ export default function AuthComprehensiveTest() {
         console.error("❌ Backend session error:", backendError);
         setDebugInfo(prev => ({ ...prev, backendError }));
       }
-      
+
     } catch (error: any) {
       console.error("❌ Google sign-in error:", error);
       toast({
@@ -150,12 +150,12 @@ export default function AuthComprehensiveTest() {
     try {
       const provider = new FacebookAuthProvider();
       const result = await signInWithPopup(auth, provider);
-      
+
       toast({
         title: "Firebase Success!",
         description: `Welcome ${result.user.displayName || result.user.email}!`,
       });
-      
+
     } catch (error: any) {
       console.error("❌ Facebook sign-in error:", error);
       toast({

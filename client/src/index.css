@@ -1,5 +1,7 @@
 /* Consistent Typography */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+/* Display font for branded hero fallback titles */
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap');
 
 @tailwind base;
 @tailwind components;

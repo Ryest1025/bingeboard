@@ -95,6 +95,83 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/content/discover', getDiscoverContent);
   app.get('/api/content/search', getSearchContent);
 
+  // ---------------------------------------------------------------------------
+  // Unified Discover Aggregation Endpoint
+  // Returns: hero, forYou, moodBuckets, dynamicBlocks, trending, anniversaries, socialBuzz
+  // This is a lightweight composition layer so the client can issue a single query.
+  // ---------------------------------------------------------------------------
+  app.get('/api/discover', async (req, res) => {
+    try {
+      const userId = (req as any)?.user?.claims?.sub || (req as any)?.user?.id || null;
+      // Fetch base trending (all/week) once; derive hero + forYou slices
+      let trendingAll: any = null;
+      try {
+        trendingAll = await tmdbService.getTrending('all', 'week');
+      } catch (e) {
+        console.warn('⚠️ discover endpoint: trending fetch failed', (e as Error).message);
+        trendingAll = { results: [] };
+      }
+
+      const trendingResults: any[] = Array.isArray(trendingAll?.results) ? trendingAll.results : [];
+      const heroRaw = trendingResults.find(r => r.backdrop_path) || trendingResults[0] || null;
+      const hero = heroRaw ? {
+        id: heroRaw.id,
+        title: heroRaw.title || heroRaw.name,
+        backdrop: heroRaw.backdrop_path ? `https://image.tmdb.org/t/p/original${heroRaw.backdrop_path}` : null,
+        genres: [], // Could be enriched with a genre lookup layer
+        platform: '—', // Placeholder until streaming enrichment
+        rationale: 'Top trending pick selected as a personalized hero placeholder.'
+      } : null;
+
+      const forYou = trendingResults.slice(0, 15).map(r => ({
+        id: r.id,
+        title: r.title || r.name,
+        poster: r.poster_path ? `https://image.tmdb.org/t/p/w500${r.poster_path}` : null,
+        mediaType: r.media_type || (r.title ? 'movie' : 'tv')
+      }));
+
+      // Placeholder mood + genre inference (would normally derive from user prefs + embeddings)
+      const moodBuckets = ['Cerebral', 'Feel-good', 'Edge-of-seat'];
+      const dynamicBlocks = [
+        { type: 'quiz', id: 'q1', title: 'Pick your weekend vibe' },
+        { type: 'spotlight', id: 's1', title: 'Hidden Gems: Sci-Fi' }
+      ];
+
+      // Simple anniversaries stub (would be calculated server-side from release dates + current date)
+      const anniversaries = [] as any[];
+
+      // Social buzz placeholder (replace with real social listening / internal metrics)
+      const socialBuzz = [
+        { id: 't1', topic: '#NowStreaming', mentions: 12500 },
+        { id: 't2', topic: 'BingeBoardRecs', mentions: 6400 }
+      ];
+
+      res.setHeader('Cache-Control', 'public, max-age=60, stale-while-revalidate=300');
+      return res.json({
+        userId,
+        hero,
+        forYou,
+        moodBuckets,
+        dynamicBlocks,
+        trendingThisWeek: trendingResults.slice(0, 20).map(r => ({
+          id: r.id,
+          title: r.title || r.name,
+          poster: r.poster_path ? `https://image.tmdb.org/t/p/w500${r.poster_path}` : null
+        })),
+        anniversaries,
+        socialBuzz,
+        meta: {
+          source: 'aggregated',
+          fetchedAt: new Date().toISOString(),
+          trendingCount: trendingResults.length
+        }
+      });
+    } catch (e) {
+      console.error('❌ /api/discover aggregation error', e);
+      return res.status(500).json({ message: 'Failed to build discover payload' });
+    }
+  });
+
   // Debug middleware to log all requests and cookies
   app.use((req, res, next) => {
     if (req.path.startsWith('/api/auth')) {

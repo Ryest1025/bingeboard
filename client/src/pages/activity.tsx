@@ -1,8 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Heart, MessageCircle, Star, Clock, TrendingUp, Play } from "lucide-react";
+import React from "react";
 import { useAuth } from "@/hooks/useAuth";
-import NavigationHeader from "@/components/navigation-header";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import AppLayout from "@/components/layouts/AppLayout";
 
 interface ActivityItem {
   id: number;
@@ -63,7 +66,7 @@ export default function Activity() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-[hsl(228,25%,3%)] via-[hsl(226,22%,6%)] to-[hsl(224,20%,8%)] pb-20">
-        <NavigationHeader />
+        {/* NavigationHeader removed: handled by App.tsx */}
         <div className="max-w-7xl mx-auto px-6 lg:px-8 pt-28">
           <div className="space-y-6">
             {[...Array(5)].map((_, i) => (
@@ -84,9 +87,8 @@ export default function Activity() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[hsl(228,25%,3%)] via-[hsl(226,22%,6%)] to-[hsl(224,20%,8%)] pb-20">
-      <NavigationHeader />
-      <div className="max-w-7xl mx-auto px-6 lg:px-8 pt-28">
+    <AppLayout>
+      <div className="max-w-7xl mx-auto px-6 lg:px-8 pt-4">
         <div className="space-y-8">
           {/* Page Header */}
           <div>
@@ -172,6 +174,6 @@ export default function Activity() {
           )}
         </div>
       </div>
-    </div>
+    </AppLayout>
   );
 }
