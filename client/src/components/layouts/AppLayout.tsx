@@ -11,7 +11,7 @@ export default function AppLayout({ children, className = "" }: AppLayoutProps) 
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-slate-900 to-slate-800">
       <TopNav />
-      <main className={`flex-1 pt-16 pb-16 md:pb-0 ${className}`} style={{ paddingTop: 'calc(4rem + env(safe-area-inset-top, 0px))', paddingBottom: 'calc(4rem + env(safe-area-inset-bottom, 0px))' }}>
+      <main className={`flex-1 pt-16 pb-16 md:pb-0 ${className}`}>
         {children}
       </main>
       <BottomNav />

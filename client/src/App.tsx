@@ -25,7 +25,6 @@ import MobileLogin from "@/pages/mobile-login";
 import Home from "@/pages/home";
 // Structured Discover page with integrated components
 import DiscoverStructured from "@/pages/DiscoverStructured";
-import DiscoverSectionPage from "@/pages/discover-section";
 import DiscoverLab from "@/pages/DiscoverLab";
 import UserActionsDemoPage from "@/pages/UserActionsDemoPage";
 import UserActionsTestPage from "@/pages/UserActionsTestPage";
@@ -177,7 +176,6 @@ function Router() {
             <>
               <Route path="/dashboard" component={Dashboard} />
               <Route path="/discover" component={DiscoverStructured} />
-              <Route path="/discover/:section" component={DiscoverSectionPage} />
               <Route path="/demo" component={UserActionsDemoPage} />
               <Route path="/test" component={UserActionsTestPage} />
               <Route path="/activity" component={Activity} />
