@@ -21,6 +21,7 @@ interface FiltersState {
   showCollaborativeLists: boolean;
   listSortBy: ListSortBy;
   watchlistStatus: WatchlistStatus;
+  liveNow?: boolean; // Added for live content filtering
 }
 
 const defaultFilters: FiltersState = {
@@ -32,6 +33,7 @@ const defaultFilters: FiltersState = {
   showCollaborativeLists: true,
   listSortBy: 'date',
   watchlistStatus: 'Watching',
+  liveNow: false,
 };
 
 type Action =

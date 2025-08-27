@@ -7,12 +7,16 @@ console.log("FIREBASE_ADMIN_KEY present:", !!process.env.FIREBASE_ADMIN_KEY);
 
 import express, { type Request, Response, NextFunction } from "express";
 import cors from "cors";
+import path from "path";
+import { fileURLToPath } from "url";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { initializeFirebaseAdmin } from "./services/firebaseAdmin";
 import fs from 'fs';
 import https from 'https';
 import http from 'http';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const app = express();
 
@@ -155,6 +159,12 @@ app.use((req, res, next) => {
 
   if (env === "development" && !isApiOnlyMode) {
     console.log('✅ Setting up Vite development server...');
+
+    // Serve static files from client/public directory for development
+    const clientPublicPath = path.resolve(__dirname, "..", "client", "public");
+    console.log('📁 Serving static files from:', clientPublicPath);
+    app.use(express.static(clientPublicPath));
+
     await setupVite(app, server);
   } else if (env === "production") {
     console.log('📦 Setting up static file serving...');

@@ -3,6 +3,7 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import { createServer as createViteServer, createLogger } from "vite";
+import { QueryClient, dehydrate } from '@tanstack/react-query';
 import { type Server } from "http";
 import viteConfig from "../vite.config";
 import { nanoid } from "nanoid";
@@ -37,6 +38,10 @@ export async function setupVite(app: Express, server: Server) {
   const vite = await createViteServer({
     ...viteConfig,
     configFile: false,
+  // Explicitly ensure Vite root points at the client directory when running in middleware mode.
+  // This mirrors the root setting in the base config but we reassert it here since we spread viteConfig
+  // and then override configFile (which can sometimes skip certain path normalizations in edge cases).
+  root: path.resolve(__dirname, "..", "client"),
     customLogger: {
       ...viteLogger,
       error: (msg, options) => {
@@ -57,6 +62,12 @@ export async function setupVite(app: Express, server: Server) {
       return next();
     }
 
+    // If the request looks like a direct module/asset request (has an extension that isn't .html)
+    // let Vite's middleware (or static serving) handle it instead of forcing index.html.
+    if (/\.[a-zA-Z0-9]+($|\?)/.test(url) && !url.endsWith('.html')) {
+      return next();
+    }
+
     try {
       const clientTemplate = path.resolve(
         __dirname,
@@ -67,6 +78,24 @@ export async function setupVite(app: Express, server: Server) {
 
       // Always reload the index.html file from disk in case it changes
       let template = await fs.promises.readFile(clientTemplate, "utf-8");
+
+      // Server-side lightweight prefetch for /discover (non-blocking if it fails)
+      if (url.startsWith('/discover')) {
+        try {
+          const qc = new QueryClient();
+          // Prefetch discover data from internal API
+            await qc.prefetchQuery({ queryKey: ['discover'], queryFn: async () => {
+              const res = await fetch(`http://localhost:${process.env.PORT || 5000}/api/discover`);
+              if (!res.ok) throw new Error('prefetch failed');
+              return res.json();
+            }});
+          const dehydrated = JSON.stringify(dehydrate(qc));
+          template = template.replace('</head>', `<script>window.__RQ__=${dehydrated}</script></head>`);
+        } catch (e) {
+          console.warn('⚠️ Discover prefetch failed:', (e as Error).message);
+        }
+      }
+
       // Let Vite handle script injection and CSS processing - don't manually modify
       const page = await vite.transformIndexHtml(url, template);
       res.status(200).set({ "Content-Type": "text/html" }).end(page);

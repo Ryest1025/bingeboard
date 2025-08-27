@@ -17,6 +17,8 @@ type FiltersState = {
   showCollaborativeLists: boolean;
   listSortBy: string;
   watchlistStatus: string;
+  hideWatched?: boolean;
+  liveNow?: boolean; // <- Added
 };
 
 export interface RecommendationFilterProps {
@@ -37,7 +39,7 @@ export const RecommendationFilter: React.FC<RecommendationFilterProps> = ({
   onChange,
   initialFilters = {}
 }) => {
-  const { preferredGenres, activePlatforms, userMood, setFilter } = useDashboardFilters();
+  const { preferredGenres, activePlatforms, userMood, liveNow: liveNowFilter, setFilter } = useDashboardFilters();
   const [filters, setFilters] = useState<RecommendationFilters>(initialFilters);
   const [isOpen, setIsOpen] = useState(false);
 
@@ -60,12 +62,14 @@ export const RecommendationFilter: React.FC<RecommendationFilterProps> = ({
     preferredGenres.length > 0 ||
     activePlatforms.length > 0 ||
     userMood !== null ||
-    filters.hideWatched;
+    filters.hideWatched ||
+    liveNowFilter; // <- include live now
 
   const clearFilters = () => {
     setFilter('preferredGenres', []);
     setFilter('activePlatforms', []);
     setFilter('userMood', null);
+    setFilter('liveNow', false); // <- reset live now
     const clearedFilters = {};
     setFilters(clearedFilters);
     onChange?.(clearedFilters);
@@ -87,7 +91,7 @@ export const RecommendationFilter: React.FC<RecommendationFilterProps> = ({
             Tune
             {hasActiveFilters && (
               <Badge variant="secondary" className="ml-2 h-4 w-4 p-0 text-xs bg-blue-500 text-white">
-                {[preferredGenres.length > 0, activePlatforms.length > 0, userMood !== null, filters.hideWatched].filter(Boolean).length}
+                {[preferredGenres.length > 0, activePlatforms.length > 0, userMood !== null, filters.hideWatched, liveNowFilter].filter(Boolean).length}
               </Badge>
             )}
           </Button>
@@ -174,17 +178,31 @@ export const RecommendationFilter: React.FC<RecommendationFilterProps> = ({
                 </div>
               </div>
 
-              {/* Hide Watched Toggle */}
-              <div className="flex items-center justify-between pt-2 border-t border-gray-700">
-                <span className="text-sm text-gray-300">Hide shows I've seen</span>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className={`p-2 ${filters.hideWatched ? 'text-blue-400' : 'text-gray-400'}`}
-                  onClick={() => updateFilter('hideWatched', !filters.hideWatched)}
-                >
-                  {filters.hideWatched ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                </Button>
+              {/* Hide Watched & Live Now */}
+              <div className="flex flex-col gap-2 pt-2 border-t border-gray-700">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-300">Hide shows I've seen</span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className={`p-2 ${filters.hideWatched ? 'text-blue-400' : 'text-gray-400'}`}
+                    onClick={() => updateFilter('hideWatched', !filters.hideWatched)}
+                  >
+                    {filters.hideWatched ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </Button>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-300">Live Now</span>
+                  <Button
+                    variant={liveNowFilter ? 'default' : 'outline'}
+                    size="sm"
+                    className={`p-2 ${liveNowFilter ? 'bg-green-600 text-white border-green-500' : 'text-gray-400 border-gray-600 hover:text-green-400 hover:border-green-400'}`}
+                    onClick={() => setFilter('liveNow', !liveNowFilter)}
+                  >
+                    LIVE
+                  </Button>
+                </div>
               </div>
             </div>
           </motion.div>

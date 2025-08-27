@@ -7,6 +7,8 @@ import { motion } from "framer-motion";
 import useSearchShows from "@/hooks/useSearchShows";
 import BrandedSearchDropdown from "@/components/search/BrandedSearchDropdown";
 import BrandedShowModal from "@/components/search/BrandedShowModal";
+import BrandedShowModalLite from "@/components/search/BrandedShowModalLite";
+import { useOpenShowModal } from '@/hooks/useOpenShowModal';
 import { colors, gradients, radii, spacing } from "@/styles/tokens";
 import { tw } from "@/styles/theme";
 import { StreamingPlatformsDisplay } from '@/components/streaming/StreamingPlatformsDisplay';
@@ -16,6 +18,8 @@ interface Props {
   className?: string;
   onAddToWatchlist?: (showId: number) => void;
   onWatchNow?: (show: any) => void;
+  onQueryChange?: (value: string) => void;
+  onShowSelected?: (show: any) => void;
 }
 
 export default function BrandedSearchBar({
@@ -23,6 +27,8 @@ export default function BrandedSearchBar({
   className = "",
   onAddToWatchlist,
   onWatchNow,
+  onQueryChange,
+  onShowSelected,
 }: Props) {
   const [query, setQuery] = useState("");
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -43,6 +49,7 @@ export default function BrandedSearchBar({
   const [resultCountMsg, setResultCountMsg] = useState("");
 
   const { data: results = [], isFetching } = useSearchShows(query);
+  const { openModal, Modal } = useOpenShowModal({ onAddToWatchlist, onWatchNow, source: 'search' });
 
   // Reset highlighted index & update status when results change
   useEffect(() => {
@@ -118,21 +125,15 @@ export default function BrandedSearchBar({
   function openShowModal(id: string, type: string = 'movie') {
     setSelectedId(id);
     setSelectedType(type);
-    setModalOpen(true);
     setDropdownOpen(false);
-
-    // Prefetch details with react-query for instant modal loading
-    qc.prefetchQuery({
-      queryKey: ["show-details", id, type],
-      queryFn: () => fetch(`/api/tmdb/${type}/${id}`).then(r => r.json()),
-      staleTime: 1000 * 60 * 10,
-    });
+    openModal(id, type);
   }
 
   function handleInputChange(e: React.ChangeEvent<HTMLInputElement>) {
     const value = e.target.value;
     setQuery(value);
     setDropdownOpen(!!value.trim());
+  onQueryChange?.(value);
   }
 
   function handleInputFocus() {
@@ -156,6 +157,7 @@ export default function BrandedSearchBar({
   function handleChoose(result: any) {
     openShowModal(result.id, result.type || 'movie');
     setQuery(''); // Clear search after selection
+  onShowSelected?.(result);
   }
 
   return (
@@ -241,15 +243,8 @@ export default function BrandedSearchBar({
         />
       )}
 
-      {/* Enhanced Modal */}
-      <BrandedShowModal
-        showId={selectedId}
-        showType={selectedType}
-        open={modalOpen}
-        onClose={() => setModalOpen(false)}
-        onAddToWatchlist={onAddToWatchlist}
-        onWatchNow={onWatchNow}
-      />
+  {/* Centralized Modal Renderer (variant-aware) */}
+  <Modal />
 
       {/* Streaming Platforms Display - Moved here from show modal for enhanced visibility */}
       {selectedId && (

@@ -9,8 +9,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
-import { TopNav } from "@/components/top-nav";
-import MobileNav from "@/components/mobile-nav";
+// // import { TopNav } from "@/components/top-nav"; // Auto-removed: TopNav handled by App.tsx // Auto-removed: TopNav handled by App.tsx
+// import MobileNav from "@/components/mobile-nav"; // Auto-removed: MobileNav handled by App.tsx
 import { HorizontalScrollContainer } from "@/components/ui/HorizontalScrollContainer";
 import { ContentCard } from "@/components/ui/ContentCard";
 import { StreamingLogos } from "@/components/ui/StreamingLogos";
@@ -237,7 +237,7 @@ export default function ModernSocial() {
 
   return (
     <div className="min-h-screen bg-black">
-      <TopNav />
+      {/* TopNav removed: handled by App.tsx */}
       
       <div className="pt-20 pb-24 px-4">
         <div className="max-w-4xl mx-auto">
@@ -547,7 +547,7 @@ export default function ModernSocial() {
         </div>
       </div>
       
-      <MobileNav />
+      {/* MobileNav removed: handled by App.tsx */}
     </div>
   );
 }

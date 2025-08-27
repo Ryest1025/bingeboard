@@ -1,66 +1,65 @@
-<svg width="192" height="192" viewBox="0 0 192 192" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <!-- Background Circle -->
-  <circle cx="96" cy="96" r="88" fill="url(#bgGradient)"/>
-  
-  <!-- TV Screen Frame -->
-  <rect x="48" y="64" width="96" height="72" rx="8" fill="#1a1b23" stroke="url(#frameGradient)" stroke-width="3"/>
-  
-  <!-- Screen Content -->
-  <rect x="56" y="72" width="80" height="56" rx="4" fill="#000"/>
-  
-  <!-- Play Button -->
-  <circle cx="96" cy="100" r="16" fill="url(#playGradient)" opacity="0.9"/>
-  <path d="M90 92L106 100L90 108V92Z" fill="white"/>
-  
-  <!-- Signal/Wave Lines (representing streaming) -->
-  <path d="M144 84C144 84 150 78 156 84" stroke="url(#signalGradient)" stroke-width="2" stroke-linecap="round" fill="none"/>
-  <path d="M144 100C144 100 152 94 160 100" stroke="url(#signalGradient)" stroke-width="2" stroke-linecap="round" fill="none"/>
-  <path d="M144 116C144 116 150 110 156 116" stroke="url(#signalGradient)" stroke-width="2" stroke-linecap="round" fill="none"/>
-  
-  <!-- Small dots representing shows/content -->
-  <circle cx="64" cy="80" r="2" fill="#8b5cf6" opacity="0.8"/>
-  <circle cx="72" cy="80" r="2" fill="#ec4899" opacity="0.8"/>
-  <circle cx="80" cy="80" r="2" fill="#8b5cf6" opacity="0.8"/>
-  <circle cx="88" cy="80" r="2" fill="#ec4899" opacity="0.8"/>
-  
-  <circle cx="64" cy="120" r="2" fill="#ec4899" opacity="0.8"/>
-  <circle cx="72" cy="120" r="2" fill="#8b5cf6" opacity="0.8"/>
-  <circle cx="80" cy="120" r="2" fill="#ec4899" opacity="0.8"/>
-  <circle cx="88" cy="120" r="2" fill="#8b5cf6" opacity="0.8"/>
-  
-  <!-- Letter "B" overlay (subtle) -->
-  <path d="M32 60V140H52C58 140 62 136 62 130V110C62 104 58 100 52 100H48V80H52C58 80 62 76 62 70V70C62 64 58 60 52 60H32Z" fill="url(#letterGradient)" opacity="0.3"/>
-  
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 600" role="img" aria-labelledby="title desc">
+  <title id="title">Bingeboard logo lockup</title>
+  <desc id="desc">Stylized B with two white play buttons in circular enclosures, blue gradient on dark background, with BINGEBOARD and PRESS PLAY! text.</desc>
+
+  <!-- Background -->
+  <rect width="100%" height="100%" fill="#0b1020"/>
+
   <defs>
-    <!-- Background Gradient -->
-    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#1a1b23"/>
-      <stop offset="50%" style="stop-color:#2a2b33"/>
-      <stop offset="100%" style="stop-color:#1a1b23"/>
+    <!-- Blue gradient for the B -->
+    <linearGradient id="bb-grad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#60a5fa"/>
+      <stop offset="100%" stop-color="#1d4ed8"/>
     </linearGradient>
-    
-    <!-- Frame Gradient -->
-    <linearGradient id="frameGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#8b5cf6"/>
-      <stop offset="100%" style="stop-color:#ec4899"/>
-    </linearGradient>
-    
-    <!-- Play Button Gradient -->
-    <radialGradient id="playGradient" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" style="stop-color:#8b5cf6"/>
-      <stop offset="100%" style="stop-color:#ec4899"/>
-    </radialGradient>
-    
-    <!-- Signal Gradient -->
-    <linearGradient id="signalGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" style="stop-color:#8b5cf6" stop-opacity="0.8"/>
-      <stop offset="100%" style="stop-color:#ec4899" stop-opacity="0.4"/>
-    </linearGradient>
-    
-    <!-- Letter Gradient -->
-    <linearGradient id="letterGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#8b5cf6"/>
-      <stop offset="100%" style="stop-color:#ec4899"/>
-    </linearGradient>
+
+    <!-- Build the B via mask (spine + two bowls) -->
+    <mask id="bb-mask" maskUnits="userSpaceOnUse">
+      <rect x="0" y="0" width="700" height="600" fill="black"/>
+      <!-- spine -->
+      <rect x="220" y="110" width="95" height="300" rx="47.5" fill="white"/>
+      <!-- top bowl -->
+      <circle cx="330" cy="200" r="80" fill="white"/>
+      <!-- bottom bowl -->
+      <circle cx="340" cy="320" r="95" fill="white"/>
+    </mask>
   </defs>
+
+  <!-- Gradient “B” -->
+  <rect x="190" y="100" width="280" height="320" fill="url(#bb-grad)" mask="url(#bb-mask)"/>
+
+  <!-- Play button (top) -->
+  <g transform="translate(330,200)">
+    <!-- circular enclosure -->
+    <circle r="56" fill="none" stroke="#ffffff" stroke-width="6"/>
+    <!-- triangle -->
+    <path d="M-16,-24 L26,0 L-16,24 Z" fill="#ffffff"/>
+  </g>
+
+  <!-- Play button (bottom) -->
+  <g transform="translate(340,320)">
+    <circle r="66" fill="none" stroke="#ffffff" stroke-width="6"/>
+    <path d="M-18,-27 L30,0 L-18,27 Z" fill="#ffffff"/>
+  </g>
+
+  <!-- Wordmark -->
+  <text x="350" y="455"
+        fill="#ffffff"
+        font-family="Inter, Segoe UI, Helvetica, Arial, sans-serif"
+        font-size="60"
+        font-weight="800"
+        letter-spacing="4"
+        text-anchor="middle">
+    BINGEBOARD
+  </text>
+
+  <!-- Tagline -->
+  <text x="350" y="500"
+        fill="#ffffff"
+        font-family="Inter, Segoe UI, Helvetica, Arial, sans-serif"
+        font-size="22"
+        font-weight="700"
+        letter-spacing="6"
+        text-anchor="middle">
+    PRESS PLAY!
+  </text>
 </svg>

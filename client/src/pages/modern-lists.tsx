@@ -9,8 +9,8 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
-import { TopNav } from "@/components/top-nav";
-import MobileNav from "@/components/mobile-nav";
+// // import { TopNav } from "@/components/top-nav"; // Auto-removed: TopNav handled by App.tsx // Auto-removed: TopNav handled by App.tsx
+// import MobileNav from "@/components/mobile-nav"; // Auto-removed: MobileNav handled by App.tsx
 import { HorizontalScrollContainer } from "@/components/ui/HorizontalScrollContainer";
 import { ContentCard } from "@/components/ui/ContentCard";
 import { StreamingLogos } from "@/components/ui/StreamingLogos";
@@ -278,7 +278,7 @@ export default function ModernLists() {
 
   return (
     <div className="min-h-screen bg-black">
-      <TopNav />
+      {/* TopNav removed: handled by App.tsx */}
 
       <div className="pt-20 pb-24">
         <div className="container mx-auto px-4">
@@ -553,7 +553,7 @@ export default function ModernLists() {
         </div>
       </div>
 
-      <MobileNav />
+      {/* MobileNav removed: handled by App.tsx */}
     </div>
   );
 }

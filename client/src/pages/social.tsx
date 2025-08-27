@@ -1,200 +1,100 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { motion } from "framer-motion";
+import AppLayout from "@/components/layouts/AppLayout";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useAuth } from "@/hooks/useAuth";
-import {
-  Users,
-  Plus,
-  Search,
-  Star,
-  Heart,
-  MessageCircle,
-  Share2,
-  UserPlus,
-  Tv,
-  Film,
-  Clock,
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { 
+  Users, 
+  UserPlus, 
+  Search, 
+  Share2, 
   TrendingUp,
-  Filter,
-  MoreHorizontal
+  Sparkles
 } from "lucide-react";
-import NavigationHeader from "@/components/navigation-header";
 
-interface User {
-  id: string;
-  name: string;
-  avatar: string;
-  username: string;
-  isFollowing: boolean;
-}
+// Modular Components
+import { ActivityCard, FriendCard, SuggestionCard } from "@/components/Social";
 
-interface Activity {
-  id: string;
-  user: User;
-  type: "watched" | "liked" | "added_to_list" | "rated" | "shared";
-  content: {
-    title: string;
-    poster_path: string;
-    media_type: string;
-    rating?: number;
-  };
-  timestamp: string;
-  likes: number;
-  comments: number;
-  isLiked: boolean;
-}
+// Types
+import type { Friend, Activity } from "@/types/social";
 
-const mockUsers: User[] = [
+// Mock data - replace with real API calls
+const mockFriends: Friend[] = [
   {
     id: "1",
-    name: "Alex Chen",
-    avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face",
-    username: "@alexc",
-    isFollowing: false
+    name: "Sarah Chen",
+    username: "@sarahc",
+    avatar: "https://i.pravatar.cc/150?img=1",
+    isFollowing: true,
+    mutualFriends: 12,
+    commonShows: 8,
+    recentActivity: "Watched Breaking Bad S5E16"
   },
   {
-    id: "2",
-    name: "Sarah Kim",
-    avatar: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=100&h=100&fit=crop&crop=face",
-    username: "@sarahk",
-    isFollowing: true
+    id: "2", 
+    name: "Mike Rodriguez",
+    username: "@mikerod",
+    avatar: "https://i.pravatar.cc/150?img=2",
+    isFollowing: true,
+    mutualFriends: 5,
+    commonShows: 15,
+    recentActivity: "Added The Crown to watchlist"
   },
   {
     id: "3",
-    name: "Mike Johnson",
-    avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face",
-    username: "@mikej",
-    isFollowing: true
+    name: "Emma Thompson", 
+    username: "@emma_t",
+    avatar: "https://i.pravatar.cc/150?img=3",
+    isFollowing: false,
+    mutualFriends: 3,
+    commonShows: 4,
+    recentActivity: "Rated Succession 5 stars"
   }
 ];
 
 const mockActivities: Activity[] = [
   {
     id: "1",
-    user: mockUsers[1],
+    user: mockFriends[0],
     type: "watched",
     content: {
-      title: "The Last of Us",
-      poster_path: "/uKvVjHNqB5VmOrdxqAt2F7J78ED.jpg",
+      id: "1",
+      title: "Breaking Bad",
+      poster_path: "/1yeVJox3rjo2jBKrrihIMj7uoS9.jpg",
       media_type: "tv"
     },
     timestamp: "2 hours ago",
     likes: 12,
-    comments: 3,
-    isLiked: false
+    comments: 3
   },
   {
-    id: "2",
-    user: mockUsers[2],
+    id: "2", 
+    user: mockFriends[1],
     type: "rated",
     content: {
-      title: "Dune: Part Two",
-      poster_path: "/1pdfLvkbY9ohJlCjQH2CZjjYVvJ.jpg",
-      media_type: "movie",
-      rating: 9
+      id: "2",
+      title: "The Crown",
+      poster_path: "/4jMuNlBBHQwBzgQF2S4dl8uLAqa.jpg",
+      media_type: "tv",
+      rating: 5
     },
-    timestamp: "4 hours ago",
+    timestamp: "4 hours ago", 
     likes: 8,
-    comments: 1,
-    isLiked: true
-  },
-  {
-    id: "3",
-    user: mockUsers[0],
-    type: "added_to_list",
-    content: {
-      title: "Wednesday",
-      poster_path: "/9PFonBhy4cQy7Jz20NpMygczOkv.jpg",
-      media_type: "tv"
-    },
-    timestamp: "6 hours ago",
-    likes: 5,
-    comments: 2,
-    isLiked: false
+    comments: 1
   }
 ];
 
 export default function Social() {
-  const { isAuthenticated } = useAuth();
-  const [searchTerm, setSearchTerm] = useState("");
-  const [activeTab, setActiveTab] = useState<"feed" | "discover" | "friends">("feed");
+  const [activeTab, setActiveTab] = useState("feed");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [likedActivities, setLikedActivities] = useState(new Set<string>());
 
-  const filteredUsers = mockUsers.filter(user =>
-    user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.username.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  if (!isAuthenticated) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center px-4">
-        <div className="text-center text-white max-w-md">
-          <Users className="w-16 h-16 mx-auto mb-4 text-teal-400" />
-          <h1 className="text-2xl font-bold mb-4">Join the community</h1>
-          <p className="text-gray-400 mb-6">Connect with friends and discover what they're watching</p>
-          <Button className="bg-teal-600 hover:bg-teal-700">
-            Sign In
-          </Button>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
-      <NavigationHeader />
-      {/* Mobile-first layout */}
-      <div className="pb-6 px-4 sm:px-6 lg:px-8 pt-28">
-        <div className="max-w-4xl mx-auto space-y-6">
-
-          {/* Header */}
-          <div className="text-center space-y-4">
-            <h1 className="text-3xl sm:text-4xl font-bold text-white">Social</h1>
-            <p className="text-gray-400 text-sm sm:text-base">See what your friends are watching</p>
-          </div>
-
-          {/* Tab Navigation - Mobile optimized */}
-          <div className="flex bg-slate-800/50 rounded-lg p-1">
-            {[
-              { id: "feed", label: "Feed", icon: TrendingUp },
-              { id: "discover", label: "Discover", icon: Search },
-              { id: "friends", label: "Friends", icon: Users }
-            ].map((tab) => {
-              const Icon = tab.icon;
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id as any)}
-                  className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-md transition-all ${activeTab === tab.id
-                    ? "bg-teal-600 text-white"
-                    : "text-gray-400 hover:text-white hover:bg-slate-700/50"
-                    }`}
-                >
-                  <Icon className="w-4 h-4" />
-                  <span className="text-sm font-medium">{tab.label}</span>
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Content based on active tab */}
-          {activeTab === "feed" && <FeedTab activities={mockActivities} />}
-          {activeTab === "discover" && <DiscoverTab users={filteredUsers} searchTerm={searchTerm} setSearchTerm={setSearchTerm} />}
-          {activeTab === "friends" && <FriendsTab users={mockUsers.filter(u => u.isFollowing)} />}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function FeedTab({ activities }: { activities: Activity[] }) {
-  const [likedPosts, setLikedPosts] = useState(new Set<string>());
-
-  const toggleLike = (activityId: string) => {
-    setLikedPosts(prev => {
+  // Handle like toggle
+  const handleToggleLike = (activityId: string) => {
+    setLikedActivities(prev => {
       const newSet = new Set(prev);
       if (newSet.has(activityId)) {
         newSet.delete(activityId);
@@ -205,221 +105,154 @@ function FeedTab({ activities }: { activities: Activity[] }) {
     });
   };
 
-  return (
-    <div className="space-y-4">
-      {activities.map((activity) => (
-        <Card key={activity.id} className="bg-slate-800/50 border-slate-700">
-          <CardContent className="p-4 sm:p-6">
-            <div className="flex gap-3">
-              {/* User Avatar */}
-              <Avatar className="w-10 h-10 sm:w-12 sm:h-12 flex-shrink-0">
-                <AvatarImage src={activity.user.avatar} alt={activity.user.name} />
-                <AvatarFallback>{activity.user.name.charAt(0)}</AvatarFallback>
-              </Avatar>
-
-              <div className="flex-1 min-w-0">
-                {/* Header */}
-                <div className="flex items-start justify-between mb-2">
-                  <div>
-                    <p className="text-white font-medium text-sm sm:text-base">
-                      {activity.user.name}
-                    </p>
-                    <p className="text-gray-400 text-xs sm:text-sm">
-                      {getActivityText(activity)} • {activity.timestamp}
-                    </p>
-                  </div>
-                  <Button variant="ghost" size="sm" className="w-8 h-8 p-0 flex-shrink-0">
-                    <MoreHorizontal className="w-4 h-4" />
-                  </Button>
-                </div>
-
-                {/* Content */}
-                <div className="flex gap-3 mb-3">
-                  <img
-                    src={`https://image.tmdb.org/t/p/w200${activity.content.poster_path}`}
-                    alt={activity.content.title}
-                    className="w-12 h-16 sm:w-16 sm:h-20 object-cover rounded border border-slate-600 flex-shrink-0"
-                  />
-                  <div className="flex-1 min-w-0">
-                    <h4 className="text-white font-medium text-sm sm:text-base truncate">
-                      {activity.content.title}
-                    </h4>
-                    <div className="flex items-center gap-2 mt-1">
-                      <Badge variant="outline" className="text-xs">
-                        {activity.content.media_type === "tv" ? "TV" : "Movie"}
-                      </Badge>
-                      {activity.content.rating && (
-                        <div className="flex items-center gap-1">
-                          <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-                          <span className="text-yellow-400 text-xs font-medium">
-                            {activity.content.rating}/10
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Actions */}
-                <div className="flex items-center gap-4 text-gray-400">
-                  <button
-                    onClick={() => toggleLike(activity.id)}
-                    className="flex items-center gap-1 hover:text-red-400 transition-colors"
-                  >
-                    <Heart
-                      className={`w-4 h-4 ${likedPosts.has(activity.id) || activity.isLiked
-                        ? "fill-red-400 text-red-400"
-                        : ""
-                        }`}
-                    />
-                    <span className="text-sm">{activity.likes}</span>
-                  </button>
-
-                  <button className="flex items-center gap-1 hover:text-blue-400 transition-colors">
-                    <MessageCircle className="w-4 h-4" />
-                    <span className="text-sm">{activity.comments}</span>
-                  </button>
-
-                  <button className="flex items-center gap-1 hover:text-green-400 transition-colors">
-                    <Share2 className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      ))}
-    </div>
-  );
-}
-
-function DiscoverTab({ users, searchTerm, setSearchTerm }: {
-  users: User[],
-  searchTerm: string,
-  setSearchTerm: (term: string) => void
-}) {
-  const [followingUsers, setFollowingUsers] = useState(new Set<string>());
-
-  const toggleFollow = (userId: string) => {
-    setFollowingUsers(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(userId)) {
-        newSet.delete(userId);
-      } else {
-        newSet.add(userId);
-      }
-      return newSet;
-    });
+  // Navigation handlers
+  const navigateToFindFriends = () => {
+    window.location.href = '/find-friends';
   };
 
+  // Suggestion card configurations
+  const suggestionCards = [
+    {
+      title: "AI Friend Suggestions",
+      description: "Based on your viewing history",
+      icon: <Search className="h-8 w-8 text-white" />,
+      gradient: "from-purple-900/30 to-blue-900/30 border-purple-500/30 hover:border-purple-400/50",
+      details: ["Smart matching", "Real-time updates"],
+      button: {
+        label: "Explore Suggestions",
+        icon: <Search className="h-4 w-4 mr-2" />,
+        onClick: navigateToFindFriends
+      },
+      highlightInfo: {
+        text: "Discover people with similar taste",
+        icon: <Sparkles className="h-3 w-3 inline mr-1" />,
+        color: "bg-purple-600/20 text-purple-300"
+      }
+    },
+    {
+      title: "Social Connections",
+      description: "Import from social media",
+      icon: <Share2 className="h-8 w-8 text-white" />,
+      gradient: "from-teal-900/30 to-cyan-900/30 border-teal-500/30 hover:border-teal-400/50",
+      details: ["Google", "Facebook"],
+      button: {
+        label: "Connect Accounts",
+        icon: <Share2 className="h-4 w-4 mr-2" />,
+        onClick: navigateToFindFriends
+      },
+      highlightInfo: {
+        text: "Find friends already on BingeBoard",
+        icon: <Users className="h-3 w-3 inline mr-1" />,
+        color: "bg-teal-600/20 text-teal-300"
+      }
+    },
+    {
+      title: "Search & Invite",
+      description: "Find specific people",
+      icon: <UserPlus className="h-8 w-8 text-white" />,
+      gradient: "from-amber-900/30 to-orange-900/30 border-amber-500/30 hover:border-amber-400/50",
+      details: ["Username search", "Contact import"],
+      button: {
+        label: "Search Friends",
+        icon: <UserPlus className="h-4 w-4 mr-2" />,
+        onClick: navigateToFindFriends
+      },
+      highlightInfo: {
+        text: "Search by name, email or username",
+        icon: <Search className="h-3 w-3 inline mr-1" />,
+        color: "bg-amber-600/20 text-amber-300"
+      }
+    }
+  ];
+
   return (
-    <div className="space-y-4">
-      {/* Search */}
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-        <Input
-          placeholder="Search users..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="pl-10 bg-slate-800/50 border-slate-700 text-white placeholder-gray-400 focus:ring-teal-500 focus:border-teal-500"
-        />
+    <AppLayout>
+      <div className="container mx-auto max-w-6xl px-4 md:px-6">
+        {/* Hero Section */}
+        <motion.div 
+          className="text-center py-8 mb-8"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
+            Your <span className="bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">Social</span> Hub
+          </h1>
+          <p className="text-gray-300 text-lg mb-6">Connect with friends and discover what they're watching</p>
+          
+          <div className="flex flex-col sm:flex-row gap-4 justify-center max-w-md mx-auto">
+            <Button 
+              onClick={navigateToFindFriends}
+              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+            >
+              <UserPlus className="h-4 w-4 mr-2" />
+              Find Friends
+            </Button>
+            <Button variant="outline" className="border-gray-600 text-white hover:bg-gray-800">
+              <Share2 className="h-4 w-4 mr-2" />
+              Invite Friends
+            </Button>
+          </div>
+        </motion.div>
+
+        {/* Navigation Tabs */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full mb-8">
+          <TabsList className="grid w-full grid-cols-2 bg-gray-800/50 backdrop-blur-sm border border-gray-700/50">
+            <TabsTrigger value="feed" className="data-[state=active]:bg-blue-600/20 data-[state=active]:text-blue-300">
+              <TrendingUp className="h-4 w-4 mr-2" />
+              Feed
+            </TabsTrigger>
+            <TabsTrigger value="friends" className="data-[state=active]:bg-purple-600/20 data-[state=active]:text-purple-300">
+              <Users className="h-4 w-4 mr-2" />
+              Friends
+            </TabsTrigger>
+          </TabsList>
+
+          {/* Feed Tab */}
+          <TabsContent value="feed" className="space-y-6 mt-8">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="space-y-6"
+            >
+              {mockActivities.map((activity) => (
+                <ActivityCard
+                  key={activity.id}
+                  activity={activity}
+                  isLiked={likedActivities.has(activity.id)}
+                  onToggleLike={handleToggleLike}
+                />
+              ))}
+            </motion.div>
+          </TabsContent>
+
+          {/* Friends Tab */}
+          <TabsContent value="friends" className="space-y-6 mt-8">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-semibold text-white">Your Friends</h2>
+              <Button 
+                onClick={navigateToFindFriends}
+                className="bg-purple-600 hover:bg-purple-700"
+              >
+                <UserPlus className="h-4 w-4 mr-2" />
+                Find Friends
+              </Button>
+            </div>
+
+            {/* Friends Grid with integrated suggestions */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {/* Existing Friends */}
+              {mockFriends.filter(f => f.isFollowing).map((friend) => (
+                <FriendCard key={friend.id} friend={friend} />
+              ))}
+
+              {/* Seamlessly integrated Find Friends Cards */}
+              {suggestionCards.map((card, index) => (
+                <SuggestionCard key={index} {...card} />
+              ))}
+            </div>
+          </TabsContent>
+        </Tabs>
       </div>
-
-      {/* Users Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {users.map((user) => (
-          <Card key={user.id} className="bg-slate-800/50 border-slate-700">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <Avatar className="w-12 h-12">
-                  <AvatarImage src={user.avatar} alt={user.name} />
-                  <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
-                </Avatar>
-
-                <div className="flex-1 min-w-0">
-                  <h4 className="text-white font-medium truncate">{user.name}</h4>
-                  <p className="text-gray-400 text-sm truncate">{user.username}</p>
-                </div>
-
-                <Button
-                  size="sm"
-                  variant={followingUsers.has(user.id) || user.isFollowing ? "outline" : "default"}
-                  onClick={() => toggleFollow(user.id)}
-                  className="flex-shrink-0"
-                >
-                  {followingUsers.has(user.id) || user.isFollowing ? (
-                    "Following"
-                  ) : (
-                    <>
-                      <UserPlus className="w-4 h-4 mr-1" />
-                      Follow
-                    </>
-                  )}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-    </div>
+    </AppLayout>
   );
-}
-
-function FriendsTab({ users }: { users: User[] }) {
-  return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-white">Following ({users.length})</h3>
-        <Button size="sm" className="bg-teal-600 hover:bg-teal-700">
-          <UserPlus className="w-4 h-4 mr-1" />
-          Find Friends
-        </Button>
-      </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {users.map((user) => (
-          <Card key={user.id} className="bg-slate-800/50 border-slate-700">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <Avatar className="w-12 h-12">
-                  <AvatarImage src={user.avatar} alt={user.name} />
-                  <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
-                </Avatar>
-
-                <div className="flex-1 min-w-0">
-                  <h4 className="text-white font-medium truncate">{user.name}</h4>
-                  <p className="text-gray-400 text-sm truncate">{user.username}</p>
-                  <p className="text-teal-400 text-xs">Following</p>
-                </div>
-
-                <Button
-                  size="sm"
-                  variant="outline"
-                >
-                  Message
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function getActivityText(activity: Activity): string {
-  switch (activity.type) {
-    case "watched":
-      return "watched";
-    case "liked":
-      return "liked";
-    case "added_to_list":
-      return "added to list";
-    case "rated":
-      return "rated";
-    case "shared":
-      return "shared";
-    default:
-      return "interacted with";
-  }
 }

@@ -1,5 +1,5 @@
 // components/search/BrandedSearchDropdown.tsx - Enhanced BingeBoard Branded Dropdown
-import React, { useEffect, useRef, forwardRef } from "react";
+import React, { useEffect, useRef, forwardRef, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Star, Play, Calendar, Plus, Video } from "lucide-react";
 import { colors, gradients, radii, spacing, shadows } from "@/styles/tokens";
@@ -42,15 +42,11 @@ const BrandedSearchDropdown = forwardRef<HTMLDivElement, Props>(function Branded
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Lock body scroll on mobile when dropdown open
+  // Body scroll lock (cleanly reverted on unmount regardless of state transitions)
   useEffect(() => {
-    if (results.length > 0 || loading) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
-    return () => {
-      document.body.style.overflow = "";
-    };
+    const shouldLock = results.length > 0 || loading;
+    if (shouldLock) document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = ''; };
   }, [results.length, loading]);
 
   // Keyboard navigation handler on container level
@@ -109,7 +105,7 @@ const BrandedSearchDropdown = forwardRef<HTMLDivElement, Props>(function Branded
 
   return (
     <AnimatePresence>
-      {(loading || results.length > 0) && (
+  {true && (
         <motion.div
           ref={(node: HTMLDivElement) => {
             (containerRef as any).current = node;
@@ -120,8 +116,22 @@ const BrandedSearchDropdown = forwardRef<HTMLDivElement, Props>(function Branded
           role="listbox"
           id={listboxId}
           aria-label="Search Results"
-          aria-activedescendant={optionIdForIndex ? optionIdForIndex(highlightedIndex) : `result-${highlightedIndex}`}
+          aria-activedescendant={
+            highlightedIndex >= 0 && highlightedIndex < results.length
+              ? (optionIdForIndex ? optionIdForIndex(highlightedIndex) : `result-${highlightedIndex}`)
+              : undefined
+          }
           onKeyDown={handleKeyDown}
+          onFocus={(e) => {
+            // When the listbox itself receives focus (e.g., via Tab), shift focus to highlighted option for better SR alignment
+            const activeId = optionIdForIndex ? optionIdForIndex(highlightedIndex) : `result-${highlightedIndex}`;
+            if (activeId && highlightedIndex >= 0) {
+              const optionEl = document.getElementById(activeId);
+              if (optionEl instanceof HTMLElement) {
+                optionEl.focus();
+              }
+            }
+          }}
           initial={{ opacity: 0, y: -8, scale: 0.95 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: -8, scale: 0.95 }}
@@ -167,10 +177,13 @@ const BrandedSearchDropdown = forwardRef<HTMLDivElement, Props>(function Branded
           >
             {results.map((result, idx) => {
               const isHighlighted = idx === highlightedIndex;
+              // Stable option id derived from index (tests rely on this); real id also exposed via data attribute
+              const optionId = optionIdForIndex ? optionIdForIndex(idx) : `result-${idx}`;
               return (
                 <motion.div
                   key={result.id}
-                  id={optionIdForIndex ? optionIdForIndex(idx) : `result-${idx}`}
+                  id={optionId}
+                  data-option-id={result.id}
                   role="option"
                   aria-selected={isHighlighted}
                   tabIndex={isHighlighted ? 0 : -1}
@@ -257,7 +270,7 @@ const BrandedSearchDropdown = forwardRef<HTMLDivElement, Props>(function Branded
                       </h4>
 
                       {/* Type badge */}
-                      {result.type && (
+            {result.type && (
                         <span
                           className="px-2 py-1 text-xs font-medium uppercase tracking-wide flex-shrink-0"
                           style={{
@@ -269,7 +282,7 @@ const BrandedSearchDropdown = forwardRef<HTMLDivElement, Props>(function Branded
                             borderRadius: radii.sm,
                           }}
                         >
-                          {result.type}
+              {result.type.toUpperCase()}
                         </span>
                       )}
                     </div>

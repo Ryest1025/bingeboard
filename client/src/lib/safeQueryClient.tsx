@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { HydrationBoundary } from '@tanstack/react-query';
 
 // Create a simple QueryClient with minimal config to avoid initialization issues
 const simpleQueryClient = new QueryClient({
@@ -25,7 +26,7 @@ export function SafeQueryProvider({ children }: SafeQueryProviderProps) {
 
   return (
     <QueryClientProvider client={simpleQueryClient}>
-      {children}
+  <HydrationBoundary state={(globalThis as any).__RQ__ || undefined}>{children}</HydrationBoundary>
     </QueryClientProvider>
   );
 }

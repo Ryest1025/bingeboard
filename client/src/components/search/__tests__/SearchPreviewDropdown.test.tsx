@@ -18,10 +18,14 @@ vi.mock('framer-motion', () => ({
 
 vi.mock('@/hooks/useEnhancedSearch', () => ({
   default: vi.fn(() => ({
-    data: { success: true, data: { results: [
-      { id: 'r1', title: 'Result One', media_type: 'movie', vote_average: 7.8 },
-      { id: 'r2', title: 'Result Two', media_type: 'tv', vote_average: 8.2 },
-    ] } },
+    data: {
+      success: true, data: {
+        results: [
+          { id: 'r1', title: 'Result One', media_type: 'movie', vote_average: 7.8 },
+          { id: 'r2', title: 'Result Two', media_type: 'tv', vote_average: 8.2 },
+        ]
+      }
+    },
     isLoading: false,
     error: null,
     refetch: vi.fn(),
@@ -46,9 +50,9 @@ describe('SearchPreviewDropdown', () => {
       <SearchPreviewDropdown
         query=""
         isVisible
-        onSelectShow={() => {}}
-        onHoverShow={() => {}}
-        onClose={() => {}}
+        onSelectShow={() => { }}
+        onHoverShow={() => { }}
+        onClose={() => { }}
         hoveredShow={null}
       />
     );
@@ -63,13 +67,13 @@ describe('SearchPreviewDropdown', () => {
       <SearchPreviewDropdown
         query=""
         isVisible
-        onSelectShow={() => {}}
-        onHoverShow={() => {}}
-        onClose={() => {}}
+        onSelectShow={() => { }}
+        onHoverShow={() => { }}
+        onClose={() => { }}
         hoveredShow={null}
       />
     );
-  const listbox = screen.getByRole('listbox', { name: 'Search suggestions' });
+    const listbox = screen.getByRole('listbox', { name: 'Search suggestions' });
     await user.click(listbox);
     await user.keyboard('{ArrowDown}');
     expect(listbox).toHaveAttribute('aria-activedescendant', 'recent-searches-option-0');
@@ -84,9 +88,9 @@ describe('SearchPreviewDropdown', () => {
       <SearchPreviewDropdown
         query=""
         isVisible
-        onSelectShow={() => {}}
-        onHoverShow={() => {}}
-        onClose={() => {}}
+        onSelectShow={() => { }}
+        onHoverShow={() => { }}
+        onClose={() => { }}
         hoveredShow={null}
       />
     );
@@ -103,9 +107,9 @@ describe('SearchPreviewDropdown', () => {
       <SearchPreviewDropdown
         query=""
         isVisible
-        onSelectShow={() => {}}
-        onHoverShow={() => {}}
-        onClose={() => {}}
+        onSelectShow={() => { }}
+        onHoverShow={() => { }}
+        onClose={() => { }}
         hoveredShow={null}
       />
     );
@@ -124,9 +128,9 @@ describe('SearchPreviewDropdown', () => {
       <SearchPreviewDropdown
         query="al" // less than 2 triggers recent only
         isVisible
-        onSelectShow={() => {}}
-        onHoverShow={() => {}}
-        onClose={() => {}}
+        onSelectShow={() => { }}
+        onHoverShow={() => { }}
+        onClose={() => { }}
         hoveredShow={null}
       />
     );
@@ -139,9 +143,9 @@ describe('SearchPreviewDropdown', () => {
       <SearchPreviewDropdown
         query="alpha" // will show results
         isVisible
-        onSelectShow={() => {}}
-        onHoverShow={() => {}}
-        onClose={() => {}}
+        onSelectShow={() => { }}
+        onHoverShow={() => { }}
+        onClose={() => { }}
         hoveredShow={null}
       />
     );
@@ -157,13 +161,13 @@ describe('SearchPreviewDropdown', () => {
       <SearchPreviewDropdown
         query="re"
         isVisible
-        onSelectShow={() => {}}
-        onHoverShow={() => {}}
-        onClose={() => {}}
+        onSelectShow={() => { }}
+        onHoverShow={() => { }}
+        onClose={() => { }}
         hoveredShow={null}
       />
     );
-  const listbox = screen.getByRole('listbox', { name: 'Search suggestions' });
+    const listbox = screen.getByRole('listbox', { name: 'Search suggestions' });
     expect(listbox).toBeInTheDocument();
     const options = screen.getAllByRole('option');
     expect(options.length).toBeGreaterThan(0);
@@ -177,12 +181,12 @@ describe('SearchPreviewDropdown', () => {
         query="res"
         isVisible
         onSelectShow={onSelectShow}
-        onHoverShow={() => {}}
-        onClose={() => {}}
+        onHoverShow={() => { }}
+        onClose={() => { }}
         hoveredShow={null}
       />
     );
-  const listbox = screen.getByRole('listbox', { name: 'Search suggestions' });
+    const listbox = screen.getByRole('listbox', { name: 'Search suggestions' });
     await user.click(listbox);
     await user.keyboard('{ArrowDown}{Enter}');
     expect(onSelectShow).toHaveBeenCalled();
@@ -196,9 +200,9 @@ describe('SearchPreviewDropdown', () => {
       <SearchPreviewDropdown
         query="res"
         isVisible
-        onSelectShow={() => {}}
-        onHoverShow={() => {}}
-        onClose={() => {}}
+        onSelectShow={() => { }}
+        onHoverShow={() => { }}
+        onClose={() => { }}
         hoveredShow={null}
       />
     );
@@ -215,8 +219,8 @@ describe('SearchPreviewDropdown', () => {
       <SearchPreviewDropdown
         query="res"
         isVisible
-        onSelectShow={() => {}}
-        onHoverShow={() => {}}
+        onSelectShow={() => { }}
+        onHoverShow={() => { }}
         onClose={onClose}
         hoveredShow={null}
       />
@@ -229,10 +233,14 @@ describe('SearchPreviewDropdown', () => {
 
   it('shows "With Streaming Data" badge when results contain streaming info', () => {
     (useEnhancedSearch as any).mockReturnValue({
-      data: { success: true, data: { results: [
-        { id: 'r1', title: 'Result One', media_type: 'movie', vote_average: 7.8, streaming: ['netflix'] },
-        { id: 'r2', title: 'Result Two', media_type: 'tv', vote_average: 8.2 }
-      ] } },
+      data: {
+        success: true, data: {
+          results: [
+            { id: 'r1', title: 'Result One', media_type: 'movie', vote_average: 7.8, streaming: ['netflix'] },
+            { id: 'r2', title: 'Result Two', media_type: 'tv', vote_average: 8.2 }
+          ]
+        }
+      },
       isLoading: false,
       error: null,
       refetch: vi.fn(),
@@ -241,9 +249,9 @@ describe('SearchPreviewDropdown', () => {
       <SearchPreviewDropdown
         query="res"
         isVisible
-        onSelectShow={() => {}}
-        onHoverShow={() => {}}
-        onClose={() => {}}
+        onSelectShow={() => { }}
+        onHoverShow={() => { }}
+        onClose={() => { }}
         hoveredShow={null}
       />
     );

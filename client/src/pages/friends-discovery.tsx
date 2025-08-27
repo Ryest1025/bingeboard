@@ -1,26 +1,21 @@
 import { useState } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { apiRequest, queryClient } from "@/lib/queryClient";
-import { useToast } from "@/hooks/use-toast";
+import { motion } from "framer-motion";
+import AppLayout from "@/components/layouts/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { 
-  Search, 
-  UserPlus, 
-  Users, 
-  MessageCircle, 
-  Star, 
+import {
+  Search,
+  UserPlus,
+  Users,
+  MessageCircle,
+  Star,
   Clock,
   Smartphone,
   Mail
 } from "lucide-react";
-import { SiFacebook, SiInstagram } from "react-icons/si";
-import NavigationHeader from "@/components/navigation-header";
-
 
 interface SuggestedFriend {
   id: string;
@@ -33,75 +28,72 @@ interface SuggestedFriend {
   source: 'facebook' | 'email' | 'phone' | 'bingeboard';
 }
 
+const mockSuggestedFriends: SuggestedFriend[] = [
+  {
+    id: "1",
+    firstName: "Alex",
+    lastName: "Chen",
+    email: "alex.chen@example.com",
+    profileImageUrl: "https://i.pravatar.cc/150?img=6",
+    mutualFriends: 5,
+    commonShows: 12,
+    source: 'facebook'
+  },
+  {
+    id: "2", 
+    firstName: "Jordan",
+    lastName: "Smith",
+    email: "jordan.smith@example.com",
+    profileImageUrl: "https://i.pravatar.cc/150?img=7",
+    mutualFriends: 3,
+    commonShows: 8,
+    source: 'email'
+  }
+];
+
 export default function FriendsDiscovery() {
-  const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedSource, setSelectedSource] = useState<'all' | 'facebook' | 'email' | 'phone' | 'bingeboard'>('all');
 
-  // Fetch suggested friends
-  const { data: suggestedFriends = [], isLoading } = useQuery<SuggestedFriend[]>({
-    queryKey: ['/api/friends/suggestions'],
-    retry: false,
-  });
+  const filteredSuggestions = selectedSource === 'all'
+    ? mockSuggestedFriends
+    : mockSuggestedFriends.filter((friend) => friend.source === selectedSource);
 
-  // Search users
-  const { data: searchResults = [], isLoading: isSearching } = useQuery<any[]>({
-    queryKey: ['/api/friends/search', searchQuery],
-    enabled: searchQuery.length > 2,
-    retry: false,
-  });
-
-  // Send friend request mutation
-  const sendFriendRequestMutation = useMutation({
-    mutationFn: async (friendId: string) => {
-      return await apiRequest('/api/friends/send-request', 'POST', { friendId });
-    },
-    onSuccess: () => {
-      toast({
-        title: "Friend Request Sent",
-        description: "Your friend request has been sent successfully.",
-      });
-      queryClient.invalidateQueries({ queryKey: ['/api/friends/suggestions'] });
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Failed to Send Request",
-        description: error.message || "Something went wrong. Please try again.",
-        variant: "destructive",
-      });
-    },
-  });
-
-  // Connect social network - Firebase authentication only
-  const connectSocialMutation = useMutation({
-    mutationFn: async (platform: string) => {
-      // Firebase authentication only - no server-side OAuth
-      toast({
-        title: "Social Media Integration",
-        description: "Connect through your profile's social media settings for the best experience.",
-      });
-      return { platform };
-    },
-    onSuccess: (data) => {
-      toast({
-        title: "Integration Info",
-        description: `Visit your profile to connect ${data.platform} through Firebase authentication.`,
-      });
-    },
-  });
-
-  const handleSendFriendRequest = (friendId: string) => {
-    sendFriendRequestMutation.mutate(friendId);
+  // Handle adding a friend
+  const handleAddFriend = async (friend: SuggestedFriend) => {
+    try {
+      console.log('Adding friend:', friend);
+      // API call to add friend (placeholder)
+      // await addFriend(friend.id);
+      
+      // Show success feedback
+      alert(`Friend request sent to ${friend.firstName} ${friend.lastName}!`);
+      
+      // Optionally remove from suggestions or update UI
+    } catch (error) {
+      console.error('Failed to add friend:', error);
+      alert('Failed to send friend request. Please try again.');
+    }
   };
 
-  const handleConnectSocial = (platform: string) => {
-    connectSocialMutation.mutate(platform);
+  // Handle connecting to Facebook
+  const handleConnectFacebook = () => {
+    console.log('Connecting to Facebook...');
+    // Implement Facebook connection logic
+    alert('Facebook integration coming soon!');
+  };
+
+  // Handle search
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+    console.log('Searching for:', query);
+    // In a real app, this would trigger an API call to search for users
   };
 
   const getSourceIcon = (source: string) => {
     switch (source) {
       case 'facebook':
-        return <SiFacebook className="h-4 w-4 text-blue-500" />;
+        return <div className="h-4 w-4 bg-blue-500 rounded"></div>;
       case 'email':
         return <Mail className="h-4 w-4 text-green-500" />;
       case 'phone':
@@ -111,227 +103,175 @@ export default function FriendsDiscovery() {
     }
   };
 
-  const filteredSuggestions = selectedSource === 'all' 
-    ? suggestedFriends 
-    : suggestedFriends.filter((friend: SuggestedFriend) => friend.source === selectedSource);
-
   return (
-    <div className="min-h-screen bg-binge-dark">
-      <NavigationHeader />
-      
-      <div className="pt-16 pb-20 lg:pb-0">
-        <div className="max-w-6xl mx-auto px-4 py-8">
-          {/* Header */}
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-white mb-2">
-              Find Your <span className="text-gradient-purple">Friends</span>
-            </h1>
-            <p className="text-gray-400">
-              Connect with friends and discover what they're watching
-            </p>
-          </div>
-
-          {/* Connect Social Networks */}
-          <Card className="glass-effect border-white/10 mb-8">
-            <CardHeader>
-              <CardTitle className="text-white flex items-center gap-2">
-                <Users className="h-5 w-5" />
-                Connect Your Social Networks
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Button
-                  onClick={() => handleConnectSocial('facebook')}
-                  variant="outline"
-                  className="glass-effect border-white/20 hover:bg-blue-500/10 text-white justify-start"
-                >
-                  <SiFacebook className="h-5 w-5 mr-3 text-blue-500" />
-                  Find Facebook Friends
-                </Button>
-                
-                <Button
-                  variant="outline"
-                  disabled
-                  className="glass-effect border-white/20 text-gray-400 justify-start opacity-50"
-                >
-                  <MessageCircle className="h-5 w-5 mr-3 text-blue-400" />
-                  Twitter (Coming Soon)
-                </Button>
-                
-                <Button
-                  variant="outline"
-                  disabled
-                  className="glass-effect border-white/20 text-gray-400 justify-start opacity-50"
-                >
-                  <SiInstagram className="h-5 w-5 mr-3 text-pink-500" />
-                  Instagram (Coming Soon)
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Search */}
-          <Card className="glass-effect border-white/10 mb-8">
-            <CardHeader>
-              <CardTitle className="text-white flex items-center gap-2">
-                <Search className="h-5 w-5" />
-                Search Users
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="relative">
-                <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                <Input
-                  placeholder="Search by name or email..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 glass-effect border-white/20 text-white placeholder:text-gray-400"
-                />
-              </div>
-              
-              {searchQuery.length > 2 && (
-                <div className="mt-4 space-y-3">
-                  {isSearching ? (
-                    <div className="text-center py-4 text-gray-400">
-                      Searching...
-                    </div>
-                  ) : searchResults.length > 0 ? (
-                    searchResults.map((user: any) => (
-                      <div key={user.id} className="flex items-center justify-between p-3 glass-effect rounded-lg border border-white/10">
-                        <div className="flex items-center gap-3">
-                          <Avatar>
-                            <AvatarImage src={user.profileImageUrl} />
-                            <AvatarFallback className="bg-purple-600 text-white">
-                              {user.firstName?.[0]}{user.lastName?.[0]}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div>
-                            <p className="text-white font-medium">
-                              {user.firstName} {user.lastName}
-                            </p>
-                            <p className="text-gray-400 text-sm">{user.email}</p>
-                          </div>
-                        </div>
-                        <Button
-                          onClick={() => handleSendFriendRequest(user.id)}
-                          disabled={sendFriendRequestMutation.isPending}
-                          size="sm"
-                          className="bg-gradient-purple hover:opacity-90"
-                        >
-                          <UserPlus className="h-4 w-4 mr-2" />
-                          Add Friend
-                        </Button>
-                      </div>
-                    ))
-                  ) : (
-                    <div className="text-center py-4 text-gray-400">
-                      No users found
-                    </div>
-                  )}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Suggested Friends */}
-          <Card className="glass-effect border-white/10">
-            <CardHeader>
-              <CardTitle className="text-white flex items-center gap-2 mb-4">
-                <Star className="h-5 w-5" />
-                Suggested Friends
-              </CardTitle>
-              <div className="flex flex-wrap gap-2">
-                {['all', 'facebook', 'email', 'bingeboard'].map((source) => (
-                  <Button
-                    key={source}
-                    variant={selectedSource === source ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setSelectedSource(source as any)}
-                    className={selectedSource === source 
-                      ? "bg-gradient-purple hover:opacity-90" 
-                      : "glass-effect border-white/20 text-white hover:bg-white/10"
-                    }
-                  >
-                    {source === 'all' ? 'All' : source.charAt(0).toUpperCase() + source.slice(1)}
-                  </Button>
-                ))}
-              </div>
-            </CardHeader>
-            <CardContent>
-              {isLoading ? (
-                <div className="text-center py-8 text-gray-400">
-                  Loading suggestions...
-                </div>
-              ) : filteredSuggestions.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {filteredSuggestions.map((friend: SuggestedFriend) => (
-                    <div key={friend.id} className="glass-effect rounded-lg border border-white/10 p-4">
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="flex items-center gap-3">
-                          <Avatar>
-                            <AvatarImage src={friend.profileImageUrl} />
-                            <AvatarFallback className="bg-purple-600 text-white">
-                              {friend.firstName[0]}{friend.lastName[0]}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div>
-                            <p className="text-white font-medium">
-                              {friend.firstName} {friend.lastName}
-                            </p>
-                            <div className="flex items-center gap-1 text-gray-400 text-sm">
-                              {getSourceIcon(friend.source)}
-                              <span className="capitalize">{friend.source}</span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="space-y-2 mb-4">
-                        {friend.mutualFriends > 0 && (
-                          <div className="flex items-center gap-2 text-sm">
-                            <Users className="h-4 w-4 text-gray-400" />
-                            <span className="text-gray-300">
-                              {friend.mutualFriends} mutual friends
-                            </span>
-                          </div>
-                        )}
-                        {friend.commonShows > 0 && (
-                          <div className="flex items-center gap-2 text-sm">
-                            <Clock className="h-4 w-4 text-gray-400" />
-                            <span className="text-gray-300">
-                              {friend.commonShows} shows in common
-                            </span>
-                          </div>
-                        )}
-                      </div>
-
-                      <Button
-                        onClick={() => handleSendFriendRequest(friend.id)}
-                        disabled={sendFriendRequestMutation.isPending}
-                        className="w-full bg-gradient-purple hover:opacity-90"
-                        size="sm"
-                      >
-                        <UserPlus className="h-4 w-4 mr-2" />
-                        Add Friend
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8">
-                  <Users className="h-12 w-12 text-gray-600 mx-auto mb-4" />
-                  <p className="text-gray-400 mb-2">No friend suggestions available</p>
-                  <p className="text-gray-500 text-sm">
-                    Connect your social networks or search for friends manually
-                  </p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
+    <AppLayout>
+      {/* Header */}
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-white mb-2">
+          Find Your <span className="bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">Friends</span>
+        </h1>
+        <p className="text-gray-400">
+          Connect with friends and discover what they're watching
+        </p>
       </div>
 
-    </div>
+      {/* Search Section */}
+      <Card className="bg-gray-800/40 backdrop-blur-sm border-gray-700/50 mb-8">
+        <CardHeader>
+          <CardTitle className="text-white flex items-center gap-2">
+            <Search className="h-5 w-5" />
+            Search Friends
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Input
+              placeholder="Search by name or email..."
+              value={searchQuery}
+              onChange={(e) => handleSearch(e.target.value)}
+              className="pl-10 bg-gray-800/50 border-gray-600 text-white placeholder-gray-400"
+            />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Connect Social Networks */}
+      <Card className="bg-gray-800/40 backdrop-blur-sm border-gray-700/50 mb-8">
+        <CardHeader>
+          <CardTitle className="text-white flex items-center gap-2">
+            <Users className="h-5 w-5" />
+            Connect Your Social Networks
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <Button
+              variant="outline"
+              onClick={handleConnectFacebook}
+              className="bg-blue-600/10 border-blue-500/50 text-blue-300 hover:bg-blue-500/20 justify-start"
+            >
+              <div className="h-5 w-5 mr-3 bg-blue-500 rounded" />
+              Find Facebook Friends
+            </Button>
+
+            <Button
+              variant="outline"
+              disabled
+              className="bg-gray-800/50 border-gray-600 text-gray-400 justify-start opacity-50"
+            >
+              <MessageCircle className="h-5 w-5 mr-3 text-blue-400" />
+              Contact Sync (Coming Soon)
+            </Button>
+
+            <Button
+              variant="outline"
+              disabled
+              className="bg-gray-800/50 border-gray-600 text-gray-400 justify-start opacity-50"
+            >
+              <Mail className="h-5 w-5 mr-3 text-green-400" />
+              Email Import (Coming Soon)
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Source Filter */}
+      <div className="flex gap-2 mb-6">
+        {[
+          { id: 'all', label: 'All Sources' },
+          { id: 'facebook', label: 'Facebook' },
+          { id: 'email', label: 'Email' },
+          { id: 'phone', label: 'Phone' },
+          { id: 'bingeboard', label: 'BingeBoard' }
+        ].map((source) => (
+          <Button
+            key={source.id}
+            variant={selectedSource === source.id ? "default" : "outline"}
+            size="sm"
+            onClick={() => setSelectedSource(source.id as any)}
+            className={selectedSource === source.id 
+              ? "bg-purple-600 text-white" 
+              : "border-gray-600 text-gray-300 hover:bg-gray-600"
+            }
+          >
+            {source.label}
+          </Button>
+        ))}
+      </div>
+
+      {/* Suggested Friends */}
+      <Card className="bg-gray-800/40 backdrop-blur-sm border-gray-700/50">
+        <CardHeader>
+          <CardTitle className="text-white flex items-center gap-2">
+            <UserPlus className="h-5 w-5" />
+            Suggested Friends ({filteredSuggestions.length})
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {filteredSuggestions.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {filteredSuggestions.map((friend) => (
+                <motion.div
+                  key={friend.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="bg-gray-700/30 rounded-lg p-4 border border-gray-600/50 hover:border-purple-500/50 transition-all duration-300"
+                >
+                  <div className="flex items-center gap-4">
+                    <Avatar className="h-12 w-12 border-2 border-purple-500/50">
+                      <AvatarImage src={friend.profileImageUrl} alt={`${friend.firstName} ${friend.lastName}`} />
+                      <AvatarFallback className="bg-purple-600 text-white">
+                        {friend.firstName[0]}{friend.lastName[0]}
+                      </AvatarFallback>
+                    </Avatar>
+                    
+                    <div className="flex-1">
+                      <h3 className="font-medium text-white">
+                        {friend.firstName} {friend.lastName}
+                      </h3>
+                      <p className="text-gray-400 text-sm mb-2">{friend.email}</p>
+                      
+                      <div className="flex items-center gap-2 mb-2">
+                        {getSourceIcon(friend.source)}
+                        <span className="text-xs text-gray-500 capitalize">{friend.source}</span>
+                      </div>
+
+                      {(friend.mutualFriends > 0 || friend.commonShows > 0) && (
+                        <div className="flex gap-3 text-xs text-gray-500">
+                          {friend.mutualFriends > 0 && (
+                            <span>{friend.mutualFriends} mutual friends</span>
+                          )}
+                          {friend.commonShows > 0 && (
+                            <span>{friend.commonShows} shows in common</span>
+                          )}
+                        </div>
+                      )}
+                    </div>
+
+                    <Button
+                      className="bg-purple-600 hover:bg-purple-700"
+                      size="sm"
+                      onClick={() => handleAddFriend(friend)}
+                    >
+                      <UserPlus className="h-4 w-4 mr-2" />
+                      Add Friend
+                    </Button>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <Users className="h-12 w-12 text-gray-600 mx-auto mb-4" />
+              <p className="text-gray-400 mb-2">No friend suggestions available</p>
+              <p className="text-gray-500 text-sm">
+                Connect your social networks or search for friends manually
+              </p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </AppLayout>
   );
 }

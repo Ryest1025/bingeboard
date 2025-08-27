@@ -54,7 +54,19 @@ export default function RecommendationCard({
       onBlur={() => setHovered(false)}
     >
       <CardContent className="p-0">
-        <div className="relative" onClick={handlePosterClick} role="button" tabIndex={-1}>
+        <div
+          className="relative focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[var(--bb-focus-ring)]"
+          onClick={handlePosterClick}
+          role="button"
+          tabIndex={0}
+          aria-label={`Open details for ${show.title}`}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              handlePosterClick();
+            }
+          }}
+        >
           {show.posterPath ? (
             <img
               src={show.posterPath}
@@ -118,9 +130,14 @@ export default function RecommendationCard({
           )}
         </div>
         <div className="p-3">
-          <h3 className="font-semibold mb-1 truncate cursor-pointer hover:text-binge-purple transition-colors" onClick={handlePosterClick}>
+          <button
+            type="button"
+            className="font-semibold mb-1 truncate cursor-pointer hover:text-binge-purple transition-colors text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[var(--bb-focus-ring)]"
+            onClick={handlePosterClick}
+            aria-label={`Open details for ${show.title}`}
+          >
             {show.title}
-          </h3>
+          </button>
           <div className="flex items-center justify-between mb-1">
             <span className="text-xs text-gray-400 font-medium">
               {show.rating ? <>{show.rating}★</> : null}

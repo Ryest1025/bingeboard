@@ -6,6 +6,7 @@ export interface RecommendationFilters {
   length?: string;
   platform?: string;
   hideWatched?: boolean;
+  liveNow?: boolean; // Added for live content filtering
 }
 
 export interface FriendFeedFilters {

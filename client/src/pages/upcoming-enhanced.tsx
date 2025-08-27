@@ -3,8 +3,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Clock, Calendar, Star, Play, Bell, BellRing } from "lucide-react";
-import NavigationHeader from "@/components/navigation-header";
-import MobileNav from "@/components/mobile-nav";
+// import NavigationHeader from "@/components/navigation-header"; // Auto-removed: NavigationHeader handled by App.tsx
+// import MobileNav from "@/components/mobile-nav"; // Auto-removed: MobileNav handled by App.tsx
 import StreamingLogos from "@/components/streaming-logos";
 
 interface UpcomingRelease {
@@ -203,7 +203,7 @@ export default function UpcomingEnhanced() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-black">
-        <NavigationHeader />
+        {/* NavigationHeader removed: handled by App.tsx */}
         <div className="pt-28 p-4 pb-24">
           <div className="container mx-auto max-w-4xl">
             <div className="space-y-6">
@@ -232,7 +232,7 @@ export default function UpcomingEnhanced() {
             </div>
           </div>
         </div>
-        <MobileNav />
+        {/* MobileNav removed: handled by App.tsx */}
       </div>
     );
   }

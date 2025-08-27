@@ -2,6 +2,7 @@ import fetch from 'node-fetch';
 
 const TMDB_API_KEY = process.env.TMDB_API_KEY;
 const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
+import { mapDiscoverFilters, DiscoverFiltersCamel } from './tmdbFilterMapper';
 
 if (!TMDB_API_KEY) {
   console.warn('TMDB_API_KEY not found in environment variables');
@@ -103,30 +104,9 @@ export class TMDBService {
   }
 
   // Discover with advanced filters (Trakt doesn't have this)
-  async discover(mediaType: 'tv' | 'movie' = 'tv', filters: {
-    sortBy?: string;
-    genres?: string;
-    networks?: string;
-    companies?: string;
-    keywords?: string;
-    voteAverageGte?: number;
-    voteAverageLte?: number;
-    firstAirDateGte?: string;
-    firstAirDateLte?: string;
-    withRuntimeGte?: number;
-    withRuntimeLte?: number;
-    page?: number;
-  } = {}) {
-    const params = new URLSearchParams();
-    
-    Object.entries(filters).forEach(([key, value]) => {
-      if (value !== undefined) {
-        const paramKey = key.replace(/([A-Z])/g, '_$1').toLowerCase();
-        params.append(paramKey, value.toString());
-      }
-    });
-
-    return this.makeRequest<TMDBResponse<TMDBShow | TMDBMovie>>(`/discover/${mediaType}?${params.toString()}`);
+  async discover(mediaType: 'tv' | 'movie' = 'tv', filters: DiscoverFiltersCamel = {}) {
+  const params = mapDiscoverFilters(filters);
+  return this.makeRequest<TMDBResponse<TMDBShow | TMDBMovie>>(`/discover/${mediaType}?${params.toString()}`);
   }
 
   // Get detailed show info with credits, keywords, recommendations
@@ -222,29 +202,29 @@ export class TMDBService {
     
     // Use discover endpoint for filtered searches
     return this.discover('tv', {
-      with_genres: genre,
-      first_air_date_year: year,
-      vote_average_gte: rating,
-      with_networks: network,
-      with_original_language: language,
-      page
+  genres: genre,
+  firstAirDateYear: year,
+  voteAverageGte: rating,
+  networks: network,
+  originalLanguage: language,
+  page
     });
   }
 
   // Search by streaming platform
   async searchByStreamingPlatform(platform: string, page = 1) {
     return this.discover('tv', { 
-      with_watch_providers: platform,
-      watch_region: 'US',
-      page 
+  watchProviders: platform,
+  watchRegion: 'US',
+  page
     });
   }
 
   // Get shows by genre
   async getShowsByGenre(genreId: string, page = 1) {
     return this.discover('tv', { 
-      with_genres: genreId,
-      page 
+  genres: genreId,
+  page
     });
   }
 

@@ -11,18 +11,18 @@ interface EnhancedSearchErrorUIProps {
   query?: string;
 }
 
-export function EnhancedSearchErrorUI({ 
-  error, 
-  isLoading, 
-  onRetry, 
-  query 
+export function EnhancedSearchErrorUI({
+  error,
+  isLoading,
+  onRetry,
+  query
 }: EnhancedSearchErrorUIProps) {
   if (!error) return null;
 
   // Determine error type and appropriate messaging
   const getErrorInfo = (error: Error) => {
     const message = error.message?.toLowerCase() || '';
-    
+
     // Network/timeout errors
     if (message.includes('network') || message.includes('fetch') || message.includes('timeout')) {
       return {
@@ -33,7 +33,7 @@ export function EnhancedSearchErrorUI({
         canRetry: true,
       };
     }
-    
+
     // Server errors (5xx)
     if (message.includes('500') || message.includes('503') || message.includes('server')) {
       return {
@@ -44,7 +44,7 @@ export function EnhancedSearchErrorUI({
         canRetry: true,
       };
     }
-    
+
     // Rate limiting
     if (message.includes('429') || message.includes('rate limit')) {
       return {
@@ -55,20 +55,20 @@ export function EnhancedSearchErrorUI({
         canRetry: true,
       };
     }
-    
+
     // Client errors (4xx)
     if (message.includes('400') || message.includes('404')) {
       return {
         type: 'client',
         title: 'Search Error',
-        description: query 
+        description: query
           ? `Unable to search for "${query}". Please try a different search term.`
           : 'Invalid search request. Please try a different search term.',
         icon: <AlertCircle className="h-4 w-4" />,
         canRetry: false,
       };
     }
-    
+
     // Generic error
     return {
       type: 'generic',
@@ -90,7 +90,7 @@ export function EnhancedSearchErrorUI({
         </AlertTitle>
         <AlertDescription className="mt-2 text-sm">
           {errorInfo.description}
-          
+
           {errorInfo.canRetry && (
             <div className="mt-4 flex items-center gap-2">
               <Button
@@ -112,13 +112,13 @@ export function EnhancedSearchErrorUI({
                   </>
                 )}
               </Button>
-              
+
               <span className="text-xs text-muted-foreground">
                 Searches automatically retry with smart backoff
               </span>
             </div>
           )}
-          
+
           {errorInfo.type === 'network' && (
             <div className="mt-3 text-xs text-muted-foreground">
               <strong>Troubleshooting:</strong>
@@ -129,7 +129,7 @@ export function EnhancedSearchErrorUI({
               </ul>
             </div>
           )}
-          
+
           {errorInfo.type === 'rate-limit' && (
             <div className="mt-3 text-xs text-muted-foreground">
               Our search service has usage limits to ensure good performance for all users.
@@ -138,7 +138,7 @@ export function EnhancedSearchErrorUI({
           )}
         </AlertDescription>
       </Alert>
-      
+
       {/* Technical details for debugging (only in development) */}
       {process.env.NODE_ENV === 'development' && (
         <details className="mt-4 text-xs text-muted-foreground">

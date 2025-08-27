@@ -13,29 +13,90 @@ class BehaviorTracker {
   private queue: TrackingEvent[] = [];
   private isFlushInProgress = false;
   private flushInterval: NodeJS.Timeout | null = null;
+  private lastFlushAt = 0;
+  private lastSentCache: Map<string, number> = new Map();
+  private readonly DEDUPE_WINDOW_MS = 5000;
+
+  // Privacy toggle
+  private readonly OPT_OUT_KEY = 'bb.analyticsOptOut';
+
+  // Tuning knobs
+  private readonly FLUSH_INTERVAL_MS = 10_000;
+  private readonly MAX_QUEUE_LENGTH = 200;
+  private readonly FLUSH_THRESHOLD = 20; // flush sooner when many events buffered
+  private readonly STORAGE_KEY = 'bb.behaviorQueue';
+  private readonly SESSION_KEY = 'bb.behaviorSessionId';
+  private readonly BATCH_ENDPOINTS = ['/api/behavior/track-batch', '/api/behavior/track/batch'];
+  private readonly SINGLE_ENDPOINT = '/api/behavior/track';
 
   constructor() {
-    // Generate a session ID for this browsing session
-    this.sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    
-    // Auto-flush tracking events every 10 seconds
+    // Restore or generate a session ID for this browsing session
+    this.sessionId = this.restoreSessionId();
+    // Restore any persisted queue
+    this.restoreQueue();
+
+    // Auto-flush tracking events on an interval
     this.flushInterval = setInterval(() => {
       this.flush();
-    }, 10000);
+    }, this.FLUSH_INTERVAL_MS);
 
     // Flush on page unload
     if (typeof window !== 'undefined') {
       window.addEventListener('beforeunload', () => {
+        // Best-effort final flush
+        this.flush();
+      });
+
+      // Flush when back online
+      window.addEventListener('online', () => {
         this.flush();
       });
     }
   }
 
+  private restoreSessionId(): string {
+    try {
+      const existing = typeof localStorage !== 'undefined' ? localStorage.getItem(this.SESSION_KEY) : null;
+      if (existing) return existing;
+    } catch { /* ignore */ }
+    const sid = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    try { localStorage.setItem(this.SESSION_KEY, sid); } catch { /* ignore */ }
+    return sid;
+  }
+
+  private restoreQueue() {
+    try {
+      const raw = typeof localStorage !== 'undefined' ? localStorage.getItem(this.STORAGE_KEY) : null;
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) {
+          this.queue = parsed.filter(this.validateEvent);
+        }
+      }
+    } catch { /* ignore */ }
+  }
+
+  private persistQueue() {
+    try {
+      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(this.queue));
+    } catch { /* ignore */ }
+  }
+
+  private validateEvent = (event: any): event is TrackingEvent => {
+    return (
+      event &&
+      typeof event.actionType === 'string' &&
+      typeof event.targetType === 'string' &&
+      (event.targetId === undefined || typeof event.targetId === 'number') &&
+      (event.metadata === undefined || typeof event.metadata === 'object')
+    );
+  };
+
   /**
    * Track when user adds a show to their watchlist
    */
   trackWatchlistAdd(showId: number, status: string = 'want_to_watch', metadata?: Record<string, any>) {
-    this.track({
+  this.track({
       actionType: 'watchlist_add',
       targetType: 'show',
       targetId: showId,
@@ -230,6 +291,12 @@ class BehaviorTracker {
    * Internal method to add event to queue
    */
   private track(event: TrackingEvent) {
+    // Respect user opt-out
+    try {
+      const optedOut = typeof localStorage !== 'undefined' && localStorage.getItem(this.OPT_OUT_KEY) === '1';
+      if (optedOut) return;
+    } catch { /* ignore */ }
+
     // Add session ID to all events
     event.sessionId = this.sessionId;
     
@@ -237,14 +304,45 @@ class BehaviorTracker {
     if (!event.metadata) {
       event.metadata = {};
     }
-    if (!event.metadata.timestamp) {
-      event.metadata.timestamp = new Date().toISOString();
+    event.metadata.timestamp = event.metadata.timestamp || new Date().toISOString();
+
+    // Attach experiment variantSource if present globally
+    try {
+      const source = (window as any).__bbVariantSource;
+      if (source && !event.metadata.variantSource) event.metadata.variantSource = source;
+    } catch { /* noop */ }
+
+    // Runtime validation to guard malformed payloads
+    if (!this.validateEvent(event)) {
+      console.warn('Dropping malformed tracking event', event);
+      return;
     }
+
+    // Deduplicate identical events within a short window
+    const key = `${event.actionType}|${event.targetType}|${event.targetId ?? ''}|${event.metadata?.platform ?? ''}`;
+    const now = Date.now();
+    const last = this.lastSentCache.get(key) || 0;
+    if (now - last < this.DEDUPE_WINDOW_MS) {
+      return; // drop duplicate
+    }
+    this.lastSentCache.set(key, now);
 
     this.queue.push(event);
 
+    // Rate limiting by capping queue size (drop oldest)
+    if (this.queue.length > this.MAX_QUEUE_LENGTH) {
+      const dropCount = this.queue.length - this.MAX_QUEUE_LENGTH;
+      this.queue.splice(0, dropCount);
+      if (process.env.NODE_ENV !== 'production') {
+        console.warn(`BehaviorTracker queue capped. Dropped ${dropCount} oldest events.`);
+      }
+    }
+
+    // Persist after enqueue
+    this.persistQueue();
+
     // If queue gets too large, flush immediately
-    if (this.queue.length >= 10) {
+    if (this.queue.length >= this.FLUSH_THRESHOLD) {
       this.flush();
     }
   }
@@ -257,18 +355,41 @@ class BehaviorTracker {
       return;
     }
 
+    // If offline, skip
+    if (typeof navigator !== 'undefined' && !navigator.onLine) {
+      return;
+    }
+
     this.isFlushInProgress = true;
     const eventsToSend = [...this.queue];
     this.queue = [];
+    this.persistQueue();
 
     try {
-      // Send events in batch
-      for (const event of eventsToSend) {
+      // Try batch endpoints first
+      const batchPayload = { events: eventsToSend };
+      let batchSuccess = false;
+      for (const endpoint of this.BATCH_ENDPOINTS) {
         try {
-          await apiRequest("POST", "/api/behavior/track", event);
-        } catch (error) {
-          // If individual event fails, log but continue with others
-          console.warn("Failed to track behavior event:", error);
+          await this.sendWithRetry(() => apiRequest('POST', endpoint, batchPayload));
+          batchSuccess = true;
+          break;
+        } catch (e) {
+          // try next batch endpoint
+        }
+      }
+
+      if (!batchSuccess) {
+        // Fallback: send individually with retry + small delay to avoid flooding
+        for (const event of eventsToSend) {
+          try {
+            await this.sendWithRetry(() => apiRequest('POST', this.SINGLE_ENDPOINT, event));
+            // tiny delay to be gentle on server when many events
+            await this.sleep(25);
+          } catch (error) {
+            // If individual event fails after retries, re-queue for next flush
+            this.queue.push(event);
+          }
         }
       }
     } catch (error) {
@@ -277,7 +398,30 @@ class BehaviorTracker {
       this.queue = [...eventsToSend, ...this.queue];
     } finally {
       this.isFlushInProgress = false;
+      // Persist queue state after attempts
+      this.persistQueue();
+      this.lastFlushAt = Date.now();
     }
+  }
+
+  private async sendWithRetry(fn: () => Promise<any>, maxRetries = 3, baseDelayMs = 300): Promise<void> {
+    let attempt = 0;
+    // eslint-disable-next-line no-constant-condition
+    while (true) {
+      try {
+        await fn();
+        return;
+      } catch (e) {
+        attempt++;
+        if (attempt > maxRetries) throw e;
+        const delay = Math.round(baseDelayMs * Math.pow(2, attempt - 1) * (1 + Math.random() * 0.2));
+        await this.sleep(delay);
+      }
+    }
+  }
+
+  private sleep(ms: number) {
+    return new Promise((res) => setTimeout(res, ms));
   }
 
   /**

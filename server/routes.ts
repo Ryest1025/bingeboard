@@ -74,6 +74,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json({ status: 'OK', timestamp: new Date().toISOString() });
   });
 
+  // QR Code page route - serve the static QR code HTML file
+  app.get('/qr-code.html', (_req, res) => {
+    res.sendFile(path.resolve(__dirname, '..', 'qr-code.html'));
+  });
+
   // CRITICAL: Set up authentication and session middleware FIRST
   // This must happen before any routes that use isAuthenticated middleware
   await setupAuth(app);
@@ -95,6 +100,158 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/content/discover', getDiscoverContent);
   app.get('/api/content/search', getSearchContent);
 
+  // ---------------------------------------------------------------------------
+  // Unified Discover Aggregation Endpoint
+  // Returns: hero, forYou, moodBuckets, dynamicBlocks, trending, anniversaries, socialBuzz
+  // This is a lightweight composition layer so the client can issue a single query.
+  // ---------------------------------------------------------------------------
+  app.get('/api/discover', async (req, res) => {
+    try {
+      const userId = (req as any)?.user?.claims?.sub || (req as any)?.user?.id || null;
+      // Fetch base trending (all/week) once; derive hero + forYou slices
+      let trendingAll: any = null;
+      try {
+        trendingAll = await tmdbService.getTrending('all', 'week');
+      } catch (e) {
+        console.warn('⚠️ discover endpoint: trending fetch failed', (e as Error).message);
+        trendingAll = { results: [] };
+      }
+
+      const trendingResults: any[] = Array.isArray(trendingAll?.results) ? trendingAll.results : [];
+      const heroRaw = trendingResults.find(r => r.backdrop_path) || trendingResults[0] || null;
+      const hero = heroRaw ? {
+        id: heroRaw.id,
+        title: heroRaw.title || heroRaw.name,
+        backdrop: heroRaw.backdrop_path ? `https://image.tmdb.org/t/p/original${heroRaw.backdrop_path}` : null,
+        genres: [], // Could be enriched with a genre lookup layer
+        platform: '—', // Placeholder until streaming enrichment
+        rationale: 'Top trending pick selected as a personalized hero placeholder.'
+      } : null;
+
+      const forYou = trendingResults.slice(0, 15).map(r => ({
+        id: r.id,
+        title: r.title || r.name,
+        poster: r.poster_path ? `https://image.tmdb.org/t/p/w500${r.poster_path}` : null,
+        mediaType: r.media_type || (r.title ? 'movie' : 'tv')
+      }));
+
+      // Placeholder mood + genre inference (would normally derive from user prefs + embeddings)
+      const moodBuckets = ['Cerebral', 'Feel-good', 'Edge-of-seat'];
+      const dynamicBlocks = [
+        { type: 'quiz', id: 'q1', title: 'Pick your weekend vibe' },
+        { type: 'spotlight', id: 's1', title: 'Hidden Gems: Sci-Fi' }
+      ];
+
+      // Simple anniversaries stub (would be calculated server-side from release dates + current date)
+      const anniversaries = [] as any[];
+
+      // Social buzz placeholder (replace with real social listening / internal metrics)
+      const socialBuzz = [
+        { id: 't1', topic: '#NowStreaming', mentions: 12500 },
+        { id: 't2', topic: 'BingeBoardRecs', mentions: 6400 }
+      ];
+
+      res.setHeader('Cache-Control', 'public, max-age=60, stale-while-revalidate=300');
+      return res.json({
+        userId,
+        hero,
+        forYou,
+        moodBuckets,
+        dynamicBlocks,
+        trendingThisWeek: trendingResults.slice(0, 20).map(r => ({
+          id: r.id,
+          title: r.title || r.name,
+          poster: r.poster_path ? `https://image.tmdb.org/t/p/w500${r.poster_path}` : null
+        })),
+        anniversaries,
+        socialBuzz,
+        meta: {
+          source: 'aggregated',
+          fetchedAt: new Date().toISOString(),
+          trendingCount: trendingResults.length
+        }
+      });
+    } catch (e) {
+      console.error('❌ /api/discover aggregation error', e);
+      return res.status(500).json({ message: 'Failed to build discover payload' });
+    }
+  });
+
+  // Upcoming releases (movies) — used by Discover page
+  app.get('/api/discover/upcoming', async (_req, res) => {
+    try {
+      const apiKey = process.env.TMDB_API_KEY;
+      if (!apiKey) {
+        return res.status(200).json([]);
+      }
+      const url = `https://api.themoviedb.org/3/movie/upcoming?api_key=${apiKey}&region=US`;
+      const r = await fetch(url);
+      if (!r.ok) {
+        return res.status(200).json([]);
+      }
+      const data = await r.json();
+      const items = Array.isArray(data?.results) ? data.results : [];
+      const mapped = items.map((m: any) => ({
+        id: m.id,
+        title: m.title,
+        poster: m.poster_path ? `https://image.tmdb.org/t/p/w500${m.poster_path}` : null,
+        backdrop: m.backdrop_path ? `https://image.tmdb.org/t/p/original${m.backdrop_path}` : null,
+        overview: m.overview,
+        releaseDate: m.release_date,
+        mediaType: 'movie',
+      }));
+      res.setHeader('Cache-Control', 'public, max-age=300, stale-while-revalidate=600');
+      return res.json(mapped);
+    } catch (e) {
+      console.warn('⚠️ /api/discover/upcoming failed', (e as Error).message);
+      return res.status(200).json([]);
+    }
+  });
+
+  // Safe image proxy for TMDB images (enables CORS for color extraction only)
+  app.get('/api/image-proxy', async (req, res) => {
+    try {
+      const src = String(req.query.src || '');
+      if (!src || !/^https:\/\/image\.tmdb\.org\//.test(src)) {
+        return res.status(400).json({ error: 'Invalid source' });
+      }
+      const upstream = await fetch(src);
+      if (!upstream.ok) {
+        return res.status(404).end();
+      }
+      // Forward content type and length when possible
+      const contentType = upstream.headers.get('content-type') || 'image/jpeg';
+      const contentLength = upstream.headers.get('content-length');
+      res.setHeader('Content-Type', contentType);
+      if (contentLength) res.setHeader('Content-Length', contentLength);
+      // Allow CORS so canvas/color extraction can read pixels
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      res.setHeader('Timing-Allow-Origin', '*');
+      res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+      res.setHeader('Cache-Control', 'public, max-age=3600');
+      // Stream the body safely in Node
+      const body = upstream.body as unknown as import('stream/web').ReadableStream<Uint8Array> | null;
+      if (body && typeof (body as any).getReader === 'function') {
+        const reader = (body as import('stream/web').ReadableStream<Uint8Array>).getReader();
+        const pump = async () => {
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            if (value) res.write(Buffer.from(value));
+          }
+          res.end();
+        };
+        await pump();
+      } else {
+        const buf = await upstream.arrayBuffer();
+        res.end(Buffer.from(buf));
+      }
+    } catch (e) {
+      console.warn('⚠️ /api/image-proxy failed', (e as Error).message);
+      res.status(404).end();
+    }
+  });
+
   // Debug middleware to log all requests and cookies
   app.use((req, res, next) => {
     if (req.path.startsWith('/api/auth')) {
@@ -106,6 +263,75 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log('📋 req.user in debug middleware:', JSON.stringify((req as any).user, null, 2));
     }
     next();
+  });
+
+  // Behavior tracking endpoints (single + batch)
+  app.post('/api/behavior/track', isAuthenticated, async (req: any, res) => {
+    try {
+      const { trackingEventSchema } = await import('../shared/tracking');
+      const userId = req.user?.claims?.sub || req.user?.id;
+      if (!userId) return res.status(401).json({ message: 'Unauthorized' });
+
+      const parsed = trackingEventSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ message: 'Invalid tracking payload', issues: parsed.error.issues });
+      }
+
+      const evt = parsed.data;
+      await storage.trackUserBehavior({
+        userId,
+        actionType: evt.actionType,
+        targetType: evt.targetType,
+        targetId: evt.targetId,
+        metadata: {
+          ...evt.metadata,
+          sessionId: evt.sessionId,
+          timestamp: evt.timestamp || new Date().toISOString(),
+        },
+        sessionId: evt.sessionId,
+      });
+      return res.json({ ok: true });
+    } catch (e: any) {
+      console.error('❌ /api/behavior/track error', e);
+      return res.status(500).json({ message: 'Failed to track behavior' });
+    }
+  });
+
+  app.post('/api/behavior/track-batch', isAuthenticated, async (req: any, res) => {
+    try {
+      const { trackingEventSchema } = await import('../shared/tracking');
+      const userId = req.user?.claims?.sub || req.user?.id;
+      if (!userId) return res.status(401).json({ message: 'Unauthorized' });
+
+      const events = Array.isArray(req.body?.events) ? req.body.events : [];
+      if (!events.length) return res.status(400).json({ message: 'events array required' });
+
+      // Validate all; collect good ones only
+      const valid = [] as any[];
+      for (const raw of events) {
+        const parsed = trackingEventSchema.safeParse(raw);
+        if (parsed.success) valid.push(parsed.data);
+      }
+      if (!valid.length) return res.status(400).json({ message: 'No valid events' });
+
+      await Promise.all(valid.slice(0, 200).map((evt) => storage.trackUserBehavior({
+        userId,
+        actionType: evt.actionType,
+        targetType: evt.targetType,
+        targetId: evt.targetId,
+        metadata: {
+          ...evt.metadata,
+          sessionId: evt.sessionId,
+          timestamp: evt.timestamp || new Date().toISOString(),
+        },
+        sessionId: evt.sessionId,
+      })));
+
+      return res.json({ ok: true, stored: valid.length });
+    } catch (e: any) {
+      console.error('❌ /api/behavior/track-batch error', e);
+      return res.status(500).json({ message: 'Failed to track batch behavior' });
+    }
   });
 
   // Firebase authentication only
@@ -785,13 +1011,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/streaming/enhanced-search', async (req, res) => {
     const startTime = Date.now();
     const requestId = Math.random().toString(36).slice(2, 9);
-    
+
     try {
       const query = (req.query.query || req.query.q || '').toString().trim();
       const mediaType = (req.query.type || req.query.mediaType || 'multi').toString();
-      
+
       console.log(`🔍 [${requestId}] Enhanced search started: query="${query}", type="${mediaType}"`);
-      
+
       if (!query || query.length < 2) {
         console.log(`⚠️ [${requestId}] Query too short: "${query}"`);
         return res.json({ results: [] });
@@ -799,7 +1025,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const searchResponse = await tmdbService.search(query, { mediaType: mediaType as any, page: 1 });
       const rawResults: any[] = (searchResponse.results || []).slice(0, 20);
-      
+
       console.log(`📊 [${requestId}] TMDB returned ${rawResults.length} results`);
 
       // Enrich first 8 results with streaming data (performance conscious)
@@ -1559,7 +1785,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/debug/echo-cookies', (req, res) => {
     try {
       console.log('🍪 Debug echo-cookies endpoint called');
-      
+
       const cookiesInfo = {
         headers: {
           cookie: req.headers.cookie || null,
@@ -1591,7 +1817,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/debug/streaming-sources', async (req, res) => {
     try {
       const { tmdbId, title, mediaType = 'tv', imdbId } = req.query;
-      
+
       if (!tmdbId) {
         return res.status(400).json({ error: 'tmdbId parameter is required' });
       }
@@ -1666,9 +1892,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     } catch (error) {
       console.error('❌ Debug streaming sources error:', error);
-      res.status(500).json({ 
+      res.status(500).json({
         error: 'Failed to fetch streaming sources debug info',
-        message: (error as Error).message 
+        message: (error as Error).message
       });
     }
   });
@@ -3156,10 +3382,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           tmdbService.getTrending('tv', timeWindow),
           tmdbService.getTrending('movie', timeWindow)
         ]);
-        baseResults = [ ...(tv.results || []).map((r:any)=>({...r, media_type: 'tv'})), ...(movie.results || []).map((r:any)=>({...r, media_type: 'movie'})) ];
+        baseResults = [...(tv.results || []).map((r: any) => ({ ...r, media_type: 'tv' })), ...(movie.results || []).map((r: any) => ({ ...r, media_type: 'movie' }))];
       } else {
         const single = await tmdbService.getTrending(mediaType, timeWindow);
-        baseResults = (single.results || []).map((r:any)=> ({...r, media_type: r.media_type || (r.title ? 'movie':'tv')}));
+        baseResults = (single.results || []).map((r: any) => ({ ...r, media_type: r.media_type || (r.title ? 'movie' : 'tv') }));
       }
 
       // Basic filtering by genre id (single). Accept comma but treat first for simplicity.
@@ -3173,7 +3399,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (networkFilter) {
         const networkIdNum = parseInt(networkFilter.toString());
         // If some tv items lack networks array, leave them (avoid N extra detail calls). Only filter when 'origin_country' or known network id available in an embedded field (rare). For accurate network filtering the client should call discover.
-        filtered = filtered.filter(r => r.media_type !== 'tv' || !networkIdNum || !r.networks || r.networks.some((n:any)=> n?.id === networkIdNum));
+        filtered = filtered.filter(r => r.media_type !== 'tv' || !networkIdNum || !r.networks || r.networks.some((n: any) => n?.id === networkIdNum));
       }
 
       // Optional streaming enrichment (reuse approach from /api/trending route)

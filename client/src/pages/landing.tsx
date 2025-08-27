@@ -38,9 +38,8 @@ import { SiGoogle, SiFacebook } from "react-icons/si";
 import { useToast } from "@/hooks/use-toast";
 import { isMobileDevice } from "@/lib/deviceUtils";
 import BingeBoardHeader from "@/components/BingeBoardHeader";
-import { RecommendationCard } from "@/components/common";
 import { StreamingMarqueeModal } from "@/components/streaming-marquee-modal";
-import { StreamingMarqueeSection } from "@/components/streaming-marquee-section";
+import StreamingMarqueeSection from "@/components/streaming-marquee-section";
 
 
 interface Show {
@@ -712,22 +711,65 @@ export default function Landing() {
 
             <div className="flex space-x-4 overflow-x-auto pb-4 scrollbar-hide">
               {trendingShows.results?.filter(show => show && show.vote_average != null).slice(0, 8).map((show) => (
-                <RecommendationCard
-                  key={show.id}
-                  show={{
-                    tmdbId: show.id,
-                    title: show.name || show.title || 'Unknown Title',
-                    posterPath: show.poster_path
-                      ? `https://image.tmdb.org/t/p/w300${show.poster_path}`
-                      : undefined,
-                    rating: show.vote_average?.toFixed(1) || 'N/A',
-                    streamingPlatforms: (show as any).streamingPlatforms
-                  }}
-                  variant="compact"
-                  onInteraction={(action, tmdbId) => {
-                    console.log(`Landing page trending interaction: ${action} on ${tmdbId}`);
-                  }}
-                />
+                <Card key={show.id} className="show-card flex-shrink-0 w-36 glass-effect border-slate-700/50 rounded-xl transition-all duration-300 hover:scale-105 group">
+                  <CardContent className="p-0">
+                    <div className="relative">
+                      <img
+                        src={
+                          show.poster_path
+                            ? `https://image.tmdb.org/t/p/w300${show.poster_path}`
+                            : "/placeholder-poster.png"
+                        }
+                        alt={show.name || show.title || 'Unknown Title'}
+                        className="w-full h-48 object-cover rounded-t-xl"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent rounded-t-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+
+                      <div className="absolute top-3 right-3">
+                        <Badge className="glass-effect border-0 text-amber-300 font-semibold">
+                          <Star className="h-3 w-3 mr-1 fill-current" />
+                          {show.vote_average?.toFixed(1) || 'N/A'}
+                        </Badge>
+                      </div>
+                    </div>
+
+                    <div className="p-4 space-y-2">
+                      <h3 className="font-bold text-white text-sm line-clamp-2 leading-tight">
+                        {show.name || show.title || 'Unknown Title'}
+                      </h3>
+                      <div className="flex items-center justify-between">
+                        <div className="text-xs text-gray-300 font-medium">
+                          {show.first_air_date || show.release_date ?
+                            new Date(show.first_air_date || show.release_date!).getFullYear() : ''}
+                        </div>
+                        <div className="flex space-x-1">
+                          {/* Streaming Platform Logos - Real TMDB Data */}
+                          {(show as any).streamingPlatforms && (show as any).streamingPlatforms.length > 0 && (
+                            <div className="flex items-center space-x-1">
+                              {(show as any).streamingPlatforms.slice(0, 2).map((platform: any, index: number) => (
+                                <div key={index} className="w-6 h-4 rounded-sm bg-white p-0.5 flex-shrink-0">
+                                  {platform.logo_path ? (
+                                    <img
+                                      src={`https://image.tmdb.org/t/p/w45${platform.logo_path}`}
+                                      alt={platform.provider_name}
+                                      className="w-full h-full object-contain rounded-sm"
+                                    />
+                                  ) : (
+                                    <div className="w-full h-full bg-slate-600 rounded-sm flex items-center justify-center">
+                                      <span className="text-[7px] font-bold text-white">
+                                        {platform.provider_name?.charAt(0) || '?'}
+                                      </span>
+                                    </div>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
               ))}
             </div>
           </div>

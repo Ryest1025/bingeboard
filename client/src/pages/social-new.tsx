@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { TopNav } from "@/components/top-nav";
+// // import { TopNav } from "@/components/top-nav"; // Auto-removed: TopNav handled by App.tsx // Auto-removed: TopNav handled by App.tsx
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -145,7 +145,7 @@ export default function Social() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
-      <TopNav />
+      {/* TopNav removed: handled by App.tsx */}
 
       {/* Mobile-first layout */}
       <div className="pt-20 pb-6 px-4 sm:px-6 lg:px-8">
