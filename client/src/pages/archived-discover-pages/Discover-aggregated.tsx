@@ -1,3 +1,4 @@
+
 import React, { useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -126,7 +127,7 @@ export default function Discover() {
       items = items.filter((_it, i) => i % 2 === 0);
     }
     return items.length ?  // TODO: Add try/catch around this fetch call to handle errors properly
- items : data.forYou;
+      items : data.forYou;
   }, [data, activeMood, activeGenres]);
 
   if (isLoading) return <div className="p-8 text-white">Loading Discover...</div>;
@@ -166,7 +167,7 @@ export default function Discover() {
               );
             })}
             {/* Genre chips placeholder (no real genres yet in payload) */}
-            {['Sci-Fi','Drama','Thriller'].map(g => {
+            {['Sci-Fi', 'Drama', 'Thriller'].map(g => {
               const active = activeGenres.includes(g);
               return (
                 <button key={g} onClick={() => setActiveGenres(curr => (curr.includes(g) ? curr.filter(c => c !== g) : [...curr, g]))} className={`whitespace-nowrap rounded-full px-3 py-2 text-sm transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 ${active ? 'scale-105 bg-emerald-500 text-black' : 'bg-white/10 text-white/90 hover:bg-white/20'}`}>{g}</button>

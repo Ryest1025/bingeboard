@@ -1,7 +1,5 @@
-// client/src/pages/DiscoverStructured.tsx - New Functional & Intentional Design (restored + compact hero)
+// client/src/pages/DiscoverStructured.tsx - Universal Design System Implementation
 import React, { useCallback, useMemo, useState, useEffect, useRef } from 'react';
-// Color extraction for dynamic hero gradient
-import ColorThief from 'colorthief';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import AppLayout from "@/components/layouts/AppLayout";
 import { useAuth } from '@/hooks/useAuth';
@@ -14,6 +12,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { motion } from 'framer-motion';
 import { Play, Plus, ChevronRight, ChevronLeft, Calendar, Film, Tv, Globe, Sparkles, ChevronDown } from 'lucide-react';
+import HeroSpot from '@/components/hero/HeroSpot';
+import { universal } from '@/styles/universal';
 
 // ———————————————————————————————————————————————————————————
 // Types
@@ -40,6 +40,8 @@ type Show = {
 		logo_path?: string;
 		type?: string;
 	}>;
+	// Optional logo URL if upstream provides a branded logo
+	logoUrl?: string;
 };
 
 type FilterState = {
@@ -69,13 +71,13 @@ interface DiscoverData {
 
 async function fetchJSON<T>(url: string, init?: RequestInit): Promise<T> {
 	try {
-		const res = await fetch(url, { 
-			...init, 
+		const res = await fetch(url, {
+			...init,
 			credentials: 'include',
-			headers: { 
-				'Content-Type': 'application/json', 
-				...(init?.headers || {}) 
-			} 
+			headers: {
+				'Content-Type': 'application/json',
+				...(init?.headers || {})
+			}
 		});
 		if (!res.ok) {
 			const text = await res.text().catch(() => '');
@@ -101,12 +103,22 @@ const qk = {
 	userPreferences: () => ['user-preferences'],
 };
 
-// Fetch discover data (existing API endpoint)
+// Fetch discover data with enhanced multi-API integration
 async function fetchDiscoverData(): Promise<DiscoverData> {
-	return fetchJSON<DiscoverData>('/api/discover');
+	return fetchJSON<DiscoverData>('/api/discover-enhanced');
 }
 
 async function getHero(filters: FilterState): Promise<Show> {
+	// Use enhanced trending endpoint for hero content with streaming data
+	try {
+		const response = await fetchJSON<Show[]>('/api/content/trending-enhanced?mediaType=all&includeStreaming=true');
+		if (response && response.length > 0) {
+			return response[0];
+		}
+	} catch (error) {
+		console.warn('Enhanced hero fetch failed, falling back to basic discover');
+	}
+
 	const response = await fetchDiscoverData();
 	return response.hero || {
 		id: 'fallback',
@@ -116,9 +128,29 @@ async function getHero(filters: FilterState): Promise<Show> {
 }
 
 async function getRecommendations(filters: FilterState): Promise<Show[]> {
+	// Use enhanced API endpoints for recommendations with streaming data
+	try {
+		if (filters.genre || filters.platforms?.length) {
+			// Enhanced genre/platform filtering with streaming data
+			const genreParam = filters.genre ? `&with_genres=${filters.genre}` : '';
+			const platformParam = filters.platforms?.length ? `&with_watch_providers=${filters.platforms.join('|')}` : '';
+
+			const response = await fetchJSON<Show[]>(`/api/tmdb/discover/movie?includeStreaming=true${genreParam}${platformParam}`);
+			if (response && response.length > 0) {
+				return response;
+			}
+		}
+
+		// Enhanced general recommendations with streaming data
+		const response = await fetchJSON<Show[]>('/api/content/trending-enhanced?mediaType=all&includeStreaming=true&limit=20');
+		return response || [];
+	} catch (error) {
+		console.warn('Enhanced recommendations fetch failed, falling back to basic discover');
+	}
+
 	const response = await fetchDiscoverData();
 	let filtered = response.forYou || [];
-  
+
 	// Apply mood filtering
 	if (filters.mood) {
 		const moodToGenres: Record<string, string[]> = {
@@ -126,64 +158,101 @@ async function getRecommendations(filters: FilterState): Promise<Show[]> {
 			'Feel-good': ['comedy', 'romance', 'family', 'musical', 'animation'],
 			'Edge-of-seat': ['action', 'thriller', 'horror', 'crime', 'war', 'adventure']
 		};
-    
+
 		const targetGenres = moodToGenres[filters.mood] || [];
-		filtered = filtered.filter(show => 
-			show.genres?.some(genre => 
-				targetGenres.some(target => 
+		filtered = filtered.filter(show =>
+			show.genres?.some(genre =>
+				targetGenres.some(target =>
 					genre.toLowerCase().includes(target.toLowerCase())
 				)
 			)
 		);
 	}
-  
+
 	return filtered;
 }
 
 async function getTrending(): Promise<Show[]> {
-	const response = await fetchDiscoverData();
-	return response.trendingThisWeek || [];
+	// Use enhanced trending endpoint with comprehensive streaming data
+	try {
+		return await fetchJSON<Show[]>('/api/content/trending-enhanced?mediaType=all&includeStreaming=true&limit=12');
+	} catch (error) {
+		console.warn('Enhanced trending fetch failed, falling back to basic discover');
+		const response = await fetchDiscoverData();
+		return response.trendingThisWeek || [];
+	}
 }
 
 async function getComingSoon(): Promise<Show[]> {
+	// Use enhanced upcoming releases endpoint with streaming data
 	try {
-		return await fetchJSON<Show[]>('/api/discover/upcoming');
-	} catch {
-		return [];
+		return await fetchJSON<Show[]>('/api/tmdb/discover/movie?includeStreaming=true&primary_release_date.gte=' +
+			new Date().toISOString().split('T')[0] + '&sort_by=primary_release_date.asc');
+	} catch (error) {
+		console.warn('Enhanced coming soon fetch failed, falling back to basic endpoint');
+		try {
+			return await fetchJSON<Show[]>('/api/discover/upcoming');
+		} catch {
+			return [];
+		}
 	}
 }
 
 async function getMoodPicks(mood: string | null): Promise<Show[]> {
 	if (!mood) return [];
+
+	// Use enhanced discovery with mood-based genre filtering and streaming data
+	try {
+		const moodToGenres: Record<string, string[]> = {
+			'Cerebral': ['99', '18', '53', '9648', '36'], // Documentary, Drama, Thriller, Mystery, History
+			'Feel-good': ['35', '10749', '10751', '10402', '16'], // Comedy, Romance, Family, Music, Animation
+			'Edge-of-seat': ['28', '53', '27', '80', '10752', '12'] // Action, Thriller, Horror, Crime, War, Adventure
+		};
+
+		const genreIds = moodToGenres[mood] || [];
+		if (genreIds.length > 0) {
+			const response = await fetchJSON<Show[]>(`/api/tmdb/discover/movie?includeStreaming=true&with_genres=${genreIds.join(',')}&sort_by=vote_average.desc&vote_count.gte=100`);
+			return response || [];
+		}
+	} catch (error) {
+		console.warn('Enhanced mood picks fetch failed, falling back to basic filtering');
+	}
+
 	const response = await fetchDiscoverData();
-  
+
 	// Filter by mood-related genres
 	const moodToGenres: Record<string, string[]> = {
 		'Cerebral': ['documentary', 'drama', 'thriller', 'mystery', 'biography'],
 		'Feel-good': ['comedy', 'romance', 'family', 'musical', 'animation'],
 		'Edge-of-seat': ['action', 'thriller', 'horror', 'crime', 'war', 'adventure']
 	};
-  
+
 	const targetGenres = moodToGenres[mood] || [];
-	return (response.forYou || []).filter(show => 
-		show.genres?.some(genre => 
-			targetGenres.some(target => 
+	return (response.forYou || []).filter(show =>
+		show.genres?.some(genre =>
+			targetGenres.some(target =>
 				genre.toLowerCase().includes(target.toLowerCase())
 			)
 		)
 	);
 }
 
-// User preferences API
+// User preferences API with enhanced data
 async function getUserPreferences() {
 	return fetchJSON<any>('/api/user/preferences');
 }
 
-// Watchlist API using existing endpoints
+// Enhanced Watchlist API with streaming data integration
 async function addToWatchlist(showId: string | number, mediaType: string = 'movie') {
-	return fetchJSON<{ success: true }>('/api/watchlist', {
+	// Add with enhanced streaming data tracking
+	return fetchJSON<{ success: true }>('/api/watchlist-enhanced', {
 		method: 'POST',
-		body: JSON.stringify({ showId, type: mediaType }),
+		body: JSON.stringify({
+			showId,
+			type: mediaType,
+			includeStreaming: true,
+			trackAffiliate: true
+		}),
 	});
 }
 
@@ -204,10 +273,10 @@ function SectionHeader({ title, subtitle, onSeeAll, viewAllHref }: { title: stri
 						View all <ChevronRight className="w-4 h-4 ml-1" aria-hidden="true" />
 					</a>
 				) : onSeeAll ? (
-					<Button 
-						size="sm" 
-						variant="ghost" 
-						onClick={onSeeAll} 
+					<Button
+						size="sm"
+						variant="ghost"
+						onClick={onSeeAll}
 						aria-label={`See all for ${title}`}
 						className="self-start sm:self-auto text-gray-400 hover:text-white"
 					>
@@ -222,20 +291,6 @@ function SectionHeader({ title, subtitle, onSeeAll, viewAllHref }: { title: stri
 	);
 }
 
-function Grid({ children, ariaLabel, compact = false }: React.PropsWithChildren<{ ariaLabel: string; compact?: boolean }>) {
-	return (
-		<div
-			role="grid"
-			aria-label={ariaLabel}
-			className={compact
-				? "grid grid-cols-4 gap-1.5 sm:grid-cols-5 md:grid-cols-7 lg:grid-cols-9 xl:grid-cols-10"
-				: "grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-7 xl:grid-cols-8"}
-		>
-			{children}
-		</div>
-	);
-}
-
 // Enhanced Loading Skeleton Components
 function ContentCardSkeleton() {
 	return (
@@ -244,9 +299,9 @@ function ContentCardSkeleton() {
 				<Skeleton className="w-full h-full" />
 				<div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
 			</div>
-			<div className="space-y-2">
+			<div className={universal.spacing.itemY}>
 				<Skeleton className="h-4 w-3/4 bg-gray-700/50" />
-				<div className="flex gap-1">
+				<div className={universal.spacing.itemX}>
 					<Skeleton className="h-3 w-8 bg-gray-700/30 rounded-full" />
 					<Skeleton className="h-3 w-8 bg-gray-700/30 rounded-full" />
 				</div>
@@ -256,15 +311,15 @@ function ContentCardSkeleton() {
 }
 
 // Horizontal Carousel Component
-function HorizontalCarousel({ 
-	items, 
-	title, 
+function HorizontalCarousel({
+	items,
+	title,
 	ariaLabel,
-	onAddToWatchlist, 
+	onAddToWatchlist,
 	onWatchNow,
 	cardWidth = 180,
-}: { 
-	items: Show[]; 
+}: {
+	items: Show[];
 	title: string;
 	ariaLabel?: string;
 	onAddToWatchlist?: (show: Show) => void;
@@ -314,16 +369,16 @@ function HorizontalCarousel({
 		<section className="group relative" aria-labelledby={title ? `${title.replace(/\s+/g, '-').toLowerCase()}-heading` : undefined} role="region" aria-label={ariaLabel || title || 'Carousel'}>
 			{title && (
 				<div className="flex justify-between items-center mb-6">
-					<h2 
+					<h2
 						id={`${title.replace(/\s+/g, '-').toLowerCase()}-heading`}
 						className="text-2xl font-bold text-white"
 					>
 						{title}
 					</h2>
 					<div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-						<Button 
-							variant="outline" 
-							size="sm" 
+						<Button
+							variant="outline"
+							size="sm"
 							onClick={scrollLeft}
 							className="bg-gray-800/60 backdrop-blur-sm border-gray-600 text-gray-300 hover:bg-gray-700/80 hover:text-white"
 							aria-label={`Scroll ${title} left`}
@@ -331,9 +386,9 @@ function HorizontalCarousel({
 						>
 							<ChevronLeft className="w-4 h-4" aria-hidden="true" />
 						</Button>
-						<Button 
-							variant="outline" 
-							size="sm" 
+						<Button
+							variant="outline"
+							size="sm"
 							onClick={scrollRight}
 							className="bg-gray-800/60 backdrop-blur-sm border-gray-600 text-gray-300 hover:bg-gray-700/80 hover:text-white"
 							aria-label={`Scroll ${title} right`}
@@ -344,13 +399,13 @@ function HorizontalCarousel({
 					</div>
 				</div>
 			)}
-      
+
 			{/* Always visible scroll arrows for sections without titles */}
 			{!title && (
 				<div className="absolute top-1/2 -translate-y-1/2 left-2 right-2 flex justify-between pointer-events-none z-10">
-					<Button 
-						variant="outline" 
-						size="sm" 
+					<Button
+						variant="outline"
+						size="sm"
 						onClick={scrollLeft}
 						className="bg-gray-800/80 backdrop-blur-sm border-gray-600 text-gray-300 hover:bg-gray-700/90 hover:text-white shadow-lg pointer-events-auto opacity-80 hover:opacity-100 transition-opacity"
 						aria-label="Scroll left"
@@ -358,9 +413,9 @@ function HorizontalCarousel({
 					>
 						<ChevronLeft className="w-4 h-4" aria-hidden="true" />
 					</Button>
-					<Button 
-						variant="outline" 
-						size="sm" 
+					<Button
+						variant="outline"
+						size="sm"
 						onClick={scrollRight}
 						className="bg-gray-800/80 backdrop-blur-sm border-gray-600 text-gray-300 hover:bg-gray-700/90 hover:text-white shadow-lg pointer-events-auto opacity-80 hover:opacity-100 transition-opacity"
 						aria-label="Scroll right"
@@ -370,8 +425,8 @@ function HorizontalCarousel({
 					</Button>
 				</div>
 			)}
-      
-			<div 
+
+			<div
 				ref={containerRef}
 				id={idRef.current}
 				className="flex space-x-6 overflow-x-auto pb-4 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-lg"
@@ -385,8 +440,8 @@ function HorizontalCarousel({
 				}}
 			>
 				{items.map((item, index) => (
-					<motion.div 
-						key={item.id} 
+					<motion.div
+						key={item.id}
 						className="group/item"
 						style={{ minWidth: cardWidth, maxWidth: cardWidth }}
 						role="listitem"
@@ -395,9 +450,10 @@ function HorizontalCarousel({
 						transition={{ duration: 0.5, delay: index * 0.1 }}
 					>
 						<div className="transform transition-all duration-300 hover:scale-105 hover:z-10 relative">
-							<UniversalShowCard 
+							<UniversalShowCard
 								show={item}
 								className="w-full shadow-xl hover:shadow-2xl"
+								onClick={() => onWatchNow?.(item)}
 								onAddToList={onAddToWatchlist}
 								showQuickActions={true}
 							/>
@@ -442,7 +498,7 @@ export default function DiscoverStructured() {
 	useEffect(() => {
 		try {
 			localStorage.setItem('bb-compact', compact ? '1' : '0');
-		} catch {}
+		} catch { }
 	}, [compact]);
 
 	// Modal state
@@ -461,10 +517,10 @@ export default function DiscoverStructured() {
 	const onFilterChange = useCallback((next: FilterState) => {
 		setFilters(next);
 		// Prefetch recommendations for responsiveness
-		qc.prefetchQuery({ 
-			queryKey: qk.recommendations(next), 
-			queryFn: () => getRecommendations(next) 
-		}).catch(() => {});
+		qc.prefetchQuery({
+			queryKey: qk.recommendations(next),
+			queryFn: () => getRecommendations(next)
+		}).catch(() => { });
 	}, [qc]);
 
 	// Queries with error handling
@@ -507,12 +563,12 @@ export default function DiscoverStructured() {
 
 	// Watchlist mutation with optimistic updates
 	const addToWatchlistMutation = useMutation({
-		mutationFn: ({ showId, mediaType }: { showId: string | number; mediaType: string }) => 
+		mutationFn: ({ showId, mediaType }: { showId: string | number; mediaType: string }) =>
 			addToWatchlist(showId, mediaType),
 		onMutate: async ({ showId }) => {
 			await qc.cancelQueries({ queryKey: ['watchlist'] });
 			const previousWatchlist = qc.getQueryData(['watchlist']);
-			qc.setQueryData(['watchlist'], (old: any) => 
+			qc.setQueryData(['watchlist'], (old: any) =>
 				old ? [...old, { id: showId }] : [{ id: showId }]
 			);
 			return { previousWatchlist };
@@ -537,15 +593,15 @@ export default function DiscoverStructured() {
 	const handleQuickAdd = useCallback(async (show: Show) => {
 		try {
 			if (!user) {
-				toast({ 
-					title: 'Sign in required', 
-					description: 'Please sign in to add to your list.' 
+				toast({
+					title: 'Sign in required',
+					description: 'Please sign in to add to your list.'
 				});
 				return;
 			}
-			addToWatchlistMutation.mutate({ 
-				showId: show.id, 
-				mediaType: show.mediaType || 'movie' 
+			addToWatchlistMutation.mutate({
+				showId: show.id,
+				mediaType: show.mediaType || 'movie'
 			});
 		} catch (err) {
 			const message = err instanceof Error ? err.message : 'Could not add to list';
@@ -559,7 +615,7 @@ export default function DiscoverStructured() {
 		if (searchQuery) {
 			filtered = filtered.filter(show =>
 				show.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-				show.genres?.some(genre => 
+				show.genres?.some(genre =>
 					genre.toLowerCase().includes(searchQuery.toLowerCase())
 				)
 			);
@@ -596,7 +652,7 @@ export default function DiscoverStructured() {
 		return Array.from(set).filter(Boolean).slice(0, 10);
 	}, [recs, trending]);
 
-	const COUNTRIES = useMemo(() => ['US','UK','CA','JP','KR','FR','DE','IN'], []);
+	const COUNTRIES = useMemo(() => ['US', 'UK', 'CA', 'JP', 'KR', 'FR', 'DE', 'IN'], []);
 
 	// Build hero slides from hero + trending + recs (dedup, ensure image)
 	const heroSlides = useMemo((): Show[] => {
@@ -614,212 +670,39 @@ export default function DiscoverStructured() {
 			return Boolean(img);
 		}).slice(0, 6);
 	}, [hero, trending, recs]);
-
-	const [heroIndex, setHeroIndex] = useState(0);
-	const [heroPaused, setHeroPaused] = useState(false);
-
-	useEffect(() => {
-		if (heroPaused || heroSlides.length <= 1) return;
-		const id = setInterval(() => {
-			setHeroIndex((i) => (i + 1) % heroSlides.length);
-		}, 6000);
-		return () => clearInterval(id);
-	}, [heroPaused, heroSlides.length]);
-
-	const nextHero = useCallback(() => {
-		setHeroIndex((i) => (i + 1) % Math.max(heroSlides.length, 1));
-	}, [heroSlides.length]);
-
-	const prevHero = useCallback(() => {
-		setHeroIndex((i) => (i - 1 + Math.max(heroSlides.length, 1)) % Math.max(heroSlides.length, 1));
-	}, [heroSlides.length]);
-
-	const activeHero = heroSlides[heroIndex] || hero || null;
-
-	// Hero image URL (we animate zoom-out with a foreground <img> instead of CSS background)
-	const heroImageUrl = useMemo(() => (
-		activeHero?.backdrop || activeHero?.posterUrl || activeHero?.poster || ''
-	), [activeHero]);
-
-	// Dynamic gradient colors derived from hero image (fallback to neutral darks)
-	const [gradientColors, setGradientColors] = useState<string[]>([
-		'#000000', '#1f2937', '#111827'
-	]);
-
-	useEffect(() => {
-		if (!heroImageUrl) return;
-		let canceled = false;
-		const img = new Image();
-		// Attempt to allow cross-origin color extraction when possible
-		img.crossOrigin = 'anonymous';
-		img.src = heroImageUrl;
-		img.onload = () => {
-			try {
-				const thief = new ColorThief();
-				// getPalette can throw if the image isn't CORS-enabled; guard with try/catch
-				const dominant = thief.getColor(img) as [number, number, number];
-				const palette = thief.getPalette(img, 5) as [number, number, number][];
-				const secondary = (palette && palette[1]) ? palette[1] : dominant;
-				if (!canceled) {
-					setGradientColors([
-						`rgb(${dominant[0]},${dominant[1]},${dominant[2]})`,
-						`rgb(${secondary[0]},${secondary[1]},${secondary[2]})`,
-						'#000000',
-					]);
-				}
-			} catch (_err) {
-				// Ignore extraction errors; fallback stays in place
-			}
-		};
-		img.onerror = () => {
-			// keep fallback
-		};
-		return () => { canceled = true; };
-	}, [heroImageUrl]);
-
 	const openModal = useCallback((show: Show) => {
 		setActiveShow(show);
 		setModalOpen(true);
 	}, []);
-  
+
 	const closeModal = useCallback(() => {
 		setModalOpen(false);
 		setActiveShow(null);
 	}, []);
 
-	if (heroLoading && recsLoading && trendingLoading) {
-		return (
-			<AppLayout>
-				<main className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
-					{/* Hero Skeleton (reduced height) */}
-					<div className="relative h-[55vh] min-h-[400px]">
-						<Skeleton className="absolute inset-0 w-full h-full" />
-						<div className="absolute inset-0 bg-gradient-to-r from-black/60 to-transparent" />
-					</div>
-					{/* Content Skeletons */}
-					<div className="px-4 md:px-8 lg:px-16 max-w-[1440px] mx-auto pt-8">
-						<div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
-							{Array.from({ length: 18 }).map((_, i) => (
-								<motion.div
-									key={i}
-									initial={{ opacity: 0, y: 20 }}
-									animate={{ opacity: 1, y: 0 }}
-									transition={{ duration: 0.4, delay: i * 0.05 }}
-								>
-									<ContentCardSkeleton />
-								</motion.div>
-							))}
-						</div>
-					</div>
-				</main>
-			</AppLayout>
-		);
-	}
-
 	return (
 		<AppLayout>
-			<main className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900" aria-label="Discover page">
-				{/* Hero Section (compact, gradient overlay, rotating slides) */}
-				<div
-					className="relative h-[55vh] min-h-[400px] w-full overflow-hidden"
-					onMouseEnter={() => setHeroPaused(true)}
-					onMouseLeave={() => setHeroPaused(false)}
-					role="region"
-					aria-label="Featured titles"
-				>
-					{/* Dynamic gradient + Animated background image (zoom-out per slide) */}
-					{heroImageUrl ? (
-						<div className="absolute inset-0 z-0 overflow-hidden" aria-hidden>
-							{/* Dynamic gradient background that adapts to the image */}
-							<div
-								className="absolute inset-0"
-								style={{
-									background: `linear-gradient(to top, ${gradientColors[2]}, ${gradientColors[1]}, ${gradientColors[0]})`
-								}}
-							/>
-							{/* Blurred background fill for seamless look */}
-							<img
-								src={heroImageUrl}
-								alt=""
-								className="absolute inset-0 w-full h-full object-cover blur-lg scale-110 opacity-60"
-								style={{ zIndex: 1, objectPosition: 'center center', pointerEvents: 'none' }}
-							/>
-							{/* Main hero image, always fully visible */}
-							<motion.img
-								src={heroImageUrl}
-								alt=""
-								className="relative w-full h-full object-contain select-none mx-auto"
-								style={{ objectPosition: 'center center', zIndex: 2 }}
-								initial={{ scale: heroPaused ? 1 : 1.22, opacity: 0 }}
-								animate={{ scale: 1, opacity: 1 }}
-								transition={{ duration: heroPaused ? 0 : 6, ease: 'easeOut' }}
-								key={`${heroIndex}-${heroPaused ? 'paused' : 'run'}`}
-							/>
-						</div>
-					) : null}
+			<main className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
+				{/* Hero Section using reusable HeroSpot component */}
+				<HeroSpot
+					shows={heroSlides}
+					height="h-[55vh] min-h-[400px]"
+					onWatchNow={(s) => openModal(s)}
+					onMoreInfo={(s) => openModal(s)}
+				/>
 
-					{/* Readability overlay to ensure text/CTAs pop over any gradient */}
-					<div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent pointer-events-none z-10" />
-					{/* Nav Controls */}
-					{heroSlides.length > 1 && (
-						<>
-							<button
-								className="absolute left-4 top-1/2 -translate-y-1/2 z-30 h-10 w-10 rounded-full bg-black/40 text-white flex items-center justify-center hover:bg-black/60 focus:outline-none focus:ring-2 focus:ring-white/60"
-								onClick={prevHero}
-								aria-label="Previous featured"
-							>
-								<ChevronLeft className="h-5 w-5" />
-							</button>
-							<button
-								className="absolute right-4 top-1/2 -translate-y-1/2 z-30 h-10 w-10 rounded-full bg-black/40 text-white flex items-center justify-center hover:bg-black/60 focus:outline-none focus:ring-2 focus:ring-white/60"
-								onClick={nextHero}
-								aria-label="Next featured"
-							>
-								<ChevronRight className="h-5 w-5" />
-							</button>
-							<div className="absolute bottom-4 right-6 z-30 flex gap-2" aria-label="Featured pagination">
-								{heroSlides.map((_, i) => (
-									<button
-										key={`dot-${i}`}
-										className={`h-2 w-2 rounded-full ${i === heroIndex ? 'bg-white' : 'bg-white/40 hover:bg-white/60'}`}
-										onClick={() => setHeroIndex(i)}
-										aria-label={`Go to slide ${i + 1}`}
-										aria-current={i === heroIndex}
-									/>
-								))}
-							</div>
-						</>
-					)}
-
-					<div className="relative z-20 h-full flex items-end pb-10">
-						<div className="container mx-auto px-6 lg:px-16">
-							<div className="max-w-2xl space-y-4">
-								<h1 className="text-3xl md:text-5xl font-bold text-white leading-tight">
-									{activeHero?.title || 'Discover'}
-								</h1>
-								<div className="flex gap-4">
-									<button
-										className="bg-white text-black font-semibold px-6 py-2 rounded-xl shadow hover:bg-gray-200"
-										onClick={() => activeHero && openModal(activeHero)}
-									>
-										Watch Now
-									</button>
-									<button
-										className="border border-white text-white px-6 py-2 rounded-xl hover:bg-white/10"
-										onClick={() => activeHero && handleQuickAdd(activeHero)}
-									>
-										Add to List
-									</button>
-								</div>
-							</div>
-						</div>
-					</div>
-				</div>
-
-				<div className="mx-auto max-w-7xl px-4 py-12 space-y-20">
+				{/* Main Content Container - Universal Design System */}
+				<div className={universal.containers.main}>
 					{/* Compact Filter Toolbar — horizontally scrollable, expandable pills */}
-					<section aria-label="Filter toolbar" className="rounded-xl">
-						<div className="flex items-center gap-2 overflow-x-auto pb-2 -mx-1 px-1">
+					<section aria-label="Filter toolbar" className={universal.cards.glass}>
+						<div className={universal.cn('flex items-center gap-2 overflow-x-auto pb-2 -mx-1 px-1', universal.utilities.scrollbarHide)}>
+							<button
+								className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs border ${openFilter === 'mood' ? 'bg-teal-500 text-white border-teal-400' : 'bg-white/5 text-white border-white/10 hover:bg-white/10'}`}
+								onClick={() => setOpenFilter(f => f === 'mood' ? null : 'mood')}
+								aria-pressed={openFilter === 'mood'}
+							>
+								<Sparkles className="w-3.5 h-3.5" /> Mood <ChevronDown className="w-3.5 h-3.5 opacity-70" />
+							</button>
 							<button
 								className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs border ${openFilter === 'mood' ? 'bg-teal-500 text-white border-teal-400' : 'bg-white/5 text-white border-white/10 hover:bg-white/10'}`}
 								onClick={() => setOpenFilter(f => f === 'mood' ? null : 'mood')}
@@ -862,7 +745,7 @@ export default function DiscoverStructured() {
 						{/* Expanded rows */}
 						{openFilter === 'mood' && (
 							<div className="mt-2 flex gap-2 overflow-x-auto pb-1" role="region" aria-label="Mood options">
-								{['Cerebral','Feel-good','Edge-of-seat'].map(m => {
+								{['Cerebral', 'Feel-good', 'Edge-of-seat'].map(m => {
 									const active = filters.mood === m;
 									return (
 										<button
@@ -878,7 +761,7 @@ export default function DiscoverStructured() {
 						)}
 						{openFilter === 'genre' && (
 							<div className="mt-2 flex gap-2 overflow-x-auto pb-1" role="region" aria-label="Genre options">
-								{(filters.mood ? (filters.mood === 'Cerebral' ? ['Documentary','Drama','Thriller','Mystery'] : filters.mood === 'Feel-good' ? ['Comedy','Romance','Family','Animation'] : ['Action','Thriller','Horror','Crime','Adventure']) : allowedGenres).slice(0,16).map(g => {
+								{(filters.mood ? (filters.mood === 'Cerebral' ? ['Documentary', 'Drama', 'Thriller', 'Mystery'] : filters.mood === 'Feel-good' ? ['Comedy', 'Romance', 'Family', 'Animation'] : ['Action', 'Thriller', 'Horror', 'Crime', 'Adventure']) : allowedGenres).slice(0, 16).map(g => {
 									const pressed = filters.genre?.toLowerCase() === g.toLowerCase();
 									return (
 										<button
@@ -894,7 +777,7 @@ export default function DiscoverStructured() {
 						)}
 						{openFilter === 'platform' && (
 							<div className="mt-2 flex gap-2 overflow-x-auto pb-1" role="region" aria-label="Platform options">
-								{allowedPlatforms.slice(0,16).map(p => {
+								{allowedPlatforms.slice(0, 16).map(p => {
 									const pressed = Boolean(filters.platforms?.includes(p));
 									return (
 										<button
@@ -902,7 +785,7 @@ export default function DiscoverStructured() {
 											className={`px-2.5 py-1.5 rounded-full border text-xs ${pressed ? 'bg-teal-500 text-white border-teal-400' : 'bg-white/5 text-white border-white/10 hover:bg-white/10'}`}
 											onClick={() => {
 												const has = filters.platforms?.includes(p);
-												const next = has ? (filters.platforms || []).filter(x => x !== p) : [ ...(filters.platforms || []), p ];
+												const next = has ? (filters.platforms || []).filter(x => x !== p) : [...(filters.platforms || []), p];
 												onFilterChange({ ...filters, platforms: next });
 											}}
 											aria-pressed={pressed}
@@ -929,22 +812,22 @@ export default function DiscoverStructured() {
 							</div>
 						)}
 					</section>
-          
-					{/* Recommendations - single row horizontal carousel */}
-					<section id="recommendations-section" aria-label="Recommendations">
+
+					{/* Recommendations - Universal Section Pattern */}
+					<section id="recommendations-section" aria-label="Recommendations" className={universal.containers.section}>
 						<SectionHeader title="Recommended for you" viewAllHref="/discover/recommended" subtitle={filters.mood || filters.genre || (filters.platforms && filters.platforms.length) ? `Because you chose ${[
 							filters.mood ? `“${filters.mood}”` : null,
 							filters.genre ? `“${filters.genre}”` : null,
 							filters.platforms?.length ? `“${filters.platforms.join(', ')}”` : null,
 						].filter(Boolean).join(' and ')}.` : 'Personalized picks based on your taste.'} />
 						{recsLoading ? (
-							<Grid ariaLabel="Loading recommendations" compact={compact}>
+							<div className={universal.grids.poster} aria-label="Loading recommendations">
 								{Array.from({ length: 6 }).map((_, i) => (
-									<div key={`rec-skel-${i}`} className="space-y-3">
+									<div key={`rec-skel-${i}`} className={universal.spacing.elementY}>
 										<ContentCardSkeleton />
 									</div>
 								))}
-							</Grid>
+							</div>
 						) : (
 							<HorizontalCarousel
 								items={(filteredForYou && filteredForYou.length ? filteredForYou : (recs || [])).slice(0, 6)}
@@ -957,25 +840,32 @@ export default function DiscoverStructured() {
 						)}
 					</section>
 
-					<div className="border-t border-white/10" />
 					{/* Trending Now (grid) */}
-					<motion.section aria-label="Trending" initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }}>
+					{/* Trending Now - Universal Grid Pattern */}
+					<motion.section
+						aria-label="Trending"
+						className={universal.containers.section}
+						initial={{ opacity: 0, y: 20 }}
+						whileInView={{ opacity: 1, y: 0 }}
+						viewport={{ once: true }}
+						transition={{ duration: 0.6 }}
+					>
 						<SectionHeader
 							title="Trending Now"
-							subtitle="What everyone’s watching this week."
+							subtitle="What everyone's watching this week."
 							viewAllHref="/discover/trending"
 						/>
 						{trendingLoading ? (
-							<Grid ariaLabel="Loading trending" compact={compact}>
+							<div className={universal.grids.poster} aria-label="Loading trending">
 								{Array.from({ length: 6 }).map((_, i) => (
-									<div key={`trend-skel-${i}`} className="space-y-3">
+									<div key={`trend-skel-${i}`} className={universal.spacing.elementY}>
 										<ContentCardSkeleton />
 									</div>
 								))}
-							</Grid>
+							</div>
 						) : (
-							<div className={`grid gap-3 ${compact ? 'grid-cols-4 sm:grid-cols-6' : 'grid-cols-3 sm:grid-cols-4 lg:grid-cols-6'}`} role="grid" aria-label="Trending grid">
-								{(trending || []).slice(0, 6).map((show, i) => (
+							<div className={compact ? universal.grids.four : universal.grids.three} role="grid" aria-label="Trending grid">
+								{((trending as Show[] | undefined) || []).slice(0, 6).map((show: Show, i: number) => (
 									<motion.div key={show.id} role="gridcell" initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} transition={{ duration: 0.4, delay: i * 0.03 }}>
 										<UniversalShowCard
 											show={show}
@@ -988,32 +878,37 @@ export default function DiscoverStructured() {
 								))}
 							</div>
 						)}
-					</motion.section>
-
-					<div className="border-t border-white/10" />
-					{/* Coming Soon — timeline style */}
-					<motion.section aria-label="Coming soon" id="coming-soon-section" initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6, delay: 0.1 }}>
+					</motion.section>					{/* Coming Soon — Universal Timeline Pattern */}
+					<motion.section
+						aria-label="Coming soon"
+						id="coming-soon-section"
+						className={universal.containers.section}
+						initial={{ opacity: 0, y: 20 }}
+						whileInView={{ opacity: 1, y: 0 }}
+						viewport={{ once: true }}
+						transition={{ duration: 0.6, delay: 0.1 }}
+					>
 						<SectionHeader title="New Seasons & Releases" subtitle="Upcoming and newly released titles you'll care about" viewAllHref="/discover/coming-soon" />
 						{comingSoonLoading ? (
-							<Grid ariaLabel="Loading coming soon" compact={compact}>
+							<div className={universal.grids.poster} aria-label="Loading coming soon">
 								{Array.from({ length: 6 }).map((_, i) => (
-									<div key={`soon-skel-${i}`} className="space-y-3">
+									<div key={`soon-skel-${i}`} className={universal.spacing.elementY}>
 										<ContentCardSkeleton />
 									</div>
 								))}
-							</Grid>
+							</div>
 						) : (
 							<div className="relative pl-4">
 								<div aria-hidden className="absolute left-1 top-0 bottom-0 w-px bg-white/10" />
 								{(comingSoon ?? []).slice().sort((a, b) => (a.releaseDate ?? '').localeCompare(b.releaseDate ?? '')).slice(0, 6).map((show) => (
-									<div key={show.id} className="relative mb-5">
+									<div key={show.id} className={universal.cn('relative', universal.spacing.contentY)}>
 										<div aria-hidden className="absolute -left-[7px] top-2 h-3 w-3 rounded-full bg-teal-400 shadow-[0_0_0_3px_rgba(20,184,166,0.25)]" />
-										<div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 bg-white/5 border border-white/10 rounded-xl p-3">
-											<div className="flex items-center gap-2 text-xs text-gray-200">
+										<div className={universal.cn(universal.cards.glass, 'flex flex-col sm:flex-row items-start sm:items-center', universal.spacing.elementX)}>
+											<div className={universal.cn('flex items-center', universal.spacing.itemX, 'text-xs text-gray-200')}>
 												<Calendar className="w-4 h-4" /> {show.releaseDate || 'TBA'}
 											</div>
 											<div className="flex-1 w-full">
-												<div className="flex flex-col sm:flex-row gap-3">
+												<div className={universal.cn('flex flex-col sm:flex-row', universal.spacing.elementX)}>
 													<div className="w-full sm:w-56 h-28 overflow-hidden rounded-lg bg-gray-800/40 flex-shrink-0">
 														<img src={show.backdrop || show.poster || ''} alt={show.title} className="w-full h-full object-cover" />
 													</div>
@@ -1023,9 +918,9 @@ export default function DiscoverStructured() {
 													</div>
 												</div>
 											</div>
-											<div className="flex gap-2 self-stretch sm:self-auto">
-												<Button size="sm" onClick={() => openModal(show)} className="bg-white text-black hover:bg-gray-100"><Play className="h-4 w-4 mr-1" /> Watch</Button>
-												<Button size="sm" variant="outline" onClick={() => handleQuickAdd(show)} className="bg-black/30 border-white/30 text-white hover:bg-black/40"><Plus className="h-4 w-4" /></Button>
+											<div className={universal.cn('flex', universal.spacing.itemX, 'self-stretch sm:self-auto')}>
+												<Button size="sm" onClick={() => openModal(show)} className={universal.buttons.primary}><Play className="h-4 w-4 mr-1" /> Watch</Button>
+												<Button size="sm" variant="outline" onClick={() => handleQuickAdd(show)} className={universal.buttons.secondary}><Plus className="h-4 w-4" /></Button>
 											</div>
 										</div>
 									</div>
@@ -1034,20 +929,20 @@ export default function DiscoverStructured() {
 						)}
 					</motion.section>
 
-					{/* Mood Picks */}
+					{/* Mood Picks - Universal Section Pattern */}
 					{filters.mood && (
-						<section aria-label="Mood picks">
+						<section aria-label="Mood picks" className={universal.containers.section}>
 							<SectionHeader title={`Perfect for ${filters.mood} moments`} subtitle={`Unwind with these ${filters.mood?.toLowerCase()} picks handpicked for you.`} viewAllHref="/discover/mood" />
 							{moodLoading ? (
-								<Grid ariaLabel="Loading mood picks" compact={compact}>
+								<div className={universal.grids.poster} aria-label="Loading mood picks">
 									{Array.from({ length: 6 }).map((_, i) => (
-										<div key={`mood-skel-${i}`} className="space-y-3">
+										<div key={`mood-skel-${i}`} className={universal.spacing.elementY}>
 											<ContentCardSkeleton />
 										</div>
 									))}
-								</Grid>
+								</div>
 							) : (
-								<Grid ariaLabel="Mood picks grid" compact={compact}>
+								<div className={universal.grids.poster} aria-label="Mood picks grid">
 									{(moodPicks ?? []).slice(0, 6).map((show) => (
 										<motion.div
 											key={show.id}
@@ -1064,14 +959,20 @@ export default function DiscoverStructured() {
 											/>
 										</motion.div>
 									))}
-								</Grid>
+								</div>
 							)}
 						</section>
 					)}
 
-					{/* Staff Picks */}
-					<div className="border-t border-white/10" />
-					<motion.section aria-label="Staff Picks" initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6, delay: 0.2 }}>
+					{/* Staff Picks - Universal Section Pattern */}
+					<motion.section
+						aria-label="Staff Picks"
+						className={universal.containers.section}
+						initial={{ opacity: 0, y: 20 }}
+						whileInView={{ opacity: 1, y: 0 }}
+						viewport={{ once: true }}
+						transition={{ duration: 0.6, delay: 0.2 }}
+					>
 						<SectionHeader title="Staff picks" subtitle="Handpicked by our team — quality over quantity." viewAllHref="/discover/staff-picks" />
 						<HorizontalCarousel
 							items={(recs || []).slice(0, 6)}
@@ -1083,11 +984,18 @@ export default function DiscoverStructured() {
 						/>
 					</motion.section>
 
-					{/* Hidden Gems */}
-					<motion.section aria-label="Hidden Gems" initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6, delay: 0.3 }}>
+					{/* Hidden Gems - Universal Section Pattern */}
+					<motion.section
+						aria-label="Hidden Gems"
+						className={universal.containers.section}
+						initial={{ opacity: 0, y: 20 }}
+						whileInView={{ opacity: 1, y: 0 }}
+						viewport={{ once: true }}
+						transition={{ duration: 0.6, delay: 0.3 }}
+					>
 						<SectionHeader title="Hidden gems" subtitle="Critically loved titles you might have missed." viewAllHref="/discover/hidden-gems" />
 						<HorizontalCarousel
-							items={(recs || []).filter(s => (s.rating ?? 0) >= 7).slice(0, 6)}
+							items={(((recs as Show[] | undefined) || []).filter((s: Show) => (s.rating ?? 0) >= 7)).slice(0, 6)}
 							title=""
 							ariaLabel="Hidden gems"
 							onAddToWatchlist={handleQuickAdd}

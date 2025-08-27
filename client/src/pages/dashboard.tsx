@@ -501,40 +501,84 @@ function Dashboard() {
     }
   };
 
-  // Fetch trending/spotlight data filtered by genre or network
+  // Fetch trending/spotlight data filtered by genre or network using enhanced multi-API endpoints
   const { data: spotlightData, isLoading: spotlightLoading, error: spotlightError } = useQuery({
-    queryKey: ["/api/content/trending-enhanced-enhanced-v2", spotlightFilterType, spotlightFilterType === 'genre' ? selectedGenre : selectedNetwork],
+    queryKey: ["spotlight-enhanced", spotlightFilterType, spotlightFilterType === 'genre' ? selectedGenre : selectedNetwork],
     queryFn: async () => {
-      let url = `/api/tmdb/spotlight`; // Default fallback to real TMDB trending
+      console.log('🎯 Enhanced spotlight filter state:', {
+        spotlightFilterType,
+        selectedGenre,
+        selectedNetwork,
+        preferredGenres
+      });
 
-      if (spotlightFilterType === 'genre') {
-        if (selectedGenre === "all") {
-          url = `/api/tmdb/spotlight`;
-        } else {
-          url = `/api/streaming/enhanced-search?type=tv&includeStreaming=true`;
-        }
-      } else if (spotlightFilterType === 'network') {
-        if (selectedNetwork === "all") {
-          url = `/api/tmdb/spotlight`;
-        } else {
-          url = `/api/streaming/enhanced-search?type=tv&includeStreaming=true`;
-        }
+      let url: string;
+      const params = new URLSearchParams();
+
+      if (spotlightFilterType === 'genre' && selectedGenre !== "all") {
+        // Use enhanced movie discover with streaming data for genre filtering
+        url = `/api/tmdb/discover/movie`;
+        params.append('with_genres', selectedGenre);
+        params.append('sort_by', 'popularity.desc');
+        params.append('page', '1');
+        params.append('includeStreaming', 'true'); // Multi-API streaming enrichment
+        console.log('🎬 Using enhanced movie discover with genre:', selectedGenre);
+      } else if (spotlightFilterType === 'network' && selectedNetwork !== "all") {
+        // Use enhanced TV discover with streaming data for network filtering
+        url = `/api/tmdb/discover/tv`;
+        params.append('with_networks', selectedNetwork);
+        params.append('sort_by', 'popularity.desc');
+        params.append('page', '1');
+        params.append('includeStreaming', 'true'); // Multi-API streaming enrichment
+        console.log('📺 Using enhanced TV discover with network:', selectedNetwork);
+      } else {
+        // Use enhanced trending endpoint with multi-API streaming data
+        url = `/api/content/trending-enhanced`;
+        params.append('mediaType', 'all'); // Get both movies and TV
+        params.append('timeWindow', 'week');
+        params.append('includeStreaming', 'true'); // Multi-API streaming enrichment
+        console.log('✨ Using enhanced trending with multi-API streaming data');
       }
 
-      const res = await fetch(url);
+      const fullUrl = params.toString() ? `${url}?${params}` : url;
+      console.log('🔗 Enhanced multi-API call:', fullUrl);
+
+      const res = await fetch(fullUrl, {
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' }
+      });
+
       if (!res.ok) {
-        throw new Error(`Failed to fetch trending: ${res.status}`);
+        console.error('❌ Enhanced spotlight fetch failed:', res.status, res.statusText);
+        throw new Error(`Failed to fetch enhanced spotlight data: ${res.status}`);
       }
-      const data = await res.json();
 
-      // Normalize the response: spotlight endpoint returns {trending: [...]} while discover returns {results: [...]}
-      if (data.trending) {
-        return { results: data.trending };
-      }
-      return data;
+      const data = await res.json();
+      console.log('✅ Enhanced spotlight data received:', data);
+
+      // Normalize the response structure - all enhanced endpoints return { results: [...] }
+      let normalizedResults: any[] = data.results || [];
+
+      // Enrich results with streaming platform info from multi-API system
+      normalizedResults = normalizedResults.map((item: any) => ({
+        ...item,
+        // Ensure media_type is properly set
+        media_type: item.media_type || (item.title ? 'movie' : 'tv'),
+        // Include streaming platforms from multi-API enrichment
+        streaming_platforms: item.streaming || item.streaming_platforms || [],
+        // Include streaming stats if available
+        streamingStats: item.streamingStats || null,
+        // Add streaming availability flag
+        hasStreaming: Boolean(item.streaming?.length || item.streaming_platforms?.length)
+      }));
+
+      console.log('🎭 Enhanced results count:', normalizedResults.length);
+      console.log('🎪 Enhanced sample with streaming:', normalizedResults[0]);
+
+      return { results: normalizedResults };
     },
     enabled: !!isAuthenticated,
-    staleTime: 0, // Force fresh data
+    staleTime: 60_000, // Cache for 1 minute
     refetchOnWindowFocus: false,
   });
 

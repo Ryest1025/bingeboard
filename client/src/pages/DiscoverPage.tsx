@@ -1,44 +1,26 @@
-// client/src/pages/DiscoverPage.tsx
 import React, { useCallback, useMemo, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { motion } from 'framer-motion';
 import AppLayout from "@/components/layouts/AppLayout";
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import EnhancedFilterSystem from '@/components/common/EnhancedFilterSystem';
 import BrandedShowModal from '@/components/search/BrandedShowModal';
-import UniversalShowCard from '@/components/global/UniversalShowCard';
+import HeroSpot from '@/components/hero/HeroSpot';
+import TrendingCarousel from '@/components/TrendingCarousel';
+import RecommendationsSection from '@/components/RecommendationsSection';
+import HiddenGemsSection from '@/components/HiddenGemsSection';
+import FloatingActions from '@/components/FloatingActions';
+import { mockTrendingMovies, mockTrendingTV } from '@/mock/shows';
+import { Show } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
-import { motion } from 'framer-motion';
 import { Play, Plus, ChevronRight } from 'lucide-react';
 
 // ———————————————————————————————————————————————————————————
 // Types
 // ———————————————————————————————————————————————————————————
-
-type Show = {
-  id: string | number;
-  title: string;
-  year?: number;
-  posterUrl?: string;
-  poster?: string;
-  backdrop?: string;
-  overview?: string;
-  genres?: string[];
-  releaseDate?: string;
-  rating?: number;
-  runtime?: number;
-  streamingPlatform?: string;
-  platform?: string;
-  mediaType?: string;
-  streamingPlatforms?: Array<{
-    provider_id: number;
-    provider_name: string;
-    logo_path?: string;
-    type?: string;
-  }>;
-};
 
 type FilterState = {
   mood?: string | null;
@@ -55,13 +37,13 @@ type FilterState = {
 
 async function fetchJSON<T>(url: string, init?: RequestInit): Promise<T> {
   try {
-    const res = await fetch(url, { 
-      ...init, 
+    const res = await fetch(url, {
+      ...init,
       credentials: 'include',
-      headers: { 
-        'Content-Type': 'application/json', 
-        ...(init?.headers || {}) 
-      } 
+      headers: {
+        'Content-Type': 'application/json',
+        ...(init?.headers || {})
+      }
     });
     if (!res.ok) {
       const text = await res.text().catch(() => '');
@@ -88,7 +70,7 @@ async function getHero(filters: FilterState): Promise<Show> {
   const params = new URLSearchParams();
   if (filters.mood) params.append('mood', filters.mood);
   if (filters.genre) params.append('genre', filters.genre);
-  
+
   const response = await fetchJSON<{ hero: Show }>(`/api/discover?${params}`);
   return response.hero;
 }
@@ -98,7 +80,7 @@ async function getRecommendations(filters: FilterState): Promise<Show[]> {
   if (filters.mood) params.append('mood', filters.mood);
   if (filters.genre) params.append('genre', filters.genre);
   if (filters.sort) params.append('sort', filters.sort);
-  
+
   const response = await fetchJSON<{ forYou: Show[] }>(`/api/discover?${params}`);
   return response.forYou || [];
 }
@@ -126,54 +108,54 @@ async function addToWatchlist(showId: string | number, mediaType: string = 'movi
 }
 
 // ———————————————————————————————————————————————————————————
-// UI helpers
+// Animation variants
 // ———————————————————————————————————————————————————————————
-function SectionHeader({ title, onSeeAll }: { title: string; onSeeAll?: () => void }) {
-  return (
-    <div className="flex items-center justify-between mb-6" role="heading" aria-level={2}>
-      <h2 className="text-2xl font-bold text-white">{title}</h2>
-      {onSeeAll ? (
-        <Button 
-          size="sm" 
-          variant="ghost" 
-          onClick={onSeeAll} 
-          aria-label={`See all for ${title}`}
-          className="text-gray-400 hover:text-white"
-        >
-          See all <ChevronRight className="w-4 h-4 ml-1" />
-        </Button>
-      ) : null}
-    </div>
-  );
-}
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.2,
+      delayChildren: 0.1
+    }
+  }
+};
 
-function Grid({ children, ariaLabel }: React.PropsWithChildren<{ ariaLabel: string }>) {
-  return (
-    <div
-      role="grid"
-      aria-label={ariaLabel}
-      className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6"
-    >
-      {children}
-    </div>
-  );
-}
+const sectionVariants = {
+  hidden: { opacity: 0, y: 40 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.8,
+      ease: [0.25, 0.46, 0.45, 0.94] // Custom easing for premium feel
+    }
+  }
+};
 
-function HorizontalScroll({ children, ariaLabel }: React.PropsWithChildren<{ ariaLabel: string }>) {
-  return (
-    <div
-      role="list"
-      aria-label={ariaLabel}
-      className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide"
-      style={{
-        scrollbarWidth: 'none',
-        msOverflowStyle: 'none',
-      }}
-    >
-      {children}
-    </div>
-  );
-}
+const heroVariants = {
+  hidden: { opacity: 0, scale: 0.95 },
+  visible: {
+    opacity: 1,
+    scale: 1,
+    transition: {
+      duration: 1.2,
+      ease: "easeOut"
+    }
+  }
+};
+
+const filterVariants = {
+  hidden: { opacity: 0, y: -20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.6,
+      ease: "easeOut"
+    }
+  }
+};
 
 // ———————————————————————————————————————————————————————————
 // Page Component
@@ -190,25 +172,40 @@ export default function DiscoverPage() {
     sort: 'popularity',
   });
 
+  const [activeFilters, setActiveFilters] = useState<string[]>([]);
+
   const onFilterChange = useCallback((next: any) => {
     setFilters(next);
+    // Extract all active filter values for component filtering
+    const allFilters = [
+      ...(next.genres || []),
+      ...(next.platforms || []),
+      ...(next.countries || []),
+      ...(next.sports || [])
+    ];
+    setActiveFilters(allFilters);
+
     // Prefetch recommendations for responsiveness
-    qc.prefetchQuery({ 
-      queryKey: qk.recommendations(next), 
-      queryFn: () => getRecommendations(next) 
-    }).catch(() => {});
+    qc.prefetchQuery({
+      queryKey: qk.recommendations(next),
+      queryFn: () => getRecommendations(next)
+    }).catch(() => { });
   }, [qc]);
 
-  // Queries with error handling
+  // Create hero shows from mock data
+  const heroShows = useMemo(() => [...mockTrendingMovies, ...mockTrendingTV].slice(0, 5), []);
+
+  // Queries with fallback to mock data
   const {
     data: hero,
     isLoading: heroLoading,
     isError: heroError,
-    error: heroErrObj,
   } = useQuery({
     queryKey: qk.hero(filters),
     queryFn: () => getHero(filters),
-  staleTime: 60_000,
+    staleTime: 60_000,
+    // Fallback to first mock movie if API fails
+    placeholderData: mockTrendingMovies[0],
   });
 
   const {
@@ -217,24 +214,20 @@ export default function DiscoverPage() {
   } = useQuery({
     queryKey: qk.recommendations(filters),
     queryFn: () => getRecommendations(filters),
-  placeholderData: (prev) => prev ?? [],
+    placeholderData: mockTrendingMovies.slice(0, 4),
   });
 
   const { data: trending, isLoading: trendingLoading } = useQuery({
     queryKey: qk.trending(),
     queryFn: getTrending,
-  staleTime: 60_000,
+    staleTime: 60_000,
+    placeholderData: mockTrendingMovies,
   });
 
-  const { data: comingSoon, isLoading: comingSoonLoading } = useQuery({
-    queryKey: qk.comingSoon(),
-    queryFn: getComingSoon,
-  });
-
-  const { data: moodPicks, isLoading: moodLoading } = useQuery({
-    queryKey: qk.mood(filters.mood ?? null),
-    queryFn: () => getMoodPicks(filters.mood ?? null),
-    enabled: Boolean(filters.mood),
+  const { data: trendingTV, isLoading: trendingTVLoading } = useQuery({
+    queryKey: ['trending-tv'],
+    queryFn: () => fetchJSON<Show[]>('/api/discover/trending-tv'),
+    placeholderData: mockTrendingTV,
   });
 
   // ———————————————————————————————————————————————————————————
@@ -242,84 +235,90 @@ export default function DiscoverPage() {
   // ———————————————————————————————————————————————————————————
   const [activeShow, setActiveShow] = useState<Show | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
-  
+
   const openModal = useCallback((show: Show) => {
     setActiveShow(show);
     setModalOpen(true);
   }, []);
-  
+
   const closeModal = useCallback(() => {
     setModalOpen(false);
     setActiveShow(null);
   }, []);
 
   // ———————————————————————————————————————————————————————————
-  // Actions (hybrid: quick add on card; full actions live in modal)
+  // Actions
   // ———————————————————————————————————————————————————————————
   const handleQuickAdd = useCallback(async (show: Show) => {
     try {
       if (!user) {
-        toast({ 
-          title: 'Sign in required', 
-          description: 'Please sign in to add to your list.' 
+        toast({
+          title: 'Sign in required',
+          description: 'Please sign in to add to your list.'
         });
         return;
       }
       await addToWatchlist(show.id, show.mediaType || 'movie');
-      toast({ 
-        title: 'Added', 
-        description: `"${show.title}" was added to your list.` 
+      toast({
+        title: 'Added',
+        description: `"${show.title}" was added to your list.`
       });
-      // Invalidate watchlist queries
       await qc.invalidateQueries({ queryKey: ['watchlist'] });
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Could not add to list';
-      toast({ 
-        title: 'Error', 
-        description: message, 
-        variant: 'destructive' 
+      toast({
+        title: 'Error',
+        description: message,
+        variant: 'destructive'
       });
     }
   }, [toast, user, qc]);
 
-  // ———————————————————————————————————————————————————————————
-  // Hero styles
-  // ———————————————————————————————————————————————————————————
-  const heroStyles = useMemo(() => {
-    const url = hero?.backdrop || hero?.posterUrl || hero?.poster;
-    return url
-      ? {
-          backgroundImage: `linear-gradient(to bottom, rgba(0,0,0,.4), rgba(0,0,0,.8)), url(${url})`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-        } as React.CSSProperties
-      : {};
-  }, [hero]);
-
-  // ———————————————————————————————————————————————————————————
-  // Scroll to first section handler
-  // ———————————————————————————————————————————————————————————
-  const scrollToContent = useCallback(() => {
-    const element = document.getElementById('recommendations-section');
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth' });
-    }
+  const handleWatchNow = useCallback((show: Show) => {
+    console.log('Watch now:', show.title);
+    // Implement watch functionality
   }, []);
 
-  // ———————————————————————————————————————————————————————————
-  // Render
-  // ———————————————————————————————————————————————————————————
+  const handleMoreInfo = useCallback((show: Show) => {
+    openModal(show);
+  }, [openModal]);
+
   return (
     <AppLayout>
-      <main className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900" aria-label="Discover page">
-        
-        {/* Sticky Filters */}
-        <section
-          aria-label="Filters"
-          className="sticky top-0 z-20 backdrop-blur supports-[backdrop-filter]:bg-gray-900/60 bg-gray-900/90 border-b border-gray-700/50"
+      <motion.main
+        initial="hidden"
+        animate="visible"
+        variants={containerVariants}
+        className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900"
+        aria-label="Discover page"
+      >
+
+        {/* Hero Section */}
+        <motion.section
+          variants={heroVariants}
+          initial="hidden"
+          animate="visible"
+          aria-label="Hero spotlight"
         >
-          <div className="mx-auto max-w-7xl px-4 py-3">
-            <EnhancedFilterSystem 
+          <HeroSpot
+            shows={heroShows}
+            height="h-[600px]"
+            onWatchNow={handleWatchNow}
+            onMoreInfo={handleMoreInfo}
+          />
+        </motion.section>
+
+        {/* Sticky Filters */}
+        <motion.section
+          variants={filterVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true }}
+          aria-label="Filters"
+          className="sticky top-0 z-20 bg-slate-900 bg-opacity-95 backdrop-blur-sm p-4 md:p-6 shadow-md border-b border-slate-700/30"
+        >
+          <div className="mx-auto max-w-7xl">
+            <EnhancedFilterSystem
               persistKey="discover-filters"
               showAdvanced={false}
               defaultExpanded={false}
@@ -327,223 +326,99 @@ export default function DiscoverPage() {
               onFiltersChange={onFilterChange}
             />
           </div>
-        </section>
+        </motion.section>
 
-        {/* Hero Spotlight */}
-        <section aria-label="Hero spotlight" className="mx-auto max-w-7xl px-4 pt-8">
-          <div
-            className="relative w-full rounded-2xl overflow-hidden min-h-[300px] sm:min-h-[400px] md:min-h-[500px]"
-            style={heroStyles}
-            role="img"
-            aria-label={hero?.title ? `Featured: ${hero.title}` : 'Featured show'}
+        {/* Content Sections */}
+        <div className="mx-auto max-w-7xl p-4 md:p-8 space-y-16">
+
+          {/* Trending Movies */}
+          <motion.div
+            variants={sectionVariants}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, amount: 0.2 }}
           >
-            <div className="absolute inset-0 p-6 sm:p-8 md:p-12 flex flex-col justify-end">
-              {heroLoading ? (
-                <div className="space-y-4 w-full sm:w-2/3 md:w-1/2">
-                  <Skeleton className="h-10 w-2/3 bg-gray-700/50" />
-                  <Skeleton className="h-6 w-3/4 bg-gray-700/50" />
-                  <Skeleton className="h-12 w-40 bg-gray-700/50" />
-                </div>
-              ) : heroError ? (
-                <div className="bg-gray-900/80 backdrop-blur-sm rounded-xl p-6">
-                  <p className="text-gray-300">
-                    {(heroErrObj as Error | undefined)?.message ?? 'Unable to load featured content.'}
-                  </p>
-                </div>
-              ) : hero ? (
-                <motion.div 
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="bg-black/50 backdrop-blur-sm rounded-2xl p-6 sm:p-8 max-w-2xl"
-                >
-                  <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 text-white">
-                    {hero.title}
-                  </h1>
-                  {hero.overview ? (
-                    <p className="text-base sm:text-lg text-gray-200 line-clamp-3 mb-6">
-                      {hero.overview}
-                    </p>
-                  ) : null}
-                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-                    <Button
-                      size="lg"
-                      aria-label="Discover now - scroll to recommendations"
-                      onClick={scrollToContent}
-                      className="bg-white text-black hover:bg-gray-100 font-semibold px-8 py-3"
-                    >
-                      <Play className="w-5 h-5 mr-2 fill-current" />
-                      Discover Now
-                    </Button>
-                    {hero.genres?.length ? (
-                      <div className="flex gap-2 flex-wrap">
-                        {hero.genres.slice(0, 3).map((genre) => (
-                          <Badge 
-                            key={genre}
-                            variant="secondary"
-                            className="bg-white/10 backdrop-blur-sm text-white border border-white/20"
-                          >
-                            {genre}
-                          </Badge>
-                        ))}
-                      </div>
-                    ) : null}
-                  </div>
-                </motion.div>
-              ) : null}
-            </div>
-          </div>
-        </section>
-
-        <div className="mx-auto max-w-7xl px-4 py-8 space-y-12">
-          
-          {/* Recommendations */}
-          <section id="recommendations-section" aria-label="Recommendations">
-            <SectionHeader title="Recommended for you" />
-            {recsLoading ? (
-              <Grid ariaLabel="Loading recommendations">
-                {Array.from({ length: 12 }).map((_, i) => (
-                  <div key={`rec-skel-${i}`} className="space-y-3">
-                    <Skeleton className="aspect-[2/3] w-full rounded-xl bg-gray-700/50" />
-                    <Skeleton className="h-4 w-3/4 bg-gray-700/30" />
-                  </div>
-                ))}
-              </Grid>
-            ) : (
-              <Grid ariaLabel="Recommendations grid">
-                {(recs ?? []).map((show) => (
-                  <motion.div
-                    key={show.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="group"
-                  >
-                    <UniversalShowCard
-                      show={show}
-                      className="w-full transition-transform hover:scale-105"
-                      onClick={() => openModal(show)}
-                      onAddToList={() => handleQuickAdd(show)}
-                      showQuickActions={true}
-                    />
-                  </motion.div>
-                ))}
-              </Grid>
-            )}
-          </section>
-
-          {/* Trending Now */}
-          <section aria-label="Trending">
-            <SectionHeader
-              title="Trending now"
-              onSeeAll={() => {
-                // Could navigate to full trending page
-                console.log('Navigate to trending page');
-              }}
+            <TrendingCarousel
+              title="Trending Movies"
+              shows={trending || mockTrendingMovies}
+              activeFilters={activeFilters}
+              viewAllUrl="/movies"
+              onShowClick={openModal}
+              onAddToList={handleQuickAdd}
             />
-            {trendingLoading ? (
-              <HorizontalScroll ariaLabel="Loading trending">
-                {Array.from({ length: 12 }).map((_, i) => (
-                  <div key={`trend-skel-${i}`} className="min-w-[200px] space-y-3">
-                    <Skeleton className="h-72 w-48 rounded-xl bg-gray-700/50" />
-                    <Skeleton className="h-4 w-3/4 bg-gray-700/30" />
-                  </div>
-                ))}
-              </HorizontalScroll>
-            ) : (
-              <HorizontalScroll ariaLabel="Trending carousel">
-                {(trending ?? []).map((show) => (
-                  <div key={show.id} role="listitem" className="min-w-[200px]">
-                    <UniversalShowCard
-                      show={show}
-                      className="w-48 transition-transform hover:scale-105"
-                      onClick={() => openModal(show)}
-                      onAddToList={() => handleQuickAdd(show)}
-                      showQuickActions={true}
-                    />
-                  </div>
-                ))}
-              </HorizontalScroll>
-            )}
-          </section>
+          </motion.div>
 
-          {/* Coming Soon */}
-          <section aria-label="Coming soon">
-            <SectionHeader title="Coming soon" />
-            {comingSoonLoading ? (
-              <Grid ariaLabel="Loading coming soon">
-                {Array.from({ length: 12 }).map((_, i) => (
-                  <div key={`soon-skel-${i}`} className="space-y-3">
-                    <Skeleton className="aspect-[2/3] w-full rounded-xl bg-gray-700/50" />
-                    <Skeleton className="h-4 w-3/4 bg-gray-700/30" />
-                  </div>
-                ))}
-              </Grid>
-            ) : (
-              <Grid ariaLabel="Coming soon grid">
-                {(comingSoon ?? [])
-                  .slice()
-                  .sort((a, b) => (a.releaseDate ?? '').localeCompare(b.releaseDate ?? ''))
-                  .map((show) => (
-                    <motion.div
-                      key={show.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="group relative"
-                    >
-                      <UniversalShowCard
-                        show={show}
-                        className="w-full transition-transform hover:scale-105"
-                        onClick={() => openModal(show)}
-                        onAddToList={() => handleQuickAdd(show)}
-                        showQuickActions={true}
-                      />
-                      {show.releaseDate && (
-                        <Badge className="absolute top-2 right-2 bg-green-600 hover:bg-green-700 text-white text-xs">
-                          {new Date(show.releaseDate).toLocaleDateString()}
-                        </Badge>
-                      )}
-                    </motion.div>
-                  ))}
-              </Grid>
-            )}
-          </section>
+          {/* Trending TV Shows */}
+          <motion.div
+            variants={sectionVariants}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, amount: 0.2 }}
+          >
+            <TrendingCarousel
+              title="Trending TV Shows"
+              shows={trendingTV || mockTrendingTV}
+              activeFilters={activeFilters}
+              viewAllUrl="/tv"
+              onShowClick={openModal}
+              onAddToList={handleQuickAdd}
+            />
+          </motion.div>
 
-          {/* Mood Picks */}
-          {filters.mood && (
-            <section aria-label="Mood picks">
-              <SectionHeader title={`Perfect for ${filters.mood} moments`} />
-              {moodLoading ? (
-                <Grid ariaLabel="Loading mood picks">
-                  {Array.from({ length: 12 }).map((_, i) => (
-                    <div key={`mood-skel-${i}`} className="space-y-3">
-                      <Skeleton className="aspect-[2/3] w-full rounded-xl bg-gray-700/50" />
-                      <Skeleton className="h-4 w-3/4 bg-gray-700/30" />
-                    </div>
-                  ))}
-                </Grid>
-              ) : (
-                <Grid ariaLabel="Mood picks grid">
-                  {(moodPicks ?? []).map((show) => (
-                    <motion.div
-                      key={show.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="group"
-                    >
-                      <UniversalShowCard
-                        show={show}
-                        className="w-full transition-transform hover:scale-105"
-                        onClick={() => openModal(show)}
-                        onAddToList={() => handleQuickAdd(show)}
-                        showQuickActions={true}
-                      />
-                    </motion.div>
-                  ))}
-                </Grid>
-              )}
-            </section>
-          )}
+          {/* AI Recommendations */}
+          <motion.div
+            variants={sectionVariants}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, amount: 0.2 }}
+          >
+            <RecommendationsSection
+              title="AI Recommendations"
+              shows={recs || mockTrendingMovies.slice(0, 4)}
+              activeFilters={activeFilters}
+              onShowClick={openModal}
+              onAddToList={handleQuickAdd}
+            />
+          </motion.div>
+
+          {/* Hidden Gems */}
+          <motion.div
+            variants={sectionVariants}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, amount: 0.2 }}
+          >
+            <HiddenGemsSection
+              shows={[...mockTrendingMovies, ...mockTrendingTV]}
+              activeFilters={activeFilters}
+              onShowClick={openModal}
+              onAddToList={handleQuickAdd}
+            />
+          </motion.div>
 
         </div>
+
+        {/* Enhanced Floating Actions */}
+        <FloatingActions
+          onAddToWatchlist={() => {
+            // Quick add the first trending movie as a demo
+            if (mockTrendingMovies[0]) {
+              handleQuickAdd(mockTrendingMovies[0]);
+            }
+          }}
+          onToggleFavorites={() => {
+            console.log('Toggle favorites view');
+            // Implement favorites functionality
+          }}
+          onQuickSearch={() => {
+            console.log('Open quick search');
+            // Implement quick search modal
+          }}
+          onToggleFilters={() => {
+            console.log('Toggle filters visibility');
+            // Implement filter panel toggle
+          }}
+        />
 
         {/* Modal for detailed show actions */}
         {activeShow && (
@@ -555,27 +430,26 @@ export default function DiscoverPage() {
             onAddToWatchlist={async (showId) => {
               try {
                 await addToWatchlist(showId, activeShow.mediaType || 'movie');
-                toast({ 
-                  title: 'Added', 
-                  description: `"${activeShow.title}" was added to your list.` 
+                toast({
+                  title: 'Added',
+                  description: `"${activeShow.title}" was added to your list.`
                 });
                 await qc.invalidateQueries({ queryKey: ['watchlist'] });
               } catch (err) {
                 const message = err instanceof Error ? err.message : 'Could not add to list';
-                toast({ 
-                  title: 'Error', 
-                  description: message, 
-                  variant: 'destructive' 
+                toast({
+                  title: 'Error',
+                  description: message,
+                  variant: 'destructive'
                 });
               }
             }}
             onWatchNow={(show) => {
-              // Handle watch now action
               console.log('Watch now:', show.title);
             }}
           />
         )}
-      </main>
+      </motion.main>
     </AppLayout>
   );
 }

@@ -63,6 +63,7 @@ import MobileHub from "@/pages/mobile-hub";
 import MobileApp from "@/pages/mobile-app";
 import ComponentsDemo from "@/pages/components-demo";
 import Dashboard from "@/pages/dashboard";
+import QRCode from "@/pages/qr-code";
 /**
  * 🔒 CLEANED UP: Removed duplicate auth pages and test components
  * Only keeping essential auth functionality in login-simple.tsx
@@ -158,6 +159,7 @@ function Router() {
           <Route path="/mobile-hub" component={MobileHub} />
           <Route path="/mobile" component={MobileHub} />
           <Route path="/m" component={MobileHub} />
+          <Route path="/qr" component={QRCode} />
 
           <Route path="/privacy-policy" component={PrivacyPolicy} />
           <Route path="/terms-of-service" component={TermsOfService} />
