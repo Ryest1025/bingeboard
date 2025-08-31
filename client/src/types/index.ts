@@ -15,7 +15,14 @@ export type Show = {
     provider_id: number;
     provider_name: string;
     logo_path?: string;
-    type?: string;
+    type?: 'sub' | 'buy' | 'rent' | 'free';
+    source?: 'tmdb' | 'watchmode' | 'utelly' | 'streaming-availability';
+    affiliate_supported?: boolean;
+    commission_rate?: number;
+    video_quality?: 'sd' | 'hd' | 'uhd';
+    expires_soon?: boolean;
+    web_url?: string;
+    price?: number;
   }>;
   logoUrl?: string;
   releaseDate?: string;

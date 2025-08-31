@@ -6,10 +6,18 @@ import {
   StreamingLocation,
   UtellyResult
 } from '../clients/utellyClient.js';
+import {
+  getShowByTmdbId,
+  getShowByImdbId,
+  searchShowsByTitle,
+  StreamingAvailabilityShow,
+  normalizeStreamingAvailabilityPlatformName,
+  mapStreamingAvailabilityType
+} from '../clients/streamingAvailabilityClient.js';
 import { streamingCache } from '../cache/streaming-cache.js';
 
 /**
- * Normalized streaming platform coming from TMDB, Watchmode and Utelly.
+ * Normalized streaming platform coming from TMDB, Watchmode, Utelly and Streaming Availability.
  * Marked readonly to prevent accidental mutation after aggregation / caching.
  */
 export interface EnhancedStreamingPlatform {
@@ -22,9 +30,11 @@ export interface EnhancedStreamingPlatform {
   readonly android_url?: string;
   readonly price?: number;
   readonly format?: string;
-  readonly source: 'tmdb' | 'watchmode' | 'utelly';
+  readonly source: 'tmdb' | 'watchmode' | 'utelly' | 'streaming-availability';
   readonly affiliate_supported: boolean;
   readonly commission_rate?: number;
+  readonly video_quality?: 'sd' | 'hd' | 'uhd';
+  readonly expires_soon?: boolean;
 }
 
 interface StreamingAvailabilityResponse {
@@ -39,6 +49,7 @@ interface StreamingAvailabilityResponse {
     tmdb: boolean;
     watchmode: boolean;
     utelly: boolean;
+    streamingAvailability: boolean;
   };
 }
 
@@ -142,7 +153,20 @@ export class MultiAPIStreamingService {
     'Crunchyroll': 6.5,
     'YouTube Premium': 3.2,
     'Showtime': 7.0,
-    'Starz': 6.8
+    'Starz': 6.8,
+    'Discovery+': 5.2,
+    'ESPN+': 4.0,
+    'FuboTV': 3.8,
+    'Sling TV': 4.2,
+    'Vudu': 3.5,
+    'Tubi': 2.8,
+    'Pluto TV': 2.5,
+    'Roku Channel': 3.0,
+    'IMDb TV': 2.8,
+    'Kanopy': 0.0, // Free service
+    'Hoopla': 0.0, // Free service
+    'Plex': 2.2,
+    'FilmRise': 2.0
   };
 
   // Check if platform supports affiliate links
@@ -157,6 +181,36 @@ export class MultiAPIStreamingService {
 
   // Normalize platform names across different APIs
   private static normalizePlatformName(name: string): string { return normalizePlatformName(name); }
+
+  // Convert Streaming Availability results to our enhanced format
+  private static convertStreamingAvailabilityResults(
+    streamingData: StreamingAvailabilityShow,
+    country: string = 'us'
+  ): EnhancedStreamingPlatform[] {
+    const platforms: EnhancedStreamingPlatform[] = [];
+    const streamingOptions = streamingData.streamingOptions[country] || [];
+
+    streamingOptions.forEach((option, index) => {
+      const normalizedName = normalizeStreamingAvailabilityPlatformName(option.service.id);
+      const platformType = mapStreamingAvailabilityType(option.type);
+
+      platforms.push({
+        provider_id: 10000 + parseInt(streamingData.tmdbId.toString()) + index, // Generate unique ID
+        provider_name: normalizedName,
+        logo_path: option.service.imageSet.lightThemeImage,
+        type: platformType,
+        web_url: option.link,
+        price: option.price ? parseFloat(option.price.amount) : undefined,
+        video_quality: option.videoQuality,
+        expires_soon: option.expiresSoon,
+        source: 'streaming-availability',
+        affiliate_supported: this.hasAffiliateSupport(normalizedName),
+        commission_rate: this.getCommissionRate(normalizedName)
+      });
+    });
+
+    return platforms;
+  }
 
   // Convert Utelly results to our enhanced format
   private static convertUtellyResults(utellyResults: UtellyResult[]): EnhancedStreamingPlatform[] {
@@ -200,7 +254,7 @@ export class MultiAPIStreamingService {
     }
 
     const allPlatforms: EnhancedStreamingPlatform[] = [];
-    const sources = { tmdb: false, watchmode: false, utelly: false };
+    const sources = { tmdb: false, watchmode: false, utelly: false, streamingAvailability: false };
 
     // 1. Get TMDB watch providers (normalize type based on flatrate|buy|rent arrays)
     try {
@@ -271,7 +325,29 @@ export class MultiAPIStreamingService {
       this.logger.warn('Utelly availability failed:', error);
     }
 
-    // 4. Deduplicate platforms by name (keep the one with most data)
+    // 4. Get Streaming Availability data
+    try {
+      let streamingAvailabilityData;
+      if (tmdbId) {
+        streamingAvailabilityData = await getShowByTmdbId(tmdbId);
+      } else if (imdbId) {
+        streamingAvailabilityData = await getShowByImdbId(imdbId);
+      } else {
+        // Fallback to title search
+        const searchResult = await searchShowsByTitle(title, 'us', mediaType === 'tv' ? 'series' : 'movie');
+        streamingAvailabilityData = searchResult.shows[0] || null;
+      }
+
+      if (streamingAvailabilityData && streamingAvailabilityData.streamingOptions) {
+        sources.streamingAvailability = true;
+        const streamingAvailabilityPlatforms = this.convertStreamingAvailabilityResults(streamingAvailabilityData);
+        allPlatforms.push(...streamingAvailabilityPlatforms);
+      }
+    } catch (error) {
+      this.logger.warn('Streaming Availability API failed:', error);
+    }
+
+    // 5. Deduplicate platforms by name (keep the one with most data)
     const platformMap = new Map<string, EnhancedStreamingPlatform>();
 
     allPlatforms.forEach(platform => {
@@ -318,9 +394,11 @@ export class MultiAPIStreamingService {
     if (platform.ios_url || platform.android_url) score += 1;
     if (platform.price !== undefined) score += 1;
     if (platform.format) score += 1;
+    if (platform.video_quality) score += 1;
     if (platform.affiliate_supported) score += 2;
 
-    // Prefer certain sources based on reliability
+    // Prefer certain sources based on reliability and data quality
+    if (platform.source === 'streaming-availability') score += 4; // Most comprehensive
     if (platform.source === 'tmdb') score += 3;
     if (platform.source === 'watchmode') score += 2;
     if (platform.source === 'utelly') score += 1;
@@ -406,7 +484,16 @@ export class MultiAPIStreamingService {
       'Max': (url, id) => `${url}?src=BINGEBOARD_${id}`,
       'Apple TV+': (url, id) => `${url}?at=BINGEBOARD_${id}`,
       'Paramount+': (url, id) => `${url}?promo=BINGEBOARD_${id}`,
-      'Peacock': (url, id) => `${url}?partner=BINGEBOARD_${id}`
+      'Peacock': (url, id) => `${url}?partner=BINGEBOARD_${id}`,
+      'Crunchyroll': (url, id) => `${url}?ref=BINGEBOARD_${id}`,
+      'Showtime': (url, id) => `${url}?promo=BINGEBOARD_${id}`,
+      'Starz': (url, id) => `${url}?ref=BINGEBOARD_${id}`,
+      'Discovery+': (url, id) => `${url}?ref=BINGEBOARD_${id}`,
+      'ESPN+': (url, id) => `${url}?ref=BINGEBOARD_${id}`,
+      'FuboTV': (url, id) => `${url}?ref=BINGEBOARD_${id}`,
+      'Sling TV': (url, id) => `${url}?ref=BINGEBOARD_${id}`,
+      'Vudu': (url, id) => `${url}?ref=BINGEBOARD_${id}`,
+      'Plex': (url, id) => `${url}?ref=BINGEBOARD_${id}`
     };
 
     const affiliateGenerator = affiliateUrls[platform.provider_name];
