@@ -8,6 +8,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 // import authRoutes from './routes/auth';
 import analyticsRoutes from './routes/analytics.js';
+import recommendationRoutes from './routes/recommendations.js';
 import { getDashboardContent, getDiscoverContent, getSearchContent } from './routes/content.js';
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated, verifyPassword } from "./auth";
@@ -85,6 +86,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Analytics routes for monetization tracking
   app.use('/api/analytics', analyticsRoutes);
+
+  // 🎯 Recommendation Engine - The Heart of BingeBoard
+  app.use('/api/recommendations', recommendationRoutes);
 
   // Viewing History & Progress Tracking Routes
   registerViewingHistoryRoutes(app);
