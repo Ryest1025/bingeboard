@@ -1,23 +1,37 @@
 {
-<<<<<<< HEAD
-  "files.exclude": {
-    "**/.git": true,
-    "**/node_modules": true,
-    "**/dist": true
-  },
-  "search.exclude": {
-    "**/node_modules": true,
-    "**/dist": true
-  },
-  "git.enabled": true,
-  "git.blame.editorDecoration.enabled": true,
-  "github.copilot.nextEditSuggestions.enabled": false,
-  "git.diagnosticsCommitHook.enabled": true,
-  "github.copilot.chat.codesearch.enabled": true,
-  "github.copilot.chat.languageContext.fix.typescript.enabled": true,
-  "github.copilot.chat.languageContext.inline.typescript.enabled": true
+  // === Editor / UI Settings ===
+  "workbench.secondarySideBar.defaultVisibility": "hidden",
+  "workbench.settings.applyToAllProfiles": [
+    "github.copilot.selectedCompletionModel"
+  ],
+  "git.autofetch": true,
+
+  // === Copilot Core ===
+  "github.copilot.enable": true,
+  "github.copilot.chat.enable": true,
+  "github.copilot.inlineSuggest.enable": true,
+  "github.copilot.editorContextLines": 150,  // full file context
+  "github.copilot.suggestionDelay": 100,
+  "github.copilot.advanced.enableExperimentalFeatures": true,
+  "github.copilot.experimental.disableOnRemote": false,
+  "github.copilot.logLevel": "warn",  // avoid verbose logging in normal use
+  "github.copilot.globalEnable": true,
+
+  // === Editor Suggestions ===
+  "editor.inlineSuggest.enabled": true,
+  "editor.suggest.snippetsPreventQuickSuggestions": false,
+
+  // === TypeScript / JavaScript ===
+  "typescript.suggestionActions.enabled": true,
+  "javascript.suggestionActions.enabled": true,
+  "typescript.tsserver.log": "off",  // ✅ disable verbose logging to improve performance
+
+  // === Extension Sync / Ignored ===
+  "settingsSync.ignoredExtensions": [
+    "github.copilot-chat",
+    "github.copilot"
+  ],
+
+  // === Chat / AI Settings ===
+  "chat.agent.maxRequests": 150
 }
-=======
-    "CodeGPT.apiKey": "OpenAI"
-}
->>>>>>> ad00a93 (🚀 Major Mobile-First Redesign & Persistent Navigation Implementation)

@@ -6,12 +6,8 @@
  */
 
 import { Router } from 'express';
-import rateLimit from 'express-rate-limit';
-import helmet from 'helmet';
 import { BingeBoardRecommendationEngine } from '../services/recommendationEngine.js';
-import { AdvancedPersonalization } from '../services/advancedPersonalization.js';
-import { PersonalizationMonitoring } from '../services/monitoring.js';
-import { authMiddleware } from '../middleware/auth.js';
+import { isAuthenticated } from '../auth.js';
 import { db } from '../db.js';
 import { userBehavior, aiRecommendations } from '../../shared/schema.js';
 import { eq, and, gte } from 'drizzle-orm';
@@ -24,11 +20,11 @@ const router = Router();
  * GET /api/recommendations
  * Get personalized recommendations for the authenticated user
  */
-router.get('/', authMiddleware, async (req, res) => {
+router.get('/', isAuthenticated, async (req, res) => {
   try {
     const userId = req.user.id;
     const refresh = req.query.refresh === 'true';
-
+    
     console.log(`📊 Fetching recommendations for user: ${userId} (refresh: ${refresh})`);
 
     // Check for cached recommendations (unless refresh requested)
@@ -47,7 +43,7 @@ router.get('/', authMiddleware, async (req, res) => {
 
     // Generate fresh recommendations
     const sections = await BingeBoardRecommendationEngine.generateRecommendations(userId);
-
+    
     // Log recommendation generation event
     await logUserBehavior(userId, 'recommendations_generated', {
       sectionCount: sections.length,
@@ -77,14 +73,14 @@ router.get('/', authMiddleware, async (req, res) => {
  * GET /api/recommendations/for-you
  * Get hybrid recommendations (For You section)
  */
-router.get('/for-you', authMiddleware, async (req, res) => {
+router.get('/for-you', isAuthenticated, async (req, res) => {
   try {
     const userId = req.user.id;
     const limit = parseInt(req.query.limit as string) || 20;
-
+    
     const userProfile = await BingeBoardRecommendationEngine.buildUserProfile(userId);
     const recommendations = await BingeBoardRecommendationEngine.getHybridRecommendations(userProfile, limit);
-
+    
     await logUserBehavior(userId, 'recommendations_viewed', {
       section: 'for_you',
       itemCount: recommendations.length
@@ -110,14 +106,14 @@ router.get('/for-you', authMiddleware, async (req, res) => {
  * GET /api/recommendations/social
  * Get social recommendations (Friends Are Watching)
  */
-router.get('/social', authMiddleware, async (req, res) => {
+router.get('/social', isAuthenticated, async (req, res) => {
   try {
     const userId = req.user.id;
     const limit = parseInt(req.query.limit as string) || 15;
-
+    
     const userProfile = await BingeBoardRecommendationEngine.buildUserProfile(userId);
     const recommendations = await BingeBoardRecommendationEngine.getSocialRecommendations(userProfile, limit);
-
+    
     await logUserBehavior(userId, 'recommendations_viewed', {
       section: 'social',
       itemCount: recommendations.length
@@ -143,14 +139,14 @@ router.get('/social', authMiddleware, async (req, res) => {
  * GET /api/recommendations/trending
  * Get trending recommendations
  */
-router.get('/trending', authMiddleware, async (req, res) => {
+router.get('/trending', isAuthenticated, async (req, res) => {
   try {
     const userId = req.user.id;
     const limit = parseInt(req.query.limit as string) || 20;
-
+    
     const userProfile = await BingeBoardRecommendationEngine.buildUserProfile(userId);
     const recommendations = await BingeBoardRecommendationEngine.getTrendingRecommendations(userProfile, limit);
-
+    
     await logUserBehavior(userId, 'recommendations_viewed', {
       section: 'trending',
       itemCount: recommendations.length
@@ -176,50 +172,11 @@ router.get('/trending', authMiddleware, async (req, res) => {
 
 /**
  * POST /api/recommendations/feedback
- * Record user feedback on recommendations
+ * Track user feedback on recommendations (like/dislike/dismiss)
  */
-router.post('/feedback', authMiddleware, async (req, res) => {
+router.post('/feedback', isAuthenticated, async (req, res) => {
   try {
     const userId = req.user.id;
-    const { contentId, action, section, algorithmType } = req.body;
-
-    // Validate required fields
-    if (!contentId || !action) {
-      return res.status(400).json({
-        success: false,
-        error: 'contentId and action are required'
-      });
-    }
-
-    // Log the feedback
-    await logUserBehavior(userId, 'recommendation_feedback', {
-      contentId,
-      action, // 'clicked', 'added_to_watchlist', 'dismissed', 'not_interested'
-      section,
-      algorithmType
-    });
-
-    // Update recommendation feedback table if it exists
-    try {
-      // You might have a recommendation_feedback table for ML training
-      console.log(`📝 Recorded recommendation feedback: ${action} for content ${contentId}`);
-    } catch (error) {
-      console.warn('Could not store feedback in recommendation_feedback table:', error);
-    }
-
-    res.json({
-      success: true,
-      message: 'Feedback recorded'
-    });
-
-  } catch (error) {
-    console.error('Error recording recommendation feedback:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to record feedback'
-    });
-  }
-});
 
 // === Recommendation Analytics ===
 
@@ -227,10 +184,10 @@ router.post('/feedback', authMiddleware, async (req, res) => {
  * GET /api/recommendations/analytics
  * Get recommendation performance analytics (admin only)
  */
-router.get('/analytics', authMiddleware, async (req, res) => {
+router.get('/analytics', isAuthenticated, async (req, res) => {
   try {
     const userId = req.user.id;
-
+    
     // Check if user is admin (you'd implement this check)
     // if (!req.user.isAdmin) {
     //   return res.status(403).json({ success: false, error: 'Admin access required' });
@@ -238,7 +195,7 @@ router.get('/analytics', authMiddleware, async (req, res) => {
 
     const timeframe = req.query.timeframe as string || '7d';
     const daysBack = timeframe === '7d' ? 7 : timeframe === '30d' ? 30 : 1;
-
+    
     const startDate = new Date(Date.now() - daysBack * 24 * 60 * 60 * 1000);
 
     // Get recommendation generation stats
@@ -307,23 +264,23 @@ router.get('/analytics', authMiddleware, async (req, res) => {
  * GET /api/recommendations/profile
  * Get user's recommendation profile (preferences, affinities, etc.)
  */
-router.get('/profile', authMiddleware, async (req, res) => {
+router.get('/profile', isAuthenticated, async (req, res) => {
   try {
     const userId = req.user.id;
-
+    
     const userProfile = await BingeBoardRecommendationEngine.buildUserProfile(userId);
-
+    
     // Remove sensitive data before sending
     const sanitizedProfile = {
       explicitPreferences: userProfile.explicitPreferences,
       implicitProfile: {
         topGenres: Object.entries(userProfile.implicitProfile.genreAffinities)
-          .sort(([, a], [, b]) => b - a)
+          .sort(([,a], [,b]) => b - a)
           .slice(0, 10)
           .map(([genre, score]) => ({ genre, score })),
         viewingPatterns: userProfile.implicitProfile.viewingPatterns,
         topPlatforms: Object.entries(userProfile.implicitProfile.platformUsage)
-          .sort(([, a], [, b]) => b - a)
+          .sort(([,a], [,b]) => b - a)
           .slice(0, 5)
           .map(([platform, usage]) => ({ platform, usage }))
       },
@@ -351,7 +308,7 @@ router.get('/profile', authMiddleware, async (req, res) => {
  * GET /api/recommendations/explain/:contentId
  * Get detailed explanation for why a specific item was recommended
  */
-router.get('/explain/:contentId', authMiddleware, async (req, res) => {
+router.get('/explain/:contentId', isAuthenticated, async (req, res) => {
   try {
     const userId = req.user.id;
     const contentId = parseInt(req.params.contentId);
@@ -418,18 +375,18 @@ router.get('/explain/:contentId', authMiddleware, async (req, res) => {
 
 /**
  * POST /api/recommendations/refresh
- * Force refresh of recommendations (clears cache)
+ * Force refresh of user recommendations
  */
-router.post('/refresh', authMiddleware, async (req, res) => {
+router.post('/refresh', isAuthenticated, async (req, res) => {
   try {
     const userId = req.user.id;
-
+    
     // Clear cached recommendations
     await db.delete(aiRecommendations).where(eq(aiRecommendations.userId, userId));
-
+    
     // Generate fresh recommendations
     const sections = await BingeBoardRecommendationEngine.generateRecommendations(userId);
-
+    
     await logUserBehavior(userId, 'recommendations_refreshed', {
       sectionCount: sections.length,
       totalItems: sections.reduce((sum, s) => sum + s.items.length, 0)
@@ -467,11 +424,11 @@ async function getCachedRecommendations(userId: string) {
 
     // Group by section
     const sections = new Map();
-
+    
     for (const rec of cached) {
       const metadata = JSON.parse(rec.metadata || '{}');
       const sectionKey = metadata.section || 'for_you';
-
+      
       if (!sections.has(sectionKey)) {
         sections.set(sectionKey, {
           key: sectionKey,
@@ -539,25 +496,25 @@ async function logUserBehavior(userId: string, actionType: string, metadata: any
 
 function calculateSectionStats(viewStats: any[]) {
   const sectionCounts: Record<string, number> = {};
-
+  
   for (const stat of viewStats) {
     const metadata = JSON.parse(stat.metadata || '{}');
     const section = metadata.section || 'unknown';
     sectionCounts[section] = (sectionCounts[section] || 0) + 1;
   }
-
+  
   return sectionCounts;
 }
 
 function calculateFeedbackBreakdown(feedbackStats: any[]) {
   const breakdown: Record<string, number> = {};
-
+  
   for (const stat of feedbackStats) {
     const metadata = JSON.parse(stat.metadata || '{}');
     const action = metadata.action || 'unknown';
     breakdown[action] = (breakdown[action] || 0) + 1;
   }
-
+  
   return breakdown;
 }
 
@@ -567,16 +524,16 @@ function calculateFeedbackBreakdown(feedbackStats: any[]) {
 const performanceMiddleware = (methodName: string) => {
   return (req: any, res: any, next: any) => {
     const startTime = Date.now();
-
+    
     // Store start time for logging
     req.startTime = startTime;
     req.methodName = methodName;
-
+    
     // Override res.json to capture response time
     const originalJson = res.json;
-    res.json = function (data: any) {
+    res.json = function(data: any) {
       const duration = Date.now() - startTime;
-
+      
       // Log performance data (async, don't block response)
       setImmediate(async () => {
         try {
@@ -595,10 +552,10 @@ const performanceMiddleware = (methodName: string) => {
           console.error('Error logging performance:', error);
         }
       });
-
+      
       return originalJson.call(this, data);
     };
-
+    
     next();
   };
 };
@@ -618,8 +575,8 @@ const asyncHandler = (fn: Function) => {
  * 📊 GET /api/recommendations/personalized
  * Get personalized recommendations using advanced algorithms
  */
-router.get('/personalized',
-  authMiddleware,
+router.get('/personalized', 
+  isAuthenticated,
   performanceMiddleware('getPersonalizedRecommendations'),
   asyncHandler(async (req: any, res: any) => {
     const { limit = 20, offset = 0, category, includeMetrics = false } = req.query;
@@ -673,7 +630,7 @@ router.get('/personalized',
  * Get user's current preferences and metrics
  */
 router.get('/preferences',
-  authMiddleware,
+  isAuthenticated,
   performanceMiddleware('getUserPreferences'),
   asyncHandler(async (req: any, res: any) => {
     const userId = req.user?.id;
@@ -685,7 +642,7 @@ router.get('/preferences',
 
     try {
       const preferences = await AdvancedPersonalization.getUserPreferences(userId);
-
+      
       let response: any = {
         success: true,
         data: preferences,
@@ -722,7 +679,7 @@ router.get('/preferences',
  * Force refresh user's recommendation cache
  */
 router.post('/refresh',
-  authMiddleware,
+  isAuthenticated,
   performanceMiddleware('refreshRecommendations'),
   asyncHandler(async (req: any, res: any) => {
     const userId = req.user?.id;
@@ -768,9 +725,9 @@ router.get('/health',
   asyncHandler(async (req: any, res: any) => {
     try {
       const healthCheck = await PersonalizationMonitoring.healthCheck();
-
+      
       const statusCode = healthCheck.status === 'healthy' ? 200 : 503;
-
+      
       res.status(statusCode).json({
         status: healthCheck.status,
         timestamp: new Date().toISOString(),
@@ -791,14 +748,14 @@ router.get('/health',
  * Get personalization performance metrics
  */
 router.get('/metrics',
-  authMiddleware,
+  isAuthenticated,
   performanceMiddleware('getMetrics'),
   asyncHandler(async (req: any, res: any) => {
     const { timeframe = '24h' } = req.query;
 
     try {
       const dashboardData = await PersonalizationMonitoring.getDashboardData();
-
+      
       res.json({
         success: true,
         data: dashboardData,
