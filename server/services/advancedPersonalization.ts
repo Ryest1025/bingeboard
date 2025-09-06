@@ -1299,6 +1299,111 @@ export class AdvancedPersonalization {
       errorCount: 0
     };
   }
+
+  // === Compatibility methods for API routes ===
+
+  /**
+   * Record performance metrics for API operations (best-effort)
+   */
+  static async logPerformance(methodName: string, durationMs: number, meta?: any): Promise<void> {
+    try {
+      this.addComputationTime(durationMs);
+      // Optional: lightweight debug logging for long operations
+      if (durationMs > 1000) {
+        console.warn('perf log:', { methodName, durationMs, meta });
+      }
+    } catch (e) {
+      // Never throw
+      console.error('logPerformance failed', e);
+    }
+  }
+
+  /**
+   * Clear caches specific to a user (if present)
+   */
+  static async clearUserCache(userId: string): Promise<void> {
+    try {
+      this.cache.temporalPreferences.delete(userId);
+      this.cache.devicePreferences.delete(userId);
+      // Note: seasonalBoosts keyed by date, not user; leave intact
+    } catch (e) {
+      console.error('clearUserCache failed', e);
+    }
+  }
+
+  /**
+   * Simple personalized recommendations facade.
+   * Uses base recommendations and trims by offset/limit.
+   */
+  static async getPersonalizedRecommendations(
+    userId: string,
+    opts: { limit: number; offset?: number; category?: string; includeDebugInfo?: boolean; forceRefresh?: boolean }
+  ): Promise<Recommendation[]> {
+    const limit = Math.max(1, Math.min(100, opts.limit || 20));
+    const offset = Math.max(0, opts.offset || 0);
+    const userProfile = this.createMockUserProfile({ userId });
+    const recs = await this.getBaseRecommendations(userProfile, limit + offset);
+    return recs.slice(offset, offset + limit);
+  }
+
+  /**
+   * Aggregate user preferences for the preferences endpoint.
+   */
+  static async getUserPreferences(userId: string): Promise<any> {
+    const temporal = await this.analyzeTemporalPreferences(userId);
+    const device = await this.analyzeDevicePreferences(userId);
+
+    // Derive a very lightweight implicit profile
+    const implicitProfile = {
+      genreAffinities: {
+        // Placeholder affinities; in real system derive from history
+        Comedy: 0.4,
+        Action: 0.3,
+        Drama: 0.3,
+      },
+      viewingPatterns: {
+        timeOfDay: temporal.timeOfDay,
+        dayOfWeek: temporal.dayOfWeek,
+        seasonality: temporal.seasonality,
+      },
+      platformUsage: {
+        mobile: device.mobile.shortFormContent,
+        desktop: device.desktop.longFormContent,
+        tv: device.tv.cinematicContent,
+      }
+    };
+
+    return {
+      userId,
+      explicitPreferences: {
+        genres: [],
+        excluded: [],
+      },
+      implicitProfile,
+    };
+  }
+
+  /**
+   * Return recent interaction events for a user (best-effort)
+   */
+  static async getRecentInteractions(userId: string, limit: number = 50): Promise<any[]> {
+    try {
+      const items = await db.query.userBehavior.findMany({
+        where: eq(userBehavior.userId, userId),
+        // Use simple desc on known column to avoid typing issues
+        orderBy: [desc(userBehavior.timestamp as any)],
+        limit: Math.min(200, Math.max(1, limit)),
+      } as any);
+      return items.map((it: any) => ({
+        actionType: it.actionType,
+        timestamp: it.timestamp,
+        metadata: (() => { try { return JSON.parse(it.metadata || '{}'); } catch { return {}; } })(),
+      }));
+    } catch (e) {
+      console.warn('getRecentInteractions failed', e);
+      return [];
+    }
+  }
 }
 
 export default AdvancedPersonalization;

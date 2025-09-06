@@ -5,33 +5,35 @@
     "github.copilot.selectedCompletionModel"
   ],
   "git.autofetch": true,
-
   // === Copilot Core ===
-  "github.copilot.enable": true,
+  "github.copilot.enable": {
+    "*": true,
+    "plaintext": false,
+    "markdown": false,
+    "scminput": false,
+    "yaml": false,
+    "typescript": true
+  },
   "github.copilot.chat.enable": true,
   "github.copilot.inlineSuggest.enable": true,
-  "github.copilot.editorContextLines": 150,  // full file context
+  "github.copilot.editorContextLines": 150, // full file context
   "github.copilot.suggestionDelay": 100,
   "github.copilot.advanced.enableExperimentalFeatures": true,
   "github.copilot.experimental.disableOnRemote": false,
-  "github.copilot.logLevel": "warn",  // avoid verbose logging in normal use
+  "github.copilot.logLevel": "warn", // avoid verbose logging in normal use
   "github.copilot.globalEnable": true,
-
   // === Editor Suggestions ===
   "editor.inlineSuggest.enabled": true,
   "editor.suggest.snippetsPreventQuickSuggestions": false,
-
   // === TypeScript / JavaScript ===
   "typescript.suggestionActions.enabled": true,
   "javascript.suggestionActions.enabled": true,
-  "typescript.tsserver.log": "off",  // ✅ disable verbose logging to improve performance
-
+  "typescript.tsserver.log": "off", // ✅ disable verbose logging to improve performance
   // === Extension Sync / Ignored ===
   "settingsSync.ignoredExtensions": [
     "github.copilot-chat",
     "github.copilot"
   ],
-
   // === Chat / AI Settings ===
   "chat.agent.maxRequests": 150
 }

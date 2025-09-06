@@ -14,6 +14,9 @@ import { motion } from 'framer-motion';
 import { Play, Plus, ChevronRight, ChevronLeft, Calendar, Film, Tv, Globe, Sparkles, ChevronDown } from 'lucide-react';
 import HeroSpot from '@/components/hero/HeroSpot';
 import { universal } from '@/styles/universal';
+import { forceSparse, isDebugEnabled, isExpandedDebug } from '@/utils/debugSparse';
+import { useHybridRecommendations, getHybridRecommendations } from '@/hooks/useHybridRecommendations';
+import DebugRecBadge from '@/components/DebugRecBadge';
 
 // ———————————————————————————————————————————————————————————
 // Types
@@ -89,6 +92,40 @@ async function fetchJSON<T>(url: string, init?: RequestInit): Promise<T> {
 	}
 }
 
+// Normalize API payloads and map TMDB items to our Show shape
+function unwrapResults<T = any>(payload: any): T[] {
+	if (Array.isArray(payload)) return payload as T[];
+	if (payload && Array.isArray(payload.results)) return payload.results as T[];
+	return [];
+}
+
+function toImg(urlPart?: string | null, size: 'w500' | 'original' = 'w500'): string | undefined {
+	if (!urlPart) return undefined;
+	if (urlPart.startsWith('http')) return urlPart;
+	return `https://image.tmdb.org/t/p/${size}${urlPart}`;
+}
+
+function mapTmdbToShow(item: any): Show {
+	const mediaType = item.media_type || (item.title ? 'movie' : 'tv');
+	return {
+		id: item.id,
+		title: item.title || item.name || '',
+		year: item.release_date ? Number((item.release_date as string).slice(0, 4)) : (item.first_air_date ? Number((item.first_air_date as string).slice(0, 4)) : undefined),
+		posterUrl: toImg(item.poster_path, 'w500'),
+		poster: toImg(item.poster_path, 'w500'),
+		backdrop: toImg(item.backdrop_path, 'original'),
+		overview: item.overview,
+		genres: item.genre_names || item.genres || undefined, // may not be present; UI tolerates undefined
+		releaseDate: item.release_date || item.first_air_date,
+		rating: typeof item.vote_average === 'number' ? item.vote_average : undefined,
+		runtime: item.runtime,
+		platform: item.platform || undefined,
+		mediaType,
+		streamingPlatforms: item.streamingPlatforms || item.streamingProviders || item.streaming_platforms || item.watchProviders || undefined,
+		logoUrl: item.logoUrl || undefined,
+	};
+}
+
 // ———————————————————————————————————————————————————————————
 // Query helpers — each section gets its own key for caching & prefetch
 // ———————————————————————————————————————————————————————————
@@ -105,16 +142,49 @@ const qk = {
 
 // Fetch discover data with enhanced multi-API integration
 async function fetchDiscoverData(): Promise<DiscoverData> {
-	return fetchJSON<DiscoverData>('/api/discover-enhanced');
+	return fetchJSON<DiscoverData>('/api/discover');
 }
 
+// ———————————————————————————————————————————————————————————
+// Mapping helpers – normalize various upstream response shapes
+// ———————————————————————————————————————————————————————————
+function mapTmdbItem(raw: any): Show | null {
+	if (!raw || (!raw.id && raw.id !== 0)) return null;
+	const title = raw.title || raw.name || raw.original_title || raw.original_name;
+	if (!title) return null;
+	const poster = raw.poster || raw.posterUrl || (raw.poster_path ? `https://image.tmdb.org/t/p/w500${raw.poster_path}` : undefined);
+	const backdrop = raw.backdrop || (raw.backdrop_path ? `https://image.tmdb.org/t/p/original${raw.backdrop_path}` : poster);
+	const genres: string[] | undefined = Array.isArray(raw.genres)
+		? raw.genres.map((g: any) => typeof g === 'string' ? g : g.name).filter(Boolean)
+		: (Array.isArray(raw.genre_ids) ? raw.genre_ids.map((g: any) => String(g)) : undefined);
+	return {
+		id: raw.id,
+		title,
+		posterUrl: poster,
+		poster,
+		backdrop,
+		overview: raw.overview,
+		genres,
+		releaseDate: raw.release_date || raw.first_air_date,
+		rating: typeof raw.vote_average === 'number' ? Number(raw.vote_average.toFixed(1)) : raw.rating,
+		mediaType: raw.media_type || (raw.first_air_date ? 'tv' : 'movie'),
+		platform: raw.platform,
+		streamingPlatforms: raw.streamingPlatforms || raw.streaming_platforms || raw.providers || [],
+		logoUrl: raw.logoUrl || (raw.logo_path ? `https://image.tmdb.org/t/p/w300${raw.logo_path}` : undefined)
+	};
+}
+
+function mapTmdbResponse(payload: any): Show[] {
+	if (!payload) return [];
+	const arr = Array.isArray(payload) ? payload : Array.isArray(payload.results) ? payload.results : [];
+	return arr.map(mapTmdbItem).filter(Boolean) as Show[];
+}
 async function getHero(filters: FilterState): Promise<Show> {
 	// Use enhanced trending endpoint for hero content with streaming data
 	try {
-		const response = await fetchJSON<Show[]>('/api/content/trending-enhanced?mediaType=all&includeStreaming=true');
-		if (response && response.length > 0) {
-			return response[0];
-		}
+		const response = await fetchJSON<any>('/api/content/trending-enhanced?mediaType=all&includeStreaming=true&limit=6');
+		const mapped = mapTmdbResponse(response);
+		if (mapped.length > 0) return mapped[0];
 	} catch (error) {
 		console.warn('Enhanced hero fetch failed, falling back to basic discover');
 	}
@@ -130,20 +200,52 @@ async function getHero(filters: FilterState): Promise<Show> {
 async function getRecommendations(filters: FilterState): Promise<Show[]> {
 	// Use enhanced API endpoints for recommendations with streaming data
 	try {
-		if (filters.genre || filters.platforms?.length) {
-			// Enhanced genre/platform filtering with streaming data
-			const genreParam = filters.genre ? `&with_genres=${filters.genre}` : '';
-			const platformParam = filters.platforms?.length ? `&with_watch_providers=${filters.platforms.join('|')}` : '';
+		const debug = typeof window !== 'undefined' && isDebugEnabled();
+		const t0 = performance.now();
+		const params: string[] = ['includeStreaming=true'];
+		// Map mood to a genre boost (genre IDs prioritized)
+		const moodGenreMap: Record<string, string[]> = {
+			'Cerebral': ['99','18','53','9648','36'],
+			'Feel-good': ['35','10749','10751','10402','16'],
+			'Edge-of-seat': ['28','53','27','80','10752','12']
+		};
+		const moodGenres = filters.mood ? moodGenreMap[filters.mood] || [] : [];
+		if (filters.genre) params.push(`with_genres=${encodeURIComponent(filters.genre)}`);
+		else if (moodGenres.length) params.push(`with_genres=${moodGenres.join(',')}`);
+		if (filters.platforms?.length) params.push(`with_watch_providers=${filters.platforms.join('|')}`);
+		if (filters.country) params.push(`region=${filters.country}`);
+		if (filters.year) params.push(`primary_release_year=${filters.year}`);
+		if (filters.sort) params.push(`sort_by=${encodeURIComponent(filters.sort)}.desc`);
 
-			const response = await fetchJSON<Show[]>(`/api/tmdb/discover/movie?includeStreaming=true${genreParam}${platformParam}`);
-			if (response && response.length > 0) {
-				return response;
-			}
-		}
+		const base = '/api/tmdb/discover/movie';
+		const url = `${base}?${params.join('&')}`;
+		const raw = await fetchJSON<any>(url);
+		let mapped = mapTmdbResponse(raw);
+		mapped = forceSparse(mapped, 'primary'); // allow forcing sparse primary results
+		const primaryTime = performance.now() - t0;
+		if (debug) console.debug('[recs] primary source url=', url, 'count=', mapped.length, 'time', primaryTime.toFixed(1));
+		if (mapped.length >= 6) return Object.assign(mapped.slice(0, 20), { __meta: { source: 'primary', primaryTime, primaryUrl: url, primarySample: mapped.slice(0,5) } });
 
-		// Enhanced general recommendations with streaming data
-		const response = await fetchJSON<Show[]>('/api/content/trending-enhanced?mediaType=all&includeStreaming=true&limit=20');
-		return response || [];
+		// If movie discover sparse, try mixed media (tv) supplement
+		const tvStart = performance.now();
+		const tvUrl = url.replace('/movie', '/tv');
+		const tvRaw = await fetchJSON<any>(tvUrl);
+		let tvMapped = mapTmdbResponse(tvRaw);
+		tvMapped = forceSparse(tvMapped, 'tv');
+		const tvTime = performance.now() - tvStart;
+		const combined = [...mapped, ...tvMapped].filter((v, i, a) => a.findIndex(x => x.id === v.id) === i);
+		if (debug) console.debug('[recs] combined movie+tv count=', combined.length, 'primaryTime', (performance.now()-t0).toFixed(1));
+		if (combined.length >= 6) return Object.assign(combined.slice(0, 20), { __meta: { source: 'movie+tv', primaryTime, tvTime, primaryUrl: url, tvUrl, primarySample: mapped.slice(0,3), tvSample: tvMapped.slice(0,3) } });
+
+		// Enhanced general recommendations with trending
+		const trendingStart = performance.now();
+		const trendingUrl = '/api/content/trending-enhanced?mediaType=all&includeStreaming=true&limit=40';
+		const trendingRaw = await fetchJSON<any>(trendingUrl);
+		let trendingMapped = mapTmdbResponse(trendingRaw);
+		trendingMapped = forceSparse(trendingMapped, 'trending');
+		const trendingTime = performance.now() - trendingStart;
+		if (debug) console.debug('[recs] fallback trending count=', trendingMapped.length, 'time', trendingTime.toFixed(1));
+		return Object.assign(trendingMapped.slice(0, 20), { __meta: { source: 'trending-fallback', primaryTime, trendingTime, trendingUrl, primaryUrl: url, primarySample: mapped.slice(0,3), trendingSample: trendingMapped.slice(0,5) } });
 	} catch (error) {
 		console.warn('Enhanced recommendations fetch failed, falling back to basic discover');
 	}
@@ -175,7 +277,9 @@ async function getRecommendations(filters: FilterState): Promise<Show[]> {
 async function getTrending(): Promise<Show[]> {
 	// Use enhanced trending endpoint with comprehensive streaming data
 	try {
-		return await fetchJSON<Show[]>('/api/content/trending-enhanced?mediaType=all&includeStreaming=true&limit=12');
+		const raw = await fetchJSON<any>('/api/content/trending-enhanced?mediaType=all&includeStreaming=true&limit=30');
+		const mapped = mapTmdbResponse(raw);
+		return mapped.slice(0, 24);
 	} catch (error) {
 		console.warn('Enhanced trending fetch failed, falling back to basic discover');
 		const response = await fetchDiscoverData();
@@ -186,12 +290,14 @@ async function getTrending(): Promise<Show[]> {
 async function getComingSoon(): Promise<Show[]> {
 	// Use enhanced upcoming releases endpoint with streaming data
 	try {
-		return await fetchJSON<Show[]>('/api/tmdb/discover/movie?includeStreaming=true&primary_release_date.gte=' +
-			new Date().toISOString().split('T')[0] + '&sort_by=primary_release_date.asc');
+		const today = new Date().toISOString().split('T')[0];
+		const raw = await fetchJSON<any>(`/api/tmdb/discover/movie?includeStreaming=true&primary_release_date.gte=${today}&sort_by=primary_release_date.asc`);
+		return mapTmdbResponse(raw).slice(0, 30);
 	} catch (error) {
 		console.warn('Enhanced coming soon fetch failed, falling back to basic endpoint');
 		try {
-			return await fetchJSON<Show[]>('/api/discover/upcoming');
+			const fallback = await fetchJSON<any>('/api/discover/upcoming');
+			return Array.isArray(fallback) ? fallback as Show[] : (fallback.upcoming || []);
 		} catch {
 			return [];
 		}
@@ -204,15 +310,14 @@ async function getMoodPicks(mood: string | null): Promise<Show[]> {
 	// Use enhanced discovery with mood-based genre filtering and streaming data
 	try {
 		const moodToGenres: Record<string, string[]> = {
-			'Cerebral': ['99', '18', '53', '9648', '36'], // Documentary, Drama, Thriller, Mystery, History
-			'Feel-good': ['35', '10749', '10751', '10402', '16'], // Comedy, Romance, Family, Music, Animation
-			'Edge-of-seat': ['28', '53', '27', '80', '10752', '12'] // Action, Thriller, Horror, Crime, War, Adventure
+			'Cerebral': ['99', '18', '53', '9648', '36'],
+			'Feel-good': ['35', '10749', '10751', '10402', '16'],
+			'Edge-of-seat': ['28', '53', '27', '80', '10752', '12']
 		};
-
 		const genreIds = moodToGenres[mood] || [];
-		if (genreIds.length > 0) {
-			const response = await fetchJSON<Show[]>(`/api/tmdb/discover/movie?includeStreaming=true&with_genres=${genreIds.join(',')}&sort_by=vote_average.desc&vote_count.gte=100`);
-			return response || [];
+		if (genreIds.length) {
+			const raw = await fetchJSON<any>(`/api/tmdb/discover/movie?includeStreaming=true&with_genres=${genreIds.join(',')}&sort_by=vote_average.desc&vote_count.gte=200`);
+			return mapTmdbResponse(raw).slice(0, 24);
 		}
 	} catch (error) {
 		console.warn('Enhanced mood picks fetch failed, falling back to basic filtering');
@@ -516,10 +621,24 @@ export default function DiscoverStructured() {
 
 	const onFilterChange = useCallback((next: FilterState) => {
 		setFilters(next);
-		// Prefetch recommendations for responsiveness
+		// Hybrid hook uses its own query key; warm it by manual fetch
 		qc.prefetchQuery({
-			queryKey: qk.recommendations(next),
-			queryFn: () => getRecommendations(next)
+			queryKey: ['hybrid-recommendations', {
+				mood: next.mood,
+				genre: next.genre,
+				platforms: next.platforms,
+				country: next.country,
+				year: next.year ? String(next.year) : undefined,
+				sort: next.sort
+			}],
+			queryFn: () => getHybridRecommendations({
+				mood: next.mood,
+				genre: next.genre,
+				platforms: next.platforms,
+				country: next.country,
+				year: next.year ? String(next.year) : undefined,
+				sort: next.sort
+			})
 		}).catch(() => { });
 	}, [qc]);
 
@@ -533,10 +652,16 @@ export default function DiscoverStructured() {
 		staleTime: 60_000,
 	});
 
-	const { data: recs, isLoading: recsLoading } = useQuery<Show[]>({
-		queryKey: qk.recommendations(filters),
-		queryFn: () => getRecommendations(filters),
+	// Replace legacy recommendations with hybrid hook (normalized multi-stage flow)
+	const { data: hybridRecs, isLoading: recsLoading, meta: hybridMeta } = useHybridRecommendations({
+		mood: filters.mood || undefined,
+		genre: filters.genre,
+		platforms: filters.platforms,
+		country: filters.country,
+		year: filters.year ? String(filters.year) : undefined,
+		sort: filters.sort
 	});
+	const recs = hybridRecs as unknown as Show[] | undefined; // adapt mapping; ShowCard tolerant to fields subset
 
 	const { data: trending, isLoading: trendingLoading } = useQuery<Show[]>({
 		queryKey: qk.trending(),
@@ -680,6 +805,8 @@ export default function DiscoverStructured() {
 		setActiveShow(null);
 	}, []);
 
+	const debugMeta = (recs as any)?.__meta;
+	const renderedCount = (filteredForYou && filteredForYou.length ? filteredForYou : (recs || [])).slice(0, 6).length;
 	return (
 		<AppLayout>
 			<main className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
@@ -696,13 +823,6 @@ export default function DiscoverStructured() {
 					{/* Compact Filter Toolbar — horizontally scrollable, expandable pills */}
 					<section aria-label="Filter toolbar" className={universal.cards.glass}>
 						<div className={universal.cn('flex items-center gap-2 overflow-x-auto pb-2 -mx-1 px-1', universal.utilities.scrollbarHide)}>
-							<button
-								className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs border ${openFilter === 'mood' ? 'bg-teal-500 text-white border-teal-400' : 'bg-white/5 text-white border-white/10 hover:bg-white/10'}`}
-								onClick={() => setOpenFilter(f => f === 'mood' ? null : 'mood')}
-								aria-pressed={openFilter === 'mood'}
-							>
-								<Sparkles className="w-3.5 h-3.5" /> Mood <ChevronDown className="w-3.5 h-3.5 opacity-70" />
-							</button>
 							<button
 								className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs border ${openFilter === 'mood' ? 'bg-teal-500 text-white border-teal-400' : 'bg-white/5 text-white border-white/10 hover:bg-white/10'}`}
 								onClick={() => setOpenFilter(f => f === 'mood' ? null : 'mood')}
@@ -1030,6 +1150,23 @@ export default function DiscoverStructured() {
 						onWatchNow={(show) => {
 							console.log('Watch now:', show.title);
 						}}
+					/>
+				)}
+				{isDebugEnabled() && (
+					<DebugRecBadge
+						discoverCount={(recs || []).length}
+						tvCount={debugMeta?.source === 'movie+tv' ? (recs || []).length : 0}
+						trendingCount={debugMeta?.source === 'trending-fallback' ? (recs || []).length : 0}
+						source={debugMeta?.source || 'unknown'}
+						discoverTime={debugMeta?.primaryTime}
+						tvTime={debugMeta?.tvTime}
+						trendingTime={debugMeta?.trendingTime}
+						renderedCount={renderedCount}
+						expanded={isExpandedDebug()}
+						rawPrimarySample={debugMeta?.primarySample}
+						rawTvSample={debugMeta?.tvSample}
+						rawTrendingSample={debugMeta?.trendingSample}
+						requestUrls={{ primary: debugMeta?.primaryUrl, tv: debugMeta?.tvUrl, trending: debugMeta?.trendingUrl }}
 					/>
 				)}
 			</main>

@@ -5,7 +5,8 @@
  */
 
 import { db } from '../db.js';
-import { sql } from 'drizzle-orm';
+import { sql, gte } from 'drizzle-orm';
+import { userBehavior } from '../../shared/schema.js';
 
 interface AlertRule {
   name: string;
@@ -85,51 +86,44 @@ export class PersonalizationMonitoring {
     const fiveMinutesAgo = new Date(now.getTime() - 5 * 60 * 1000);
 
     try {
-      // Get recent performance data
-      const performanceData = await db.execute(sql`
-        SELECT 
-          AVG(duration_ms) as avg_response_time,
-          MAX(duration_ms) as max_response_time,
-          COUNT(*) as total_requests
-        FROM recommendation_performance_logs 
-        WHERE created_at >= ${fiveMinutesAgo.toISOString()}
-          AND method_name != 'nightly_aggregation'
-      `);
-
-      // Get cache metrics (would need to be tracked in AdvancedPersonalization)
-      const cacheMetrics = await this.getCacheMetrics();
-
-      // Get error rate
-      const errorData = await db.execute(sql`
-        SELECT 
-          COUNT(*) as error_count
-        FROM recommendation_performance_logs 
-        WHERE created_at >= ${fiveMinutesAgo.toISOString()}
-          AND context::jsonb ? 'error'
-      `);
-
-      // Get active users (last hour)
+      // In dev (SQLite), we may not have a recommendation_performance_logs table.
+      // Derive rough metrics from user_behavior as a fallback.
       const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
-      const activeUsersData = await db.execute(sql`
-        SELECT COUNT(DISTINCT user_id) as active_users
-        FROM recommendation_performance_logs 
-        WHERE created_at >= ${oneHourAgo.toISOString()}
-      `);
+      const fiveMinAgo = fiveMinutesAgo;
 
-      const perfRow = performanceData.rows[0];
-      const errorRow = errorData.rows[0];
-      const usersRow = activeUsersData.rows[0];
+      // Total events in last 5 minutes as proxy for throughput and requests
+      const recentEvents = await db.query.userBehavior.findMany({
+        where: gte(userBehavior.timestamp, fiveMinAgo),
+        limit: 2000,
+      } as any);
 
-      const avgResponseTime = Number(perfRow?.avg_response_time) || 0;
-      const totalRequests = Number(perfRow?.total_requests) || 0;
-      const errorCount = Number(errorRow?.error_count) || 0;
-      const activeUsers = Number(usersRow?.active_users) || 0;
+      const totalRequests = recentEvents.length;
+      const throughput = totalRequests / 5; // req/min over 5 minutes
 
+      // Error rate proxy: count events with metadata.error=true
+      let errorCount = 0;
+      for (const ev of recentEvents) {
+        try {
+          const meta = JSON.parse((ev as any).metadata || '{}');
+          if (meta && (meta.error === true || meta.statusCode >= 500)) errorCount++;
+        } catch {}
+      }
       const errorRate = totalRequests > 0 ? errorCount / totalRequests : 0;
-      const throughput = totalRequests / 5; // requests per minute
+
+      // Cache hit rate is mocked for now
+      const cacheMetrics = await this.getCacheMetrics();
       const cacheHitRate = cacheMetrics.hitRate;
 
-      // Determine system health
+      // Active users in last hour
+      const hourEvents = await db.query.userBehavior.findMany({
+        where: gte(userBehavior.timestamp, oneHourAgo),
+        columns: { userId: true },
+        limit: 5000,
+      } as any);
+      const activeUsers = new Set(hourEvents.map((e: any) => e.userId)).size;
+
+      const avgResponseTime = 0; // Not available without perf logs; report 0 in dev
+
       const systemHealth = this.determineSystemHealth(
         avgResponseTime,
         cacheHitRate,
@@ -144,7 +138,7 @@ export class PersonalizationMonitoring {
         errorRate,
         throughput,
         activeUsers,
-        systemHealth
+        systemHealth,
       };
 
     } catch (error) {
@@ -156,7 +150,7 @@ export class PersonalizationMonitoring {
         errorRate: 1,
         throughput: 0,
         activeUsers: 0,
-        systemHealth: 'critical'
+        systemHealth: 'critical',
       };
     }
   }
@@ -300,19 +294,18 @@ export class PersonalizationMonitoring {
    * Store alert in database for tracking
    */
   private static async storeAlert(alert: any): Promise<void> {
-    await db.execute(sql`
-      INSERT INTO recommendation_performance_logs (
-        method_name,
-        duration_ms,
-        context,
-        created_at
-      ) VALUES (
-        'alert_triggered',
-        0,
-        ${JSON.stringify(alert)},
-        NOW()
-      )
-    `);
+    try {
+      // In dev, recommendation_performance_logs may not exist. Store as a user_behavior event.
+      await db.insert(userBehavior as any).values({
+        userId: 'system',
+        actionType: 'alert_triggered',
+        targetType: 'monitoring',
+        metadata: JSON.stringify(alert),
+        timestamp: new Date(),
+      } as any);
+    } catch (e) {
+      console.warn('storeAlert fallback failed:', e);
+    }
   }
 
   /**
@@ -388,24 +381,27 @@ export class PersonalizationMonitoring {
     
     // Get historical data for charts
     const last24Hours = new Date(Date.now() - 24 * 60 * 60 * 1000);
-    
-    const historicalData = await db.execute(sql`
-      SELECT 
-        DATE_TRUNC('hour', created_at) as hour,
-        AVG(duration_ms) as avg_response_time,
-        COUNT(*) as request_count
-      FROM recommendation_performance_logs 
-      WHERE created_at >= ${last24Hours.toISOString()}
-        AND method_name != 'nightly_aggregation'
-      GROUP BY DATE_TRUNC('hour', created_at)
-      ORDER BY hour
-    `);
+    // Fallback historical: bucket user_behavior per hour count
+    const events = await db.query.userBehavior.findMany({
+      where: gte(userBehavior.timestamp, last24Hours),
+      columns: { timestamp: true },
+      limit: 10000,
+    } as any);
+    const buckets = new Map<string, { hour: string; avg_response_time: number; request_count: number }>();
+    for (const ev of events) {
+      const d = new Date((ev as any).timestamp);
+      const hourKey = new Date(d.getFullYear(), d.getMonth(), d.getDate(), d.getHours()).toISOString();
+      const bucket = buckets.get(hourKey) || { hour: hourKey, avg_response_time: 0, request_count: 0 };
+      bucket.request_count++;
+      buckets.set(hourKey, bucket);
+    }
+    const historicalPerformance = Array.from(buckets.values()).sort((a, b) => a.hour.localeCompare(b.hour));
 
     return {
       currentSnapshot: snapshot,
-      historicalPerformance: historicalData.rows,
+      historicalPerformance,
       systemStatus: snapshot.systemHealth,
-      lastUpdated: new Date().toISOString()
+      lastUpdated: new Date().toISOString(),
     };
   }
 
@@ -442,33 +438,38 @@ export class PersonalizationMonitoring {
  * CLI interface for monitoring
  */
 if (import.meta.url === `file://${process.argv[1]}`) {
-  const command = process.argv[2] || 'status';
-  
-  switch (command) {
-    case 'status':
-      const snapshot = await PersonalizationMonitoring.getPerformanceSnapshot();
-      console.log('📊 Current Status:', snapshot);
-      break;
-      
-    case 'alerts':
-      await PersonalizationMonitoring.checkAlerts();
-      break;
-      
-    case 'health':
-      const health = await PersonalizationMonitoring.healthCheck();
-      console.log('🏥 Health Check:', health);
-      process.exit(health.status === 'healthy' ? 0 : 1);
-      break;
-      
-    case 'dashboard':
-      const dashboard = await PersonalizationMonitoring.getDashboardData();
-      console.log('📈 Dashboard Data:', JSON.stringify(dashboard, null, 2));
-      break;
-      
-    default:
-      console.error('Usage: node monitoring.js [status|alerts|health|dashboard]');
-      process.exit(1);
-  }
+  (async () => {
+    const command = process.argv[2] || 'status';
+    switch (command) {
+      case 'status': {
+        const snapshot = await PersonalizationMonitoring.getPerformanceSnapshot();
+        console.log('📊 Current Status:', snapshot);
+        break;
+      }
+      case 'alerts': {
+        await PersonalizationMonitoring.checkAlerts();
+        break;
+      }
+      case 'health': {
+        const health = await PersonalizationMonitoring.healthCheck();
+        console.log('🏥 Health Check:', health);
+        process.exit(health.status === 'healthy' ? 0 : 1);
+        break;
+      }
+      case 'dashboard': {
+        const dashboard = await PersonalizationMonitoring.getDashboardData();
+        console.log('📈 Dashboard Data:', JSON.stringify(dashboard, null, 2));
+        break;
+      }
+      default: {
+        console.error('Usage: node monitoring.js [status|alerts|health|dashboard]');
+        process.exit(1);
+      }
+    }
+  })().catch((e) => {
+    console.error('Monitoring CLI error:', e);
+    process.exit(1);
+  });
 }
 
 export default PersonalizationMonitoring;

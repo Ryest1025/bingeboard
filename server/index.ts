@@ -135,11 +135,29 @@ app.use((req, res, next) => {
   await registerRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
-    const status = err.status || err.statusCode || 500;
-    const message = err.message || "Internal Server Error";
+    const status = err?.status || err?.statusCode || 500;
+    const message = err?.message || "Internal Server Error";
+    const stack = err?.stack;
+    const isDev = (process.env.NODE_ENV || 'development') === 'development';
 
-    res.status(status).json({ message });
-    throw err;
+    // Log full details server-side for debugging
+    console.error('Unhandled error:', { status, message, stack });
+
+    // Also write to a local error log for inspection
+    try {
+      // use require to avoid dynamic import in non-async handler
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const fs = require('fs');
+      const line = `[${new Date().toISOString()}] ${status} ${message}\n${stack || ''}\n\n`;
+      fs.appendFileSync('./server-error.log', line);
+    } catch {}
+
+    // Avoid double-send
+    if (res.headersSent) return;
+
+    const payload: any = { success: false, error: message };
+    if (isDev && stack) payload.stack = stack;
+    res.status(status).json(payload);
   });
 
   // importantly only setup vite in development and after
