@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { TopNav } from "@/components/top-nav";
+import AppLayout from "@/components/layouts/AppLayout";
 import { 
   Calendar, 
   Clock, 
@@ -225,7 +225,7 @@ export default function Sports() {
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-[hsl(228,25%,3%)] via-[hsl(226,22%,6%)] to-[hsl(224,20%,8%)]">
-        <TopNav />
+        {/* TopNav removed: handled by App.tsx */}
         <div className="pt-20 p-4">
           <div className="container mx-auto max-w-4xl text-center">
             <h1 className="text-3xl font-bold text-white mb-4">Sports Center</h1>
@@ -240,10 +240,8 @@ export default function Sports() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[hsl(228,25%,3%)] via-[hsl(226,22%,6%)] to-[hsl(224,20%,8%)]">
-      <TopNav />
-      
-      <div className="pt-20 p-4 pb-24">
+    <AppLayout>
+      <div className="p-4 pb-24">
         <div className="container mx-auto max-w-7xl">
           
           {/* Header */}
@@ -305,6 +303,6 @@ export default function Sports() {
 
         </div>
       </div>
-    </div>
+    </AppLayout>
   );
 }

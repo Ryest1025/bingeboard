@@ -1,7 +1,7 @@
 import twilio from 'twilio';
 
 export class SmsService {
-  private client: twilio.Twilio;
+  private client!: twilio.Twilio; // initialized conditionally in constructor
 
   constructor() {
     const accountSid = process.env.TWILIO_ACCOUNT_SID;

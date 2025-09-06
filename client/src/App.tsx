@@ -1,13 +1,17 @@
 import { Switch, Route, useLocation } from "wouter";
 import React, { Suspense, useState, useEffect, lazy } from "react";
 import { SafeQueryProvider } from "./lib/safeQueryClient";
-// import { Toaster } from "@/components/ui/toaster";
+import { GenreProvider } from '@/context/GenreContext';
+import { DashboardFilterProvider } from '@/components/dashboard/filters/DashboardFilterProvider';
+import { useMemo } from 'react';
+import { ModalVariantProvider } from '@/context/ModalVariantContext';
+import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/useAuth";
 import MobileNav from "@/components/mobile-nav";
 import DesktopFooter from "@/components/desktop-footer";
 import LegalFooter from "@/components/legal-footer";
-import { TopNav } from "@/components/top-nav";
+import TopNav from "@/components/top-nav";
 import OnboardingModalPremium from "@/components/onboarding/OnboardingModal-Premium";
 import SimpleNav from "@/components/simple-nav";
 import { ConsentBanner } from "@/components/consent-banner";
@@ -19,7 +23,11 @@ import Signup from "@/pages/signup";
 import MobileSocialLogin from "@/pages/mobile-social-login";
 import MobileLogin from "@/pages/mobile-login";
 import Home from "@/pages/home";
-import ModernDiscover from "@/pages/modern-discover";
+// Structured Discover page with integrated components
+import DiscoverStructured from "@/pages/DiscoverStructured";
+import DiscoverLab from "@/pages/DiscoverLab";
+import UserActionsDemoPage from "@/pages/UserActionsDemoPage";
+import UserActionsTestPage from "@/pages/UserActionsTestPage";
 import Activity from "@/pages/activity";
 import Friends from "@/pages/social";
 
@@ -29,7 +37,6 @@ import { LogoutButton } from "@/components/LogoutButton";
 
 // import { useToast } from "@/hooks/use-toast";
 import { isMobileDevice } from "@/lib/deviceUtils";
-import FriendsDiscovery from "@/pages/friends-discovery";
 import FindFriends from "@/pages/find-friends";
 import ShowDetails from "@/pages/show-details";
 import Subscription from "@/pages/subscription";
@@ -56,6 +63,7 @@ import MobileHub from "@/pages/mobile-hub";
 import MobileApp from "@/pages/mobile-app";
 import ComponentsDemo from "@/pages/components-demo";
 import Dashboard from "@/pages/dashboard";
+import QRCode from "@/pages/qr-code";
 /**
  * 🔒 CLEANED UP: Removed duplicate auth pages and test components
  * Only keeping essential auth functionality in login-simple.tsx
@@ -151,6 +159,7 @@ function Router() {
           <Route path="/mobile-hub" component={MobileHub} />
           <Route path="/mobile" component={MobileHub} />
           <Route path="/m" component={MobileHub} />
+          <Route path="/qr" component={QRCode} />
 
           <Route path="/privacy-policy" component={PrivacyPolicy} />
           <Route path="/terms-of-service" component={TermsOfService} />
@@ -158,6 +167,8 @@ function Router() {
           <Route path="/data-deletion" component={DataDeletion} />
           <Route path="/landing" component={Landing} />
           <Route path="/reset-password" component={ResetPassword} />
+          {/* Make lab route public so it's testable without auth */}
+          <Route path="/discover-lab" component={DiscoverLab} />
 
           {/* Conditional home route based on authentication - MUST BE FIRST */}
           <Route path="/" component={Home} />
@@ -166,11 +177,13 @@ function Router() {
           {isAuthenticated ? (
             <>
               <Route path="/dashboard" component={Dashboard} />
-              <Route path="/discover" component={ModernDiscover} />
+              <Route path="/discover" component={DiscoverStructured} />
+              <Route path="/demo" component={UserActionsDemoPage} />
+              <Route path="/test" component={UserActionsTestPage} />
               <Route path="/activity" component={Activity} />
               <Route path="/friends" component={Friends} />
               <Route path="/social" component={Friends} />
-              <Route path="/friends/discover" component={FriendsDiscovery} />
+              <Route path="/friends/discover" component={() => { window.location.href = '/find-friends'; return null; }} />
               <Route path="/find-friends" component={FindFriends} />
               <Route path="/upcoming" component={UpcomingEnhanced} />
               <Route path="/subscription" component={Subscription} />
@@ -197,6 +210,8 @@ function Router() {
               <Route path="/about" component={Landing} />
               <Route path="/pricing" component={SubscriptionPricing} />
               <Route path="/features" component={Features} />
+              <Route path="/demo" component={UserActionsDemoPage} />
+              <Route path="/test" component={UserActionsTestPage} />
               <Route path="/streaming-demo" component={StreamingDemo} />
               <Route path="/notifications-demo" component={NotificationsDemo} />
               <Route path="/mobile-diagnostic" component={MobileDiagnostic} />
@@ -252,12 +267,20 @@ function Router() {
 export default function App() {
   return (
     <SafeQueryProvider>
-      <TooltipProvider>
-        <ErrorBoundary>
-          <Router />
-          {/* <Toaster /> */}
-        </ErrorBoundary>
-      </TooltipProvider>
+      <GenreProvider>
+        <DashboardFilterProvider>
+          <ModalVariantProvider>
+            <TooltipProvider>
+              <ErrorBoundary>
+                <Router />
+                {/* Hidden attribute still present for quick manual QA */}
+                <div data-modal-variant-ctx style={{ display: 'none' }} />
+                <Toaster />
+              </ErrorBoundary>
+            </TooltipProvider>
+          </ModalVariantProvider>
+        </DashboardFilterProvider>
+      </GenreProvider>
     </SafeQueryProvider>
   );
 }

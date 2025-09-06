@@ -6,8 +6,8 @@ import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
-import { TopNav } from "@/components/top-nav";
-import MobileNav from "@/components/mobile-nav";
+// // import { TopNav } from "@/components/top-nav"; // Auto-removed: TopNav handled by App.tsx // Auto-removed: TopNav handled by App.tsx
+// import MobileNav from "@/components/mobile-nav"; // Auto-removed: MobileNav handled by App.tsx
 import { Settings, Bell, Shield, Smartphone, Monitor, Users, Star, CreditCard, Link, Trash2, Download, Info, FileText, Lock, Upload } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -114,7 +114,7 @@ export default function SettingsPage() {
 
   return (
     <div className="min-h-screen bg-black">
-      <TopNav />
+      {/* TopNav removed: handled by App.tsx */}
       
       <div className="pt-20 p-4 pb-24">
         <div className="container mx-auto max-w-4xl space-y-6">
@@ -332,6 +332,7 @@ export default function SettingsPage() {
                     className="border-teal-500 text-teal-400 hover:bg-teal-500 hover:text-white w-full"
                     onClick={() => {
                       // Export user data
+                      // TODO: Add try/catch around this fetch call to handle errors properly
                       fetch('/api/data/export', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -361,7 +362,8 @@ export default function SettingsPage() {
                   <Button
                     variant="outline"
                     size="sm"
-                    className="border-blue-500 text-blue-400 hover:bg-blue-500 hover:text-white w-full"
+                    className="border-blue-500                       // TODO: Add try/catch around this fetch call to handle errors properly
+text-blue-400 hover:bg-blue-500 hover:text-white w-full"
                     onClick={() => {
                       fetch('/api/data/rights')
                         .then(response => response.json())
@@ -496,7 +498,7 @@ export default function SettingsPage() {
         </div>
       </div>
       
-      <MobileNav />
+      {/* MobileNav removed: handled by App.tsx */}
     </div>
   );
 }

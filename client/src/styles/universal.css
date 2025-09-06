@@ -1,0 +1,558 @@
+/* 
+🎨 BingeBoard Universal Design System
+🔒 LOCKED DESIGN: Site-wide consistency rules
+📅 Created: August 27, 2025 - Universal styling standards
+✨ Apply consistent spacing, colors, and component patterns across entire site
+*/
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+/* ============================================
+   CSS CUSTOM PROPERTIES - DESIGN TOKENS
+   ============================================ */
+:root {
+  /* Brand Colors */
+  --brand-primary: #FF4F64;
+  --brand-primary-hover: #E63946;
+  --brand-primary-light: #FF6B7D;
+  --brand-secondary: #1F1F1F;
+  --brand-secondary-light: #2A2A2A;
+  --brand-accent: #FFD369;
+  --brand-accent-hover: #FFB627;
+
+  /* Backgrounds */
+  --bg-primary: #0F0F0F;
+  --bg-card: #1A1A1A;
+  --bg-glass: rgba(31, 31, 31, 0.8);
+  --bg-overlay: rgba(0, 0, 0, 0.6);
+
+  /* Text Colors */
+  --text-primary: #FFFFFF;
+  --text-secondary: #B3B3B3;
+  --text-muted: #666666;
+
+  /* Status Colors */
+  --color-success: #4ADE80;
+  --color-warning: #FBBF24;
+  --color-error: #EF4444;
+  --color-info: #3B82F6;
+
+  /* Borders */
+  --border-primary: rgba(255, 255, 255, 0.1);
+  --border-light: rgba(255, 255, 255, 0.2);
+  --border-focus: rgba(255, 79, 100, 0.2);
+
+  /* Spacing Scale - UNIVERSAL STANDARDS */
+  --space-xs: 0.25rem;
+  /* 4px */
+  --space-sm: 0.5rem;
+  /* 8px */
+  --space-md: 1rem;
+  /* 16px */
+  --space-lg: 1.5rem;
+  /* 24px */
+  --space-xl: 2rem;
+  /* 32px */
+  --space-2xl: 3rem;
+  /* 48px */
+  --space-3xl: 4rem;
+  /* 64px */
+  --space-4xl: 5rem;
+  /* 80px */
+
+  /* Section Spacing - CONSISTENT ACROSS SITE */
+  --section-spacing: var(--space-2xl);
+  /* 48px between major sections */
+  --content-spacing: var(--space-lg);
+  /* 24px between content blocks */
+  --element-spacing: var(--space-md);
+  /* 16px between elements */
+  --item-spacing: var(--space-sm);
+  /* 8px between small items */
+
+  /* Border Radius */
+  --radius-sm: 0.25rem;
+  /* 4px */
+  --radius-md: 0.5rem;
+  /* 8px */
+  --radius-lg: 0.75rem;
+  /* 12px */
+  --radius-xl: 1rem;
+  /* 16px */
+  --radius-2xl: 1.25rem;
+  /* 20px */
+  --radius-full: 9999px;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  --shadow-glow: 0 0 20px rgba(255, 79, 100, 0.3);
+
+  /* Transitions */
+  --transition-fast: 150ms ease;
+  --transition-normal: 300ms ease;
+  --transition-slow: 500ms ease;
+}
+
+/* ============================================
+   UNIVERSAL LAYOUT CONTAINERS
+   ============================================ */
+
+/* Main content wrapper - consistent max-width and padding */
+.bb-container {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 var(--space-md);
+}
+
+@media (min-width: 640px) {
+  .bb-container {
+    padding: 0 var(--space-lg);
+  }
+}
+
+/* Page sections - consistent vertical spacing */
+.bb-section {
+  margin-bottom: var(--section-spacing);
+}
+
+.bb-section:last-child {
+  margin-bottom: 0;
+}
+
+/* Content blocks within sections */
+.bb-content-block {
+  margin-bottom: var(--content-spacing);
+}
+
+.bb-content-block:last-child {
+  margin-bottom: 0;
+}
+
+/* ============================================
+   UNIVERSAL COMPONENT STYLES
+   ============================================ */
+
+/* Glass Effect Cards - Universal Pattern */
+.bb-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-xl);
+  padding: var(--space-lg);
+  box-shadow: var(--shadow-md);
+  transition: var(--transition-normal);
+}
+
+.bb-card:hover {
+  border-color: var(--border-light);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+.bb-card-glass {
+  background: var(--bg-glass);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-xl);
+  padding: var(--space-lg);
+  transition: var(--transition-normal);
+}
+
+.bb-card-glass:hover {
+  border-color: var(--border-light);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-xl);
+}
+
+/* Universal Button Styles */
+.bb-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-lg);
+  border-radius: var(--radius-lg);
+  font-weight: 600;
+  font-size: 0.875rem;
+  line-height: 1.25;
+  transition: var(--transition-normal);
+  cursor: pointer;
+  border: none;
+  text-decoration: none;
+}
+
+.bb-btn-primary {
+  background: linear-gradient(135deg, var(--brand-primary) 0%, var(--brand-primary-hover) 100%);
+  color: var(--text-primary);
+}
+
+.bb-btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-glow);
+}
+
+.bb-btn-secondary {
+  background: var(--bg-card);
+  color: var(--text-primary);
+  border: 1px solid var(--border-primary);
+}
+
+.bb-btn-secondary:hover {
+  background: var(--brand-secondary-light);
+  border-color: var(--border-light);
+}
+
+.bb-btn-ghost {
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px solid transparent;
+}
+
+.bb-btn-ghost:hover {
+  background: var(--bg-glass);
+  color: var(--text-primary);
+  border-color: var(--border-primary);
+}
+
+/* Universal Input Styles */
+.bb-input {
+  width: 100%;
+  padding: var(--space-sm) var(--space-md);
+  background: var(--bg-card);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-lg);
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  transition: var(--transition-normal);
+}
+
+.bb-input::placeholder {
+  color: var(--text-muted);
+}
+
+.bb-input:focus {
+  outline: none;
+  border-color: var(--brand-primary);
+  box-shadow: 0 0 0 3px var(--border-focus);
+}
+
+/* Universal Badge/Tag Styles */
+.bb-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--space-xs) var(--space-sm);
+  background: var(--bg-glass);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-full);
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.bb-badge-primary {
+  background: var(--brand-primary);
+  color: var(--text-primary);
+  border-color: var(--brand-primary);
+}
+
+.bb-badge-success {
+  background: var(--color-success);
+  color: var(--text-primary);
+  border-color: var(--color-success);
+}
+
+/* ============================================
+   UNIVERSAL GRID SYSTEMS
+   ============================================ */
+
+/* Standard Content Grid */
+.bb-grid {
+  display: grid;
+  gap: var(--space-lg);
+}
+
+.bb-grid-2 {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.bb-grid-3 {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.bb-grid-4 {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+/* Responsive Grid */
+.bb-grid-responsive {
+  display: grid;
+  gap: var(--space-lg);
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+/* Poster/Card Grid */
+.bb-poster-grid {
+  display: grid;
+  gap: var(--space-lg);
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+}
+
+@media (min-width: 640px) {
+  .bb-poster-grid {
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: var(--space-xl);
+  }
+}
+
+@media (min-width: 1024px) {
+  .bb-poster-grid {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: var(--space-2xl);
+  }
+}
+
+/* ============================================
+   UNIVERSAL SPACING UTILITIES
+   ============================================ */
+
+/* Consistent vertical spacing classes */
+.bb-space-y-sm>*+* {
+  margin-top: var(--space-sm);
+}
+
+.bb-space-y-md>*+* {
+  margin-top: var(--space-md);
+}
+
+.bb-space-y-lg>*+* {
+  margin-top: var(--space-lg);
+}
+
+.bb-space-y-xl>*+* {
+  margin-top: var(--space-xl);
+}
+
+.bb-space-y-2xl>*+* {
+  margin-top: var(--space-2xl);
+}
+
+/* Consistent horizontal spacing */
+.bb-space-x-sm>*+* {
+  margin-left: var(--space-sm);
+}
+
+.bb-space-x-md>*+* {
+  margin-left: var(--space-md);
+}
+
+.bb-space-x-lg>*+* {
+  margin-left: var(--space-lg);
+}
+
+/* ============================================
+   UNIVERSAL ANIMATION CLASSES
+   ============================================ */
+
+.bb-animate-fade-in {
+  animation: fadeIn 0.5s ease-out;
+}
+
+.bb-animate-slide-up {
+  animation: slideUp 0.5s ease-out;
+}
+
+.bb-animate-scale-in {
+  animation: scaleIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* ============================================
+   UNIVERSAL SECTION HEADERS
+   ============================================ */
+
+.bb-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--content-spacing);
+}
+
+.bb-section-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.bb-section-subtitle {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  margin-top: var(--space-xs);
+  max-width: 60ch;
+}
+
+/* ============================================
+   UNIVERSAL SCROLLBAR STYLING
+   ============================================ */
+
+.bb-scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.bb-scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+.bb-scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-primary) transparent;
+}
+
+.bb-scrollbar-thin::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.bb-scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.bb-scrollbar-thin::-webkit-scrollbar-thumb {
+  background: var(--border-primary);
+  border-radius: var(--radius-full);
+}
+
+.bb-scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background: var(--border-light);
+}
+
+/* ============================================
+   UNIVERSAL RESPONSIVE UTILITIES
+   ============================================ */
+
+/* Hide on mobile */
+@media (max-width: 639px) {
+  .bb-hide-mobile {
+    display: none !important;
+  }
+}
+
+/* Hide on desktop */
+@media (min-width: 640px) {
+  .bb-hide-desktop {
+    display: none !important;
+  }
+}
+
+/* Responsive text sizes */
+.bb-text-responsive {
+  font-size: 1rem;
+}
+
+@media (min-width: 640px) {
+  .bb-text-responsive {
+    font-size: 1.125rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .bb-text-responsive {
+    font-size: 1.25rem;
+  }
+}
+
+/* ============================================
+   UNIVERSAL STATE CLASSES
+   ============================================ */
+
+.bb-loading {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.bb-disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.bb-hidden {
+  display: none !important;
+}
+
+.bb-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ============================================
+   UNIVERSAL FOCUS MANAGEMENT
+   ============================================ */
+
+.bb-focus-visible:focus-visible {
+  outline: 2px solid var(--brand-primary);
+  outline-offset: 2px;
+}
+
+.bb-focus-ring:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--border-focus);
+}
+
+/* ============================================
+   PRINT STYLES
+   ============================================ */
+
+@media print {
+  .bb-no-print {
+    display: none !important;
+  }
+
+  .bb-card,
+  .bb-card-glass {
+    box-shadow: none;
+    border: 1px solid #ddd;
+  }
+}

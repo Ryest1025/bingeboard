@@ -2,8 +2,8 @@ import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { TopNav } from "@/components/top-nav";
-import MobileNav from "@/components/mobile-nav";
+// // import { TopNav } from "@/components/top-nav"; // Auto-removed: TopNav handled by App.tsx // Auto-removed: TopNav handled by App.tsx
+// import MobileNav from "@/components/mobile-nav"; // Auto-removed: MobileNav handled by App.tsx
 import { 
   Play, 
   Star, 
@@ -283,7 +283,7 @@ const featureCategories = [
 export default function Features() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-[hsl(228,25%,3%)] via-[hsl(226,22%,6%)] to-[hsl(224,20%,8%)]">
-      <TopNav />
+      {/* TopNav removed: handled by App.tsx */}
       
       <div className="pt-20 p-4 pb-24">
         <div className="container mx-auto max-w-7xl">
@@ -412,7 +412,7 @@ export default function Features() {
         </div>
       </div>
       
-      <MobileNav />
+      {/* MobileNav removed: handled by App.tsx */}
     </div>
   );
 }

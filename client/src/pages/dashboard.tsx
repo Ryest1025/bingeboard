@@ -5,7 +5,7 @@ import { useContinueWatching, useCurrentProgress } from "@/hooks/useViewingHisto
 import { useFilterOptions } from "@/hooks/useFilterOptions";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { useFilters } from "@/hooks/useFilters";
-import NavigationHeader from "@/components/navigation-header";
+import AppLayout from "@/components/layouts/AppLayout";
 import Toast from "@/components/toast";
 import RecommendationModal from "@/components/recommendation-modal";
 import ShowDetailsModal from "@/components/show-details-modal";
@@ -501,40 +501,84 @@ function Dashboard() {
     }
   };
 
-  // Fetch trending/spotlight data filtered by genre or network
+  // Fetch trending/spotlight data filtered by genre or network using enhanced multi-API endpoints
   const { data: spotlightData, isLoading: spotlightLoading, error: spotlightError } = useQuery({
-    queryKey: ["/api/content/trending-enhanced-enhanced-v2", spotlightFilterType, spotlightFilterType === 'genre' ? selectedGenre : selectedNetwork],
+    queryKey: ["spotlight-enhanced", spotlightFilterType, spotlightFilterType === 'genre' ? selectedGenre : selectedNetwork],
     queryFn: async () => {
-      let url = `/api/tmdb/spotlight`; // Default fallback to real TMDB trending
+      console.log('🎯 Enhanced spotlight filter state:', {
+        spotlightFilterType,
+        selectedGenre,
+        selectedNetwork,
+        preferredGenres
+      });
 
-      if (spotlightFilterType === 'genre') {
-        if (selectedGenre === "all") {
-          url = `/api/tmdb/spotlight`;
-        } else {
-          url = `/api/streaming/enhanced-search?type=tv&includeStreaming=true`;
-        }
-      } else if (spotlightFilterType === 'network') {
-        if (selectedNetwork === "all") {
-          url = `/api/tmdb/spotlight`;
-        } else {
-          url = `/api/streaming/enhanced-search?type=tv&includeStreaming=true`;
-        }
+      let url: string;
+      const params = new URLSearchParams();
+
+      if (spotlightFilterType === 'genre' && selectedGenre !== "all") {
+        // Use enhanced movie discover with streaming data for genre filtering
+        url = `/api/tmdb/discover/movie`;
+        params.append('with_genres', selectedGenre);
+        params.append('sort_by', 'popularity.desc');
+        params.append('page', '1');
+        params.append('includeStreaming', 'true'); // Multi-API streaming enrichment
+        console.log('🎬 Using enhanced movie discover with genre:', selectedGenre);
+      } else if (spotlightFilterType === 'network' && selectedNetwork !== "all") {
+        // Use enhanced TV discover with streaming data for network filtering
+        url = `/api/tmdb/discover/tv`;
+        params.append('with_networks', selectedNetwork);
+        params.append('sort_by', 'popularity.desc');
+        params.append('page', '1');
+        params.append('includeStreaming', 'true'); // Multi-API streaming enrichment
+        console.log('📺 Using enhanced TV discover with network:', selectedNetwork);
+      } else {
+        // Use enhanced trending endpoint with multi-API streaming data
+        url = `/api/content/trending-enhanced`;
+        params.append('mediaType', 'all'); // Get both movies and TV
+        params.append('timeWindow', 'week');
+        params.append('includeStreaming', 'true'); // Multi-API streaming enrichment
+        console.log('✨ Using enhanced trending with multi-API streaming data');
       }
 
-      const res = await fetch(url);
+      const fullUrl = params.toString() ? `${url}?${params}` : url;
+      console.log('🔗 Enhanced multi-API call:', fullUrl);
+
+      const res = await fetch(fullUrl, {
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' }
+      });
+
       if (!res.ok) {
-        throw new Error(`Failed to fetch trending: ${res.status}`);
+        console.error('❌ Enhanced spotlight fetch failed:', res.status, res.statusText);
+        throw new Error(`Failed to fetch enhanced spotlight data: ${res.status}`);
       }
-      const data = await res.json();
 
-      // Normalize the response: spotlight endpoint returns {trending: [...]} while discover returns {results: [...]}
-      if (data.trending) {
-        return { results: data.trending };
-      }
-      return data;
+      const data = await res.json();
+      console.log('✅ Enhanced spotlight data received:', data);
+
+      // Normalize the response structure - all enhanced endpoints return { results: [...] }
+      let normalizedResults: any[] = data.results || [];
+
+      // Enrich results with streaming platform info from multi-API system
+      normalizedResults = normalizedResults.map((item: any) => ({
+        ...item,
+        // Ensure media_type is properly set
+        media_type: item.media_type || (item.title ? 'movie' : 'tv'),
+        // Include streaming platforms from multi-API enrichment
+        streaming_platforms: item.streaming || item.streaming_platforms || [],
+        // Include streaming stats if available
+        streamingStats: item.streamingStats || null,
+        // Add streaming availability flag
+        hasStreaming: Boolean(item.streaming?.length || item.streaming_platforms?.length)
+      }));
+
+      console.log('🎭 Enhanced results count:', normalizedResults.length);
+      console.log('🎪 Enhanced sample with streaming:', normalizedResults[0]);
+
+      return { results: normalizedResults };
     },
     enabled: !!isAuthenticated,
-    staleTime: 0, // Force fresh data
+    staleTime: 60_000, // Cache for 1 minute
     refetchOnWindowFocus: false,
   });
 
@@ -801,9 +845,7 @@ function Dashboard() {
 
   // Main Dashboard
   return (
-    <div className="min-h-screen bg-gray-900 text-white overflow-x-hidden">
-      <NavigationHeader />
-
+    <AppLayout>
       <Toast
         isVisible={toast.isVisible}
         message={toast.message}
@@ -1048,15 +1090,21 @@ function Dashboard() {
                   return (
                     <div key={index} className="group cursor-pointer">
                       <div className="bg-gray-800 aspect-[2/3] mb-2 relative overflow-hidden hover:scale-105 transition-transform">
-                        <img
-                          src={showPoster || '/fallback-poster.jpg'}
-                          alt={showTitle}
-                          className="w-full h-full object-cover"
+                        <button
+                          type="button"
                           onClick={() => handleShowDetails(show)}
-                          onError={(e) => {
-                            e.currentTarget.src = '/fallback-poster.jpg';
-                          }}
-                        />
+                          aria-label={`Open details for ${showTitle}`}
+                          className="block w-full h-full text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[var(--bb-focus-ring)]"
+                        >
+                          <img
+                            src={showPoster || '/fallback-poster.jpg'}
+                            alt={showTitle}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              e.currentTarget.src = '/fallback-poster.jpg';
+                            }}
+                          />
+                        </button>
 
                         {/* Hover actions with working buttons */}
                         <div className="absolute inset-0 bg-black/80 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
@@ -1090,9 +1138,14 @@ function Dashboard() {
                           </button>
                         </div>
                       </div>
-                      <p className="text-sm font-medium line-clamp-2 group-hover:text-blue-400 transition-colors cursor-pointer" onClick={() => handleShowDetails(show)}>
+                      <button
+                        type="button"
+                        className="text-sm font-medium line-clamp-2 group-hover:text-blue-400 transition-colors text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[var(--bb-focus-ring)]"
+                        onClick={() => handleShowDetails(show)}
+                        aria-label={`Open details for ${showTitle}`}
+                      >
                         {showTitle}
-                      </p>
+                      </button>
 
                       {/* Streaming platforms */}
                       {showStreaming && showStreaming.length > 0 && (
@@ -1418,7 +1471,7 @@ function Dashboard() {
                 )}
               </div>
 
-              {/* Your Lists Section */}
+              {/* Watchlists Section */}
               <div
                 className="bg-gray-800 p-4 hover:bg-gray-700 transition-all duration-200 cursor-pointer border-l-4 border-transparent hover:border-teal-500 group"
                 onClick={goToLists}
@@ -1426,7 +1479,7 @@ function Dashboard() {
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-3">
                     <List className="h-5 w-5 text-teal-400 group-hover:text-teal-300" />
-                    <h4 className="font-semibold text-white group-hover:text-teal-200">Your Lists</h4>
+                    <h4 className="font-semibold text-white group-hover:text-teal-200">Watchlists</h4>
                   </div>
                 </div>
 
@@ -1529,7 +1582,7 @@ function Dashboard() {
         type={toast.type}
         onClose={() => setToast(prev => ({ ...prev, isVisible: false }))}
       />
-    </div>
+    </AppLayout>
   );
 }
 

@@ -215,7 +215,14 @@ export class DataSecurityService {
       await Promise.all([
         // Delete user behavior tracking
         storage.getUserBehavior(userId).then(behaviors => 
-          Promise.all(behaviors.map(b => storage.trackUserBehavior(b)))
+          Promise.all(behaviors.map(b => storage.trackUserBehavior({
+            userId: (b as any).userId,
+            actionType: (b as any).actionType,
+            targetType: (b as any).targetType,
+            targetId: (b as any).targetId,
+            sessionId: (b as any).sessionId,
+            metadata: (b as any).metadata as any
+          })))
         ),
         
         // Delete notifications

@@ -142,7 +142,19 @@ export default function RecommendationCard({
       onBlur={() => setHovered(false)}
     >
       <CardContent className="p-0">
-        <div className="relative" onClick={handlePosterClick} role="button" tabIndex={-1}>
+        <div
+          className="relative focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[var(--bb-focus-ring)]"
+          onClick={handlePosterClick}
+          role="button"
+          tabIndex={0}
+          aria-label={`Open details for ${show.title}`}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              handlePosterClick();
+            }
+          }}
+        >
           {show.posterPath ? (
             <img
               src={show.posterPath}
@@ -239,9 +251,14 @@ export default function RecommendationCard({
         </div>
         <div className="p-3 space-y-2">
           <div className="flex items-start justify-between gap-2">
-            <h3 className="font-semibold text-sm leading-tight line-clamp-2 cursor-pointer hover:text-binge-purple transition-colors" onClick={handlePosterClick}>
+            <button
+              type="button"
+              className="font-semibold text-sm leading-tight line-clamp-2 cursor-pointer hover:text-binge-purple transition-colors text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[var(--bb-focus-ring)]"
+              onClick={handlePosterClick}
+              aria-label={`Open details for ${show.title}`}
+            >
               {show.title}
-            </h3>
+            </button>
             {show.rating && (
               <span className="flex items-center text-[10px] font-medium text-yellow-400"><Star className="w-3 h-3 mr-0.5" />{show.rating}</span>
             )}

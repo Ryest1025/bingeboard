@@ -1,17 +1,23 @@
 // components/search/BrandedShowModal.tsx - BingeBoard Branded Show Modal
-import React, { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+// TODO (A/B Experiment Prep): Once all redesigned pages are finalized, wire an experiment toggle
+// to switch between this full modal and BrandedShowModalLite across Dashboard & Discover.
+// Include instrumentation: modal_open, watchlist_add, watch_click with { variant: 'full' | 'lite' }.
+// Ensure DashboardFilterProvider wraps routes before enabling Lite variant globally.
+import React, { useState, useEffect } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Star, Calendar, Clock, Play, Plus, ExternalLink, X, Heart } from "lucide-react";
+import { Star, Calendar, Clock, Play, Plus, ExternalLink, X, Heart, Bell, BellOff } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 // @ts-ignore - react-player types sometimes mismatch default export in our build setup
 import ReactPlayer from "react-player";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import useShowDetails from "@/hooks/useShowDetails";
+import { useUserActions } from "@/hooks/useUserActions";
 import { colors, gradients, radii, spacing, shadows } from "@/styles/tokens";
 import useTrailer from '@/hooks/useTrailer';
 import { StreamingPlatformsDisplay } from '@/components/streaming/StreamingPlatformsDisplay';
+import { trackEvent } from '@/lib/analytics';
 
 const fetchEnhancedShowDetails = async (id: number, type: 'tv' | 'movie', title: string) => {
   const response = await fetch(`/api/streaming/comprehensive/${type}/${id}?title=${encodeURIComponent(title)}&includeAffiliate=true`);
@@ -30,6 +36,8 @@ interface Props {
   onClose: () => void;
   onAddToWatchlist?: (showId: number) => void;
   onWatchNow?: (show: any) => void;
+  // Optional editorial/contextual reason to display in the modal
+  reason?: string;
 }
 
 export default function BrandedShowModal({
@@ -39,12 +47,23 @@ export default function BrandedShowModal({
   onClose,
   onAddToWatchlist,
   onWatchNow,
+  reason,
 }: Props) {
   const [showTrailer, setShowTrailer] = useState(false);
   const [isAddingToWatchlist, setIsAddingToWatchlist] = useState(false);
   const queryClient = useQueryClient();
+  
+  // Enhanced user actions with optimistic updates
+  const { addToList, removeFromList, toggleRemind, isInList, isReminded } = useUserActions();
 
   const { data: show, isLoading } = useShowDetails(showId, showType);
+
+  // Fire modal_open when it becomes visible with a show
+  useEffect(() => {
+    if (open && show) {
+      trackEvent('modal_open', { showId: show.id, showTitle: show.title, variant: 'full' });
+    }
+  }, [open, show]);
 
   // Watchlist mutation with optimistic updates
   const addToWatchlistMutation = useMutation({
@@ -82,6 +101,7 @@ export default function BrandedShowModal({
     if (show) {
       addToWatchlistMutation.mutate(parseInt(show.id));
       onAddToWatchlist?.(parseInt(show.id));
+  trackEvent('watchlist_add', { showId: show.id, showTitle: show.title, variant: 'full' });
     }
   };
 
@@ -94,11 +114,15 @@ export default function BrandedShowModal({
 
   const handleWatchTrailer = () => {
     setShowTrailer(true);
+    if (show) {
+      trackEvent('watch_trailer', { showId: show.id, showTitle: show.title, variant: 'full' });
+    }
   };
 
   const handleWatchNow = () => {
     if (show) {
       onWatchNow?.(show);
+  trackEvent('watch_click', { showId: show.id, showTitle: show.title, variant: 'full' });
     }
   };
 
@@ -125,6 +149,10 @@ export default function BrandedShowModal({
             >
               <DialogHeader>
                 <DialogTitle className="sr-only">Loading show details</DialogTitle>
+                {/* Provide description node early so aria-describedby always points to an existing element */}
+                <DialogDescription id={mainDescriptionId} className="sr-only">
+                  Loading show details
+                </DialogDescription>
               </DialogHeader>
               <div
                 className="animate-spin w-12 h-12 border-4 rounded-full mx-auto mb-6"
@@ -167,6 +195,8 @@ export default function BrandedShowModal({
                     transition={{ delay: 0.2 }}
                     onClick={onClose}
                     className="absolute top-6 right-6 p-2 rounded-full transition-all duration-200 z-10"
+                    aria-label="Close dialog"
+                    title="Close"
                     style={{
                       backgroundColor: `${colors.background}80`,
                       backdropFilter: 'blur(10px)',
@@ -201,10 +231,10 @@ export default function BrandedShowModal({
                           </span>
                         )}
                       </DialogTitle>
-                      {/* Hidden accessible description for screen readers */}
-                      <p id={mainDescriptionId} className="sr-only">
+                      {/* Accessible description (Radix compliant) */}
+                      <DialogDescription id={mainDescriptionId} className="sr-only">
                         {show.synopsis || 'Show details dialog'}
-                      </p>
+                      </DialogDescription>
                     </DialogHeader>
 
                     <div className="flex items-center gap-6 text-lg">
@@ -305,21 +335,25 @@ export default function BrandedShowModal({
                         transition={{ delay: 0.5, duration: 0.3 }}
                         className="flex flex-wrap gap-3"
                       >
-                        {show.genres.map((genreId: number) => (
-                          <Badge
-                            key={genreId}
-                            variant="secondary"
-                            className="px-3 py-1 text-sm font-medium"
-                            style={{
-                              backgroundColor: colors.secondaryLight,
-                              color: colors.text,
-                              border: `1px solid ${colors.border}`,
-                              borderRadius: radii.lg,
-                            }}
-                          >
-                            {genreId}
-                          </Badge>
-                        ))}
+                        {show.genres.map((raw: any) => {
+                          const key = typeof raw === 'object' ? (raw.id ?? raw.name) : raw;
+                          const label = typeof raw === 'object' ? (raw.name || raw.id) : raw;
+                          return (
+                            <Badge
+                              key={key}
+                              variant="secondary"
+                              className="px-3 py-1 text-sm font-medium"
+                              style={{
+                                backgroundColor: colors.secondaryLight,
+                                color: colors.text,
+                                border: `1px solid ${colors.border}`,
+                                borderRadius: radii.lg,
+                              }}
+                            >
+                              {label}
+                            </Badge>
+                          );
+                        })}
                       </motion.div>
                     )}
 
@@ -350,20 +384,62 @@ export default function BrandedShowModal({
                         variant="secondary"
                         className="gap-3 text-lg font-semibold px-8 py-4 transition-all duration-200 hover:scale-105"
                         style={{
-                          backgroundColor: colors.backgroundCard,
-                          color: colors.text,
+                          backgroundColor: isInList(showId || '') ? (colors.primary + '20') : colors.backgroundCard,
+                          color: isInList(showId || '') ? colors.primary : colors.text,
                           border: `1px solid ${colors.border}`,
                           borderRadius: radii.xl,
                         }}
-                        onClick={handleAddToWatchlist}
-                        disabled={isAddingToWatchlist}
+                        onClick={async () => {
+                          if (!showId) return;
+                          if (isInList(showId)) {
+                            await removeFromList(showId);
+                          } else {
+                            await addToList(showId, showType);
+                            onAddToWatchlist?.(parseInt(showId));
+                          }
+                          if (show) {
+                            // Only track adds to align with current analytics schema
+                            if (!isInList(showId)) {
+                              trackEvent('watchlist_add', {
+                                showId: show.id,
+                                showTitle: show.title,
+                                variant: 'full'
+                              });
+                            }
+                          }
+                        }}
                       >
-                        {isAddingToWatchlist ? (
-                          <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                        {isInList(showId || '') ? (
+                          <Heart className="w-5 h-5 fill-current" />
                         ) : (
                           <Heart className="w-5 h-5" />
                         )}
-                        {isAddingToWatchlist ? 'Adding...' : 'Add to Watchlist'}
+                        {isInList(showId || '') ? 'In Watchlist' : 'Add to Watchlist'}
+                      </Button>
+
+                      {/* Reminder Button */}
+                      <Button
+                        size="lg"
+                        variant="outline"
+                        className="gap-3 text-lg font-semibold px-8 py-4 transition-all duration-200 hover:scale-105"
+                        style={{
+                          backgroundColor: isReminded(showId || '') ? (colors.accent + '20') : 'transparent',
+                          borderColor: colors.border,
+                          color: isReminded(showId || '') ? colors.accent : colors.textSecondary,
+                          borderRadius: radii.xl,
+                        }}
+                        onClick={async () => {
+                          if (!showId) return;
+                          await toggleRemind(showId);
+                          // No analytics event here yet; reserved for future schema
+                        }}
+                      >
+                        {isReminded(showId || '') ? (
+                          <BellOff className="w-5 h-5" />
+                        ) : (
+                          <Bell className="w-5 h-5" />
+                        )}
+                        {isReminded(showId || '') ? 'Reminder Set' : 'Remind Me'}
                       </Button>
 
                       <Button
@@ -435,6 +511,33 @@ export default function BrandedShowModal({
                             </span>
                           </div>
                         )}
+                      </motion.div>
+                    )}
+
+                    {/* Why we recommend this (editorial/contextual) */}
+                    {reason && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.7, duration: 0.3 }}
+                        role="note"
+                        aria-label="Why we recommend this"
+                      >
+                        <div
+                          className="mt-6 p-4"
+                          style={{
+                            backgroundColor: colors.backgroundCard,
+                            border: `1px solid ${colors.border}`,
+                            borderRadius: radii.lg,
+                          }}
+                        >
+                          <h4 className="text-base font-semibold mb-1" style={{ color: colors.text }}>
+                            Why we recommend this
+                          </h4>
+                          <p className="text-sm" style={{ color: colors.textSecondary }}>
+                            {reason}
+                          </p>
+                        </div>
                       </motion.div>
                     )}
                   </div>
@@ -520,6 +623,15 @@ export default function BrandedShowModal({
                         }}
                         onClick={() => {
                           if (platform.web_url) {
+                            // Track platform redirect with variant
+                            if (show) {
+                              trackEvent('platform_redirect', {
+                                showId: show.id,
+                                showTitle: show.title,
+                                platform: platform.provider_name,
+                                variant: 'full',
+                              });
+                            }
                             window.open(platform.web_url, '_blank');
                           } else {
                             handleWatchNow();
@@ -534,6 +646,9 @@ export default function BrandedShowModal({
                             }
                             alt={platform.provider_name}
                             className="w-5 h-5 object-contain"
+                            onError={(e) => {
+                              (e.currentTarget as HTMLImageElement).style.display = 'none';
+                            }}
                           />
                         ) : (
                           <ExternalLink className="w-5 h-5" />

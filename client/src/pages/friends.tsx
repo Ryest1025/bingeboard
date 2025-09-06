@@ -5,7 +5,9 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Users, UserPlus, Search, Heart, Share2 } from "lucide-react";
+import { Link } from "wouter";
 import SocialMediaConnections from "@/components/SocialMediaConnections";
+import AppLayout from "@/components/layouts/AppLayout";
 
 interface Friend {
   id: string;
@@ -24,7 +26,7 @@ export default function Friends() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[hsl(228,25%,3%)] via-[hsl(226,22%,6%)] to-[hsl(224,20%,8%)] p-4 pb-20">
+      <AppLayout>
         <div className="container mx-auto max-w-4xl">
           <div className="space-y-4">
             {[...Array(5)].map((_, i) => (
@@ -42,13 +44,13 @@ export default function Friends() {
             ))}
           </div>
         </div>
-      </div>
+      </AppLayout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[hsl(228,25%,3%)] via-[hsl(226,22%,6%)] to-[hsl(224,20%,8%)] p-4 pb-20">
-      <div className="container mx-auto max-w-4xl">
+    <AppLayout>
+      <div className="container mx-auto max-w-4xl px-4 md:px-6">
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-white mb-4 flex items-center">
@@ -58,10 +60,12 @@ export default function Friends() {
           
           {/* Action Buttons */}
           <div className="flex flex-wrap gap-3">
-            <Button className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600">
-              <UserPlus className="h-4 w-4 mr-2" />
-              Find Friends
-            </Button>
+            <Link href="/find-friends">
+              <Button className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600">
+                <UserPlus className="h-4 w-4 mr-2" />
+                Find Friends
+              </Button>
+            </Link>
             <Button variant="outline" className="border-slate-600 text-white hover:bg-slate-800">
               <Search className="h-4 w-4 mr-2" />
               Search
@@ -98,10 +102,12 @@ export default function Friends() {
                   <p className="text-gray-400 mb-6 max-w-md mx-auto">
                     Connect with friends to share your watching experience and discover new shows together.
                   </p>
-                  <Button className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600">
-                    <UserPlus className="h-4 w-4 mr-2" />
-                    Find Friends
-                  </Button>
+                  <Link href="/find-friends">
+                    <Button className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600">
+                      <UserPlus className="h-4 w-4 mr-2" />
+                      Find Friends
+                    </Button>
+                  </Link>
                 </CardContent>
               </Card>
             ) : (
@@ -182,17 +188,10 @@ export default function Friends() {
           </TabsContent>
 
           <TabsContent value="social" className="space-y-4">
-            <Card className="glass-dark border-slate-700">
-              <CardContent className="p-8 text-center">
-                <Share2 className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-400">
-                  Social media integration coming soon!
-                </p>
-              </CardContent>
-            </Card>
+            <SocialMediaConnections />
           </TabsContent>
         </Tabs>
       </div>
-    </div>
+    </AppLayout>
   );
 }

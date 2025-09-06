@@ -66,7 +66,7 @@ const RecentSearchesComponent: React.FC<RecentSearchesProps> = ({ searches, onSe
       <div className="flex flex-wrap gap-2">
         {searches.map((s, i) => {
           const active = i === activeIndex;
-            const id = listbox ? `${baseId}-option-${i}` : undefined;
+          const id = listbox ? `${baseId}-option-${i}` : undefined;
           return (
             <motion.div
               key={`recent-search-${i}-${s}`}

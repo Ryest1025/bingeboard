@@ -24,12 +24,12 @@ import {
   ExternalLink,
   QrCode 
 } from "lucide-react";
-import { 
-  SiFacebook, 
-  SiTwitter, 
-  SiWhatsapp, 
+import {
+  SiFacebook,
+  SiWhatsapp,
   SiTelegram,
-  SiReddit
+  SiReddit,
+  SiX
 } from "react-icons/si";
 
 interface ShareButtonProps {
@@ -216,8 +216,8 @@ export default function ShareButton({
                 className="gap-2"
                 onClick={() => openSocialShare("twitter")}
               >
-                <SiTwitter className="w-4 h-4 text-blue-400" />
-                Twitter
+                <SiX className="w-4 h-4 text-blue-400" />
+                X (Twitter)
               </Button>
               <Button
                 variant="outline"

@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BingeBoard Mobile Access - QR Code</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #1e293b, #0f172a);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .qr-code {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            display: inline-block;
+        }
+
+        .url {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            word-break: break-all;
+            font-family: monospace;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .instructions {
+            max-width: 400px;
+            line-height: 1.6;
+            margin-top: 20px;
+        }
+
+        h1 {
+            color: #ef4444;
+            margin-bottom: 10px;
+        }
+
+        .step {
+            background: rgba(239, 68, 68, 0.1);
+            border-left: 4px solid #ef4444;
+            padding: 10px 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>🎬 BingeBoard Mobile Access</h1>
+        <p>Scan this QR code with your phone to access your enhanced discover page!</p>
+
+        <div class="qr-code">
+            <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https://fuzzy-xylophone-5g97jqp4vq9wf4jjr-5000.app.github.dev"
+                alt="QR Code for BingeBoard Mobile" style="display: block;">
+        </div>
+
+        <div class="url">
+            <strong>Direct URL:</strong><br>
+            https://fuzzy-xylophone-5g97jqp4vq9wf4jjr-5000.app.github.dev
+        </div>
+
+        <div class="instructions">
+            <div class="step">
+                <strong>📱 Step 1:</strong> Open your phone's camera app
+            </div>
+            <div class="step">
+                <strong>📷 Step 2:</strong> Point camera at QR code above
+            </div>
+            <div class="step">
+                <strong>🔗 Step 3:</strong> Tap the notification/link that appears
+            </div>
+            <div class="step">
+                <strong>🎉 Step 4:</strong> Enjoy your mobile BingeBoard experience!
+            </div>
+        </div>
+
+        <p style="margin-top: 30px; opacity: 0.8;">
+            <em>Features: Enhanced animations, mobile-optimized layouts, touch gestures, and floating actions!</em>
+        </p>
+    </div>
+</body>
+
+</html>

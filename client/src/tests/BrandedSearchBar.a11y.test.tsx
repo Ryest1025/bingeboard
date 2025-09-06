@@ -1,6 +1,8 @@
 import React from 'react';
 import { render, fireEvent, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { ModalVariantProvider } from '@/context/ModalVariantContext';
+import { DashboardFilterProvider } from '@/components/dashboard/filters/DashboardFilterProvider';
 import { describe, it, expect, vi } from 'vitest';
 import BrandedSearchBar from '@/components/search/BrandedSearchBar';
 import { getA11ySnapshot } from './a11ySnapshot.util';
@@ -24,9 +26,31 @@ vi.mock('framer-motion', () => ({
   AnimatePresence: ({ children }: any) => children
 }));
 
+vi.mock('@/hooks/useAuth', () => {
+  const mockValue = {
+    user: null,
+    authState: { isAuthenticated: false, user: null, loading: false },
+    signIn: vi.fn(),
+    signOut: vi.fn(),
+  };
+  return {
+    __esModule: true,
+    default: () => mockValue,
+    useAuth: () => mockValue,
+  };
+});
+
 function renderWithClient(ui: React.ReactElement) {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  return render(<QueryClientProvider client={qc}>{ui}</QueryClientProvider>);
+  return render(
+    <QueryClientProvider client={qc}>
+      <DashboardFilterProvider>
+        <ModalVariantProvider>
+          {ui}
+        </ModalVariantProvider>
+      </DashboardFilterProvider>
+    </QueryClientProvider>
+  );
 }
 
 describe('BrandedSearchBar accessibility snapshot', () => {

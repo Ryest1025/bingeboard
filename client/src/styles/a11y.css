@@ -1,0 +1,12 @@
+:root {
+  /* Brand-configurable focus ring color; override in themes if needed */
+  --bb-focus-ring: #3b82f6; /* default Tailwind blue-500 */
+}
+
+/* High-contrast mode support */
+@media (forced-colors: active) {
+  :root {
+    /* Use system color for better visibility */
+    --bb-focus-ring: Highlight;
+  }
+}

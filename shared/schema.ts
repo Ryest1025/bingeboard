@@ -181,8 +181,8 @@ export const activities = pgTable("activities", {
   id: serial("id").primaryKey(),
   userId: varchar("user_id").references(() => users.id).notNull(),
   showId: integer("show_id").references(() => shows.id),
-  activityType: varchar("activity_type", { 
-    enum: ["added_to_watchlist", "finished_show", "rated_show", "updated_progress", "started_watching", "sent_invitation"] 
+  activityType: varchar("activity_type", {
+    enum: ["added_to_watchlist", "finished_show", "rated_show", "updated_progress", "started_watching", "sent_invitation"]
   }).notNull(),
   content: text("content"),
   metadata: jsonb("metadata"),
@@ -229,8 +229,8 @@ export const upcomingReleases = pgTable("upcoming_releases", {
   seasonNumber: integer("season_number"),
   episodeNumber: integer("episode_number").default(1),
   releaseDate: timestamp("release_date").notNull(),
-  releaseType: varchar("release_type", { 
-    enum: ["season_premiere", "series_premiere", "season_finale", "special_episode", "movie"] 
+  releaseType: varchar("release_type", {
+    enum: ["season_premiere", "series_premiere", "season_finale", "special_episode", "movie"]
   }).notNull(),
   title: varchar("title"),
   description: text("description"),
@@ -246,8 +246,8 @@ export const releaseReminders = pgTable(
     id: serial("id").primaryKey(),
     userId: varchar("user_id").references(() => users.id).notNull(),
     releaseId: integer("release_id").references(() => upcomingReleases.id).notNull(),
-    reminderType: varchar("reminder_type", { 
-      enum: ["day_before", "week_before", "on_release"] 
+    reminderType: varchar("reminder_type", {
+      enum: ["day_before", "week_before", "on_release"]
     }).notNull(),
     isTriggered: boolean("is_triggered").default(false),
     triggerDate: timestamp("trigger_date").notNull(),
@@ -262,8 +262,8 @@ export const releaseReminders = pgTable(
 export const notifications = pgTable("notifications", {
   id: serial("id").primaryKey(),
   userId: varchar("user_id").references(() => users.id).notNull(),
-  type: varchar("type", { 
-    enum: ["release_reminder", "friend_activity", "recommendation", "system", "sports_reminder"] 
+  type: varchar("type", {
+    enum: ["release_reminder", "friend_activity", "recommendation", "system", "sports_reminder"]
   }).notNull(),
   title: varchar("title").notNull(),
   message: text("message").notNull(),

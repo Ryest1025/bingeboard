@@ -48,6 +48,7 @@ interface StreamingPlatform {
 interface WatchNowButtonProps {
   show: {
     title: string;
+  id?: number; // optional internal id (legacy)
     tmdbId?: number;
     streamingPlatforms?: StreamingPlatform[];
   };
@@ -76,19 +77,17 @@ export default function WatchNowButton({
   const handleTrailerClick = async () => {
     setLoadingTrailer(true);
     try {
-      const trailer = await getBestTrailer(show.tmdbId || show.id, 'tv');
+      if (!show.tmdbId) {
+        setLoadingTrailer(false);
+        return; // cannot load trailer without id
+      }
+      const trailer = await getBestTrailer(show.tmdbId, 'tv');
       setTrailerData(trailer);
       if (trailer) {
         setShowTrailerModal(true);
         // Track trailer view
-        if (user) {
-          await trackTrailerView(
-            show.tmdbId || show.id,
-            trailer.key,
-            user.id,
-            show.title,
-            !hasAdFreeTrailers
-          );
+        if (user && show.tmdbId) {
+          await trackTrailerView(show.tmdbId, trailer.key, user.id, show.title, !hasAdFreeTrailers);
         }
       }
     } catch (error) {
@@ -114,8 +113,9 @@ export default function WatchNowButton({
         size={size}
         className={`flex items-center gap-2 ${className}`}
         onClick={() => {
+          if (!show.tmdbId) return;
           if (user && hasAffiliateSupport(primaryPlatform.provider_name)) {
-            openAffiliateLink(primaryPlatform.provider_name, user.id, show.tmdbId || show.id, show.title);
+            openAffiliateLink(primaryPlatform.provider_name, user.id, show.tmdbId, show.title);
           } else {
             openStreamingApp(primaryPlatform.provider_name, show.title, show.tmdbId);
           }
@@ -148,8 +148,9 @@ export default function WatchNowButton({
           <>
             <DropdownMenuItem
               onClick={() => {
+                if (!show.tmdbId) return;
                 if (user && hasAffiliateSupport(primaryPlatform.provider_name)) {
-                  openAffiliateLink(primaryPlatform.provider_name, user.id, show.tmdbId || show.id, show.title);
+                  openAffiliateLink(primaryPlatform.provider_name, user.id, show.tmdbId, show.title);
                 } else {
                   openStreamingApp(primaryPlatform.provider_name, show.title, show.tmdbId);
                 }
@@ -217,8 +218,9 @@ export default function WatchNowButton({
             <DropdownMenuItem
               key={platform.provider_id}
               onClick={() => {
+                if (!show.tmdbId) return;
                 if (user && hasAffiliateSupport(platform.provider_name)) {
-                  openAffiliateLink(platform.provider_name, user.id, show.tmdbId || show.id, show.title);
+                  openAffiliateLink(platform.provider_name, user.id, show.tmdbId, show.title);
                 } else {
                   openStreamingApp(platform.provider_name, show.title, show.tmdbId);
                 }

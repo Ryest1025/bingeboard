@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { Loader2, Filter, ChevronDown, ChevronUp, ChevronRight } from "lucide-react";
 
@@ -26,6 +27,12 @@ interface Props {
   activeTab?: string;
   onActiveTabChange?: (tab: string) => void;
   onFilterSummaryRender?: (summary: JSX.Element | null) => void;
+  // New adaptive/UX props
+  allowedGenres?: string[];
+  allowedPlatforms?: string[];
+  allowedCountries?: string[];
+  onHoverFilter?: (category: keyof FilterValues, value: string | null) => void;
+  showSearchBar?: boolean;
 }
 
 export default function EnhancedFilterSystem({
@@ -39,7 +46,12 @@ export default function EnhancedFilterSystem({
   compactMode = false,
   activeTab,
   onActiveTabChange,
-  onFilterSummaryRender
+  onFilterSummaryRender,
+  allowedGenres,
+  allowedPlatforms,
+  allowedCountries,
+  onHoverFilter,
+  showSearchBar
 }: Props) {
   const [localFilters, setLocalFilters] = useLocalStorage<FilterValues>(persistKey, {
     genres: [],
@@ -50,6 +62,7 @@ export default function EnhancedFilterSystem({
 
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
   const [currentTab, setCurrentTab] = useState(activeTab || 'genres'); // Default to genres tab
+  const [searchTerm, setSearchTerm] = useState("");
 
   // Collapsible sections state for non-compact mode
   const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({
@@ -235,6 +248,24 @@ export default function EnhancedFilterSystem({
     filterKey: keyof FilterValues;
   }) => {
     const isCollapsed = collapsedSections[filterKey];
+    // Apply adaptive filtering and local search
+    const applyAllowed = (arr: any[]) => {
+      if (!arr) return [];
+      if (filterKey === 'genres' && Array.isArray(allowedGenres) && allowedGenres.length) {
+        arr = arr.filter((i) => allowedGenres?.some(g => g.toLowerCase() === String(i.name).toLowerCase()));
+      }
+      if (filterKey === 'platforms' && Array.isArray(allowedPlatforms) && allowedPlatforms.length) {
+        arr = arr.filter((i) => allowedPlatforms?.some(p => p.toLowerCase() === String(i.name).toLowerCase()));
+      }
+      if (filterKey === 'countries' && Array.isArray(allowedCountries) && allowedCountries.length) {
+        arr = arr.filter((i) => allowedCountries?.some(c => c.toLowerCase() === String(i.name).toLowerCase()));
+      }
+      return arr;
+    };
+
+    const filteredItems = applyAllowed(items)?.filter((i: any) =>
+      searchTerm ? String(i.name).toLowerCase().includes(searchTerm.toLowerCase()) : true
+    );
 
     return (
       <div className={compactMode ? "space-y-2" : "space-y-3"}>
@@ -264,15 +295,17 @@ export default function EnhancedFilterSystem({
             </Badge>
           )}
         </div>
-        {(!isCollapsed || compactMode) && (
+    {(!isCollapsed || compactMode) && (
           <div className="flex flex-wrap gap-2 overflow-x-auto snap-x snap-mandatory scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800 pb-1 md:overflow-visible">
-            {items?.map((item: any, index: number) => (
+      {filteredItems?.map((item: any, index: number) => (
               <Button
                 key={item.id || item.name || `${filterKey}-${index}`}
                 size={compactMode ? "sm" : "sm"}
                 onClick={() => toggle(filterKey, item.name)}
                 variant={localFilters[filterKey].includes(item.name) ? "default" : "outline"}
-                className={`${compactMode ? "text-xs h-7" : "h-8"} min-w-[48px] snap-start flex-shrink-0 touch-manipulation select-none`}
+        className={`${compactMode ? "text-[11px] h-6 px-2" : "h-8"} min-w-[44px] snap-start flex-shrink-0 touch-manipulation select-none`}
+        onMouseEnter={() => onHoverFilter?.(filterKey, item.name)}
+        onMouseLeave={() => onHoverFilter?.(filterKey, null)}
               >
                 {item.name}
               </Button>
@@ -284,12 +317,12 @@ export default function EnhancedFilterSystem({
   };
 
   return (
-    <Card className={`w-full ${compactMode ? 'p-1 rounded-lg shadow border border-gray-700 bg-gray-850' : className}`}>
-      <CardHeader className={compactMode ? "pb-2 px-2" : ""}>
+  <Card className={`w-full ${compactMode ? 'p-0 rounded-md shadow-none border-0 bg-transparent' : className}`}>
+      <CardHeader className={compactMode ? "py-1 px-2" : ""}>
         <div className="flex items-center justify-between">
-          <CardTitle className={`flex items-center gap-2 ${compactMode ? "text-sm font-semibold" : ""}`}>
+          <CardTitle className={`flex items-center gap-2 ${compactMode ? "text-xs font-semibold" : ""}`}>
             <Filter className="h-3 w-3" />
-            <span className={compactMode ? "text-xs" : ""}>Filter Content</span>
+            <span className={compactMode ? "text-xs" : ""}>Filters</span>
             {activeFilterCount > 0 && (
               <Badge className="ml-2 bg-blue-600 text-white text-xs px-2 py-0.5">
                 {activeFilterCount}
@@ -301,7 +334,7 @@ export default function EnhancedFilterSystem({
               variant="ghost"
               size="sm"
               onClick={() => setIsExpanded(!isExpanded)}
-              className="h-7 w-7 p-0"
+              className="h-6 w-6 p-0"
             >
               {isExpanded ? (
                 <ChevronUp className="h-3 w-3" />
@@ -312,7 +345,7 @@ export default function EnhancedFilterSystem({
           )}
         </div>
         {/* Filter Summary */}
-        {showFilterSummary && activeFilterCount > 0 && (
+        {showFilterSummary && !compactMode && activeFilterCount > 0 && (
           <div className="text-xs text-muted-foreground mt-1">
             <div className="flex items-center justify-between">
               <span>Active Filters: {activeFilterCount} selected</span>
@@ -351,11 +384,21 @@ export default function EnhancedFilterSystem({
         )}
       </CardHeader>
       {(!compactMode || isExpanded) && (
-        <CardContent className={`space-y-3 ${compactMode ? "pt-0 px-2 pb-2" : ""}`}>
+        <CardContent className={`space-y-3 ${compactMode ? "pt-1 px-2 pb-2" : ""}`}>
+          {showSearchBar && (
+            <div className="mb-2">
+              <Input
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Search filters..."
+                className="h-8 text-xs bg-gray-900/60 border-gray-700/50"
+              />
+            </div>
+          )}
 
           {/* Filter Tabs UI - Only show if compact mode */}
           {compactMode && (
-            <div className="flex gap-1 mb-3 overflow-x-auto snap-x snap-mandatory scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800 pb-1">
+            <div className="flex gap-1 mb-2 overflow-x-auto snap-x snap-mandatory scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800 pb-1">
               {[
                 { key: "genres", label: "Genres" },
                 { key: "platforms", label: "Platforms" },
@@ -367,7 +410,7 @@ export default function EnhancedFilterSystem({
                   variant={currentTab === tab.key ? "default" : "outline"}
                   size="sm"
                   onClick={() => setCurrentTab(tab.key)}
-                  className="text-xs h-6 px-2 snap-start flex-shrink-0 min-w-[60px] touch-manipulation"
+                  className="text-[11px] h-6 px-2 snap-start flex-shrink-0 min-w-[56px] touch-manipulation"
                 >
                   {tab.label}
                 </Button>
