@@ -69,10 +69,25 @@ function Router() {
   // Control Premium onboarding visibility
   const [showPremiumOnboarding, setShowPremiumOnboarding] = useState(false);
 
-  // DISABLE ONBOARDING COMPLETELY - User has already completed it
+  // Smart onboarding logic - show for new users or when they haven't seen it yet
   useEffect(() => {
-    setShowPremiumOnboarding(false); // Never show onboarding
-  }, []);  // Remove loading screen after React mounts
+    if (isAuthenticated && user) {
+      const hasSeenOnboarding = localStorage.getItem(`onboarding-completed-${user.id || user.email}`);
+      const isPremiumUser = user.subscription?.tier === 'premium' || user.isPremium;
+      
+      // Show onboarding if:
+      // 1. User hasn't seen it yet, OR
+      // 2. User is premium and we want to show premium features
+      if (!hasSeenOnboarding || (isPremiumUser && !hasSeenOnboarding)) {
+        console.log('🎯 Showing premium onboarding for user:', { 
+          userId: user.id || user.email, 
+          hasSeenOnboarding: !!hasSeenOnboarding,
+          isPremium: isPremiumUser 
+        });
+        setShowPremiumOnboarding(true);
+      }
+    }
+  }, [isAuthenticated, user]);  // Remove loading screen after React mounts
   useEffect(() => {
     const loadingScreen = document.getElementById('loadingScreen');
     if (loadingScreen) {
@@ -186,6 +201,7 @@ function Router() {
               <Route path="/notifications-demo" component={NotificationsDemo} />
               <Route path="/notifications" component={NotificationCenter} />
               <Route path="/import-history" component={ImportHistory} />
+              <Route path="/test-personalized" component={lazy(() => import("@/pages/test-personalized"))} />
               <Route path="/mobile-diagnostic" component={MobileDiagnostic} />
               <Route path="/mobile-hub" component={MobileHub} />
               <Route path="/components-demo" component={ComponentsDemo} />
@@ -219,6 +235,10 @@ function Router() {
           isOpen={showPremiumOnboarding}
           onComplete={() => {
             console.log('🎉 Premium onboarding completed!');
+            // Mark onboarding as completed for this user
+            if (user?.id || user?.email) {
+              localStorage.setItem(`onboarding-completed-${user.id || user.email}`, 'true');
+            }
             setShowPremiumOnboarding(false);
             // Refresh user data to update onboarding status
             // This should be handled by the onboarding component's API calls

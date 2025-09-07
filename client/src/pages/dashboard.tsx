@@ -538,18 +538,49 @@ function Dashboard() {
     refetchOnWindowFocus: false,
   });
 
-  // Fetch AI recommendations filtered by genre
-  const { data: aiRecommendations, isLoading: aiLoading, error: aiError } = useQuery({
-    queryKey: ["/api/recommendations/ai", selectedRecommendationGenre],
-    queryFn: async () => {
-      console.log("🤖 Fetching AI recommendations for genre:", selectedRecommendationGenre);
+  // Real continue watching data using the new hook
+  const { data: continueWatchingData, isLoading: continueWatchingLoading } = useContinueWatching();
 
-      // Fallback to discover API with genre filtering if AI recommendations fail
+  // Determine if we should fetch AI recommendations (wait for user data to load)
+  const shouldFetchAiRecs = !!(
+    isAuthenticated && 
+    userPreferencesData && 
+    !preferencesError &&
+    continueWatchingData !== undefined // Can be null (empty) or have data, but shouldn't be undefined (loading)
+  );
+
+  // Fetch personalized AI recommendations 
+  const { data: aiRecommendations, isLoading: aiLoading, error: aiError } = useQuery({
+    queryKey: ["/api/recommendations/ai", userPreferencesData?.preferredGenres, continueWatchingData?.length],
+    queryFn: async () => {
+      console.log("🎯 Final AI request payload", {
+        genres: userPreferencesData?.preferredGenres,
+        history: continueWatchingData,
+        user: user?.id,
+      });
+
+      // Call AI recommendations with full user context
       try {
-        const aiRes = await fetch("/api/ai-recommendations", { credentials: 'include' });
+        const requestPayload = {
+          favoriteGenres: userPreferencesData?.preferredGenres || [],
+          mood: recommendationFilters.mood || 'discover',
+          viewingHistory: continueWatchingData || [],
+          userId: user?.id,
+          personalizedRequest: true
+        };
+
+        console.log("🤖 Fetching personalized AI recommendations:", requestPayload);
+
+        const aiRes = await fetch("/api/ai/recommendations", { 
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify(requestPayload)
+        });
+
         if (aiRes.ok) {
           const aiData = await aiRes.json();
-          console.log("✅ AI recommendations:", aiData.recommendations?.length || 0, "items");
+          console.log("✅ Personalized AI recommendations:", aiData.recommendations?.length || 0, "items");
 
           // Filter AI recommendations by genre if a specific genre is selected
           if (selectedRecommendationGenre !== "all" && aiData.recommendations) {
@@ -591,13 +622,10 @@ function Dashboard() {
         })) || []
       };
     },
-    enabled: !!isAuthenticated,
-    staleTime: 600000, // Cache for 10 minutes - longer cache for AI recommendations
+    enabled: shouldFetchAiRecs,
+    staleTime: 0,
     refetchOnWindowFocus: false,
   });
-
-  // Real continue watching data using the new hook
-  const { data: continueWatchingData, isLoading: continueWatchingLoading } = useContinueWatching();
 
   // Debug logging for continue watching data
   React.useEffect(() => {
@@ -1049,12 +1077,12 @@ function Dashboard() {
                     <div key={index} className="group cursor-pointer">
                       <div className="bg-gray-800 aspect-[2/3] mb-2 relative overflow-hidden hover:scale-105 transition-transform">
                         <img
-                          src={showPoster || '/fallback-poster.jpg'}
+                          src={showPoster || '/images/no-poster.svg'}
                           alt={showTitle}
                           className="w-full h-full object-cover"
                           onClick={() => handleShowDetails(show)}
                           onError={(e) => {
-                            e.currentTarget.src = '/fallback-poster.jpg';
+                            e.currentTarget.src = '/images/no-poster.svg';
                           }}
                         />
 
@@ -1354,7 +1382,7 @@ function Dashboard() {
                         >
                           <div className="w-8 h-8 rounded overflow-hidden flex-shrink-0">
                             <img
-                              src={getShowPosterUrl(item)}
+                              src={getShowPosterUrl(item) || '/images/no-poster.svg'}
                               alt={item.title}
                               className="w-full h-full object-cover"
                               onLoad={() => {
@@ -1362,16 +1390,7 @@ function Dashboard() {
                               }}
                               onError={(e) => {
                                 console.error(`❌ Poster failed to load for ${item.title}:`, getShowPosterUrl(item));
-                                console.log('Item data:', item);
-                                // Fallback to play icon if poster fails to load
-                                e.currentTarget.style.display = 'none';
-                                e.currentTarget.parentElement!.innerHTML = `
-                                  <div class="w-8 h-8 bg-blue-600 rounded flex items-center justify-center">
-                                    <svg class="h-4 w-4 text-white" fill="currentColor" viewBox="0 0 24 24">
-                                      <path d="M8 5v14l11-7z"/>
-                                    </svg>
-                                  </div>
-                                `;
+                                e.currentTarget.src = '/images/no-poster.svg';
                               }}
                             />
                           </div>

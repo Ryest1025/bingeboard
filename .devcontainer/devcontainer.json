@@ -1,55 +1,16 @@
 {
-  "name": "BingeBoard Fast",
-  "image": "mcr.microsoft.com/devcontainers/typescript-node:18",
-  "features": {
-    "ghcr.io/devcontainers/features/github-cli:1": {},
-    "ghcr.io/devcontainers/features/git:1": {}
-  },
-  "forwardPorts": [3000, 5000],
-  "portsAttributes": {
-    "3000": {
-      "label": "BingeBoard App",
-      "onAutoForward": "notify"
-    },
-    "5000": {
-      "label": "API Server",
-      "onAutoForward": "silent"
-    }
-  },
-  "postCreateCommand": "npm install && npm run build",
+  "name": "BingeBoard Dev",
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:18",
+  "platform": "linux/arm64",
   "customizations": {
     "vscode": {
       "extensions": [
-        "GitHub.copilot",
-        "GitHub.copilot-chat",
-        "ms-vscode.vscode-typescript-next",
-        "bradlc.vscode-tailwindcss",
+        "dbaeumer.vscode-eslint",
         "esbenp.prettier-vscode"
-      ],
-      "settings": {
-        "editor.formatOnSave": true,
-        "editor.codeActionsOnSave": {
-          "source.fixAll.eslint": true
-        },
-        "typescript.preferences.importModuleSpecifier": "relative",
-        "github.copilot.enable": {
-          "*": true,
-          "yaml": false,
-          "plaintext": false
-        },
-        "files.exclude": {
-          "**/node_modules": true,
-          "**/.git": true,
-          "**/dist": true,
-          "**/build": true,
-          "**/*.sqlite": true,
-          "**/*.db": true
-        }
-      }
+      ]
     }
   },
   "mounts": [
     "source=bingeboard-node-modules,target=${containerWorkspaceFolder}/node_modules,type=volume"
-  ],
-  "remoteUser": "vscode"
+  ]
 }

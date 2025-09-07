@@ -30,6 +30,10 @@ import { searchStreamingAvailability, getStreamingByImdbId } from "./clients/ute
 import { registerViewingHistoryRoutes } from "./routes/viewing-history";
 import { registerUserPreferencesRoutes } from "./routes/user-preferences";
 import { registerFilterRoutes } from "./routes/filters";
+import { registerAIRecommendationRoutes } from "./routes/aiRecommendations";
+import { registerEnhancedRecommendationRoutes } from "./routes/enhancedRecommendations";
+import { registerABTestingRoutes } from "./routes/abTesting";
+import { DatabaseIntegrationService } from "./services/databaseIntegration";
 import multer from "multer";
 import csvParser from "csv-parser";
 import { Readable } from "stream";
@@ -74,6 +78,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json({ status: 'OK', timestamp: new Date().toISOString() });
   });
 
+  // Initialize Enhanced Database Integration Service
+  console.log('🗄️ Initializing Enhanced Database Integration Service...');
+  const dbService = new DatabaseIntegrationService({
+    type: process.env.NODE_ENV === 'production' ? 'postgres' : 'sqlite',
+    sqlitePath: './dev.db',
+    postgresUrl: process.env.DATABASE_URL
+  });
+  console.log('✅ Database Integration Service initialized');
+
   // CRITICAL: Set up authentication and session middleware FIRST
   // This must happen before any routes that use isAuthenticated middleware
   await setupAuth(app);
@@ -89,6 +102,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Filter Data Routes for Enhanced Filter System
   registerFilterRoutes(app);
+
+  // AI Recommendation Routes
+  registerAIRecommendationRoutes(app);
+  registerEnhancedRecommendationRoutes(app);
+
+  // A/B Testing Framework Routes
+  registerABTestingRoutes(app, dbService);
+  console.log('🧪 A/B Testing Framework routes registered');
 
   // Content API Routes for Enhanced Filter System
   app.get('/api/content/dashboard', getDashboardContent);
