@@ -56,6 +56,7 @@ import MobileHub from "@/pages/mobile-hub";
 import MobileApp from "@/pages/mobile-app";
 import ComponentsDemo from "@/pages/components-demo";
 import Dashboard from "@/pages/dashboard";
+import ABTestingPage from "@/pages/ab-testing";
 /**
  * 🔒 CLEANED UP: Removed duplicate auth pages and test components
  * Only keeping essential auth functionality in login-simple.tsx
@@ -181,6 +182,7 @@ function Router() {
           {isAuthenticated ? (
             <>
               <Route path="/dashboard" component={Dashboard} />
+              <Route path="/ab-testing" component={ABTestingPage} />
               <Route path="/discover" component={ModernDiscover} />
               <Route path="/activity" component={Activity} />
               <Route path="/friends" component={Friends} />

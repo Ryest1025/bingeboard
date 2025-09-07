@@ -36,6 +36,7 @@ import {
 } from "lucide-react";
 import EnhancedFilterSystem from "../components/common/EnhancedFilterSystem";
 import CollectionManager from "../components/common/CollectionManager";
+import ABTestingDashboard from "../components/ab-testing/ABTestingDashboard";
 
 export default function WorkingDashboard() {
   const [user, setUser] = useState<any>(null);
@@ -187,6 +188,12 @@ export default function WorkingDashboard() {
                 <div className="flex items-center space-x-2 text-gray-300 hover:text-white transition-colors">
                   <Users className="h-4 w-4" />
                   <span className="font-medium">Social</span>
+                </div>
+              </Link>
+              <Link href="/ab-testing">
+                <div className="flex items-center space-x-2 text-gray-300 hover:text-white transition-colors">
+                  <BarChart3 className="h-4 w-4" />
+                  <span className="font-medium">A/B Testing</span>
                 </div>
               </Link>
             </nav>
@@ -347,6 +354,38 @@ export default function WorkingDashboard() {
                 <Compass className="h-4 w-4 mr-2" />
                 Discover Shows
               </Button>
+            </CardContent>
+          </Card>
+
+          {/* A/B Testing Dashboard */}
+          <Card className="glass-effect border-slate-700/50 hover:border-slate-600/50 transition-all duration-300 hover:shadow-xl hover:shadow-teal-500/5 group">
+            <CardHeader>
+              <CardTitle className="text-white flex items-center space-x-2">
+                <BarChart3 className="h-5 w-5 text-teal-400 group-hover:scale-110 transition-transform" />
+                <span>A/B Testing</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3 text-gray-300 mb-4">
+                <div className="flex justify-between items-center">
+                  <span>Active Tests:</span>
+                  <Badge className="bg-green-600">2</Badge>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span>ML Performance:</span>
+                  <Badge className="bg-teal-600">+25.7%</Badge>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span>Confidence:</span>
+                  <Badge className="bg-blue-600">95.7%</Badge>
+                </div>
+              </div>
+              <Link href="/ab-testing">
+                <Button className="w-full bg-gradient-to-r from-teal-600 to-blue-600 hover:from-teal-700 hover:to-blue-700 transition-all duration-200 hover:scale-105">
+                  <BarChart3 className="h-4 w-4 mr-2" />
+                  View Dashboard
+                </Button>
+              </Link>
             </CardContent>
           </Card>
 
