@@ -1,21 +1,20 @@
-import React, { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Play, Plus, Star, X, ExternalLink } from "lucide-react";
-import { getShowTitle, getShowPosterUrl, getShowOverview, getShowRating, getStreamingPlatforms } from "@/utils/show-utils";
-
-interface Show {
-  id: number;
-  name?: string;
-  title?: string;
-  overview?: string;
-  poster_path?: string;
-  backdrop_path?: string;
-  vote_average?: number;
-  genre_ids?: number[];
-  media_type?: string;
-  streaming?: any[];
-}
+import React, { useState } from 'react';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Play, Plus, Star, X, ExternalLink } from 'lucide-react';
+import type { Show } from '@/lib/utils';
+import {
+  getShowTitle,
+  getShowPosterUrl,
+  getShowOverview,
+  getShowRating,
+  getStreamingPlatforms,
+} from '@/utils/show-utils';
 
 interface RecommendationModalProps {
   show: Show | null;
@@ -30,7 +29,7 @@ export default function RecommendationModal({
   open,
   onClose,
   onAddToList,
-  onWatchNow
+  onWatchNow,
 }: RecommendationModalProps) {
   const [trailerModalOpen, setTrailerModalOpen] = useState(false);
 
@@ -65,7 +64,9 @@ export default function RecommendationModal({
         <DialogContent className="max-w-4xl bg-slate-900 text-white border border-slate-700">
           <DialogHeader>
             <div className="flex items-center justify-between">
-              <DialogTitle className="text-2xl font-bold text-white mb-2">{title}</DialogTitle>
+              <DialogTitle className="text-2xl font-bold text-white mb-2">
+                {title}
+              </DialogTitle>
               <Button
                 variant="ghost"
                 size="sm"
@@ -79,13 +80,15 @@ export default function RecommendationModal({
 
           <div className="flex flex-col lg:flex-row gap-6">
             <img
-              src={poster || "/placeholder.jpg"}
+              src={poster || '/placeholder.jpg'}
               alt={title}
               className="w-full lg:w-1/3 rounded-lg object-cover"
             />
 
             <div className="flex flex-col gap-4 lg:w-2/3">
-              <p className="text-gray-300 text-sm line-clamp-6">{overview || "No description available"}</p>
+              <p className="text-gray-300 text-sm line-clamp-6">
+                {overview || 'No description available'}
+              </p>
 
               <div className="flex items-center gap-4 flex-wrap">
                 <Button
@@ -114,36 +117,45 @@ export default function RecommendationModal({
 
               <div className="flex items-center gap-2 text-yellow-400 text-sm">
                 <Star className="w-4 h-4" />
-                <span>{rating || "N/A"}</span>
+                <span>{rating || 'N/A'}</span>
               </div>
 
               <div className="text-sm text-gray-400">
-                Genre: {show.genre_ids?.map((id: number) => `Genre ${id}`).join(", ") || "Unknown"}
+                Genre:{' '}
+                {show.genre_ids
+                  ?.map((id: number) => `Genre ${id}`)
+                  .join(', ') || 'Unknown'}
               </div>
 
               {/* Streaming Platforms */}
               {streamingPlatforms && streamingPlatforms.length > 0 && (
                 <div className="flex flex-col gap-2">
-                  <span className="text-sm font-medium text-gray-300">Available on:</span>
+                  <span className="text-sm font-medium text-gray-300">
+                    Available on:
+                  </span>
                   <div className="flex gap-2 flex-wrap">
-                    {streamingPlatforms.slice(0, 6).map((platform: any, index: number) => (
-                      <div
-                        key={index}
-                        className="flex items-center gap-2 bg-slate-800 rounded-lg px-3 py-2"
-                      >
-                        {platform.logo_path && (
-                          <img
-                            src={`https://image.tmdb.org/t/p/w45${platform.logo_path}`}
-                            alt={platform.provider_name}
-                            className="w-5 h-5 rounded"
-                          />
-                        )}
-                        <span className="text-xs text-gray-300">{platform.provider_name}</span>
-                        {platform.link && (
-                          <ExternalLink className="w-3 h-3 text-gray-500" />
-                        )}
-                      </div>
-                    ))}
+                    {streamingPlatforms
+                      .slice(0, 6)
+                      .map((platform: any, index: number) => (
+                        <div
+                          key={index}
+                          className="flex items-center gap-2 bg-slate-800 rounded-lg px-3 py-2"
+                        >
+                          {platform.logo_path && (
+                            <img
+                              src={`https://image.tmdb.org/t/p/w45${platform.logo_path}`}
+                              alt={platform.provider_name}
+                              className="w-5 h-5 rounded"
+                            />
+                          )}
+                          <span className="text-xs text-gray-300">
+                            {platform.provider_name}
+                          </span>
+                          {platform.link && (
+                            <ExternalLink className="w-3 h-3 text-gray-500" />
+                          )}
+                        </div>
+                      ))}
                   </div>
                 </div>
               )}
@@ -157,7 +169,9 @@ export default function RecommendationModal({
         <DialogContent className="max-w-4xl bg-slate-900 text-white border border-slate-700">
           <DialogHeader>
             <div className="flex items-center justify-between">
-              <DialogTitle className="text-xl font-bold text-white">{title} - Trailer</DialogTitle>
+              <DialogTitle className="text-xl font-bold text-white">
+                {title} - Trailer
+              </DialogTitle>
               <Button
                 variant="ghost"
                 size="sm"

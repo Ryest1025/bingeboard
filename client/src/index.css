@@ -1,5 +1,11 @@
 /* Consistent Typography */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+/* Unified Design System - MUST be imported first */
+@import './styles/unified-design-system.css';
+
+/* Enhanced Dashboard Styles */
+@import './styles/dashboard-modern.css';
 
 @tailwind base;
 @tailwind components;
@@ -265,15 +271,65 @@ p,
   --brand-sky: hsl(199, 89%, 48%);
   /* Sky Blue #0EA5E9 */
 
-  /* Sophisticated Dark Theme */
+  /* Light Theme Variables */
+  --background: hsl(0, 0%, 98%);
+  /* Light Background #FAFAFA */
+  --foreground: hsl(222, 84%, 5%);
+  /* Dark Text */
+  --surface: hsl(0, 0%, 100%);
+  /* White Surface */
+  --surface-elevated: hsl(0, 0%, 96%);
+  /* Light Elevated Surface */
+  --surface-hover: hsl(0, 0%, 94%);
+  /* Light Hover Surface */
+  --card: hsl(0, 0%, 100%);
+  --card-foreground: hsl(222, 84%, 5%);
+  --popover: hsl(0, 0%, 100%);
+  --popover-foreground: hsl(222, 84%, 5%);
+  --primary: hsl(217, 91%, 60%);
+  --primary-foreground: hsl(210, 40%, 98%);
+  --secondary: hsl(210, 40%, 96%);
+  --secondary-foreground: hsl(222, 47%, 11%);
+  --muted: hsl(210, 40%, 96%);
+  --muted-foreground: hsl(215, 16%, 47%);
+  --accent: hsl(210, 40%, 96%);
+  --accent-foreground: hsl(222, 47%, 11%);
+  --destructive: hsl(0, 84%, 60%);
+  --destructive-foreground: hsl(210, 40%, 98%);
+  --border: hsl(214, 32%, 91%);
+  --input: hsl(214, 32%, 91%);
+  --ring: hsl(217, 91%, 60%);
+}
+
+/* Dark Theme Variables */
+.dark {
   --background: hsl(228, 25%, 3%);
   /* Deep Charcoal #080B14 */
+  --foreground: hsl(210, 40%, 98%);
+  /* Light Text */
   --surface: hsl(226, 22%, 6%);
   /* Rich Black #0F1419 */
   --surface-elevated: hsl(224, 20%, 8%);
   /* Elevated Surface #161B26 */
   --surface-hover: hsl(222, 18%, 12%);
   /* Hover Surface #1F2937 */
+  --card: hsl(224, 20%, 8%);
+  --card-foreground: hsl(210, 40%, 98%);
+  --popover: hsl(224, 20%, 8%);
+  --popover-foreground: hsl(210, 40%, 98%);
+  --primary: hsl(217, 91%, 60%);
+  --primary-foreground: hsl(222, 84%, 5%);
+  --secondary: hsl(217, 32%, 17%);
+  --secondary-foreground: hsl(210, 40%, 98%);
+  --muted: hsl(217, 32%, 17%);
+  --muted-foreground: hsl(215, 20%, 65%);
+  --accent: hsl(217, 32%, 17%);
+  --accent-foreground: hsl(210, 40%, 98%);
+  --destructive: hsl(0, 62%, 30%);
+  --destructive-foreground: hsl(210, 40%, 98%);
+  --border: hsl(217, 32%, 17%);
+  --input: hsl(217, 32%, 17%);
+  --ring: hsl(217, 91%, 60%);
 
   --foreground: hsl(210, 40%, 98%);
   /* Pure White Text */
@@ -709,6 +765,45 @@ p,
 
 .scrollbar-thumb-teal-400::-webkit-scrollbar-thumb:hover {
   background: rgb(45, 212, 191);
+}
+
+/* Enhanced Dashboard Layout Scrollbars */
+.scrollbar-track-gray-900::-webkit-scrollbar-track {
+  background: rgb(17, 24, 39);
+}
+
+.scrollbar-thumb-gray-700::-webkit-scrollbar-thumb {
+  background: rgb(55, 65, 81);
+  border-radius: 4px;
+}
+
+.scrollbar-thumb-gray-600::-webkit-scrollbar-thumb:hover {
+  background: rgb(75, 85, 99);
+}
+
+/* Modern Dashboard Sidebar Scrollbars */
+.dashboard-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(55, 65, 81) rgb(17, 24, 39);
+}
+
+.dashboard-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.dashboard-scrollbar::-webkit-scrollbar-track {
+  background: rgb(17, 24, 39);
+  border-radius: 3px;
+}
+
+.dashboard-scrollbar::-webkit-scrollbar-thumb {
+  background: rgb(55, 65, 81);
+  border-radius: 3px;
+  transition: background-color 0.2s ease;
+}
+
+.dashboard-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgb(75, 85, 99);
 }
 
 @layer base {

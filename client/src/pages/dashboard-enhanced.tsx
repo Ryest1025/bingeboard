@@ -1,12 +1,44 @@
-import React, { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { useAuth } from "@/hooks/useAuth";
-import NavigationHeader from "@/components/navigation-header";
-import { Search, Play, Star, Clock, Users, Plus } from "lucide-react";
+import React, { useCallback, useMemo } from 'react';
+import { TooltipProvider } from '@/components/ui/tooltip';
+import { Skeleton } from '@/components/ui/skeleton';
+import { UniversalButton } from '@/components/ui/universal-button';
+import Toast from '@/components/toast';
+import RecommendationModal from '@/components/recommendation-modal';
+import ShowDetailsModal from '@/components/show-details-modal';
+import { ListSelectorModal } from '@/components/list-selector-modal';
+import {
+  DashboardFilterProvider,
+  useDashboardFilters,
+} from '@/components/dashboard/filters/DashboardFilterProvider';
+import { RecommendationFilters } from '@/components/dashboard/filters/RecommendationFilters';
+import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
+import { SpotlightHero } from '@/components/dashboard/SpotlightHero';
+import { RecommendationsGrid } from '@/components/dashboard/RecommendationsGrid';
+import { ContinueWatchingCarousel } from '@/components/dashboard/ContinueWatchingCarousel';
+import { FriendActivityPanel } from '@/components/dashboard/FriendActivityPanel';
+import {
+  fetchSpotlight,
+  fetchRecommendations,
+  fetchContinueWatching,
+  fetchFriendActivity,
+  clearSpotlightCache,
+} from '@/components/dashboard/api';
+import { type Show } from '@/lib/utils';
+import { useDashboardUIState } from '@/hooks/useDashboardUIState';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 export default function EnhancedDashboard() {
-  const { user, isLoading, isAuthenticated } = useAuth();
-  const [selectedGenre, setSelectedGenre] = useState("all");
+  return (
+    <DashboardFilterProvider>
+      <DashboardOrchestrator />
+    </DashboardFilterProvider>
+  );
+}
+
+function DashboardOrchestrator() {
+  const { recommendationFilters } = useDashboardFilters();
+  const queryClient = useQueryClient();
+  const [currentSpotlightIndex, setCurrentSpotlightIndex] = React.useState(0);
 
   // Fetch genres dynamically from TMDB
   const { data: genresData, isLoading: genresLoading } = useQuery({

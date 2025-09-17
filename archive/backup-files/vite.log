@@ -1,0 +1,7 @@
+nohup: ignoring input
+🔗 API proxy configured: /api -> http://127.0.0.1:5000
+
+  VITE v6.3.5  ready in 213 ms
+
+  ➜  Local:   http://localhost:3000/
+  ➜  Network: http://172.18.0.2:3000/

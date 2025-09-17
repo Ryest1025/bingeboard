@@ -1,67 +1,82 @@
 import { Request, Response } from 'express';
+import { TMDBService } from '../services/tmdb.js';
+import { MultiAPIStreamingService } from '../services/multiAPIStreamingService.js';
 
-// Mock data for demonstration - replace with real database queries
-const mockContent = [
-  {
-    id: 1,
-    title: "The Matrix",
-    poster_path: "/f89U3ADr1oiB1s9GkdPOEpXUk5H.jpg",
-    vote_average: 8.7,
-    release_date: "1999-03-30",
-    genre_ids: [28, 878],
-    overview: "A computer hacker learns from mysterious rebels about the true nature of his reality and his role in the war against its controllers."
-  },
-  {
-    id: 2,
-    title: "Inception",
-    poster_path: "/9gk7adHYeDvHkCSEqAvQNLV5Uge.jpg",
-    vote_average: 8.8,
-    release_date: "2010-07-16",
-    genre_ids: [28, 878, 53],
-    overview: "A thief who steals corporate secrets through the use of dream-sharing technology."
-  },
-  {
-    id: 3,
-    title: "Breaking Bad",
-    name: "Breaking Bad",
-    poster_path: "/ggFHVNu6YYI5L9pCfOacjizRGt.jpg",
-    vote_average: 9.5,
-    first_air_date: "2008-01-20",
-    genre_ids: [18, 80],
-    overview: "A high school chemistry teacher diagnosed with inoperable lung cancer turns to manufacturing and selling methamphetamine."
-  },
-  {
-    id: 4,
-    title: "Stranger Things",
-    name: "Stranger Things",
-    poster_path: "/49WJfeN0moxb9IPfGn8AIqMGskD.jpg",
-    vote_average: 8.7,
-    first_air_date: "2016-07-15",
-    genre_ids: [18, 9648, 878],
-    overview: "When a young boy vanishes, a small town uncovers a mystery involving secret experiments, terrifying supernatural forces, and one strange little girl."
-  }
-];
+// Initialize TMDB service
+const tmdbService = new TMDBService();
 
+// Genre mapping for better filtering
 const genreMap: Record<string, number[]> = {
   'Action': [28],
-  'Drama': [18],
-  'Science Fiction': [878],
-  'Thriller': [53],
+  'Adventure': [12],
+  'Animation': [16],
+  'Comedy': [35],
   'Crime': [80],
-  'Mystery': [9648]
+  'Documentary': [99],
+  'Drama': [18],
+  'Family': [10751],
+  'Fantasy': [14],
+  'History': [36],
+  'Horror': [27],
+  'Music': [10402],
+  'Mystery': [9648],
+  'Romance': [10749],
+  'Science Fiction': [878],
+  'TV Movie': [10770],
+  'Thriller': [53],
+  'War': [10752],
+  'Western': [37]
 };
 
-const platformMap: Record<string, string[]> = {
-  'Netflix': ['netflix'],
-  'Disney+': ['disney'],
-  'HBO Max': ['hbo'],
-  'Amazon Prime': ['amazon'],
-  'Hulu': ['hulu']
-};
+// Helper function to add streaming data to content items
+async function enhanceWithStreamingData(items: any[], batchSize: number = 5): Promise<any[]> {
+  const batches = [];
+  for (let i = 0; i < items.length; i += batchSize) {
+    batches.push(items.slice(i, i + batchSize));
+  }
+
+  const enhancedItems = [];
+  for (const batch of batches) {
+    const batchPromises = batch.map(async (item: any) => {
+      try {
+        const mediaType = item.name ? 'tv' : 'movie';
+        const title = item.title || item.name;
+        const streamingData = await MultiAPIStreamingService.getComprehensiveAvailability(
+          item.id,
+          title,
+          mediaType,
+          item.external_ids?.imdb_id
+        );
+
+        return {
+          ...item,
+          streaming_platforms: streamingData.platforms.slice(0, 5), // Top 5 platforms
+          streaming_available: streamingData.totalPlatforms > 0,
+          affiliate_supported: streamingData.affiliatePlatforms > 0,
+          streaming_count: streamingData.totalPlatforms,
+          free_platforms: streamingData.freePlatforms,
+          premium_platforms: streamingData.premiumPlatforms
+        };
+      } catch (error) {
+        console.warn(`Failed to get streaming data for ${item.title || item.name}:`, error);
+        return {
+          ...item,
+          streaming_available: false,
+          streaming_count: 0,
+          streaming_platforms: []
+        };
+      }
+    });
+
+    const enhancedBatch = await Promise.all(batchPromises);
+    enhancedItems.push(...enhancedBatch);
+  }
+
+  return enhancedItems;
+}
 
 /**
- * Dashboard content endpoint with enhanced filter support
- * Supports both comma-separated and array parameter formats
+ * Dashboard content endpoint with real TMDB data and streaming integration
  */
 export const getDashboardContent = async (req: Request, res: Response) => {
   try {
@@ -69,17 +84,17 @@ export const getDashboardContent = async (req: Request, res: Response) => {
       genres, platforms, countries, sports,
       'genres[]': genresArray, 'platforms[]': platformsArray,
       'countries[]': countriesArray, 'sports[]': sportsArray,
-      limit = '20', include_user_context = 'false'
+      limit = '20', include_user_context = 'false', include_streaming = 'true'
     } = req.query;
 
-    console.log('🎯 Dashboard content request:', {
+    console.log('🎯 Dashboard content request with real data:', {
       genres, platforms, countries, sports,
-      genresArray, platformsArray, countriesArray, sportsArray
+      genresArray, platformsArray, countriesArray, sportsArray,
+      include_streaming
     });
 
-    // Helper function to safely extract filter values (supports both formats)
+    // Helper function to safely extract filter values
     const extractFilterValues = (singleParam: any, arrayParam: any): string[] => {
-      // Priority: array format > comma-separated format
       if (arrayParam) {
         return Array.isArray(arrayParam) ? arrayParam : [arrayParam];
       }
@@ -89,7 +104,7 @@ export const getDashboardContent = async (req: Request, res: Response) => {
       return [];
     };
 
-    // Get filter values with support for both formats
+    // Get filter values
     const genreList = extractFilterValues(genres, genresArray);
     const platformList = extractFilterValues(platforms, platformsArray);
     const countryList = extractFilterValues(countries, countriesArray);
@@ -97,74 +112,107 @@ export const getDashboardContent = async (req: Request, res: Response) => {
 
     console.log('🔍 Parsed filters:', { genreList, platformList, countryList, sportsList });
 
-    // Start with base content
-    let filteredContent = [...mockContent];
+    // Fetch real data from TMDB
+    let content: any[] = [];
+    
+    try {
+      // Get trending content as base
+      const trendingTV = await tmdbService.getTrending('tv', 'week');
+      const trendingMovies = await tmdbService.getTrending('movie', 'week');
+      const popularTV = await tmdbService.getPopular('tv');
+      const popularMovies = await tmdbService.getPopular('movie');
 
-    // Filter by genres
-    if (genreList.length > 0) {
-      const genreIds = genreList.flatMap(genre => genreMap[genre.trim()] || []);
+      // Combine and deduplicate
+      const allContent = [
+        ...trendingTV.results.slice(0, 5),
+        ...trendingMovies.results.slice(0, 5),
+        ...popularTV.results.slice(0, 5),
+        ...popularMovies.results.slice(0, 5)
+      ];
 
-      if (genreIds.length > 0) {
-        filteredContent = filteredContent.filter(item =>
-          item.genre_ids.some(id => genreIds.includes(id))
-        );
-        console.log(`🎭 Filtered by genres [${genreList.join(', ')}]: ${filteredContent.length} results`);
-      }
-    }
-
-    // Filter by platforms (enhanced for future integration)
-    if (platformList.length > 0) {
-      console.log('🎬 Platform filtering requested:', platformList);
-      // Mock platform availability - in real implementation, integrate with JustWatch or similar
-      const platformMockData: Record<string, number[]> = {
-        'netflix': [1, 3, 4], // Mock show IDs available on Netflix
-        'hulu': [2, 3],
-        'disney+': [4],
-        'amazon prime': [1, 2, 3, 4]
-      };
-
-      const availableIds = new Set<number>();
-      platformList.forEach(platform => {
-        const ids = platformMockData[platform.toLowerCase()] || [];
-        ids.forEach((id: number) => availableIds.add(id));
+      // Remove duplicates based on ID and type
+      const contentMap = new Map();
+      allContent.forEach(item => {
+        const hasName = 'name' in item && item.name;
+        const key = `${item.id}-${hasName ? 'tv' : 'movie'}`;
+        if (!contentMap.has(key)) {
+          contentMap.set(key, {
+            ...item,
+            media_type: hasName ? 'tv' : 'movie'
+          });
+        }
       });
 
-      if (availableIds.size > 0) {
-        filteredContent = filteredContent.filter(item => availableIds.has(item.id));
-        console.log(`📺 Filtered by platforms [${platformList.join(', ')}]: ${filteredContent.length} results`);
+      content = Array.from(contentMap.values());
+    } catch (error) {
+      console.error('Error fetching TMDB data:', error);
+      // Fall back to minimal mock data if TMDB fails
+      content = [
+        {
+          id: 1,
+          title: "Popular Content",
+          overview: "Real-time content fetching temporarily unavailable",
+          vote_average: 7.5,
+          media_type: "movie"
+        }
+      ];
+    }
+
+    // Apply genre filtering
+    if (genreList.length > 0) {
+      const genreIds = genreList.flatMap(genre => genreMap[genre.trim()] || []);
+      if (genreIds.length > 0) {
+        content = content.filter((item: any) =>
+          item.genre_ids?.some((id: number) => genreIds.includes(id)) || false
+        );
+        console.log(`🎭 Filtered by genres [${genreList.join(', ')}]: ${content.length} results`);
       }
     }
 
-    // Filter by countries (mock implementation)
-    if (countryList.length > 0) {
-      console.log('🌍 Country filtering requested:', countryList);
-      // For now, keep all content since mock data doesn't have country info
-    }
-
-    // Filter by sports (mock implementation)
-    if (sportsList.length > 0) {
-      console.log('⚽ Sports filtering requested:', sportsList);
-      // For now, keep all content since mock data doesn't have sports categorization
+    // Apply platform filtering with real streaming data
+    if (platformList.length > 0 && content.length > 0) {
+      console.log('🎬 Applying real platform filtering:', platformList);
+      
+      // Get streaming data for filtering
+      const contentWithStreaming = await enhanceWithStreamingData(content.slice(0, 10)); // Limit for performance
+      
+      content = contentWithStreaming.filter((item: any) => {
+        return item.streaming_platforms?.some((platform: any) => 
+          platformList.some(filterPlatform => 
+            platform.provider_name.toLowerCase().includes(filterPlatform.toLowerCase()) ||
+            filterPlatform.toLowerCase().includes(platform.provider_name.toLowerCase())
+          )
+        ) || false;
+      });
+      
+      console.log(`📺 Filtered by platforms [${platformList.join(', ')}]: ${content.length} results`);
+    } else if (include_streaming === 'true' && content.length > 0) {
+      // Add streaming data even without platform filtering
+      content = await enhanceWithStreamingData(content.slice(0, parseInt(limit as string)));
     }
 
     // Limit results
     const limitNum = parseInt(limit as string);
-    if (filteredContent.length > limitNum) {
-      filteredContent = filteredContent.slice(0, limitNum);
+    if (content.length > limitNum) {
+      content = content.slice(0, limitNum);
     }
 
-    // Enhanced results with user context
-    const cleanResults = filteredContent.map((item, index) => ({
+    // Clean and enhance results
+    const cleanResults = content.map((item: any, index: number) => ({
       ...item,
       id: item.id || index + 1,
       title: item.title || item.name,
       name: item.name || item.title,
+      poster_url: item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : null,
+      backdrop_url: item.backdrop_path ? `https://image.tmdb.org/t/p/w1280${item.backdrop_path}` : null,
+      release_year: item.release_date ? new Date(item.release_date).getFullYear() : 
+                   item.first_air_date ? new Date(item.first_air_date).getFullYear() : null,
       // Add user context if requested
       ...(include_user_context === 'true' && req.user ? {
         user_context: {
-          in_watchlist: false, // Check user's watchlist
-          watched: false, // Check watch history
-          user_rating: null // User's rating if any
+          in_watchlist: false, // TODO: Check user's watchlist from database
+          watched: false, // TODO: Check watch history from database
+          user_rating: null // TODO: User's rating if any
         }
       } : {})
     }));
@@ -181,17 +229,19 @@ export const getDashboardContent = async (req: Request, res: Response) => {
       },
       metadata: {
         endpoint: 'dashboard',
-        type: 'filtered_recommendations',
+        type: 'real_time_recommendations',
         timestamp: new Date().toISOString(),
-        source: 'enhanced_mock_data',
+        source: 'tmdb_multi_api',
         has_user_context: include_user_context === 'true' && !!req.user,
+        streaming_enhanced: include_streaming === 'true',
         processing_time: Date.now()
       }
     };
 
-    console.log('✅ Dashboard content filtered:', {
+    console.log('✅ Dashboard content with real data:', {
       total: response.total_results,
       filters: response.filters_applied,
+      streaming_enhanced: include_streaming === 'true',
       user: req.user?.email || 'anonymous'
     });
 
@@ -206,73 +256,131 @@ export const getDashboardContent = async (req: Request, res: Response) => {
 };
 
 /**
- * Discover content endpoint with filter support
+ * Discover content endpoint with real TMDB data and streaming integration
  */
 export const getDiscoverContent = async (req: Request, res: Response) => {
   try {
-    const { genres, platforms, countries, sports, limit = '50', sort_by = 'popularity.desc' } = req.query;
+    const { 
+      genres, platforms, countries, sports, 
+      limit = '50', 
+      sort_by = 'popularity.desc',
+      media_type = 'all',
+      include_streaming = 'true'
+    } = req.query;
 
-    console.log('🔍 Discover content request:', { genres, platforms, countries, sports, sort_by });
-
-    let filteredContent = [...mockContent];
+    console.log('🔍 Discover content request with real data:', { 
+      genres, platforms, countries, sports, sort_by, media_type 
+    });
 
     // Helper function to safely split query params
     const safeStringSplit = (param: any): string[] => {
       if (typeof param === 'string') {
-        return param.split(',');
+        return param.split(',').map(s => s.trim()).filter(s => s);
       }
       return [];
     };
 
-    // Apply same filtering logic as dashboard
-    if (genres && typeof genres === 'string') {
-      const genreList = safeStringSplit(genres);
-      const genreIds = genreList.flatMap(genre => genreMap[genre.trim()] || []);
+    let content: any[] = [];
 
-      if (genreIds.length > 0) {
-        filteredContent = filteredContent.filter(item =>
-          item.genre_ids.some(id => genreIds.includes(id))
-        );
+    try {
+      // Build discover query based on filters
+      const discoverParams: any = {
+        sort_by: sort_by as string,
+        'vote_count.gte': 100, // Minimum votes for quality
+        page: 1
+      };
+
+      // Add genre filtering
+      const genreList = safeStringSplit(genres);
+      if (genreList.length > 0) {
+        const genreIds = genreList.flatMap(genre => genreMap[genre.trim()] || []);
+        if (genreIds.length > 0) {
+          discoverParams.with_genres = genreIds.join(',');
+        }
+      }
+
+      // Fetch based on media type
+      if (media_type === 'tv' || media_type === 'all') {
+        const tvResults = await tmdbService.discover('tv', discoverParams);
+        content.push(...tvResults.results.map((item: any) => ({ ...item, media_type: 'tv' })));
+      }
+
+      if (media_type === 'movie' || media_type === 'all') {
+        const movieResults = await tmdbService.discover('movie', discoverParams);
+        content.push(...movieResults.results.map((item: any) => ({ ...item, media_type: 'movie' })));
+      }
+
+      // Sort combined results
+      if (sort_by === 'vote_average.desc') {
+        content.sort((a, b) => (b.vote_average || 0) - (a.vote_average || 0));
+      } else if (sort_by === 'popularity.desc') {
+        content.sort((a, b) => (b.popularity || 0) - (a.popularity || 0));
+      } else if (sort_by === 'release_date.desc') {
+        content.sort((a, b) => {
+          const dateA = new Date(a.release_date || a.first_air_date || '1970-01-01');
+          const dateB = new Date(b.release_date || b.first_air_date || '1970-01-01');
+          return dateB.getTime() - dateA.getTime();
+        });
+      }
+
+    } catch (error) {
+      console.error('Error fetching TMDB discover data:', error);
+      // Fallback to trending if discover fails
+      try {
+        const trending = await tmdbService.getTrending('all', 'week');
+        content = trending.results;
+      } catch (fallbackError) {
+        console.error('Error fetching trending fallback:', fallbackError);
+        content = [];
       }
     }
 
-    // Sort results
-    if (sort_by === 'vote_average.desc') {
-      filteredContent.sort((a, b) => b.vote_average - a.vote_average);
-    } else if (sort_by === 'release_date.desc') {
-      filteredContent.sort((a, b) => {
-        const dateA = new Date(a.release_date || a.first_air_date || '1970-01-01');
-        const dateB = new Date(b.release_date || b.first_air_date || '1970-01-01');
-        return dateB.getTime() - dateA.getTime();
+    // Apply platform filtering with streaming data
+    const platformList = safeStringSplit(platforms);
+    if (platformList.length > 0 && content.length > 0) {
+      console.log('🎬 Applying platform filtering to discover results:', platformList);
+      
+      const contentWithStreaming = await enhanceWithStreamingData(content.slice(0, 20)); // Limit for performance
+      
+      content = contentWithStreaming.filter((item: any) => {
+        return item.streaming_platforms?.some((platform: any) => 
+          platformList.some(filterPlatform => 
+            platform.provider_name.toLowerCase().includes(filterPlatform.toLowerCase()) ||
+            filterPlatform.toLowerCase().includes(platform.provider_name.toLowerCase())
+          )
+        ) || false;
       });
+    } else if (include_streaming === 'true' && content.length > 0) {
+      // Add streaming data even without platform filtering
+      const limitNum = Math.min(parseInt(limit as string), content.length);
+      content = await enhanceWithStreamingData(content.slice(0, limitNum));
     }
 
-    // Generate more results for discover
-    const extendedContent = [];
+    // Limit results
     const limitNum = parseInt(limit as string);
-
-    for (let i = 0; i < limitNum; i++) {
-      const baseItem = filteredContent[i % filteredContent.length];
-      extendedContent.push({
-        ...baseItem,
-        id: baseItem.id + i * 200, // Ensure unique IDs
-        title: baseItem.title || baseItem.name,
-        name: baseItem.name || baseItem.title
-      });
-    }
+    content = content.slice(0, limitNum);
 
     const response = {
-      results: extendedContent,
-      total_results: extendedContent.length,
+      results: content.map((item: any) => ({
+        ...item,
+        title: item.title || item.name,
+        name: item.name || item.title,
+        poster_url: item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : null,
+        backdrop_url: item.backdrop_path ? `https://image.tmdb.org/t/p/w1280${item.backdrop_path}` : null
+      })),
+      total_results: content.length,
       filters_applied: {
         genres: safeStringSplit(genres),
-        platforms: safeStringSplit(platforms),
+        platforms: safeStringSplit(platforms), 
         countries: safeStringSplit(countries),
         sports: safeStringSplit(sports)
       },
       metadata: {
         endpoint: 'discover',
         sort_by,
+        media_type,
+        source: 'tmdb_multi_api',
+        streaming_enhanced: include_streaming === 'true',
         timestamp: new Date().toISOString()
       }
     };
@@ -288,13 +396,19 @@ export const getDiscoverContent = async (req: Request, res: Response) => {
 };
 
 /**
- * Search content with filters
+ * Search content with real TMDB data and streaming integration
  */
 export const getSearchContent = async (req: Request, res: Response) => {
   try {
-    const { q, genres, platforms, countries, sports, limit = '30' } = req.query;
+    const { 
+      q, genres, platforms, countries, sports, 
+      limit = '30', 
+      include_streaming = 'true'
+    } = req.query;
 
-    console.log('🔎 Search content request:', { q, genres, platforms, countries, sports });
+    console.log('🔎 Search content request with real data:', { 
+      q, genres, platforms, countries, sports 
+    });
 
     if (!q || typeof q !== 'string') {
       return res.status(400).json({ error: 'Search query (q) is required' });
@@ -303,43 +417,88 @@ export const getSearchContent = async (req: Request, res: Response) => {
     // Helper function to safely split query params
     const safeStringSplit = (param: any): string[] => {
       if (typeof param === 'string') {
-        return param.split(',');
+        return param.split(',').map(s => s.trim()).filter(s => s);
       }
       return [];
     };
 
-    let filteredContent = mockContent.filter(item => {
-      const title = (item.title || item.name || '').toLowerCase();
-      const overview = (item.overview || '').toLowerCase();
-      const searchTerm = q.toLowerCase();
+    let content: any[] = [];
 
-      return title.includes(searchTerm) || overview.includes(searchTerm);
-    });
+    try {
+      // Search both movies and TV shows
+      const [movieResults, tvResults] = await Promise.all([
+        tmdbService.search(q as string, { mediaType: 'movie' }),
+        tmdbService.search(q as string, { mediaType: 'tv' })
+      ]);
 
-    // Apply filter logic (same as above)
-    if (genres && typeof genres === 'string') {
-      const genreList = safeStringSplit(genres);
+      content = [
+        ...movieResults.results.map((item: any) => ({ ...item, media_type: 'movie' })),
+        ...tvResults.results.map((item: any) => ({ ...item, media_type: 'tv' }))
+      ];
+
+      // Sort by popularity/relevance
+      content.sort((a, b) => (b.popularity || 0) - (a.popularity || 0));
+
+    } catch (error) {
+      console.error('Error searching TMDB:', error);
+      content = [];
+    }
+
+    // Apply genre filtering
+    const genreList = safeStringSplit(genres);
+    if (genreList.length > 0) {
       const genreIds = genreList.flatMap(genre => genreMap[genre.trim()] || []);
-
       if (genreIds.length > 0) {
-        filteredContent = filteredContent.filter(item =>
-          item.genre_ids.some(id => genreIds.includes(id))
+        content = content.filter((item: any) =>
+          item.genre_ids?.some((id: number) => genreIds.includes(id)) || false
         );
       }
     }
 
+    // Apply platform filtering with streaming data
+    const platformList = safeStringSplit(platforms);
+    if (platformList.length > 0 && content.length > 0) {
+      console.log('🎬 Applying platform filtering to search results:', platformList);
+      
+      const contentWithStreaming = await enhanceWithStreamingData(content.slice(0, 15)); // Limit for performance
+      
+      content = contentWithStreaming.filter((item: any) => {
+        return item.streaming_platforms?.some((platform: any) => 
+          platformList.some(filterPlatform => 
+            platform.provider_name.toLowerCase().includes(filterPlatform.toLowerCase()) ||
+            filterPlatform.toLowerCase().includes(platform.provider_name.toLowerCase())
+          )
+        ) || false;
+      });
+    } else if (include_streaming === 'true' && content.length > 0) {
+      // Add streaming data even without platform filtering
+      const limitNum = Math.min(parseInt(limit as string), content.length);
+      content = await enhanceWithStreamingData(content.slice(0, limitNum));
+    }
+
+    // Limit final results
+    content = content.slice(0, parseInt(limit as string));
+
     const response = {
-      results: filteredContent.slice(0, parseInt(limit as string)),
-      total_results: filteredContent.length,
+      results: content.map((item: any) => ({
+        ...item,
+        title: item.title || item.name,
+        name: item.name || item.title,
+        poster_url: item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : null,
+        backdrop_url: item.backdrop_path ? `https://image.tmdb.org/t/p/w1280${item.backdrop_path}` : null
+      })),
+      total_results: content.length,
       query: q,
       filters_applied: {
-        genres: safeStringSplit(genres),
-        platforms: safeStringSplit(platforms),
+        genres: genreList,
+        platforms: platformList,
         countries: safeStringSplit(countries),
         sports: safeStringSplit(sports)
       },
       metadata: {
         endpoint: 'search',
+        source: 'tmdb_multi_api',
+        streaming_enhanced: include_streaming === 'true',
         timestamp: new Date().toISOString()
       }
     };
@@ -351,5 +510,147 @@ export const getSearchContent = async (req: Request, res: Response) => {
       error: 'Failed to search content',
       message: error instanceof Error ? error.message : 'Unknown error'
     });
+  }
+};
+
+// Mock network data for testing
+const MOCK_NETWORKS = [
+  'Netflix',
+  'Disney+',
+  'Amazon Prime Video',
+  'HBO Max',
+  'Hulu',
+  'Apple TV+',
+  'Paramount+',
+  'Peacock'
+];
+
+const MOCK_GENRES = [
+  { id: 10759, name: 'Action & Adventure' },
+  { id: 16, name: 'Animation' },
+  { id: 35, name: 'Comedy' },
+  { id: 80, name: 'Crime' },
+  { id: 99, name: 'Documentary' },
+  { id: 18, name: 'Drama' },
+  { id: 10751, name: 'Family' },
+  { id: 10762, name: 'Kids' },
+  { id: 9648, name: 'Mystery' },
+  { id: 10763, name: 'News' },
+  { id: 10764, name: 'Reality' },
+  { id: 10765, name: 'Sci-Fi & Fantasy' },
+  { id: 10766, name: 'Soap' },
+  { id: 10767, name: 'Talk' },
+  { id: 10768, name: 'War & Politics' },
+  { id: 37, name: 'Western' }
+];
+
+// Helper function to generate mock trending content
+function generateMockTrendingContent(network: string, count: number = 10) {
+  const titles = [
+    'The Crown', 'Stranger Things', 'House of Cards', 'Breaking Bad',
+    'Game of Thrones', 'The Office', 'Friends', 'The Bear', 'Wednesday',
+    'House of the Dragon', 'The Last of Us', 'Euphoria', 'The Boys',
+    'Succession', 'Better Call Saul', 'The Mandalorian', 'Squid Game',
+    'Bridgerton', 'The Witcher', 'Money Heist'
+  ];
+
+  return Array.from({ length: count }, (_, i) => ({
+    id: Math.random() * 100000,
+    name: titles[Math.floor(Math.random() * titles.length)],
+    title: titles[Math.floor(Math.random() * titles.length)],
+    overview: `A captivating series exclusive to ${network} that has been trending among viewers worldwide.`,
+    poster_path: `/poster${(i % 10) + 1}.jpg`,
+    backdrop_path: `/backdrop${(i % 10) + 1}.jpg`,
+    vote_average: 7.5 + Math.random() * 2,
+    first_air_date: new Date(2020 + Math.floor(Math.random() * 4), Math.floor(Math.random() * 12), Math.floor(Math.random() * 28)).toISOString().split('T')[0],
+    genre_ids: [MOCK_GENRES[Math.floor(Math.random() * MOCK_GENRES.length)].id],
+    popularity: 80 + Math.random() * 20,
+    streaming_platform: network
+  }));
+}
+
+// Helper function to generate mock upcoming content
+function generateMockUpcomingContent(count: number = 20) {
+  const titles = [
+    'Avatar: The Last Airbender', 'The Rings of Power S2', 'House of the Dragon S2',
+    'Stranger Things S5', 'The Bear S4', 'Wednesday S2', 'The Boys S5',
+    'Euphoria S3', 'The Mandalorian S4', 'Bridgerton S4'
+  ];
+
+  return Array.from({ length: count }, (_, i) => ({
+    id: Math.random() * 100000,
+    name: titles[Math.floor(Math.random() * titles.length)],
+    title: titles[Math.floor(Math.random() * titles.length)],
+    overview: `An upcoming series that promises to deliver exceptional entertainment.`,
+    poster_path: `/poster${(i % 10) + 1}.jpg`,
+    backdrop_path: `/backdrop${(i % 10) + 1}.jpg`,
+    vote_average: 8.0 + Math.random() * 1.5,
+    first_air_date: new Date(2024, 6 + Math.floor(Math.random() * 6), Math.floor(Math.random() * 28)).toISOString().split('T')[0],
+    release_date: new Date(2024, 6 + Math.floor(Math.random() * 6), Math.floor(Math.random() * 28)).toISOString().split('T')[0],
+    genre_ids: [MOCK_GENRES[Math.floor(Math.random() * MOCK_GENRES.length)].id],
+    popularity: 70 + Math.random() * 30,
+    streaming_platform: MOCK_NETWORKS[Math.floor(Math.random() * MOCK_NETWORKS.length)]
+  }));
+}
+
+/**
+ * Get trending content by streaming network
+ */
+export const getTrendingByNetwork = async (req: Request, res: Response) => {
+  try {
+    // For now, return mock data organized by network
+    const trendingByNetwork: Record<string, any[]> = {};
+    
+    MOCK_NETWORKS.forEach(network => {
+      trendingByNetwork[network] = generateMockTrendingContent(network, 10);
+    });
+
+    res.json(trendingByNetwork);
+  } catch (error) {
+    console.error('Error fetching trending by network:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+/**
+ * Get upcoming releases
+ */
+export const getUpcoming = async (req: Request, res: Response) => {
+  try {
+    const results = generateMockUpcomingContent(20);
+    
+    res.json({
+      results,
+      total_results: results.length,
+      total_pages: 1,
+      page: 1
+    });
+  } catch (error) {
+    console.error('Error fetching upcoming releases:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+/**
+ * Get available streaming networks
+ */
+export const getNetworks = async (req: Request, res: Response) => {
+  try {
+    res.json(MOCK_NETWORKS);
+  } catch (error) {
+    console.error('Error fetching networks:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+/**
+ * Get available genres
+ */
+export const getGenres = async (req: Request, res: Response) => {
+  try {
+    res.json(MOCK_GENRES);
+  } catch (error) {
+    console.error('Error fetching genres:', error);
+    res.status(500).json({ error: 'Internal server error' });
   }
 };

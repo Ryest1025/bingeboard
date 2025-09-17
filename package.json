@@ -16,6 +16,12 @@
     "db:push": "drizzle-kit push",
     "migrate:generate": "drizzle-kit generate --config drizzle.config.ts",
     "migrate:apply": "drizzle-kit apply --config drizzle.config.ts",
+    "postgres:setup": "bash ./scripts/setup_postgres.sh",
+    "postgres:setup-dev": "bash ./scripts/setup-postgres.sh",
+    "postgres:setup-ci": "bash ./scripts/setup-postgres-ci.sh",
+    "postgres:verify": "bash ./scripts/verify-postgres.sh",
+    "postgres:connect": "PGPASSWORD='Binge1025' psql -U bingeboard_user -h localhost -d bingeboard",
+    "postgres:connect-admin": "PGPASSWORD='Binge1025' psql -U postgres -h localhost",
     "mobile:init": "npx cap init BingeBoard com.bingeboard.app",
     "mobile:add:ios": "npx cap add ios",
     "mobile:add:android": "npx cap add android",
@@ -162,6 +168,7 @@
     "tsx": "^4.20.3",
     "typescript": "5.6.3",
     "vite": "^6.3.5",
+    "vite-tsconfig-paths": "^5.1.4",
     "vitest": "^3.2.4"
   },
   "optionalDependencies": {

@@ -149,6 +149,7 @@ export const userPreferences = sqliteTable("user_preferences", {
   adultContent: integer("adult_content").default(0),
   notificationSettings: text("notification_settings"),
   privacySettings: text("privacy_settings"),
+  onboardingCompleted: integer("onboarding_completed").default(0),
   createdAt: integer("created_at"),
   updatedAt: integer("updated_at"),
 });
@@ -166,6 +167,27 @@ export const passwordResetCodes = sqliteTable("password_reset_codes", {
   createdAt: integer("created_at").notNull(),
 });
 
+// Awards table for tracking award winners and nominees
+export const awards = sqliteTable("awards", {
+  id: integer("id").primaryKey(),
+  showId: integer("show_id").notNull(),
+  movieId: integer("movie_id"), // For movie awards
+  ceremony: text("ceremony").notNull(), // 'Oscar', 'Emmy', 'Golden Globe', 'SAG', 'Critics Choice', etc.
+  category: text("category").notNull(), // 'Best Picture', 'Best Drama Series', 'Best Actor', etc.
+  year: integer("year").notNull(), // Award year (ceremony year, not eligibility year)
+  isWinner: integer("is_winner").default(0), // 1 if won, 0 if just nominated
+  personName: text("person_name"), // Actor/director name if person-specific award
+  description: text("description"), // Additional context about the award
+  awardDate: integer("award_date"), // Actual ceremony date timestamp for seasonal weighting
+  importance: integer("importance").default(5), // 1-10 scale, higher = more prestigious
+  createdAt: integer("created_at"),
+  updatedAt: integer("updated_at"),
+}, (table) => [
+  // Index for efficient filtering by ceremony and year
+  index("idx_awards_ceremony_year").on(table.ceremony, table.year),
+  index("idx_awards_year_importance").on(table.year, table.importance),
+]);
+
 // === Insert Schemas for validation ===
 
 export const insertUserSchema = createInsertSchema(users);
@@ -173,6 +195,7 @@ export const insertWatchHistorySchema = createInsertSchema(watchHistory);
 export const insertWatchlistSchema = createInsertSchema(watchlist);
 export const insertUserPreferencesSchema = createInsertSchema(userPreferences);
 export const insertPasswordResetCodeSchema = createInsertSchema(passwordResetCodes);
+export const insertAwardSchema = createInsertSchema(awards);
 
 // === Types ===
 
@@ -182,5 +205,9 @@ export type WatchHistory = typeof watchHistory.$inferSelect;
 export type NewWatchHistory = typeof watchHistory.$inferInsert;
 export type Watchlist = typeof watchlist.$inferSelect;
 export type NewWatchlist = typeof watchlist.$inferInsert;
+export type UserPreferences = typeof userPreferences.$inferSelect;
+export type NewUserPreferences = typeof userPreferences.$inferInsert;
 export type PasswordResetCode = typeof passwordResetCodes.$inferSelect;
 export type NewPasswordResetCode = typeof passwordResetCodes.$inferInsert;
+export type Award = typeof awards.$inferSelect;
+export type NewAward = typeof awards.$inferInsert;

@@ -1,0 +1,423 @@
+
+> rest-express@1.0.0 dev
+> bash ./scripts/kill-port-5000.sh && NODE_ENV=development tsx server/index.ts
+
+🔄 Checking for processes on port 5000...
+✅ Port 5000 is free
+✅ Streaming enrichment service initialized
+✅ User context service initialized
+✅ In-memory cache service initialized
+✅ Dashboard controller initialized
+✅ Discover controller initialized
+✅ Search controller initialized
+✅ Content routes initialized with modular controllers
+[dotenv@17.2.1] injecting env (24) from .env -- tip: 📡 observe env with Radar: https://dotenvx.com/radar
+🗄️ Using SQLite at ./dev.db
+[dotenv@17.2.1] injecting env (0) from .env -- tip: 🛠️  run anywhere with `dotenvx run -- yourcommand`
+FIREBASE_ADMIN_KEY present: true
+🔍 Environment check:
+  process.env.NODE_ENV: development
+  app.get("env"): development
+Firebase Admin SDK initialized successfully
+Creating HTTP server
+🗄️ Initializing Enhanced Database Integration Service...
+🗄️ Initializing sqlite database with analytics tables...
+✅ Database Integration Service initialized
+✅ Using MemoryStore for sessions (development mode)
+✅ Firebase authentication system initialized
+✅ All OAuth authentication handled by Firebase client-side
+✅ Database analytics tables initialized successfully
+📺 Viewing History API routes registered
+🎯 User Preferences API routes registered
+🎯 Filter API routes registered
+🧪 A/B Testing routes registered
+🧪 A/B Testing Framework routes registered
+🔍 About to check environment for Vite setup...
+  app.get("env"): "development"
+  env length: 11
+  env === "development": true
+  env.trim() === "development": true
+  process.env.NODE_ENV: "development"
+✅ Setting up Vite development server...
+3:37:50 PM [express] serving on port 5000
+Error: Failed to parse JSON file, invalid JSON syntax found at position 4
+    at TransformPluginContext._formatLog (file:///workspaces/bingeboard-local/node_modules/vite/dist/node/chunks/dep-DBxKXgDP.js:42499:41)
+    at TransformPluginContext.error (file:///workspaces/bingeboard-local/node_modules/vite/dist/node/chunks/dep-DBxKXgDP.js:42496:16)
+    at TransformPluginContext.handler (file:///workspaces/bingeboard-local/node_modules/vite/dist/node/chunks/dep-DBxKXgDP.js:12175:16)
+    at EnvironmentPluginContainer.transform (file:///workspaces/bingeboard-local/node_modules/vite/dist/node/chunks/dep-DBxKXgDP.js:42295:19)
+    at async file:///workspaces/bingeboard-local/node_modules/vite/dist/node/chunks/dep-DBxKXgDP.js:37573:22
+    at async Promise.all (index 0)
+    at async devHtmlHook (file:///workspaces/bingeboard-local/node_modules/vite/dist/node/chunks/dep-DBxKXgDP.js:37565:3)
+    at async applyHtmlTransforms (file:///workspaces/bingeboard-local/node_modules/vite/dist/node/chunks/dep-DBxKXgDP.js:36939:17)
+    at async file:///workspaces/bingeboard-local/server/vite.ts:1:1358
+🔧 PRE-SESSION: GET /api/auth/session - Session available: false
+🔧 POST-SESSION: GET /api/auth/session - Session available: true, SessionID: DT6iCGkK27HjlZzdrIABIukHfAPHG2kC
+📋 GET /api/auth/session
+📋 Session ID: DT6iCGkK27HjlZzdrIABIukHfAPHG2kC
+📋 Session exists: true
+📋 Session data: {
+  "cookie": {
+    "originalMaxAge": 604799999,
+    "expires": "2025-09-22T15:38:03.424Z",
+    "secure": false,
+    "httpOnly": true,
+    "path": "/",
+    "sameSite": "lax"
+  }
+}
+📋 Cookie header: bingeboard.session=s%3ADT6iCGkK27HjlZzdrIABIukHfAPHG2kC.m0qPczTIdYVYvU4F8UBr0xzDl5HCfmUFLPXAXaiy96U
+📋 req.user in debug middleware: undefined
+🔍 Session check endpoint called
+📋 Session exists: true
+📋 Session user: undefined
+3:38:03 PM [express] GET /api/auth/session 401 in 10ms :: {"authenticated":false,"message":"No valid…
+🎬 Trending API called: tv/day, includeStreaming: false
+📊 TMDB returned 20 results
+3:38:04 PM [express] GET /api/trending/tv/day 200 in 137ms :: {"page":1,"results":[{"adult":false,"b…
+Error: Failed to parse JSON file, invalid JSON syntax found at position 4
+    at TransformPluginContext._formatLog (file:///workspaces/bingeboard-local/node_modules/vite/dist/node/chunks/dep-DBxKXgDP.js:42499:41)
+    at TransformPluginContext.error (file:///workspaces/bingeboard-local/node_modules/vite/dist/node/chunks/dep-DBxKXgDP.js:42496:16)
+    at TransformPluginContext.handler (file:///workspaces/bingeboard-local/node_modules/vite/dist/node/chunks/dep-DBxKXgDP.js:12175:16)
+    at EnvironmentPluginContainer.transform (file:///workspaces/bingeboard-local/node_modules/vite/dist/node/chunks/dep-DBxKXgDP.js:42295:19)
+    at async file:///workspaces/bingeboard-local/node_modules/vite/dist/node/chunks/dep-DBxKXgDP.js:37573:22
+    at async Promise.all (index 0)
+    at async devHtmlHook (file:///workspaces/bingeboard-local/node_modules/vite/dist/node/chunks/dep-DBxKXgDP.js:37565:3)
+    at async applyHtmlTransforms (file:///workspaces/bingeboard-local/node_modules/vite/dist/node/chunks/dep-DBxKXgDP.js:36939:17)
+    at async file:///workspaces/bingeboard-local/server/vite.ts:1:1358
+🔧 PRE-SESSION: GET /api/auth/session - Session available: false
+🔧 POST-SESSION: GET /api/auth/session - Session available: true, SessionID: DT6iCGkK27HjlZzdrIABIukHfAPHG2kC
+📋 GET /api/auth/session
+📋 Session ID: DT6iCGkK27HjlZzdrIABIukHfAPHG2kC
+📋 Session exists: true
+📋 Session data: {
+  "cookie": {
+    "originalMaxAge": 604799999,
+    "expires": "2025-09-22T15:38:18.157Z",
+    "secure": false,
+    "httpOnly": true,
+    "path": "/",
+    "sameSite": "lax"
+  }
+}
+📋 Cookie header: bingeboard.session=s%3ADT6iCGkK27HjlZzdrIABIukHfAPHG2kC.m0qPczTIdYVYvU4F8UBr0xzDl5HCfmUFLPXAXaiy96U
+📋 req.user in debug middleware: undefined
+🔍 Session check endpoint called
+📋 Session exists: true
+📋 Session user: undefined
+3:38:18 PM [express] GET /api/auth/session 401 in 9ms :: {"authenticated":false,"message":"No valid …
+🔧 PRE-SESSION: POST /api/auth/login - Session available: false
+🔧 POST-SESSION: POST /api/auth/login - Session available: true, SessionID: DT6iCGkK27HjlZzdrIABIukHfAPHG2kC
+📋 POST /api/auth/login
+📋 Session ID: DT6iCGkK27HjlZzdrIABIukHfAPHG2kC
+📋 Session exists: true
+📋 Session data: {
+  "cookie": {
+    "originalMaxAge": 604799999,
+    "expires": "2025-09-22T15:38:19.358Z",
+    "secure": false,
+    "httpOnly": true,
+    "path": "/",
+    "sameSite": "lax"
+  }
+}
+📋 Cookie header: bingeboard.session=s%3ADT6iCGkK27HjlZzdrIABIukHfAPHG2kC.m0qPczTIdYVYvU4F8UBr0xzDl5HCfmUFLPXAXaiy96U
+📋 req.user in debug middleware: undefined
+🔐 Login request received: {
+  email: 'rachel.gubin@gmail.com',
+  passwordLength: 14,
+  body: {
+    email: 'rachel.gubin@gmail.com',
+    password: 'newpassword123',
+    rememberMe: false
+  },
+  headers: {
+    'content-type': 'application/json',
+    origin: 'http://localhost:5000',
+    'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb'
+  }
+}
+🔐 Login attempt for email: rachel.gubin@gmail.com
+👤 Found user: {
+  id: 'manual_1752272712977_25fdy83s7',
+  email: 'rachel.gubin@gmail.com',
+  authProvider: 'firebase',
+  hasPasswordHash: true
+}
+🔍 Password debug: { providedLength: 14, hashPresent: true, hashSnippet: '$2b$10$bmaJv' }
+✅ Login successful for user: rachel.gubin@gmail.com
+✅ Session saved with user data: rachel.gubin@gmail.com
+3:38:19 PM [express] POST /api/auth/login 200 in 89ms :: {"message":"Login successful","user":{"id":…
+Error: Failed to parse JSON file, invalid JSON syntax found at position 4
+    at TransformPluginContext._formatLog (file:///workspaces/bingeboard-local/node_modules/vite/dist/node/chunks/dep-DBxKXgDP.js:42499:41)
+    at TransformPluginContext.error (file:///workspaces/bingeboard-local/node_modules/vite/dist/node/chunks/dep-DBxKXgDP.js:42496:16)
+    at TransformPluginContext.handler (file:///workspaces/bingeboard-local/node_modules/vite/dist/node/chunks/dep-DBxKXgDP.js:12175:16)
+    at EnvironmentPluginContainer.transform (file:///workspaces/bingeboard-local/node_modules/vite/dist/node/chunks/dep-DBxKXgDP.js:42295:19)
+    at async file:///workspaces/bingeboard-local/node_modules/vite/dist/node/chunks/dep-DBxKXgDP.js:37573:22
+    at async Promise.all (index 0)
+    at async devHtmlHook (file:///workspaces/bingeboard-local/node_modules/vite/dist/node/chunks/dep-DBxKXgDP.js:37565:3)
+    at async applyHtmlTransforms (file:///workspaces/bingeboard-local/node_modules/vite/dist/node/chunks/dep-DBxKXgDP.js:36939:17)
+    at async file:///workspaces/bingeboard-local/server/vite.ts:1:1358
+🔧 PRE-SESSION: GET /api/auth/session - Session available: false
+🔧 POST-SESSION: GET /api/auth/session - Session available: true, SessionID: DT6iCGkK27HjlZzdrIABIukHfAPHG2kC
+📋 GET /api/auth/session
+📋 Session ID: DT6iCGkK27HjlZzdrIABIukHfAPHG2kC
+📋 Session exists: true
+📋 Session data: {
+  "cookie": {
+    "originalMaxAge": 604799999,
+    "expires": "2025-09-22T15:38:20.880Z",
+    "secure": false,
+    "httpOnly": true,
+    "path": "/",
+    "sameSite": "lax"
+  },
+  "user": {
+    "id": "manual_1752272712977_25fdy83s7",
+    "email": "rachel.gubin@gmail.com",
+    "displayName": "Rachel Gubin",
+    "authProvider": "firebase",
+    "claims": {
+      "sub": "manual_1752272712977_25fdy83s7",
+      "email": "rachel.gubin@gmail.com",
+      "exp": 1758555499
+    }
+  }
+}
+📋 Cookie header: bingeboard.session=s%3ADT6iCGkK27HjlZzdrIABIukHfAPHG2kC.m0qPczTIdYVYvU4F8UBr0xzDl5HCfmUFLPXAXaiy96U
+📋 req.user in debug middleware: undefined
+🔍 Session check endpoint called
+📋 Session exists: true
+📋 Session user: rachel.gubin@gmail.com
+🔍 DEBUG - userPreferences object: {
+  id: 1,
+  userId: 'manual_1752272712977_25fdy83s7',
+  preferredGenres: '["Drama","Comedy","Thriller","Romance"]',
+  excludedGenres: null,
+  preferredLanguages: '["English"]',
+  adultContent: 0,
+  notificationSettings: '{"email":true,"push":true,"frequency":"weekly"}',
+  privacySettings: '{"profileVisible":true,"activityVisible":true}',
+  onboardingCompleted: 1,
+  createdAt: '2025-08-02 00:21:07',
+  updatedAt: '2025-09-07 21:35:55'
+}
+🔍 DEBUG - onboardingCompleted field: 1
+🔍 DEBUG - typeof onboardingCompleted: number
+✅ Enriched user with onboarding status: true
+3:38:21 PM [express] GET /api/auth/session 200 in 9ms :: {"authenticated":true,"user":{"id":"manual_…
+🔐 [/api/recommendations/unified] Session availability: {
+  hasSession: true,
+  sessionID: 'DT6iCGkK27HjlZzdrIABIukHfAPHG2kC',
+  sessionKeys: [ 'cookie', 'user' ]
+}
+🔐 [/api/recommendations/unified] Session debug: {
+  sessionExists: true,
+  sessionUser: 'rachel.gubin@gmail.com',
+  sessionUserType: 'object',
+  sessionHasUser: true,
+  fullSession: '{\n' +
+    '  "cookie": {\n' +
+    '    "originalMaxAge": 604799999,\n' +
+    '    "expires": "2025-09-22T15:38:21.094Z",\n' +
+    '    "secure": false,\n' +
+    '    "httpOnly": true,\n' +
+    '    "path": "/",\n' +
+    '    "sameSite": "lax"\n' +
+    '  },\n' +
+    '  "user": {\n' +
+    '    "id": "manual_1752272712977_25fdy83s7",\n' +
+    '    "email": "rachel.gubin@gmail.com",\n' +
+    '    "displayName": "Rachel Gubin",\n' +
+    '    "authProvider": "firebase",\n' +
+    '    "claims": {\n' +
+    '      "sub": "manual_1752272712977_25fdy83s7",\n' +
+    '      "email": "rachel.gubin@gmail.com",\n' +
+    '      "exp": 1758555499\n' +
+    '    }\n' +
+    '  }\n' +
+    '}'
+}
+🔐 Authentication middleware [/api/recommendations/unified] - Session user: Present
+🔐 Authentication middleware [/api/recommendations/unified] - Auth header: No auth header
+🔐 Session user attached to request [/api/recommendations/unified]: rachel.gubin@gmail.com
+🎯 Unified recommendation request received
+🔐 [/api/recommendations/unified] Session availability: {
+  hasSession: true,
+  sessionID: 'DT6iCGkK27HjlZzdrIABIukHfAPHG2kC',
+  sessionKeys: [ 'cookie', 'user' ]
+}
+🔐 [/api/recommendations/unified] Session debug: {
+  sessionExists: true,
+  sessionUser: 'rachel.gubin@gmail.com',
+  sessionUserType: 'object',
+  sessionHasUser: true,
+  fullSession: '{\n' +
+    '  "cookie": {\n' +
+    '    "originalMaxAge": 604799999,\n' +
+    '    "expires": "2025-09-22T15:38:21.094Z",\n' +
+    '    "secure": false,\n' +
+    '    "httpOnly": true,\n' +
+    '    "path": "/",\n' +
+    '    "sameSite": "lax"\n' +
+    '  },\n' +
+    '  "user": {\n' +
+    '    "id": "manual_1752272712977_25fdy83s7",\n' +
+    '    "email": "rachel.gubin@gmail.com",\n' +
+    '    "displayName": "Rachel Gubin",\n' +
+    '    "authProvider": "firebase",\n' +
+    '    "claims": {\n' +
+    '      "sub": "manual_1752272712977_25fdy83s7",\n' +
+    '      "email": "rachel.gubin@gmail.com",\n' +
+    '      "exp": 1758555499\n' +
+    '    }\n' +
+    '  }\n' +
+    '}'
+}
+🔐 Authentication middleware [/api/recommendations/unified] - Session user: Present
+🔐 Authentication middleware [/api/recommendations/unified] - Auth header: No auth header
+🔐 Session user attached to request [/api/recommendations/unified]: rachel.gubin@gmail.com
+🎯 Unified recommendation request received
+🔐 [/api/friends/activity] Session availability: {
+  hasSession: true,
+  sessionID: 'DT6iCGkK27HjlZzdrIABIukHfAPHG2kC',
+  sessionKeys: [ 'cookie', 'user' ]
+}
+🔐 [/api/friends/activity] Session debug: {
+  sessionExists: true,
+  sessionUser: 'rachel.gubin@gmail.com',
+  sessionUserType: 'object',
+  sessionHasUser: true,
+  fullSession: '{\n' +
+    '  "cookie": {\n' +
+    '    "originalMaxAge": 604799999,\n' +
+    '    "expires": "2025-09-22T15:38:21.094Z",\n' +
+    '    "secure": false,\n' +
+    '    "httpOnly": true,\n' +
+    '    "path": "/",\n' +
+    '    "sameSite": "lax"\n' +
+    '  },\n' +
+    '  "user": {\n' +
+    '    "id": "manual_1752272712977_25fdy83s7",\n' +
+    '    "email": "rachel.gubin@gmail.com",\n' +
+    '    "displayName": "Rachel Gubin",\n' +
+    '    "authProvider": "firebase",\n' +
+    '    "claims": {\n' +
+    '      "sub": "manual_1752272712977_25fdy83s7",\n' +
+    '      "email": "rachel.gubin@gmail.com",\n' +
+    '      "exp": 1758555499\n' +
+    '    }\n' +
+    '  }\n' +
+    '}'
+}
+🔐 Authentication middleware [/api/friends/activity] - Session user: Present
+🔐 Authentication middleware [/api/friends/activity] - Auth header: No auth header
+🔐 Session user attached to request [/api/friends/activity]: rachel.gubin@gmail.com
+3:38:21 PM [express] GET /api/friends/activity 200 in 7ms :: {"activities":[{"id":1,"user":{"name":"…
+🎯 Processing unified recommendations: {
+  userGenres: 0,
+  availableShows: 34,
+  excludedShows: 0,
+  currentlyWatching: 0,
+  mood: 'none'
+}
+🎯 Starting unified recommendation generation with filters... {
+  filtersApplied: 3,
+  availableShows: 34,
+  excludeShows: 0,
+  defaultLimit: 12,
+  sortBy: 'relevance'
+}
+🔍 Applying comprehensive filters... { totalShows: 34, filters: [ 'limit', 'sortBy', 'hideWatched' ] }
+🔍 Final filtered shows: 34 -> 34
+🎯 Filtered shows: 34 -> 34
+🤖 Fetching AI recommendations...
+ℹ️ Sending OpenAI request (attempt 1)... {
+  model: 'gpt-4o',
+  promptLength: 1444,
+  availableShows: 34,
+  userGenres: 0
+}
+🎬 Fetching TMDB recommendations...
+📈 Fetching trending recommendations...
+🤝 Fetching collaborative filtering recommendations...
+⏱️ TMDB completed in 1.93ms
+🔍 Collaborative Filtering Performance: {
+  executionTime: '2.67ms',
+  recommendationsGenerated: 4,
+  similarUsersFound: 3,
+  hiddenGemsDiscovered: 0,
+  averageConfidence: '78.3%',
+  topMatchFactors: [ 'collaborative-filtering', 'similar-users', 'medium-confidence' ]
+}
+🤝 Generated 4 collaborative recommendations via AdvancedCollaborativeFiltering
+⏱️ Collaborative completed in 3.79ms
+🎯 Processing unified recommendations: {
+  userGenres: 4,
+  availableShows: 34,
+  excludedShows: 0,
+  currentlyWatching: 0,
+  mood: 'none'
+}
+🎯 Starting unified recommendation generation with filters... {
+  filtersApplied: 3,
+  availableShows: 34,
+  excludeShows: 0,
+  defaultLimit: 12,
+  sortBy: 'relevance'
+}
+🔍 Applying comprehensive filters... { totalShows: 34, filters: [ 'limit', 'sortBy', 'hideWatched' ] }
+🔍 Final filtered shows: 34 -> 34
+🎯 Filtered shows: 34 -> 34
+🤖 Fetching AI recommendations...
+⚠️ User manual_1752272712977_25fdy83s7 throttled, returning fallback (300s remaining)
+ℹ️ Using enhanced fallback recommendation algorithm
+🎬 Fetching TMDB recommendations...
+📈 Fetching trending recommendations...
+🤝 Fetching collaborative filtering recommendations...
+⏱️ TMDB completed in 0.95ms
+⏱️ AI completed in 2.11ms
+🔍 Collaborative Filtering Performance: {
+  executionTime: '0.72ms',
+  recommendationsGenerated: 4,
+  similarUsersFound: 3,
+  hiddenGemsDiscovered: 0,
+  averageConfidence: '78.3%',
+  topMatchFactors: [ 'collaborative-filtering', 'similar-users', 'medium-confidence' ]
+}
+🤝 Generated 4 collaborative recommendations via AdvancedCollaborativeFiltering
+⏱️ Collaborative completed in 1.42ms
+3:38:21 PM [express] GET /api/tmdb/discover/tv 200 in 122ms :: {"page":1,"results":[{"adult":false,"…
+⏱️ Trending completed in 21.47ms
+⏱️ Trending completed in 20.97ms
+🔍 Enriching 12 recommendations with details for 12 unique shows
+🔍 Fetching enhanced details for 12 shows in batches of 5
+🔍 Successfully enhanced 12/12 shows
+✅ Successfully enriched 12 recommendations with show details
+🎯 Enhanced unified recommendations generated: {
+  duration: 134.3813930004835,
+  totalRecs: 12,
+  sources: { ai: 10, tmdb: 0, trending: 8, collaborative: 4 },
+  confidence: '100%',
+  filtersUsed: 0
+}
+3:38:21 PM [express] POST /api/recommendations/unified 200 in 248ms :: {"success":true,"strategy":"u…
+❌ AI error (attempt 1): 429 You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.
+ℹ️ Falling back to heuristic recommendations
+ℹ️ Using enhanced fallback recommendation algorithm
+⏱️ AI completed in 2227.77ms
+🔍 Enriching 12 recommendations with details for 12 unique shows
+🔍 Fetching enhanced details for 12 shows in batches of 5
+🔍 Successfully enhanced 12/12 shows
+✅ Successfully enriched 12 recommendations with show details
+🎯 Enhanced unified recommendations generated: {
+  duration: 2297.033406995237,
+  totalRecs: 12,
+  sources: { ai: 10, tmdb: 0, trending: 8, collaborative: 4 },
+  confidence: '100%',
+  filtersUsed: 0
+}
+3:38:23 PM [express] POST /api/recommendations/unified 200 in 2403ms :: {"success":true,"strategy":"…
+🎭 Fetching filter genres...
+3:38:49 PM [express] GET /api/filters/genres 200 in 4ms :: [{"id":1,"name":"Action"},{"id":2,"name":…
+📺 Fetching streaming platforms...
+3:38:59 PM [express] GET /api/filters/platforms 200 in 2ms :: [{"id":8,"name":"Netflix","provider_id…

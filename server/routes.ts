@@ -31,7 +31,7 @@ import { registerViewingHistoryRoutes } from "./routes/viewing-history";
 import { registerUserPreferencesRoutes } from "./routes/user-preferences";
 import { registerFilterRoutes } from "./routes/filters";
 import { registerAIRecommendationRoutes } from "./routes/aiRecommendations";
-import { registerEnhancedRecommendationRoutes } from "./routes/enhancedRecommendations";
+import { registerEnhancedRecommendationRoutes } from "./routes/enhancedRecommendations.js";
 import { registerABTestingRoutes } from "./routes/abTesting";
 import { DatabaseIntegrationService } from "./services/databaseIntegration";
 import multer from "multer";
@@ -107,6 +107,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   registerAIRecommendationRoutes(app);
   registerEnhancedRecommendationRoutes(app);
 
+  // Unified Recommendations Routes (NEW)
+  const unifiedRecommendationRoutes = await import('./routes/unifiedRecommendations.js');
+  app.use('/api/recommendations', unifiedRecommendationRoutes.default);
+
   // A/B Testing Framework Routes
   registerABTestingRoutes(app, dbService);
   console.log('🧪 A/B Testing Framework routes registered');
@@ -115,6 +119,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/content/dashboard', getDashboardContent);
   app.get('/api/content/discover', getDiscoverContent);
   app.get('/api/content/search', getSearchContent);
+
+  // Import the new content functions - TEMPORARILY COMMENTED OUT
+  // const { getTrendingByNetwork, getUpcoming, getNetworks, getGenres } = await import('./routes/content.js');
+  
+  // New content endpoints for ModernDiscoverEnhanced - TEMPORARILY COMMENTED OUT
+  // app.get('/api/content/trending-by-network', getTrendingByNetwork);
+  // app.get('/api/content/upcoming', getUpcoming);
+  // app.get('/api/content/networks', getNetworks);
+  // app.get('/api/content/genres', getGenres);
 
   // Debug middleware to log all requests and cookies
   app.use((req, res, next) => {
@@ -642,6 +655,80 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Awards-based content filtering
+  app.get('/api/tmdb/awards-content', async (req, res) => {
+    try {
+      const award = req.query.award as string;
+      let results: any[] = [];
+
+      switch (award) {
+        case 'oscar':
+          // Query for Academy Award winners using TMDB's discover endpoint with keywords
+          const oscarResponse = await tmdbService.discover('movie', {
+            keywords: '210024', // Academy Award winner keyword
+            sortBy: 'vote_average.desc',
+            voteAverageGte: 7.0,
+            page: 1
+          });
+          results = oscarResponse.results || [];
+          break;
+
+        case 'emmy':
+          // Query for Emmy Award winning TV shows
+          const emmyResponse = await tmdbService.discover('tv', {
+            keywords: '4565', // Emmy Award keyword
+            sortBy: 'vote_average.desc',
+            voteAverageGte: 7.0,
+            page: 1
+          });
+          results = emmyResponse.results || [];
+          break;
+
+        case 'golden-globe':
+          // Query for Golden Globe winners (movies and TV)
+          const goldenGlobeMovies = await tmdbService.discover('movie', {
+            keywords: '5846', // Golden Globe keyword
+            sortBy: 'vote_average.desc',
+            voteAverageGte: 7.0,
+            page: 1
+          });
+          const goldenGlobeTV = await tmdbService.discover('tv', {
+            keywords: '5846',
+            sortBy: 'vote_average.desc',
+            voteAverageGte: 7.0,
+            page: 1
+          });
+          results = [...(goldenGlobeMovies.results || []), ...(goldenGlobeTV.results || [])];
+          break;
+
+        case 'sag':
+          // Query for SAG Award winners
+          const sagResponse = await tmdbService.discover('movie', {
+            keywords: '34627', // SAG Award keyword
+            sortBy: 'vote_average.desc',
+            voteAverageGte: 7.0,
+            page: 1
+          });
+          results = sagResponse.results || [];
+          break;
+
+        default:
+          // Fallback to highly rated content
+          const fallbackResponse = await tmdbService.discover('movie', {
+            sortBy: 'vote_average.desc',
+            voteAverageGte: 8.0,
+            page: 1
+          });
+          results = fallbackResponse.results || [];
+      }
+
+      res.json({ results: results.slice(0, 20) });
+    } catch (error) {
+      console.error('TMDB awards content error:', error);
+      res.status(500).json({ message: 'Failed to fetch awards content' });
+    }
+  });
+
   // Multi-API Trailer Aggregation (initial TMDB-only implementation with future expansion hooks)
   app.get('/api/multi-api/trailer/:type/:id', async (req, res) => {
     try {
@@ -1010,7 +1097,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log('📋 Session exists:', !!req.session);
       console.log('📋 Session user:', req.session?.user?.email);
       if (req.session?.user) {
-        return res.json({ authenticated: true, user: req.session.user });
+        // Enrich user object with onboarding status from database
+        let enrichedUser = { ...req.session.user };
+        
+        try {
+          const userId = req.session.user.id;
+          const userPreferences = await storage.getUserPreferences(userId);
+          
+          console.log('🔍 DEBUG - userPreferences object:', userPreferences);
+          console.log('🔍 DEBUG - onboardingCompleted field:', userPreferences?.onboardingCompleted);
+          console.log('🔍 DEBUG - typeof onboardingCompleted:', typeof userPreferences?.onboardingCompleted);
+          
+          if (userPreferences) {
+            // Add onboarding status from preferences - handle various data types
+            const onboardingStatus = userPreferences.onboardingCompleted;
+            enrichedUser.onboardingCompleted = Boolean(onboardingStatus);
+            console.log('✅ Enriched user with onboarding status:', enrichedUser.onboardingCompleted);
+          } else {
+            // No preferences found, onboarding not completed
+            enrichedUser.onboardingCompleted = false;
+            console.log('📋 No preferences found, onboarding not completed');
+          }
+        } catch (prefError) {
+          console.error('❌ Error fetching preferences for session:', prefError);
+          // Default to false if we can't check
+          enrichedUser.onboardingCompleted = false;
+        }
+        
+        return res.json({ authenticated: true, user: enrichedUser });
       }
       return res.status(401).json({ authenticated: false, message: 'No valid session' });
     } catch (error) {
@@ -1361,16 +1475,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log('🔧 Force completing onboarding for:', email);
 
-      // Update user in database
-      const user = await storage.updateUser('manual_1752272712977_25fdy83s7', {
-        onboardingCompleted: true
+      // Try to find user by email
+      const user = await storage.getUserByEmail(email);
+      
+      if (!user) {
+        return res.status(404).json({ message: 'User not found with that email' });
+      }
+
+      console.log('Found user:', user.id, user.email);
+
+      // Update user in database - SQLite uses integers for booleans
+      const updatedUser = await storage.updateUser(user.id, {
+        onboardingCompleted: 1 as any  // Cast to bypass TypeScript, SQLite requires integer
       });
 
+      // Skip preferences update for now since SQLite schema doesn't have onboardingCompleted field
+      console.log('✅ User updated, skipping preferences update due to schema mismatch');
+
       console.log('✅ Onboarding force completed for user:', email);
-      res.json({ success: true, user, message: 'Onboarding marked as complete' });
+      res.json({ success: true, user: updatedUser, message: 'Onboarding marked as complete' });
     } catch (error) {
       console.error('Error force completing onboarding:', error);
-      res.status(500).json({ message: 'Failed to complete onboarding' });
+      res.status(500).json({ message: 'Failed to complete onboarding', error: error instanceof Error ? error.message : 'Unknown error' });
     }
   });
 
@@ -2019,6 +2145,311 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error fetching recommendations:', error);
       res.status(500).json({ error: 'Failed to fetch recommendations' });
+    }
+  });
+
+  // General recommendations endpoint for dashboard
+  app.get('/api/recommendations', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims?.sub || req.user.id;
+      const tmdbService = new TMDBService();
+      
+      // Get mixed content from TMDB
+      const [popularTv, popularMovies] = await Promise.all([
+        tmdbService.getPopular('tv'),
+        tmdbService.getPopular('movie')
+      ]);
+
+      // Mix and match TV shows and movies
+      const allContent = [
+        ...popularTv.results.slice(0, 6).map((item: any) => ({
+          ...item,
+          media_type: 'tv',
+          title: item.name || item.title,
+          isAI: Math.random() > 0.5, // Mock AI flag
+          aiScore: Math.random() * 0.3 + 0.7, // Mock AI score 0.7-1.0
+          trending: Math.random() > 0.6,
+          friendsWatching: Math.floor(Math.random() * 6),
+          friendRecommendations: Math.random() > 0.7 ? ['Sarah M.', 'Mike D.'] : [],
+          personalizedScore: Math.random() * 0.3 + 0.6 // 0.6-0.9
+        })),
+        ...popularMovies.results.slice(0, 6).map((item: any) => ({
+          ...item,
+          media_type: 'movie',
+          title: item.name || item.title,
+          isAI: Math.random() > 0.5,
+          aiScore: Math.random() * 0.3 + 0.7,
+          trending: Math.random() > 0.6,
+          friendsWatching: Math.floor(Math.random() * 6),
+          friendRecommendations: Math.random() > 0.7 ? ['Alex K.', 'Rachel P.'] : [],
+          personalizedScore: Math.random() * 0.3 + 0.6
+        }))
+      ];
+
+      // Shuffle the content
+      const shuffled = allContent.sort(() => Math.random() - 0.5);
+
+      res.json({ 
+        recommendations: shuffled.slice(0, 12),
+        success: true 
+      });
+    } catch (error) {
+      console.error('Error fetching general recommendations:', error);
+      res.status(500).json({ error: 'Failed to fetch recommendations' });
+    }
+  });
+
+  // Friend activity endpoint for dashboard
+  app.get('/api/friends/activity', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims?.sub || req.user.id;
+      
+      // Mock friend activity data
+      const mockActivities = [
+        {
+          id: 1,
+          user: { name: 'Sarah M.', avatar: 'SM' },
+          action: 'finished watching',
+          show: 'Wednesday',
+          timestamp: new Date(Date.now() - 300000).toISOString(), // 5 minutes ago
+          rating: 5
+        },
+        {
+          id: 2,
+          user: { name: 'Mike D.', avatar: 'MD' },
+          action: 'added to watchlist',
+          show: 'The Last of Us',
+          timestamp: new Date(Date.now() - 7200000).toISOString() // 2 hours ago
+        },
+        {
+          id: 3,
+          user: { name: 'Alex K.', avatar: 'AK' },
+          action: 'rated',
+          show: 'House of the Dragon',
+          timestamp: new Date(Date.now() - 86400000).toISOString(), // 1 day ago
+          rating: 4
+        },
+        {
+          id: 4,
+          user: { name: 'Rachel P.', avatar: 'RP' },
+          action: 'started watching',
+          show: 'Stranger Things',
+          timestamp: new Date(Date.now() - 172800000).toISOString(), // 2 days ago
+        },
+        {
+          id: 5,
+          user: { name: 'Jake L.', avatar: 'JL' },
+          action: 'completed season',
+          show: 'The Bear',
+          timestamp: new Date(Date.now() - 259200000).toISOString(), // 3 days ago
+          rating: 5
+        }
+      ];
+
+      res.json({ 
+        activities: mockActivities,
+        success: true 
+      });
+    } catch (error) {
+      console.error('Error fetching friend activity:', error);
+      res.status(500).json({ error: 'Failed to fetch friend activity' });
+    }
+  });
+
+  // Friend activity endpoint (alternative path to match frontend expectations)
+  app.get('/api/friend-activity', async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub || req.user?.id || 'guest';
+      
+      // Mock friend activity data
+      const mockActivities = [
+        {
+          id: 1,
+          user: { name: 'Sarah M.', avatar: 'SM' },
+          action: 'finished watching',
+          show: 'Wednesday',
+          timestamp: new Date(Date.now() - 300000).toISOString(), // 5 minutes ago
+          rating: 5
+        },
+        {
+          id: 2,
+          user: { name: 'Mike D.', avatar: 'MD' },
+          action: 'added to watchlist',
+          show: 'The Last of Us',
+          timestamp: new Date(Date.now() - 7200000).toISOString() // 2 hours ago
+        },
+        {
+          id: 3,
+          user: { name: 'Alex K.', avatar: 'AK' },
+          action: 'rated',
+          show: 'House of the Dragon',
+          timestamp: new Date(Date.now() - 86400000).toISOString(), // 1 day ago
+          rating: 4
+        },
+        {
+          id: 4,
+          user: { name: 'Rachel P.', avatar: 'RP' },
+          action: 'started watching',
+          show: 'Stranger Things',
+          timestamp: new Date(Date.now() - 172800000).toISOString(), // 2 days ago
+        },
+        {
+          id: 5,
+          user: { name: 'Jake L.', avatar: 'JL' },
+          action: 'completed season',
+          show: 'The Bear',
+          timestamp: new Date(Date.now() - 259200000).toISOString(), // 3 days ago
+          rating: 5
+        }
+      ];
+
+      res.json({ 
+        activities: mockActivities,
+        success: true 
+      });
+    } catch (error) {
+      console.error('Error fetching friend activity:', error);
+      res.status(500).json({ error: 'Failed to fetch friend activity' });
+    }
+  });
+
+  // Spotlight/TMDB endpoint for dashboard
+  app.get('/api/tmdb/spotlight', async (req: any, res) => {
+    try {
+      const tmdbService = new TMDBService();
+      
+      // Get trending content for spotlight
+      const trending = await tmdbService.getTrending('all', 'day');
+      
+      res.json({ 
+        trending: trending.results.slice(0, 8).map((item: any) => ({
+          ...item,
+          title: item.name || item.title,
+          trending: true
+        })),
+        success: true 
+      });
+    } catch (error) {
+      console.error('Error fetching spotlight data:', error);
+      res.status(500).json({ error: 'Failed to fetch spotlight data' });
+    }
+  });
+
+  // 🎯 DUAL SPOTLIGHT: #1 Trending + #1 Most Anticipated Upcoming
+  app.get('/api/recommendations/spotlight', async (req: any, res) => {
+    try {
+      const tmdbService = new TMDBService();
+      
+      // Try to get user from session (optional - works for authenticated and non-authenticated)
+      const userId = req.session?.user?.id;
+      
+      console.log('🎯 Fetching dual spotlight: trending + upcoming releases...');
+      
+      // Get user's onboarding preferences for personalized trending
+      let userGenres: string[] = [];
+      if (userId) {
+        try {
+          const userPrefs = await storage.getUserPreferences(userId);
+          if (userPrefs?.preferredGenres) {
+            userGenres = JSON.parse(userPrefs.preferredGenres);
+            console.log('👤 User preferred genres for spotlight:', userGenres);
+          }
+        } catch (error) {
+          console.log('⚠️ Could not fetch user preferences, using generic trending');
+        }
+      }
+
+      // 🔥 TRENDING SPOTLIGHT: Get #1 trending show based on user preferences
+      let trendingSpotlight;
+      if (userGenres.length > 0) {
+        // Get trending filtered by user's preferred genres
+        const genreMap: { [key: string]: number } = {
+          'Action': 28, 'Adventure': 12, 'Animation': 16, 'Comedy': 35, 'Crime': 80,
+          'Documentary': 99, 'Drama': 18, 'Family': 10751, 'Fantasy': 14, 'History': 36,
+          'Horror': 27, 'Music': 10402, 'Mystery': 9648, 'Romance': 10749, 'Science Fiction': 878,
+          'Thriller': 53, 'War': 10752, 'Western': 37
+        };
+        
+        const userGenreIds = userGenres.map(g => genreMap[g]).filter(Boolean);
+        console.log('🎭 Looking for trending shows in user genres:', userGenreIds);
+        
+        // Discover trending shows in user's preferred genres
+        const personalizedTrending = await tmdbService.discover('tv', {
+          genres: userGenreIds.join(','),
+          sortBy: 'popularity.desc',
+          firstAirDateGte: '2020-01-01', // Recent shows only
+          voteAverageGte: 6.0, // Well-rated shows
+          page: 1
+        });
+        
+        trendingSpotlight = personalizedTrending.results?.[0];
+      } else {
+        // Fallback to general trending
+        const trending = await tmdbService.getTrending('tv', 'day');
+        trendingSpotlight = trending.results?.[0];
+      }
+
+      // 🚀 UPCOMING SPOTLIGHT: Get #1 most anticipated upcoming release  
+      const today = new Date().toISOString().split('T')[0];
+      const futureDate = new Date();
+      futureDate.setFullYear(futureDate.getFullYear() + 1);
+      const oneYearFromNow = futureDate.toISOString().split('T')[0];
+      
+      console.log('🔮 Searching for upcoming releases between:', today, 'and', oneYearFromNow);
+      
+      const upcomingReleases = await tmdbService.discover('tv', {
+        firstAirDateGte: today,
+        firstAirDateLte: oneYearFromNow,
+        sortBy: 'popularity.desc',
+        voteAverageGte: 5.0, // Has some buzz/votes
+        page: 1
+      });
+      
+      // Find an upcoming show that's different from the trending one
+      let upcomingSpotlight = upcomingReleases.results?.[0];
+      if (trendingSpotlight && upcomingReleases.results) {
+        const trendingId = (trendingSpotlight as any).id;
+        upcomingSpotlight = upcomingReleases.results.find((show: any) => show.id !== trendingId) || upcomingReleases.results[0];
+      }
+
+      // 🎬 Build dual spotlight response
+      const spotlightData = [];
+      
+      if (trendingSpotlight) {
+        const showTitle = (trendingSpotlight as any).name || (trendingSpotlight as any).title;
+        spotlightData.push({
+          ...trendingSpotlight,
+          title: showTitle,
+          spotlight_type: 'trending',
+          spotlight_label: userGenres.length > 0 ? 'Trending in Your Genres' : 'Trending Now',
+          media_type: 'tv',
+          personalized: userGenres.length > 0
+        });
+      }
+      
+      if (upcomingSpotlight) {
+        const showTitle = (upcomingSpotlight as any).name || (upcomingSpotlight as any).title;
+        spotlightData.push({
+          ...upcomingSpotlight,
+          title: showTitle,
+          spotlight_type: 'upcoming',
+          spotlight_label: 'Most Anticipated Upcoming',
+          media_type: 'tv',
+          upcoming: true
+        });
+      }
+
+      console.log('✅ Dual spotlight ready:', {
+        trending: (trendingSpotlight as any)?.name || 'none',
+        upcoming: (upcomingSpotlight as any)?.name || 'none',
+        personalizedTrending: userGenres.length > 0,
+        totalItems: spotlightData.length
+      });
+      
+      res.json(spotlightData);
+    } catch (error) {
+      console.error('❌ Error fetching dual spotlight data:', error);
+      res.status(500).json({ error: 'Failed to fetch spotlight data' });
     }
   });
 

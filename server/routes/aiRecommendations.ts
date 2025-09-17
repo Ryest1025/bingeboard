@@ -13,13 +13,23 @@ import { TMDBService } from '../services/tmdb';
 export function registerAIRecommendationRoutes(app: Express) {
   const tmdb = new TMDBService();
 
-  // NEW: Unified multi-system recommendations endpoint
+  // NEW: Unified multi-system recommendations endpoint with proper TMDB filtering
   app.post('/api/recommendations/unified', isAuthenticated, async (req: Request & { user?: any }, res: Response) => {
     try {
       console.log('🎯 Unified recommendation request received');
+      console.log('🎯 Request body:', JSON.stringify(req.body, null, 2));
       
       const body = req.body || {};
+      const filters = body.filters || {};
       const rawProfile = body.userProfile || body.profile || {};
+      
+      // Enhanced filter processing with detailed logging
+      console.log('🎯 UNIFIED API RECEIVED FILTERS:', filters);
+      const cleanFilters = Object.fromEntries(
+        Object.entries(filters).filter(([_, v]) => v !== null && v !== undefined)
+      );
+      const filtersUsed = Object.keys(cleanFilters).length;
+      console.log('🎯 CLEANED FILTERS:', cleanFilters, `(${filtersUsed} filters applied)`);
       
       const userProfile = {
         favoriteGenres: rawProfile.favoriteGenres || body.favoriteGenres || [],
@@ -33,28 +43,101 @@ export function registerAIRecommendationRoutes(app: Express) {
         recentlyWatched: rawProfile.recentlyWatched || body.recentlyWatched || []
       };
 
+      // Build TMDB discover query from filters (following your flowchart)
+      const tmdbDiscoverParams: any = {
+        page: 1,
+        sort_by: 'popularity.desc',
+        include_adult: false,
+        language: 'en-US'
+      };
+
+      // Genre filter → TMDB with_genres
+      if (cleanFilters.genre && cleanFilters.genre !== 'all') {
+        const genreMap: Record<string, number> = {
+          'Action': 10759, 'Adventure': 10759, 'Comedy': 35, 'Drama': 18, 
+          'Crime': 80, 'Documentary': 99, 'Family': 10751, 'Mystery': 9648,
+          'Romance': 10749, 'Sci-Fi': 10765, 'Fantasy': 10765, 'Thriller': 53,
+          'Horror': 27, 'Animation': 16, 'Western': 37, 'Biography': 99,
+          'History': 36, 'Music': 10402, 'Sport': 99, 'War': 10768
+        };
+        
+        const genreId = genreMap[cleanFilters.genre as string];
+        if (genreId) {
+          tmdbDiscoverParams.with_genres = genreId.toString();
+          console.log(`🎯 Applied genre filter: ${cleanFilters.genre} → ID ${genreId}`);
+        }
+      }
+
+      // Year filter → TMDB primary_release_year
+      if (cleanFilters.year && cleanFilters.year !== 'all') {
+        const yearInt = parseInt(cleanFilters.year as string);
+        if (!isNaN(yearInt)) {
+          tmdbDiscoverParams.primary_release_year = yearInt;
+          tmdbDiscoverParams.first_air_date_year = yearInt; // For TV shows
+          console.log(`🎯 Applied year filter: ${yearInt}`);
+        }
+      }
+
+      // Platform filter → TMDB with_watch_providers
+      if (cleanFilters.platform && cleanFilters.platform !== 'all') {
+        const platformMap: Record<string, number> = {
+          'netflix': 8, 'hulu': 15, 'amazon': 119, 'hbo': 384, 'disney': 337,
+          'apple': 350, 'paramount': 531, 'peacock': 386, 'showtime': 37,
+          'starz': 43, 'max': 384 // HBO Max/Max
+        };
+        
+        const platformId = platformMap[(cleanFilters.platform as string).toLowerCase()];
+        if (platformId) {
+          tmdbDiscoverParams.with_watch_providers = platformId.toString();
+          tmdbDiscoverParams.watch_region = 'US';
+          console.log(`🎯 Applied platform filter: ${cleanFilters.platform} → ID ${platformId}`);
+        }
+      }
+
+      // Rating filter → TMDB vote_average.gte
+      if (cleanFilters.rating && cleanFilters.rating !== 'all') {
+        const minRating = parseFloat(cleanFilters.rating as string);
+        if (!isNaN(minRating)) {
+          tmdbDiscoverParams['vote_average.gte'] = minRating;
+          console.log(`🎯 Applied rating filter: minimum ${minRating}`);
+        }
+      }
+
+      console.log('🎯 Final TMDB discover params:', tmdbDiscoverParams);
+
+      // Execute TMDB discover query with filters
+      let filteredShows: any[] = [];
+      try {
+        console.log('🎯 Executing TMDB discover query...');
+        const tmdbTvResults = await tmdb.discover('tv', tmdbDiscoverParams);
+        const tmdbMovieResults = await tmdb.discover('movie', tmdbDiscoverParams);
+        
+        filteredShows = [
+          ...(tmdbTvResults.results || []).map((item: any) => ({ ...item, media_type: 'tv' })),
+          ...(tmdbMovieResults.results || []).map((item: any) => ({ ...item, media_type: 'movie' }))
+        ].slice(0, 50);
+        
+        console.log(`🎯 TMDB discover returned ${filteredShows.length} filtered results`);
+        console.log('🎯 Sample result:', filteredShows[0] ? {
+          id: filteredShows[0].id,
+          title: filteredShows[0].title || filteredShows[0].name,
+          vote_average: filteredShows[0].vote_average,
+          release_date: filteredShows[0].release_date || filteredShows[0].first_air_date
+        } : 'No results');
+        
+      } catch (tmdbError) {
+        console.error('🎯 TMDB discover failed, falling back to popular:', tmdbError);
+        // Fallback to popular content if discover fails
+        const popular = await safeGetPopular(tmdb, 'tv');
+        filteredShows = (popular.results || []).slice(0, 20);
+      }
+
       // Build exclude list from user's watchlist and history
       const excludeIds = new Set<number>();
       [...(userProfile.watchlist || []), ...(userProfile.viewingHistory || []), ...(userProfile.recentlyWatched || [])].forEach((item: any) => {
         const id = item?.tmdbId || item?.id;
         if (typeof id === 'number') excludeIds.add(id);
       });
-
-      // Get available shows (client can provide or we fetch popular)
-      let availableShows: any[] = Array.isArray(body.availableShows) ? body.availableShows : [];
-      if (!availableShows.length) {
-        const popular = await safeGetPopular(tmdb, 'tv');
-        const trending = await safeGetTrending(tmdb);
-        const discover = await safeGetDiscover(tmdb, userProfile);
-        
-        // Combine and deduplicate
-        const combinedShows = new Map();
-        [...(popular.results || []), ...(trending.results || []), ...(discover.results || [])].forEach(show => {
-          if (show && show.id) combinedShows.set(show.id, show);
-        });
-        
-        availableShows = Array.from(combinedShows.values()).slice(0, 100);
-      }
 
       // Add any manual exclusions from request
       const bodyExclude: number[] = Array.isArray(body.excludeShows) 
@@ -64,38 +147,44 @@ export function registerAIRecommendationRoutes(app: Express) {
 
       console.log('🎯 Processing unified recommendations:', {
         userGenres: userProfile.favoriteGenres.length,
-        availableShows: availableShows.length,
+        filteredShows: filteredShows.length,
         excludedShows: excludeIds.size,
         currentlyWatching: userProfile.currentlyWatching.length,
-        mood: body.mood || 'none'
+        filtersUsed,
+        appliedFilters: cleanFilters
       });
 
-      // Get unified recommendations
+      // Use filtered shows from TMDB discover instead of generic popular/trending
       const result = await UnifiedRecommendationService.getUnifiedRecommendations(
         userProfile,
-        availableShows,
-        Array.from(excludeIds)
+        filteredShows, // Use TMDB-filtered results
+        Array.from(excludeIds),
+        cleanFilters, // Pass clean filters to unified service
+        req.user?.id
       );
 
-      // Add mood context if provided
-      if (body.mood) {
+      // Add filter context to recommendations
+      if (Object.keys(cleanFilters).length > 0) {
         result.recommendations = result.recommendations.map(rec => ({
           ...rec,
-          reason: rec.reason + ` (matches your ${body.mood} mood)`
+          reason: rec.reason + ` (filtered for: ${Object.entries(cleanFilters).map(([k, v]) => `${k}: ${v}`).join(', ')})`
         }));
       }
 
       res.json({
         success: result.success,
-        strategy: 'unified-multi-system',
+        strategy: 'tmdb-filtered-unified',
         ai: result.ai,
         model: result.model,
         recommendations: result.recommendations,
         confidence: result.confidence,
         sources: result.sources,
         totalRecommendations: result.totalRecommendations,
+        filtersUsed, // Include filter count in response
+        appliedFilters: cleanFilters, // Include applied filters for debugging
         processingInfo: {
-          availableShowsProcessed: availableShows.length,
+          tmdbDiscoverParams,
+          filteredShowsFromTMDB: filteredShows.length,
           excludedItems: excludeIds.size,
           userPreferences: {
             genres: userProfile.favoriteGenres.length,
@@ -112,7 +201,8 @@ export function registerAIRecommendationRoutes(app: Express) {
         success: false,
         message: 'Failed to generate unified recommendations', 
         error: error.message,
-        strategy: 'unified-multi-system'
+        strategy: 'tmdb-filtered-unified',
+        filtersUsed: 0
       });
     }
   });
@@ -136,7 +226,7 @@ export function registerAIRecommendationRoutes(app: Express) {
         userProfile: mockProfile as any,
         availableShows: popular.results || [],
         excludeShows: []
-      });
+      }, 'demo-user'); // Pass demo userId for caching
       res.json({ source: 'demo', ...result });
     } catch (e:any) {
       res.status(500).json({ message: 'Demo recommendations failed', error: e.message });
@@ -180,10 +270,10 @@ export function registerAIRecommendationRoutes(app: Express) {
 
       const result = await AIRecommendationService.generatePersonalizedRecommendations({
         userProfile,
-  availableShows,
-  excludeShows: Array.from(excludeIds),
+        availableShows,
+        excludeShows: Array.from(excludeIds),
         mood: body.mood
-      });
+      }, req.user?.id); // Pass userId for caching/throttling
 
       res.json({
         success: true,

@@ -19,7 +19,7 @@ import Signup from "@/pages/signup";
 import MobileSocialLogin from "@/pages/mobile-social-login";
 import MobileLogin from "@/pages/mobile-login";
 import Home from "@/pages/home";
-import ModernDiscover from "@/pages/modern-discover";
+import ModernDiscoverEnhanced from "@/pages/modern-discover-enhanced";
 import Activity from "@/pages/activity";
 import Friends from "@/pages/social";
 
@@ -55,7 +55,7 @@ import MobileDiagnostic from "@/pages/mobile-diagnostic";
 import MobileHub from "@/pages/mobile-hub";
 import MobileApp from "@/pages/mobile-app";
 import ComponentsDemo from "@/pages/components-demo";
-import Dashboard from "@/pages/dashboard";
+import Dashboard from "@/pages/DashboardPage";
 import ABTestingPage from "@/pages/ab-testing";
 /**
  * 🔒 CLEANED UP: Removed duplicate auth pages and test components
@@ -73,19 +73,41 @@ function Router() {
   // Smart onboarding logic - show for new users or when they haven't seen it yet
   useEffect(() => {
     if (isAuthenticated && user) {
-      const hasSeenOnboarding = localStorage.getItem(`onboarding-completed-${user.id || user.email}`);
+      const userId = user.id || user.email;
+      
+      // Check localStorage first (fastest)
+      const hasSeenOnboardingLocal = localStorage.getItem(`onboarding-completed-${userId}`) === 'true';
+      
+      // Also check if user has onboardingCompleted from server data  
+      const hasSeenOnboardingServer = user.onboardingCompleted === true || user.onboardingCompleted === 1;
+      
+      const hasCompletedOnboarding = hasSeenOnboardingLocal || hasSeenOnboardingServer;
+      
       const isPremiumUser = user.subscription?.tier === 'premium' || user.isPremium;
       
-      // Show onboarding if:
-      // 1. User hasn't seen it yet, OR
-      // 2. User is premium and we want to show premium features
-      if (!hasSeenOnboarding || (isPremiumUser && !hasSeenOnboarding)) {
+      // Show onboarding only if user hasn't completed it
+      if (!hasCompletedOnboarding) {
         console.log('🎯 Showing premium onboarding for user:', { 
-          userId: user.id || user.email, 
-          hasSeenOnboarding: !!hasSeenOnboarding,
+          userId: userId, 
+          hasSeenOnboardingLocal,
+          hasSeenOnboardingServer,
           isPremium: isPremiumUser 
         });
         setShowPremiumOnboarding(true);
+      } else {
+        console.log('✅ User has completed onboarding, skipping modal:', { 
+          userId: userId, 
+          hasSeenOnboardingLocal,
+          hasSeenOnboardingServer,
+          source: hasSeenOnboardingLocal ? 'localStorage' : 'server'
+        });
+        setShowPremiumOnboarding(false);
+        
+        // Sync localStorage if server has completion but local doesn't
+        if (!hasSeenOnboardingLocal && hasSeenOnboardingServer) {
+          localStorage.setItem(`onboarding-completed-${userId}`, 'true');
+          console.log('🔄 Synced onboarding completion to localStorage');
+        }
       }
     }
   }, [isAuthenticated, user]);  // Remove loading screen after React mounts
@@ -174,6 +196,9 @@ function Router() {
           <Route path="/data-deletion" component={DataDeletion} />
           <Route path="/landing" component={Landing} />
           <Route path="/reset-password" component={ResetPassword} />
+          
+          {/* Temporary: Dashboard Clean for testing (public access) */}
+          <Route path="/dashboard-clean" component={Dashboard} />
 
           {/* Conditional home route based on authentication - MUST BE FIRST */}
           <Route path="/" component={Home} />
@@ -182,8 +207,9 @@ function Router() {
           {isAuthenticated ? (
             <>
               <Route path="/dashboard" component={Dashboard} />
+              <Route path="/dashboard-clean" component={Dashboard} />
               <Route path="/ab-testing" component={ABTestingPage} />
-              <Route path="/discover" component={ModernDiscover} />
+              <Route path="/discover" component={ModernDiscoverEnhanced} />
               <Route path="/activity" component={Activity} />
               <Route path="/friends" component={Friends} />
               <Route path="/social" component={Friends} />

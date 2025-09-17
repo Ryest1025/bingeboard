@@ -1,25 +1,28 @@
-import { useState, useMemo, useRef, useEffect } from "react";
-import { Link } from "wouter";
-import { useQuery } from "@tanstack/react-query";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import NavigationHeader from "@/components/navigation-header";
-import { useAuth } from "@/hooks/useAuth";
-import { useStreamingEnrichedContent } from "@/hooks/useStreamingEnrichedContent";
-import { useFilterOptions } from "@/hooks/useFilterOptions";
-import { useFilters } from "@/hooks/useFilters";
-import EnhancedFilterSystem from "@/components/common/EnhancedFilterSystem";
-import { FilterBadges, type FilterValues } from "@/components/common/FilterBadges";
-import { useLocalStorage } from "@/hooks/useLocalStorage";
+import { useState, useMemo, useRef, useEffect } from 'react';
+import { Link } from 'wouter';
+import { useQuery } from '@tanstack/react-query';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import NavigationHeader from '@/components/navigation-header';
+import { useAuth } from '@/hooks/useAuth';
+import { useStreamingEnrichedContent } from '@/hooks/useStreamingEnrichedContent';
+import { useFilterOptions } from '@/hooks/useFilterOptions';
+import { useFilters } from '@/hooks/useFilters';
+import EnhancedFilterSystem from '@/components/common/EnhancedFilterSystem';
+import {
+  FilterBadges,
+  type FilterValues,
+} from '@/components/common/FilterBadges';
+import { useLocalStorage } from '@/hooks/useLocalStorage';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from '@/components/ui/dropdown-menu';
 import {
   Search,
   Mic,
@@ -53,88 +56,56 @@ import {
   Loader2,
   ArrowRight,
   Flame,
-  Crown
-} from "lucide-react";// Universal Components for BingeBoard Rules
-import { HorizontalScrollContainer } from "@/components/ui/HorizontalScrollContainer";
-import { ContentCard } from "@/components/ui/ContentCard";
-import { StreamingLogos } from "@/components/ui/StreamingLogos";
-import { StreamingPlatformSelector } from "@/components/ui/StreamingPlatformSelector";
+  Crown,
+} from 'lucide-react'; // Universal Components for BingeBoard Rules
+import { HorizontalScrollContainer } from '@/components/ui/HorizontalScrollContainer';
+import { ContentCard } from '@/components/ui/ContentCard';
+import { StreamingLogos } from '@/components/ui/StreamingLogos';
+import { StreamingPlatformSelector } from '@/components/ui/StreamingPlatformSelector';
 
-// Enhanced mood filters with better visual hierarchy
-const moodFilters = [
+// Awards filters for prestigious award winners
+const awardsFilters = [
   {
-    id: "light",
-    label: "Light & Fun",
-    icon: Sun,
-    gradient: "from-yellow-400 to-orange-500",
-    description: "Comedy & feel-good shows",
-    count: "2.1k shows"
+    id: 'oscar',
+    label: 'Oscar Winners',
+    icon: Crown,
+    gradient: 'from-yellow-400 to-amber-500',
+    description: 'Academy Award winners',
+    count: '350+ titles',
   },
   {
-    id: "bingeable",
-    label: "Bingeable",
-    icon: Zap,
-    gradient: "from-orange-500 to-red-500",
-    description: "Can't-stop-watching series",
-    count: "850 shows"
+    id: 'emmy',
+    label: 'Emmy Winners',
+    icon: Tv,
+    gradient: 'from-purple-500 to-indigo-500',
+    description: 'Emmy Award winners',
+    count: '420+ shows',
   },
   {
-    id: "feelgood",
-    label: "Feel-Good",
-    icon: Heart,
-    gradient: "from-pink-500 to-rose-500",
-    description: "Uplifting & heartwarming",
-    count: "1.5k shows"
+    id: 'golden-globe',
+    label: 'Golden Globe',
+    icon: Sparkles,
+    gradient: 'from-orange-500 to-red-500',
+    description: 'Golden Globe winners',
+    count: '280+ titles',
   },
   {
-    id: "dark",
-    label: "Dark & Intense",
-    icon: Moon,
-    gradient: "from-purple-600 to-indigo-600",
-    description: "Thrillers & dark dramas",
-    count: "920 shows"
-  },
-  {
-    id: "comedy",
-    label: "Comedy",
-    icon: Laugh,
-    gradient: "from-green-400 to-emerald-500",
-    description: "Laugh-out-loud moments",
-    count: "1.8k shows"
-  },
-  {
-    id: "drama",
-    label: "Drama",
-    icon: Drama,
-    gradient: "from-blue-500 to-cyan-500",
-    description: "Emotional storytelling",
-    count: "2.5k shows"
-  },
-  {
-    id: "action",
-    label: "Action",
-    icon: Swords,
-    gradient: "from-red-500 to-pink-500",
-    description: "High-octane adventures",
-    count: "1.2k shows"
-  },
-  {
-    id: "scifi",
-    label: "Sci-Fi",
-    icon: Rocket,
-    gradient: "from-indigo-500 to-purple-500",
-    description: "Future & beyond",
-    count: "680 shows"
+    id: 'sag',
+    label: 'SAG Awards',
+    icon: Star,
+    gradient: 'from-blue-500 to-cyan-500',
+    description: 'Screen Actors Guild winners',
+    count: '190+ titles',
   },
 ];
 
 const trendingSearches = [
-  "House of the Dragon",
-  "The Bear",
-  "Wednesday",
-  "Stranger Things",
-  "The Last of Us",
-  "Avatar: The Last Airbender"
+  'House of the Dragon',
+  'The Bear',
+  'Wednesday',
+  'Stranger Things',
+  'The Last of Us',
+  'Avatar: The Last Airbender',
 ];
 
 // Removed duplicate StreamingLogos component - now imported from @/components/ui/StreamingLogos
@@ -164,8 +135,8 @@ const ContentSkeleton = () => (
 );
 
 export default function ModernDiscover() {
-  const [selectedMood, setSelectedMood] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedAward, setSelectedAward] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
   const [isVoiceSearch, setIsVoiceSearch] = useState(false);
   const [showTrending, setShowTrending] = useState(false);
   const [isSearchFocused, setIsSearchFocused] = useState(false);
@@ -179,19 +150,26 @@ export default function ModernDiscover() {
     clearFilters,
     hasActiveFilters,
     activeFilterCount,
-    applyFilters
+    applyFilters,
   } = useFilters({
     persistKey: 'discover-filters',
     syncWithUrl: true, // Enable deep linking for Discover page
     onFiltersChange: (newFilters) => {
       console.log('🔍 Discover filters changed:', newFilters);
-    }
+    },
   });
 
   // UI state management with localStorage persistence
-  const [showAdvancedFilters, setShowAdvancedFilters] = useLocalStorage('discover-show-filters', false);
-  const [activeFilterTab, setActiveFilterTab] = useLocalStorage('discover-active-filter-tab', 'genres');
-  const [stickyFilterSummary, setStickyFilterSummary] = useState<JSX.Element | null>(null);
+  const [showAdvancedFilters, setShowAdvancedFilters] = useLocalStorage(
+    'discover-show-filters',
+    false
+  );
+  const [activeFilterTab, setActiveFilterTab] = useLocalStorage(
+    'discover-active-filter-tab',
+    'genres'
+  );
+  const [stickyFilterSummary, setStickyFilterSummary] =
+    useState<JSX.Element | null>(null);
   const { filterOptions, isLoading: filterOptionsLoading } = useFilterOptions();
 
   // Initialize search query from URL parameters
@@ -225,10 +203,13 @@ export default function ModernDiscover() {
     console.log('🎯 Applying discover filters:', filters);
   };
 
-  const handleRemoveDiscoverFilter = (type: keyof FilterValues, value: string) => {
+  const handleRemoveDiscoverFilter = (
+    type: keyof FilterValues,
+    value: string
+  ) => {
     const newFilters = {
       ...discoverFilters,
-      [type]: discoverFilters[type].filter(item => item !== value)
+      [type]: discoverFilters[type].filter((item) => item !== value),
     };
     setDiscoverFilters(newFilters);
   };
@@ -239,13 +220,15 @@ export default function ModernDiscover() {
 
   // Fetch trending shows from TMDB with real streaming data (Utelly + TMDB + Watchmode)
   const { data: trendingData } = useQuery({
-    queryKey: ["/api/trending/tv/week?includeStreaming=true"],
+    queryKey: ['/api/trending/tv/week?includeStreaming=true'],
     queryFn: async () => {
-      const response = await fetch("/api/trending/tv/week?includeStreaming=true");
-      if (!response.ok) throw new Error("Failed to fetch trending shows");
+      const response = await fetch(
+        '/api/trending/tv/week?includeStreaming=true'
+      );
+      if (!response.ok) throw new Error('Failed to fetch trending shows');
       return response.json();
     },
-    staleTime: 300000
+    staleTime: 300000,
   });
 
   // Enrich trending data with comprehensive streaming info
@@ -256,46 +239,55 @@ export default function ModernDiscover() {
 
   // Fetch popular shows from TMDB
   const { data: popularData } = useQuery({
-    queryKey: ["/api/streaming/enhanced-search?type=tv"],
+    queryKey: ['/api/streaming/enhanced-search?type=tv'],
     queryFn: async () => {
-      const response = await fetch("/api/streaming/enhanced-search?type=tv&includeStreaming=true");
-      if (!response.ok) throw new Error("Failed to fetch popular shows");
+      const response = await fetch(
+        '/api/streaming/enhanced-search?type=tv&includeStreaming=true'
+      );
+      if (!response.ok) throw new Error('Failed to fetch popular shows');
       return response.json();
     },
-    staleTime: 300000
+    staleTime: 300000,
   });
 
   // Enrich popular data with streaming info
   const { data: enrichedPopularData } = useStreamingEnrichedContent(
     (popularData as any)?.results || [],
     !!(popularData as any)?.results
-  );  // Search functionality using TMDB (more reliable than Watchmode API)
+  ); // Search functionality using TMDB (more reliable than Watchmode API)
   const { data: searchData, isLoading: searchLoading } = useQuery({
-    queryKey: ["/api/streaming/enhanced-search", searchQuery],
+    queryKey: ['/api/streaming/enhanced-search', searchQuery],
     queryFn: () => {
       if (!searchQuery.trim()) return null;
-      return fetch(`/api/streaming/enhanced-search?query=${encodeURIComponent(searchQuery)}&mediaType=tv`).then(res => res.json());
+      return fetch(
+        `/api/streaming/enhanced-search?query=${encodeURIComponent(searchQuery)}&mediaType=tv`
+      ).then((res) => res.json());
     },
     enabled: !!searchQuery.trim(),
-    staleTime: 300000
+    staleTime: 300000,
   });
 
-  // FIXED: Mood-specific content from latest releases
-  const { data: moodSpecificData } = useQuery({
-    queryKey: ["/api/tmdb/mood-content", selectedMood],
+  // Awards-specific content from prestigious award winners
+  const { data: awardsSpecificData } = useQuery({
+    queryKey: ['/api/tmdb/awards-content', selectedAward],
     queryFn: () => {
-      if (!selectedMood) return null;
-      return fetch(`/api/tmdb/mood-content?mood=${selectedMood}`).then(res => res.json());
+      if (!selectedAward) return null;
+      return fetch(`/api/tmdb/awards-content?award=${selectedAward}`).then((res) =>
+        res.json()
+      );
     },
-    enabled: !!selectedMood,
-    staleTime: 300000
+    enabled: !!selectedAward,
+    staleTime: 300000,
   });
 
   // Upcoming movies data
   const { data: upcomingMoviesData } = useQuery({
-    queryKey: ["/api/streaming/comprehensive/movie/upcoming"],
-    queryFn: () => fetch('/api/streaming/comprehensive/movie/upcoming').then(res => res.json()),
-    staleTime: 300000
+    queryKey: ['/api/streaming/comprehensive/movie/upcoming'],
+    queryFn: () =>
+      fetch('/api/streaming/comprehensive/movie/upcoming').then((res) =>
+        res.json()
+      ),
+    staleTime: 300000,
   });
 
   // Enrich upcoming movies with streaming info
@@ -306,9 +298,9 @@ export default function ModernDiscover() {
 
   // Upcoming shows query for calendar reminders
   const { data: upcomingData } = useQuery({
-    queryKey: ["/api/upcoming-releases"],
-    queryFn: () => fetch("/api/upcoming-releases").then(res => res.json()),
-    staleTime: 300000
+    queryKey: ['/api/upcoming-releases'],
+    queryFn: () => fetch('/api/upcoming-releases').then((res) => res.json()),
+    staleTime: 300000,
   });
 
   // Enrich upcoming shows with streaming info
@@ -329,42 +321,63 @@ export default function ModernDiscover() {
 
   // Fetch user preferences for AI-powered recommendations
   const { data: userPreferences } = useQuery({
-    queryKey: ["/api/user-preferences"],
+    queryKey: ['/api/user-preferences'],
+    queryFn: async () => {
+      const response = await fetch('/api/user-preferences');
+      if (!response.ok) throw new Error('Failed to fetch user preferences');
+      return response.json();
+    },
     enabled: !!user,
-    staleTime: 600000 // Cache for 10 minutes
+    staleTime: 600000, // Cache for 10 minutes
   });
 
   // ENHANCED: AI-powered Hidden Gems based on user onboarding preferences
   const hiddenGems = useMemo(() => {
     const allContent = [
       ...(enrichedTrendingData || []),
-      ...(enrichedPopularData || [])
+      ...(enrichedPopularData || []),
     ];
 
     if (!allContent.length) return [];
 
     // Filter by user's favorite genres if available
-    let filtered = allContent.filter(show => {
+    let filtered = allContent.filter((show) => {
       const rating = show.vote_average || 0;
       const popularity = show.popularity || 0;
 
       // Base quality filter: good ratings but not super mainstream
-      const qualityFilter = rating >= 7.0 && popularity > 20 && popularity < 500;
+      const qualityFilter =
+        rating >= 7.0 && popularity > 20 && popularity < 500;
 
       // AI Enhancement: Match user's preferred genres from onboarding
       if ((userPreferences as any)?.favoriteGenres?.length) {
         const showGenres = show.genre_ids || [];
-        const genreMatch = (userPreferences as any).favoriteGenres.some((genre: string) => {
-          // Map genre names to TMDB IDs
-          const genreMap: { [key: string]: number } = {
-            'Action': 28, 'Adventure': 12, 'Animation': 16, 'Comedy': 35,
-            'Crime': 80, 'Documentary': 99, 'Drama': 18, 'Family': 10751,
-            'Fantasy': 14, 'History': 36, 'Horror': 27, 'Music': 10402,
-            'Mystery': 9648, 'Romance': 10749, 'Science Fiction': 878,
-            'Thriller': 53, 'War': 10752, 'Western': 37
-          };
-          return showGenres.includes(genreMap[genre]);
-        });
+        const genreMatch = (userPreferences as any).favoriteGenres.some(
+          (genre: string) => {
+            // Map genre names to TMDB IDs
+            const genreMap: { [key: string]: number } = {
+              Action: 28,
+              Adventure: 12,
+              Animation: 16,
+              Comedy: 35,
+              Crime: 80,
+              Documentary: 99,
+              Drama: 18,
+              Family: 10751,
+              Fantasy: 14,
+              History: 36,
+              Horror: 27,
+              Music: 10402,
+              Mystery: 9648,
+              Romance: 10749,
+              'Science Fiction': 878,
+              Thriller: 53,
+              War: 10752,
+              Western: 37,
+            };
+            return showGenres.includes(genreMap[genre]);
+          }
+        );
 
         return qualityFilter && genreMatch;
       }
@@ -374,7 +387,7 @@ export default function ModernDiscover() {
 
     // If no genre matches found, fall back to quality-based filtering
     if (filtered.length === 0) {
-      filtered = allContent.filter(show => {
+      filtered = allContent.filter((show) => {
         const rating = show.vote_average || 0;
         const popularity = show.popularity || 0;
         return rating >= 7.0 && popularity > 20 && popularity < 500;
@@ -388,9 +401,9 @@ export default function ModernDiscover() {
 
   const searchResults = searchData?.results || [];
 
-  const handleMoodFilter = (moodId: string) => {
-    setSelectedMood(selectedMood === moodId ? null : moodId);
-    setShowTrending(false); // Reset trending view when mood is selected
+  const handleAwardFilter = (awardId: string) => {
+    setSelectedAward(selectedAward === awardId ? null : awardId);
+    setShowTrending(false); // Reset trending view when award is selected
   };
 
   const handleVoiceSearch = () => {
@@ -400,28 +413,32 @@ export default function ModernDiscover() {
 
   // Handle functions for Watch Now and Add to List
   const handleWatchNow = (show: any, platform: any) => {
-    console.log("Opening:", platform.provider_name, "for show:", show.title || show.name);
-    window.open(`https://www.${platform.provider_name.toLowerCase().replace(/\s+/g, '')}.com`, '_blank');
+    console.log(
+      'Opening:',
+      platform.provider_name,
+      'for show:',
+      show.title || show.name
+    );
+    window.open(
+      `https://www.${platform.provider_name.toLowerCase().replace(/\s+/g, '')}.com`,
+      '_blank'
+    );
   };
 
   const handleAddToWatchlist = (show: any) => {
-    console.log("Adding to watchlist:", show.title || show.name);
+    console.log('Adding to watchlist:', show.title || show.name);
     // This would connect to the actual watchlist API
   };
 
-
-
-
-
   const handleMoreFilters = () => {
     setShowAdvancedFilters(!showAdvancedFilters);
-    console.log("🎯 Toggling advanced filters:", !showAdvancedFilters);
+    console.log('🎯 Toggling advanced filters:', !showAdvancedFilters);
   };
 
   const handleTrendingView = () => {
     console.log("What's Trending clicked - showing trending content");
-    setSelectedMood(null);
-    setSearchQuery("");
+    setSelectedAward(null);
+    setSearchQuery('');
     // Toggle trending view - if already showing trending, go back to default
     setShowTrending(!showTrending);
   };
@@ -432,13 +449,18 @@ export default function ModernDiscover() {
     const showTitle = show.title || show.name;
 
     // Create calendar event URL (Google Calendar)
-    const startDate = releaseDate.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
-    const endDate = new Date(releaseDate.getTime() + 60 * 60 * 1000).toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+    const startDate =
+      releaseDate.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+    const endDate =
+      new Date(releaseDate.getTime() + 60 * 60 * 1000)
+        .toISOString()
+        .replace(/[-:]/g, '')
+        .split('.')[0] + 'Z';
 
     const calendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(`${showTitle} - New Episode`)}&dates=${startDate}/${endDate}&details=${encodeURIComponent(`New episode of ${showTitle} releases today!`)}&location=Streaming`;
 
     window.open(calendarUrl, '_blank');
-    console.log("Opening calendar reminder for:", showTitle);
+    console.log('Opening calendar reminder for:', showTitle);
   };
 
   // Handle text notification opt-in for upcoming shows
@@ -455,16 +477,16 @@ export default function ModernDiscover() {
           tmdbId: show.id,
           title: showTitle,
           releaseDate: show.releaseDate || show.first_air_date,
-          notificationMethods: ['push', 'email'] // Can add SMS later
-        })
+          notificationMethods: ['push', 'email'], // Can add SMS later
+        }),
       });
 
       if (response.ok) {
-        console.log("Text reminders enabled for:", showTitle);
+        console.log('Text reminders enabled for:', showTitle);
         // Could show a toast notification here
       }
     } catch (error) {
-      console.error("Error setting up text reminders:", error);
+      console.error('Error setting up text reminders:', error);
     }
   };
 
@@ -472,14 +494,18 @@ export default function ModernDiscover() {
   const filteredContent = (() => {
     // If user is actively searching, show search results
     if (searchQuery.trim() && searchResults.length > 0) {
-      console.log("Showing search results for:", searchQuery);
+      console.log('Showing search results for:', searchQuery);
       return searchResults.slice(0, 4);
     }
 
-    // If mood filter is selected, use mood-specific API data
-    if (selectedMood && moodSpecificData?.results) {
-      console.log(`Using latest ${selectedMood} releases:`, moodSpecificData.results.length, "shows");
-      return moodSpecificData.results.slice(0, 4);
+    // If award filter is selected, use award-specific API data
+    if (selectedAward && awardsSpecificData?.results) {
+      console.log(
+        `Using latest ${selectedAward} winners:`,
+        awardsSpecificData.results.length,
+        'titles'
+      );
+      return awardsSpecificData.results.slice(0, 4);
     }
 
     // If trending view is active, show trending content
@@ -498,11 +524,12 @@ export default function ModernDiscover() {
 
       <div className="pt-28 pb-24">
         <div className="container mx-auto px-4 space-y-8">
-
           {/* Header */}
           <div className="text-center space-y-4 mb-8">
             <div className="flex items-center justify-center gap-2">
-              <span className="text-2xl font-bold text-white">Discover What to</span>
+              <span className="text-2xl font-bold text-white">
+                Discover What to
+              </span>
               <span className="inline-flex items-center gap-1">
                 {/* TV Logo matching homepage */}
                 <div className="relative inline-block">
@@ -510,7 +537,15 @@ export default function ModernDiscover() {
                   <div className="w-8 h-6 bg-gradient-to-br from-slate-700 to-slate-900 rounded-lg shadow-xl border-2 border-slate-600 relative">
                     {/* TV Screen */}
                     <div className="absolute inset-1 bg-gradient-to-br from-teal-500 via-cyan-500 to-blue-500 rounded-md flex items-center justify-center">
-                      <div className="text-xs font-bold text-white drop-shadow-lg" style={{ textShadow: '0 0 6px rgba(0,0,0,0.8), 0 0 2px rgba(255,255,255,0.3)' }}>B</div>
+                      <div
+                        className="text-xs font-bold text-white drop-shadow-lg"
+                        style={{
+                          textShadow:
+                            '0 0 6px rgba(0,0,0,0.8), 0 0 2px rgba(255,255,255,0.3)',
+                        }}
+                      >
+                        B
+                      </div>
                     </div>
                     {/* TV Base */}
                     <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-2 h-0.5 bg-slate-700 rounded-sm"></div>
@@ -525,29 +560,30 @@ export default function ModernDiscover() {
             </div>
           </div>
 
-          {/* Mood-Based Filters */}
+          {/* Awards-Based Filters */}
           <div className="space-y-4">
             <h2 className="text-xl font-bold text-white flex items-center gap-2">
-              <Sparkles className="h-5 w-5 text-teal-400" />
-              What's Your Mood?
+              <Crown className="h-5 w-5 text-amber-400" />
+              Award Winners
             </h2>
 
             <div className="w-full">
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-8 gap-3">
-                {moodFilters.map((mood) => {
-                  const Icon = mood.icon;
-                  const isSelected = selectedMood === mood.id;
+                {awardsFilters.map((award) => {
+                  const Icon = award.icon;
+                  const isSelected = selectedAward === award.id;
 
                   return (
                     <Button
-                      key={mood.id}
+                      key={award.id}
                       variant="outline"
-                      onClick={() => handleMoodFilter(mood.id)}
-                      className={`bg-gradient-to-r ${mood.gradient} ${isSelected ? "ring-2 ring-teal-400" : ""
-                        } flex items-center gap-2 whitespace-nowrap transition-all duration-200 hover:scale-105 text-sm`}
+                      onClick={() => handleAwardFilter(award.id)}
+                      className={`bg-gradient-to-r ${award.gradient} ${
+                        isSelected ? 'ring-2 ring-teal-400' : ''
+                      } flex items-center gap-2 whitespace-nowrap transition-all duration-200 hover:scale-105 text-sm`}
                     >
                       <Icon className="h-4 w-4" />
-                      {mood.label}
+                      {award.label}
                     </Button>
                   );
                 })}
@@ -569,7 +605,9 @@ export default function ModernDiscover() {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+                      onClick={() =>
+                        setShowAdvancedFilters(!showAdvancedFilters)
+                      }
                       className="text-xs h-6"
                     >
                       Edit
@@ -592,7 +630,10 @@ export default function ModernDiscover() {
                 <Filter className="h-5 w-5 text-blue-400" />
                 Find Something to Watch
                 {hasActiveFilters && (
-                  <Badge variant="secondary" className="bg-blue-500/20 text-blue-300 ml-2">
+                  <Badge
+                    variant="secondary"
+                    className="bg-blue-500/20 text-blue-300 ml-2"
+                  >
                     {activeFilterCount} active
                   </Badge>
                 )}
@@ -613,7 +654,9 @@ export default function ModernDiscover() {
                 filters={discoverFilters}
                 onRemoveFilter={handleRemoveDiscoverFilter}
                 onClearAll={handleClearAllDiscoverFilters}
-                onToggleFilters={() => setShowAdvancedFilters(!showAdvancedFilters)}
+                onToggleFilters={() =>
+                  setShowAdvancedFilters(!showAdvancedFilters)
+                }
                 className="mb-4"
               />
             )}
@@ -644,19 +687,30 @@ export default function ModernDiscover() {
                   Filtered Discovery Results
                 </h4>
                 <p className="text-gray-400 text-sm mb-3">
-                  {discoverFilters.genres.length > 0 && `Genres: ${discoverFilters.genres.join(', ')}`}
-                  {discoverFilters.genres.length > 0 && discoverFilters.platforms.length > 0 && ' • '}
-                  {discoverFilters.platforms.length > 0 && `Platforms: ${discoverFilters.platforms.join(', ')}`}
+                  {discoverFilters.genres.length > 0 &&
+                    `Genres: ${discoverFilters.genres.join(', ')}`}
+                  {discoverFilters.genres.length > 0 &&
+                    discoverFilters.platforms.length > 0 &&
+                    ' • '}
+                  {discoverFilters.platforms.length > 0 &&
+                    `Platforms: ${discoverFilters.platforms.join(', ')}`}
                 </p>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   {/* This would be replaced with actual filtered content */}
                   {[1, 2, 3, 4].map((item) => (
-                    <div key={item} className="bg-gray-800/50 rounded-lg p-4 text-center backdrop-blur-sm">
+                    <div
+                      key={item}
+                      className="bg-gray-800/50 rounded-lg p-4 text-center backdrop-blur-sm"
+                    >
                       <div className="w-full h-32 bg-gray-700 rounded mb-2 flex items-center justify-center">
                         <Sparkles className="h-8 w-8 text-gray-400" />
                       </div>
-                      <p className="text-sm text-gray-300">Filtered Content {item}</p>
-                      <p className="text-xs text-gray-500">Powered by your filters</p>
+                      <p className="text-sm text-gray-300">
+                        Filtered Content {item}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        Powered by your filters
+                      </p>
                     </div>
                   ))}
                 </div>
@@ -669,9 +723,11 @@ export default function ModernDiscover() {
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-bold text-white flex items-center gap-2">
                 <TrendingUp className="h-5 w-5 text-orange-400" />
-                {searchQuery.trim() ? `Search Results for "${searchQuery}"` :
-                  selectedMood ? `${moodFilters.find(m => m.id === selectedMood)?.label} Picks` :
-                    "Top Picks Today"}
+                {searchQuery.trim()
+                  ? `Search Results for "${searchQuery}"`
+                  : selectedAward
+                    ? `${awardsFilters.find((a) => a.id === selectedAward)?.label} Winners`
+                    : 'Top Picks Today'}
               </h2>
               <Button
                 variant="ghost"
@@ -687,22 +743,30 @@ export default function ModernDiscover() {
             <div className="grid gap-4">
               {searchLoading && searchQuery.trim() ? (
                 <div className="flex items-center justify-center py-8">
-                  <div className="text-gray-400">Searching for "{searchQuery}"...</div>
+                  <div className="text-gray-400">
+                    Searching for "{searchQuery}"...
+                  </div>
                 </div>
               ) : filteredContent.length === 0 ? (
                 <div className="text-center py-8 text-gray-400">
-                  {searchQuery.trim() ? `No results found for "${searchQuery}"` : "No content available"}
+                  {searchQuery.trim()
+                    ? `No results found for "${searchQuery}"`
+                    : 'No content available'}
                 </div>
               ) : (
                 filteredContent.slice(0, 4).map((show: any) => {
                   return (
-                    <Card key={show.id} className="glass-effect border-slate-700/50 hover:border-teal-500/50 transition-all duration-300 group"
+                    <Card
+                      key={show.id}
+                      className="glass-effect border-slate-700/50 hover:border-teal-500/50 transition-all duration-300 group"
                       onClick={async () => {
                         // Fetch real streaming data when card is interacted with
                         if (!show.streamingProviders) {
                           const mediaType = show.title ? 'movie' : 'tv';
                           try {
-                            const response = await fetch(`/api/tmdb/${mediaType}/${show.id}/watch/providers?region=US`);
+                            const response = await fetch(
+                              `/api/tmdb/${mediaType}/${show.id}/watch/providers?region=US`
+                            );
                             if (response.ok) {
                               const data = await response.json();
                               const regionData = data.results?.US;
@@ -710,14 +774,21 @@ export default function ModernDiscover() {
                                 show.streamingProviders = [
                                   ...(regionData.flatrate || []),
                                   ...(regionData.rent || []),
-                                  ...(regionData.buy || [])
-                                ].filter((provider, index, self) =>
-                                  self.findIndex(p => p.provider_id === provider.provider_id) === index
+                                  ...(regionData.buy || []),
+                                ].filter(
+                                  (provider, index, self) =>
+                                    self.findIndex(
+                                      (p) =>
+                                        p.provider_id === provider.provider_id
+                                    ) === index
                                 );
                               }
                             }
                           } catch (error) {
-                            console.error('Error fetching streaming data:', error);
+                            console.error(
+                              'Error fetching streaming data:',
+                              error
+                            );
                           }
                         }
                       }}
@@ -748,39 +819,72 @@ export default function ModernDiscover() {
                                   </Badge>
                                 </h3>
                                 <div className="flex items-center gap-2 mt-1">
-                                  <span className="text-sm text-gray-400">{show.first_air_date ? new Date(show.first_air_date).getFullYear() : show.release_date ? new Date(show.release_date).getFullYear() : ''}</span>
+                                  <span className="text-sm text-gray-400">
+                                    {show.first_air_date
+                                      ? new Date(
+                                          show.first_air_date
+                                        ).getFullYear()
+                                      : show.release_date
+                                        ? new Date(
+                                            show.release_date
+                                          ).getFullYear()
+                                        : ''}
+                                  </span>
                                 </div>
                               </div>
                               <div className="flex items-center gap-1 text-yellow-400">
                                 <Star className="h-4 w-4 fill-current" />
-                                <span className="font-medium">{show.vote_average?.toFixed(1)}</span>
+                                <span className="font-medium">
+                                  {show.vote_average?.toFixed(1)}
+                                </span>
                               </div>
                             </div>
 
-                            <p className="text-gray-300 text-sm line-clamp-2">{show.overview}</p>
+                            <p className="text-gray-300 text-sm line-clamp-2">
+                              {show.overview}
+                            </p>
 
                             {/* Display streaming platforms */}
-                            {show.streamingProviders && show.streamingProviders.length > 0 ? (
+                            {show.streamingProviders &&
+                            show.streamingProviders.length > 0 ? (
                               <div className="flex items-center gap-2">
-                                <span className="text-xs text-gray-400">Available on:</span>
+                                <span className="text-xs text-gray-400">
+                                  Available on:
+                                </span>
                                 <div className="flex gap-1.5">
-                                  {show.streamingProviders.slice(0, 4).map((platform: any, index: number) => (
-                                    <div key={index} className="w-5 h-5 rounded bg-white p-0.5 flex-shrink-0 border border-gray-200">
-                                      <img
-                                        src={platform.logo_path ? `https://image.tmdb.org/t/p/w45${platform.logo_path}` : platform.logoPath}
-                                        alt={platform.provider_name || platform.name}
-                                        className="w-full h-full object-contain rounded"
-                                      />
-                                    </div>
-                                  ))}
+                                  {show.streamingProviders
+                                    .slice(0, 4)
+                                    .map((platform: any, index: number) => (
+                                      <div
+                                        key={index}
+                                        className="w-5 h-5 rounded bg-white p-0.5 flex-shrink-0 border border-gray-200"
+                                      >
+                                        <img
+                                          src={
+                                            platform.logo_path
+                                              ? `https://image.tmdb.org/t/p/w45${platform.logo_path}`
+                                              : platform.logoPath
+                                          }
+                                          alt={
+                                            platform.provider_name ||
+                                            platform.name
+                                          }
+                                          className="w-full h-full object-contain rounded"
+                                        />
+                                      </div>
+                                    ))}
                                   {show.streamingProviders.length > 4 && (
-                                    <span className="text-xs text-gray-400">+{show.streamingProviders.length - 4} more</span>
+                                    <span className="text-xs text-gray-400">
+                                      +{show.streamingProviders.length - 4} more
+                                    </span>
                                   )}
                                 </div>
                               </div>
                             ) : (
                               <div className="flex items-center gap-2">
-                                <span className="text-xs text-gray-400">Streaming info loading...</span>
+                                <span className="text-xs text-gray-400">
+                                  Streaming info loading...
+                                </span>
                               </div>
                             )}
 
@@ -788,7 +892,12 @@ export default function ModernDiscover() {
                               <Button
                                 size="sm"
                                 className="bg-red-500/20 text-red-400 hover:bg-red-500/30 border-red-500/50"
-                                onClick={() => window.open(`https://www.youtube.com/results?search_query=${encodeURIComponent((show.title || show.name) + ' trailer')}`, '_blank')}
+                                onClick={() =>
+                                  window.open(
+                                    `https://www.youtube.com/results?search_query=${encodeURIComponent((show.title || show.name) + ' trailer')}`,
+                                    '_blank'
+                                  )
+                                }
                               >
                                 <Play className="h-3 w-3 mr-2" />
                                 Trailer
@@ -801,15 +910,23 @@ export default function ModernDiscover() {
                                 <Plus className="h-3 w-3 mr-2" />
                                 Add to List
                               </Button>
-                              {show.streamingProviders && show.streamingProviders.length > 0 ? (
+                              {show.streamingProviders &&
+                              show.streamingProviders.length > 0 ? (
                                 <Button
                                   variant="outline"
                                   size="sm"
                                   className="border-slate-600 text-gray-300 hover:bg-slate-700"
-                                  onClick={() => handleWatchNow(show, show.streamingProviders[0])}
+                                  onClick={() =>
+                                    handleWatchNow(
+                                      show,
+                                      show.streamingProviders[0]
+                                    )
+                                  }
                                 >
                                   <Eye className="h-3 w-3 mr-2" />
-                                  Watch on {show.streamingProviders[0].provider_name || show.streamingProviders[0].name}
+                                  Watch on{' '}
+                                  {show.streamingProviders[0].provider_name ||
+                                    show.streamingProviders[0].name}
                                 </Button>
                               ) : (
                                 <Button
@@ -817,9 +934,15 @@ export default function ModernDiscover() {
                                   size="sm"
                                   className="border-slate-600 text-gray-300 hover:bg-slate-700"
                                   onClick={() => {
-                                    console.log("No streaming data available for:", show.name || show.title);
+                                    console.log(
+                                      'No streaming data available for:',
+                                      show.name || show.title
+                                    );
                                     // Fallback search on Google
-                                    window.open(`https://www.google.com/search?q=where+to+watch+${encodeURIComponent(show.name || show.title)}`, '_blank');
+                                    window.open(
+                                      `https://www.google.com/search?q=where+to+watch+${encodeURIComponent(show.name || show.title)}`,
+                                      '_blank'
+                                    );
                                   }}
                                 >
                                   <Eye className="h-3 w-3 mr-2" />
@@ -885,7 +1008,10 @@ export default function ModernDiscover() {
                   Coming Soon - TV Shows
                 </h2>
                 <Link to="/upcoming-releases">
-                  <Button variant="ghost" className="text-teal-400 hover:text-teal-300">
+                  <Button
+                    variant="ghost"
+                    className="text-teal-400 hover:text-teal-300"
+                  >
                     View All
                   </Button>
                 </Link>
@@ -893,12 +1019,19 @@ export default function ModernDiscover() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {upcomingShows.slice(0, 6).map((show: any) => (
-                  <Card key={show.id} className="glass-effect border-slate-700/50 hover:border-teal-500/50 transition-all duration-300">
+                  <Card
+                    key={show.id}
+                    className="glass-effect border-slate-700/50 hover:border-teal-500/50 transition-all duration-300"
+                  >
                     <CardContent className="p-4">
                       <div className="flex gap-3">
                         <div className="relative flex-shrink-0">
                           <img
-                            src={show.posterPath ? `https://image.tmdb.org/t/p/w200${show.posterPath}` : '/placeholder-poster.png'}
+                            src={
+                              show.posterPath
+                                ? `https://image.tmdb.org/t/p/w200${show.posterPath}`
+                                : '/placeholder-poster.png'
+                            }
                             alt={show.title || show.name}
                             className="w-16 h-24 object-cover rounded-md opacity-0 transition-opacity duration-300"
                             onLoad={(e) => {
@@ -916,42 +1049,63 @@ export default function ModernDiscover() {
                             {show.title || show.name}
                           </h3>
                           <div className="text-xs text-gray-400 mb-2 flex items-center gap-2">
-                            <span>{show.releaseDate ? new Date(show.releaseDate).toLocaleDateString() : 'TBA'}</span>
+                            <span>
+                              {show.releaseDate
+                                ? new Date(
+                                    show.releaseDate
+                                  ).toLocaleDateString()
+                                : 'TBA'}
+                            </span>
                             <Badge className="bg-teal-500 text-xs">
-                              {show.releaseType === 'movie' ? 'Movie' :
-                                show.releaseType?.includes('season') ? show.releaseType.replace('_', ' ') :
-                                  show.releaseType?.includes('premiere') ? show.releaseType.replace('_', ' ') :
-                                    'Series'}
+                              {show.releaseType === 'movie'
+                                ? 'Movie'
+                                : show.releaseType?.includes('season')
+                                  ? show.releaseType.replace('_', ' ')
+                                  : show.releaseType?.includes('premiere')
+                                    ? show.releaseType.replace('_', ' ')
+                                    : 'Series'}
                             </Badge>
                           </div>
                           <p className="text-xs text-gray-300 mb-2 line-clamp-2">
-                            {show.description || show.overview || 'New episode coming soon!'}
+                            {show.description ||
+                              show.overview ||
+                              'New episode coming soon!'}
                           </p>
 
                           {/* Streaming Platform Logos */}
-                          {show.streamingProviders && show.streamingProviders.length > 0 && (
-                            <div className="flex items-center gap-1 mb-2">
-                              <span className="text-xs text-gray-400">Available on:</span>
-                              {show.streamingProviders.slice(0, 3).map((provider: any) => (
-                                <img
-                                  key={provider.provider_id}
-                                  src={`https://image.tmdb.org/t/p/w45${provider.logo_path}`}
-                                  alt={provider.provider_name}
-                                  className="w-4 h-4 rounded-sm"
-                                  onError={(e) => {
-                                    e.currentTarget.style.display = 'none';
-                                  }}
-                                />
-                              ))}
-                            </div>
-                          )}
+                          {show.streamingProviders &&
+                            show.streamingProviders.length > 0 && (
+                              <div className="flex items-center gap-1 mb-2">
+                                <span className="text-xs text-gray-400">
+                                  Available on:
+                                </span>
+                                {show.streamingProviders
+                                  .slice(0, 3)
+                                  .map((provider: any) => (
+                                    <img
+                                      key={provider.provider_id}
+                                      src={`https://image.tmdb.org/t/p/w45${provider.logo_path}`}
+                                      alt={provider.provider_name}
+                                      className="w-4 h-4 rounded-sm"
+                                      onError={(e) => {
+                                        e.currentTarget.style.display = 'none';
+                                      }}
+                                    />
+                                  ))}
+                              </div>
+                            )}
 
                           <div className="flex gap-1 flex-wrap">
                             <Button
                               size="sm"
                               variant="outline"
                               className="text-xs h-6 px-2 border-red-500/30 text-red-400 hover:bg-red-500/10"
-                              onClick={() => window.open(`https://www.youtube.com/results?search_query=${encodeURIComponent((show.title || show.name) + ' trailer')}`, '_blank')}
+                              onClick={() =>
+                                window.open(
+                                  `https://www.youtube.com/results?search_query=${encodeURIComponent((show.title || show.name) + ' trailer')}`,
+                                  '_blank'
+                                )
+                              }
                             >
                               <Play className="h-3 w-3 mr-1" />
                               Trailer
@@ -1004,7 +1158,10 @@ export default function ModernDiscover() {
                   Coming Soon - Movies
                 </h2>
                 <Link to="/upcoming-releases">
-                  <Button variant="ghost" className="text-teal-400 hover:text-teal-300">
+                  <Button
+                    variant="ghost"
+                    className="text-teal-400 hover:text-teal-300"
+                  >
                     View All
                   </Button>
                 </Link>
@@ -1012,12 +1169,19 @@ export default function ModernDiscover() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {upcomingMovies.slice(0, 4).map((movie: any) => (
-                  <Card key={movie.id} className="glass-effect border-slate-700/50 hover:border-teal-500/50 transition-all duration-300">
+                  <Card
+                    key={movie.id}
+                    className="glass-effect border-slate-700/50 hover:border-teal-500/50 transition-all duration-300"
+                  >
                     <CardContent className="p-4">
                       <div className="flex gap-3">
                         <div className="relative flex-shrink-0">
                           <img
-                            src={movie.posterPath ? `https://image.tmdb.org/t/p/w200${movie.posterPath}` : '/placeholder-poster.png'}
+                            src={
+                              movie.posterPath
+                                ? `https://image.tmdb.org/t/p/w200${movie.posterPath}`
+                                : '/placeholder-poster.png'
+                            }
                             alt={movie.title || movie.name}
                             className="w-16 h-24 object-cover rounded-md opacity-0 transition-opacity duration-300"
                             onLoad={(e) => {
@@ -1038,42 +1202,63 @@ export default function ModernDiscover() {
                             {movie.title || movie.name}
                           </h3>
                           <div className="text-xs text-gray-400 mb-2 flex items-center gap-2">
-                            <span>{movie.releaseDate ? new Date(movie.releaseDate).toLocaleDateString() : 'TBA'}</span>
+                            <span>
+                              {movie.releaseDate
+                                ? new Date(
+                                    movie.releaseDate
+                                  ).toLocaleDateString()
+                                : 'TBA'}
+                            </span>
                             <Badge className="bg-teal-500 text-xs">
-                              {movie.releaseType === 'movie' ? 'Movie' :
-                                movie.releaseType?.includes('season') ? movie.releaseType.replace('_', ' ') :
-                                  movie.releaseType?.includes('premiere') ? movie.releaseType.replace('_', ' ') :
-                                    'Movie'}
+                              {movie.releaseType === 'movie'
+                                ? 'Movie'
+                                : movie.releaseType?.includes('season')
+                                  ? movie.releaseType.replace('_', ' ')
+                                  : movie.releaseType?.includes('premiere')
+                                    ? movie.releaseType.replace('_', ' ')
+                                    : 'Movie'}
                             </Badge>
                           </div>
                           <p className="text-xs text-gray-300 mb-2 line-clamp-2">
-                            {movie.description || movie.overview || 'New movie coming soon!'}
+                            {movie.description ||
+                              movie.overview ||
+                              'New movie coming soon!'}
                           </p>
 
                           {/* Streaming Platform Logos */}
-                          {movie.streamingProviders && movie.streamingProviders.length > 0 && (
-                            <div className="flex items-center gap-1 mb-2">
-                              <span className="text-xs text-gray-400">Available on:</span>
-                              {movie.streamingProviders.slice(0, 3).map((provider: any) => (
-                                <img
-                                  key={provider.provider_id}
-                                  src={`https://image.tmdb.org/t/p/w45${provider.logo_path}`}
-                                  alt={provider.provider_name}
-                                  className="w-4 h-4 rounded-sm"
-                                  onError={(e) => {
-                                    e.currentTarget.style.display = 'none';
-                                  }}
-                                />
-                              ))}
-                            </div>
-                          )}
+                          {movie.streamingProviders &&
+                            movie.streamingProviders.length > 0 && (
+                              <div className="flex items-center gap-1 mb-2">
+                                <span className="text-xs text-gray-400">
+                                  Available on:
+                                </span>
+                                {movie.streamingProviders
+                                  .slice(0, 3)
+                                  .map((provider: any) => (
+                                    <img
+                                      key={provider.provider_id}
+                                      src={`https://image.tmdb.org/t/p/w45${provider.logo_path}`}
+                                      alt={provider.provider_name}
+                                      className="w-4 h-4 rounded-sm"
+                                      onError={(e) => {
+                                        e.currentTarget.style.display = 'none';
+                                      }}
+                                    />
+                                  ))}
+                              </div>
+                            )}
 
                           <div className="flex gap-1 flex-wrap">
                             <Button
                               size="sm"
                               variant="outline"
                               className="text-xs h-6 px-2 border-red-500/30 text-red-400 hover:bg-red-500/10"
-                              onClick={() => window.open(`https://www.youtube.com/results?search_query=${encodeURIComponent((movie.title || movie.name) + ' trailer')}`, '_blank')}
+                              onClick={() =>
+                                window.open(
+                                  `https://www.youtube.com/results?search_query=${encodeURIComponent((movie.title || movie.name) + ' trailer')}`,
+                                  '_blank'
+                                )
+                              }
                             >
                               <Play className="h-3 w-3 mr-1" />
                               Trailer
@@ -1130,7 +1315,7 @@ export default function ModernDiscover() {
                 <Button
                   variant="ghost"
                   className="text-teal-400 hover:text-teal-300"
-                  onClick={() => window.location.href = '/upcoming-releases'}
+                  onClick={() => (window.location.href = '/upcoming-releases')}
                 >
                   View All
                 </Button>
@@ -1161,11 +1346,12 @@ export default function ModernDiscover() {
                 <div className="w-8 h-8 bg-gradient-to-br from-teal-500 to-blue-600 rounded-lg flex items-center justify-center">
                   <Sparkles className="h-4 w-4 text-white" />
                 </div>
-                <h2 className="text-xl font-bold text-white">
-                  Hidden Gems
-                </h2>
+                <h2 className="text-xl font-bold text-white">Hidden Gems</h2>
               </div>
-              <Button variant="ghost" className="text-teal-400 hover:text-teal-300">
+              <Button
+                variant="ghost"
+                className="text-teal-400 hover:text-teal-300"
+              >
                 View All
               </Button>
             </div>
@@ -1185,9 +1371,6 @@ export default function ModernDiscover() {
               ))}
             </HorizontalScrollContainer>
           </div>
-
-
-
         </div>
       </div>
     </div>

@@ -5,13 +5,16 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
-import { Loader2, Filter, ChevronDown, ChevronUp, ChevronRight } from "lucide-react";
+import { Loader2, Filter, ChevronDown, ChevronUp, ChevronRight, Trophy, Award, TrendingUp, Flame, Star } from "lucide-react";
+import { isAwardSeason, getAwardBadgeStyles, AWARD_GRADIENTS } from "@/styles/constants";
 
 interface FilterValues {
   genres: string[];
   platforms: string[];
   countries: string[];
   sports: string[];
+  awardSeason: string[]; // "winners", "nominees", "trending"
+  trending: string[]; // "hot", "rising", "viral"
 }
 
 interface Props {
@@ -45,7 +48,9 @@ export default function EnhancedFilterSystem({
     genres: [],
     platforms: [],
     countries: [],
-    sports: []
+    sports: [],
+    awardSeason: [],
+    trending: []
   });
 
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
@@ -56,7 +61,9 @@ export default function EnhancedFilterSystem({
     genres: false,
     platforms: false,
     countries: false,
-    sports: false
+    sports: false,
+    awardSeason: false,
+    trending: false
   });
 
   const toggleSection = (sectionKey: string) => {
@@ -80,7 +87,9 @@ export default function EnhancedFilterSystem({
       genres: [],
       platforms: [],
       countries: [],
-      sports: []
+      sports: [],
+      awardSeason: [],
+      trending: []
     });
   };
 
@@ -141,7 +150,9 @@ export default function EnhancedFilterSystem({
     ...localFilters.genres,
     ...localFilters.platforms,
     ...localFilters.countries,
-    ...localFilters.sports
+    ...localFilters.sports,
+    ...localFilters.awardSeason,
+    ...localFilters.trending
   ].length;
 
   useEffect(() => {
@@ -190,6 +201,16 @@ export default function EnhancedFilterSystem({
             {localFilters.sports.length > 0 && (
               <div className="bg-orange-600/20 text-orange-300 px-2 py-1 rounded-full text-xs whitespace-nowrap min-w-0 flex-shrink-0">
                 {localFilters.sports.join(' • ')}
+              </div>
+            )}
+            {localFilters.awardSeason.length > 0 && (
+              <div className="bg-yellow-600/20 text-yellow-300 px-2 py-1 rounded-full text-xs whitespace-nowrap min-w-0 flex-shrink-0">
+                🏆 {localFilters.awardSeason.join(' • ')}
+              </div>
+            )}
+            {localFilters.trending.length > 0 && (
+              <div className="bg-red-600/20 text-red-300 px-2 py-1 rounded-full text-xs whitespace-nowrap min-w-0 flex-shrink-0">
+                🔥 {localFilters.trending.join(' • ')}
               </div>
             )}
             <span className="text-gray-500 text-xs whitespace-nowrap ml-2">
@@ -254,13 +275,23 @@ export default function EnhancedFilterSystem({
                 )}
               </Button>
             )}
-            <h3 className={`font-medium ${compactMode ? "text-xs" : "text-sm"}`}>
+            <h3 className={`font-medium ${compactMode ? "text-xs" : "text-sm"} flex items-center gap-1`}>
               {title}
+              {localFilters[filterKey].length === 0 && (
+                <span className="text-xs text-gray-500 font-normal">(multi-select)</span>
+              )}
             </h3>
           </div>
           {localFilters[filterKey].length > 0 && (
-            <Badge variant="secondary" className="text-xs">
-              {localFilters[filterKey].length}
+            <Badge 
+              variant="secondary" 
+              className={`text-xs ${
+                filterKey === 'awardSeason' ? 'bg-yellow-500/20 text-yellow-300 border-yellow-500/30' :
+                filterKey === 'trending' ? 'bg-red-500/20 text-red-300 border-red-500/30' :
+                'bg-blue-500/20 text-blue-300 border-blue-500/30'
+              }`}
+            >
+              {localFilters[filterKey].length} selected
             </Badge>
           )}
         </div>
@@ -272,9 +303,14 @@ export default function EnhancedFilterSystem({
                 size={compactMode ? "sm" : "sm"}
                 onClick={() => toggle(filterKey, item.name)}
                 variant={localFilters[filterKey].includes(item.name) ? "default" : "outline"}
-                className={`${compactMode ? "text-xs h-7" : "h-8"} min-w-[48px] snap-start flex-shrink-0 touch-manipulation select-none`}
+                className={`${compactMode ? "text-xs h-7" : "h-8"} min-w-[48px] snap-start flex-shrink-0 touch-manipulation select-none
+                  ${filterKey === 'awardSeason' && localFilters[filterKey].includes(item.name) ? 'bg-gradient-to-r from-yellow-500 to-amber-500 text-white border-0 shadow-lg' : ''}
+                  ${filterKey === 'trending' && localFilters[filterKey].includes(item.name) ? 'bg-gradient-to-r from-red-500 to-orange-500 text-white border-0 shadow-lg' : ''}
+                  ${filterKey === 'trending' && item.name === 'hot' ? 'animate-pulse' : ''}
+                  ${filterKey === 'trending' && item.name === 'viral' ? 'animate-bounce' : ''}
+                `}
               >
-                {item.name}
+                {item.displayName || item.name}
               </Button>
             ))}
           </div>
@@ -285,6 +321,18 @@ export default function EnhancedFilterSystem({
 
   return (
     <Card className={`w-full ${compactMode ? 'p-1 rounded-lg shadow border border-gray-700 bg-gray-850' : className}`}>
+      {/* Award Season Banner */}
+      {isAwardSeason(new Date()) && (
+        <div className={`${AWARD_GRADIENTS.winner} px-4 py-2 border-b border-yellow-500/20`}>
+          <div className="flex items-center justify-center gap-2 text-center">
+            <Trophy className="h-4 w-4 text-yellow-200" />
+            <span className="text-sm font-medium text-yellow-100">
+              🏆 Award Season Special - Filter by winners & nominees
+            </span>
+            <Award className="h-4 w-4 text-yellow-200" />
+          </div>
+        </div>
+      )}
       <CardHeader className={compactMode ? "pb-2 px-2" : ""}>
         <div className="flex items-center justify-between">
           <CardTitle className={`flex items-center gap-2 ${compactMode ? "text-sm font-semibold" : ""}`}>
@@ -315,12 +363,16 @@ export default function EnhancedFilterSystem({
         {showFilterSummary && activeFilterCount > 0 && (
           <div className="text-xs text-muted-foreground mt-1">
             <div className="flex items-center justify-between">
-              <span>Active Filters: {activeFilterCount} selected</span>
+              <span className="flex items-center gap-1">
+                Active Filters: {activeFilterCount} selected
+                {activeFilterCount >= 5 && <Flame className="h-3 w-3 text-orange-400 animate-pulse" />}
+                {activeFilterCount >= 10 && <Star className="h-3 w-3 text-yellow-400 animate-pulse" />}
+              </span>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={clearAllFilters}
-                className="text-xs text-red-400 hover:text-red-500 h-5 px-2"
+                className="text-xs text-red-400 hover:text-red-500 h-5 px-2 hover:bg-red-500/10 transition-colors"
               >
                 Clear All
               </Button>
@@ -346,6 +398,16 @@ export default function EnhancedFilterSystem({
                   {sport}
                 </Badge>
               ))}
+              {localFilters.awardSeason.map(award => (
+                <Badge key={award} variant="outline" className="text-2xs px-1 py-0.5 bg-yellow-500/10 text-yellow-400 border-yellow-500/30">
+                  🏆 {award}
+                </Badge>
+              ))}
+              {localFilters.trending.map(trend => (
+                <Badge key={trend} variant="outline" className="text-2xs px-1 py-0.5 bg-red-500/10 text-red-400 border-red-500/30">
+                  🔥 {trend}
+                </Badge>
+              ))}
             </div>
           </div>
         )}
@@ -360,7 +422,9 @@ export default function EnhancedFilterSystem({
                 { key: "genres", label: "Genres" },
                 { key: "platforms", label: "Platforms" },
                 { key: "countries", label: "Countries" },
-                { key: "sports", label: "Sports" }
+                { key: "sports", label: "Sports" },
+                ...(isAwardSeason(new Date()) ? [{ key: "awardSeason", label: "🏆 Awards" }] : []),
+                { key: "trending", label: "🔥 Trending" }
               ].map((tab) => (
                 <Button
                   key={tab.key}
@@ -427,6 +491,29 @@ export default function EnhancedFilterSystem({
                   <FilterSection title="Sports" items={sports} filterKey="sports" />
                 )
               )}
+              {currentTab === 'awardSeason' && (
+                <FilterSection 
+                  title="🏆 Award Season" 
+                  items={[
+                    { name: "winners", displayName: "🏆 Winners" },
+                    { name: "nominees", displayName: "🎯 Nominees" },
+                    { name: "contenders", displayName: "⭐ Contenders" }
+                  ]} 
+                  filterKey="awardSeason" 
+                />
+              )}
+              {currentTab === 'trending' && (
+                <FilterSection 
+                  title="🔥 Trending" 
+                  items={[
+                    { name: "hot", displayName: "🔥 Hot Now" },
+                    { name: "rising", displayName: "📈 Rising" },
+                    { name: "viral", displayName: "💥 Viral" },
+                    { name: "popular", displayName: "⭐ Popular" }
+                  ]} 
+                  filterKey="trending" 
+                />
+              )}
             </>
           ) : (
             // Full view for non-compact mode
@@ -474,6 +561,31 @@ export default function EnhancedFilterSystem({
               ) : (
                 <FilterSection title="Sports" items={sports} filterKey="sports" />
               )}
+
+              {/* Award Season Section - Only show during award season */}
+              {isAwardSeason(new Date()) && (
+                <FilterSection 
+                  title="🏆 Award Season" 
+                  items={[
+                    { name: "winners", displayName: "🏆 Winners" },
+                    { name: "nominees", displayName: "🎯 Nominees" },
+                    { name: "contenders", displayName: "⭐ Contenders" }
+                  ]} 
+                  filterKey="awardSeason" 
+                />
+              )}
+
+              {/* Trending Section */}
+              <FilterSection 
+                title="🔥 Trending" 
+                items={[
+                  { name: "hot", displayName: "🔥 Hot Now" },
+                  { name: "rising", displayName: "📈 Rising" },
+                  { name: "viral", displayName: "💥 Viral" },
+                  { name: "popular", displayName: "⭐ Popular" }
+                ]} 
+                filterKey="trending" 
+              />
             </>
           )}
 
