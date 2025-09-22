@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { useLocation } from 'wouter';
 import { useAuth } from '@/hooks/useAuth';
 import { isMobileDevice } from '@/lib/deviceUtils';
-import Dashboard from './dashboard-polished';
+import Dashboard from './dashboard';
 import Landing from './landing';
 
 /**

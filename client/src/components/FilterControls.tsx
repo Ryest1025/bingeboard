@@ -86,7 +86,7 @@ const FilterControls: React.FC<FilterControlsProps> = ({
             >
               Genre
             </DropdownMenuItem>
-            {genres.map((genre) => (
+            {Array.isArray(genres) && genres.map((genre) => (
               <DropdownMenuItem
                 key={genre.id}
                 onClick={() => onGenreChange(genre.id.toString())}
