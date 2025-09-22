@@ -146,6 +146,13 @@ const DashboardPageReconstructed: React.FC = () => {
     <div className="min-h-screen bg-slate-900">
       <div className="px-4 md:px-8 lg:px-16 space-y-12 py-8">
         <NavigationHeader />
+        
+        {/* Distinctive marker for reconstructed dashboard */}
+        <div className="bg-purple-600 text-white p-4 rounded-lg text-center">
+          <h2 className="text-xl font-bold">🚀 RECONSTRUCTED DASHBOARD (9/20 Style)</h2>
+          <p className="text-sm">This is the test version with hero carousel and dropdown filters</p>
+        </div>
+        
         <HeroCarousel shows={processedTrending.slice(0,5)} />
 
         {/* For You Section */}

@@ -7,7 +7,16 @@ const SpotlightSection: React.FC<{ shows: NormalizedMedia[] }> = ({ shows }) => 
   const [index, setIndex] = useState(0);
   const spotlight = shows[index];
 
-  if (!spotlight) return null;
+  if (!spotlight) {
+    return (
+      <section className="relative h-96 rounded-xl overflow-hidden bg-slate-800 flex items-center justify-center">
+        <div className="text-center text-white">
+          <h2 className="text-2xl font-bold mb-2">Loading Spotlight...</h2>
+          <p className="text-slate-400">Fetching featured content</p>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="relative h-96 rounded-xl overflow-hidden bg-slate-800">

@@ -4,7 +4,15 @@ import { Section } from '@/components/shared/Section';
 import type { NormalizedMedia } from '@/types/media';
 
 const ForYouSection: React.FC<{ shows: NormalizedMedia[] }> = ({ shows }) => {
-  if (!shows?.length) return null;
+  if (!shows?.length) {
+    return (
+      <Section title="Recommended for You">
+        <div className="bg-slate-800 rounded-lg p-8 text-center">
+          <p className="text-slate-400">Loading recommendations...</p>
+        </div>
+      </Section>
+    );
+  }
 
   return (
     <Section title="Recommended for You">
