@@ -38,10 +38,10 @@ const DashboardPage: React.FC = () => {
   const { data: sportsData } = useQuery({
     queryKey: ['live-sports'],
     queryFn: async () => {
-      const res = await fetch('/api/sports/live');
-      if (!res.ok) throw new Error('Failed to fetch sports');
-      return res.json();
+      // Sports endpoint not available yet, return empty data
+      return { events: [] };
     },
+    enabled: false, // Disable this query until sports endpoint is implemented
   });
 
   const processed = useMemo(() => ({
@@ -58,7 +58,7 @@ const DashboardPage: React.FC = () => {
         <SpotlightSection shows={processed.spotlight} />
         <ForYouSection shows={processed.personalized} />
         <ContinueWatchingSection items={processed.continueWatching} />
-        <SportsSection events={processed.sports} />
+        {processed.sports.length > 0 && <SportsSection events={processed.sports} />}
       </div>
     </div>
   );
