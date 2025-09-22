@@ -14,6 +14,7 @@ import NotFound from "@/pages/not-found";
 
 // Lazy imports
 const LazyTestPersonalized = React.lazy(() => import("@/pages/test-personalized"));
+const LazyDashboardReconstructed = React.lazy(() => import("@/pages/dashboard-reconstructed"));
 
 export const publicRoutes = [
   { path: "/landing", component: Landing },
@@ -31,6 +32,7 @@ export const protectedRoutes = [
   { path: "/modern-discover", component: Discover, requireAuth: true },
   { path: "/search", component: SearchResultsPage, requireAuth: true },
   { path: "/test-personalized", component: LazyTestPersonalized, lazy: true, requireAuth: true },
+  { path: "/test-dashboard", component: LazyDashboardReconstructed, lazy: true, requireAuth: true },
 ];
 
 export const notFoundRoute = { component: NotFound };
@@ -43,5 +45,6 @@ export const navHiddenRoutes = [
   "/upcoming",
   "/activity", 
   "/friends",
-  "/dashboard"
+  "/dashboard",
+  "/test-dashboard"
 ];
