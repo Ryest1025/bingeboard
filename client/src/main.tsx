@@ -132,6 +132,19 @@ const initApp = () => {
 
     createRoot(rootEl).render(<App />);
     clearTimeout(loadingTimeout);
+    
+    // Hide the animated loading screen
+    const loadingScreen = document.querySelector('.loading-fallback') as HTMLElement;
+    if (loadingScreen) {
+      setTimeout(() => {
+        loadingScreen.style.opacity = '0';
+        loadingScreen.style.transition = 'opacity 0.5s ease-out';
+        setTimeout(() => {
+          loadingScreen.remove();
+        }, 500);
+      }, 100); // Small delay to ensure React has rendered
+    }
+    
     console.log("✅ React app rendered successfully");
   } catch (err) {
     console.error("❌ Critical error in main.tsx:", err);
