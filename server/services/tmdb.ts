@@ -1,11 +1,15 @@
 import fetch from 'node-fetch';
 
-const TMDB_API_KEY = process.env.TMDB_API_KEY;
 const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
 
-if (!TMDB_API_KEY) {
-  console.warn('TMDB_API_KEY not found in environment variables');
-}
+// Get API key dynamically to ensure proper environment loading
+const getTMDBAPIKey = () => {
+  const key = process.env.TMDB_API_KEY;
+  if (!key) {
+    console.warn('TMDB_API_KEY not found in environment variables');
+  }
+  return key;
+};
 
 interface TMDBShow {
   id: number;
@@ -45,6 +49,7 @@ interface TMDBResponse<T> {
 
 export class TMDBService {
   private async makeRequest<T>(endpoint: string): Promise<T> {
+    const TMDB_API_KEY = getTMDBAPIKey();
     if (!TMDB_API_KEY) {
       throw new Error('TMDB API key not configured');
     }
@@ -106,6 +111,7 @@ export class TMDBService {
   async discover(mediaType: 'tv' | 'movie' = 'tv', filters: {
     sortBy?: string;
     genres?: string;
+    with_genres?: string;
     networks?: string;
     companies?: string;
     keywords?: string;
@@ -115,6 +121,11 @@ export class TMDBService {
     firstAirDateLte?: string;
     withRuntimeGte?: number;
     withRuntimeLte?: number;
+    with_watch_providers?: string;
+    watch_region?: string;
+    with_networks?: string;
+    with_original_language?: string;
+    first_air_date_year?: number;
     page?: number;
   } = {}) {
     const params = new URLSearchParams();
@@ -224,7 +235,7 @@ export class TMDBService {
     return this.discover('tv', {
       with_genres: genre,
       first_air_date_year: year,
-      vote_average_gte: rating,
+      voteAverageGte: rating,
       with_networks: network,
       with_original_language: language,
       page

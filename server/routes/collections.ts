@@ -271,4 +271,71 @@ router.delete('/:id', (req, res) => {
   }
 });
 
+// POST /api/collections/watchlist/add - Add to watchlist
+router.post('/watchlist/add', (req, res) => {
+  try {
+    const { user_id, show_id, show_title, show_poster } = req.body;
+
+    if (!user_id || !show_id) {
+      return res.status(400).json({ 
+        error: 'Missing required fields: user_id, show_id' 
+      });
+    }
+
+    // Create or get watchlist collection for user
+    let watchlistStmt = db.prepare(`
+      SELECT id FROM user_collections 
+      WHERE user_id = ? AND name = 'Watchlist'
+    `);
+    
+    let watchlist = watchlistStmt.get(user_id) as { id: number } | undefined;
+    
+    if (!watchlist) {
+      // Create watchlist collection
+      const createWatchlistStmt = db.prepare(`
+        INSERT INTO user_collections (
+          user_id, name, description, is_public, tags,
+          created_at, updated_at
+        ) VALUES (?, 'Watchlist', 'My shows to watch', 0, '[]', datetime('now'), datetime('now'))
+      `);
+      
+      const result = createWatchlistStmt.run(user_id);
+      watchlist = { id: Number(result.lastInsertRowid) };
+    }
+
+    // Add show to watchlist
+    const addShowStmt = db.prepare(`
+      INSERT OR REPLACE INTO collection_items (
+        collection_id, show_id, show_title, show_poster, added_at
+      ) VALUES (?, ?, ?, ?, datetime('now'))
+    `);
+    
+    addShowStmt.run(watchlist.id, show_id, show_title || 'Unknown Title', show_poster || '');
+    
+    res.json({ success: true, message: 'Added to watchlist' });
+  } catch (error) {
+    console.error('Error adding to watchlist:', error);
+    res.status(500).json({ error: 'Failed to add to watchlist' });
+  }
+});
+
+// POST /api/collections/share - Share a show
+router.post('/share', (req, res) => {
+  try {
+    const { show_id, show_title, platform } = req.body;
+    
+    // For now, just return success - real sharing would integrate with social platforms
+    console.log(`Sharing ${show_title} (${show_id}) on ${platform}`);
+    
+    res.json({ 
+      success: true, 
+      message: `Shared "${show_title}" successfully`,
+      share_url: `https://bingeboard.com/show/${show_id}`
+    });
+  } catch (error) {
+    console.error('Error sharing show:', error);
+    res.status(500).json({ error: 'Failed to share show' });
+  }
+});
+
 export default router;

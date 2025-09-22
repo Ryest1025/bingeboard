@@ -1,35 +1,36 @@
-import { memo } from 'react';
+import React, { memo } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Play, Star, Plus, Share2, Calendar, Clock } from 'lucide-react';
-import { GRADIENTS, POSTER_SIZES, getRatingColor, getPlatformColor, getVariantStyles } from '@/styles/constants';
-import { StreamingBadges } from './StreamingBadges';
+import { Star, Plus, Play, Calendar, Clock, Share2 } from 'lucide-react';
+import StreamingLogoGrid from '@/components/StreamingLogoGrid';
 
-interface ContentItem {
+interface Show {
   id: number;
   title?: string;
   name?: string;
-  overview?: string;
   poster_path?: string;
   backdrop_path?: string;
   vote_average?: number;
-  first_air_date?: string;
-  release_date?: string;
   genre_ids?: number[];
-  streaming_platforms?: { provider_name: string; logo_path?: string }[];
-  award?: string; // e.g., "Oscar Best Picture 2025"
+  overview?: string;
+  release_date?: string;
+  first_air_date?: string;
+  media_type?: 'movie' | 'tv';
+  streaming_platforms?: Array<{ provider_id?: number; provider_name?: string; name?: string; logo_path?: string }>;
+  streamingPlatforms?: Array<{ provider_id?: number; provider_name?: string; name?: string; logo_path?: string }>;
+  streaming?: Array<{ provider_id?: number; provider_name?: string; name?: string; logo_path?: string }>;
 }
 
 interface EnhancedShowCardProps {
-  show: ContentItem;
-  variant?: 'trending' | 'upcoming' | 'search' | 'award';
-  onAddToWatchlist: (show: ContentItem) => void;
-  onShareContent: (show: ContentItem) => void;
-  onCardClick?: (show: ContentItem) => void;
+  show: Show;
+  variant?: 'default' | 'compact' | 'detailed' | 'spotlight' | 'trending' | 'upcoming' | 'search' | 'award';
+  onAddToWatchlist: (show: Show) => void;
+  onWatchTrailer?: (show: Show) => void;
+  onCardClick?: (show: Show) => void;
+  onShareContent?: (show: Show) => void;
   genreMap?: Record<number, string>;
   size?: 'sm' | 'md' | 'lg';
-  className?: string;
 }
 
 // Helper to calculate days until release
@@ -45,6 +46,7 @@ export const EnhancedShowCard = memo(({
   onAddToWatchlist,
   onShareContent,
   onCardClick,
+  onWatchTrailer,
   genreMap,
   size = 'md',
   className = '',
@@ -143,7 +145,24 @@ export const EnhancedShowCard = memo(({
 
           {show.overview && <p className="text-slate-300 text-sm line-clamp-2">{show.overview}</p>}
 
-          <StreamingBadges platforms={show.streaming_platforms} maxShow={3} />
+          {(() => {
+            const platforms = show.streaming_platforms || show.streamingPlatforms || show.streaming || [];
+            console.log(`🎬 ShowCard Debug: ${title}`, {
+              streaming_platforms: show.streaming_platforms,
+              streamingPlatforms: show.streamingPlatforms,
+              streaming: show.streaming,
+              finalPlatforms: platforms,
+              platformCount: platforms.length
+            });
+            
+            return (
+              <StreamingLogoGrid providers={platforms?.map((platform: any, index: number) => ({
+                provider_id: platform.provider_id || index + 1,
+                provider_name: platform.provider_name,
+                logo_path: platform.logo_path || null
+              }))} />
+            );
+          })()}
 
           {variant === 'upcoming' && releaseDate && daysUntilRelease !== null && (
             <div className="absolute bottom-2 left-2 bg-emerald-600/90 backdrop-blur-sm rounded-full px-2 py-1 flex items-center gap-1 text-xs text-white">

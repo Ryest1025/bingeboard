@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { 
-  getAuth, 
   signInWithPopup, 
   GoogleAuthProvider, 
   FacebookAuthProvider,
@@ -8,6 +7,7 @@ import {
   onAuthStateChanged,
   type User 
 } from "firebase/auth";
+import { auth } from "@/firebase/config"; // Use centralized auth instance
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -16,8 +16,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { SiGoogle, SiFacebook } from "react-icons/si";
 import { LogOut, User as UserIcon, CheckCircle, XCircle, Mail, Lock, Phone, RefreshCw } from "lucide-react";
-
-const auth = getAuth();
 
 export default function AuthComprehensiveTest() {
   const { toast } = useToast();

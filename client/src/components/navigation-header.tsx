@@ -15,43 +15,24 @@ import BrandedSearchBar from "@/components/search/BrandedSearchBar";
 
 export default function NavigationHeader() {
   const [location, setLocation] = useLocation();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+
 
   // Close mobile menu when location changes
   useEffect(() => {
     setIsMobileMenuOpen(false);
   }, [location]);
 
-  // Handle logout with proper Firebase and server cleanup
+  // Handle logout using the useAuth hook
   const handleLogout = async () => {
     try {
-      // First, sign out from Firebase
-      const { signOut } = await import("firebase/auth");
-      const { auth } = await import("../firebase/config");
-
-      await signOut(auth);
-
-      // Clear any stored tokens
-      localStorage.removeItem('firebaseToken');
-      sessionStorage.removeItem('firebaseToken');
-
-      // Call server logout
-      await fetch('/api/logout', {
-        method: 'GET',
-        credentials: 'include'
-      });
-
-      // Clear any other auth-related storage
-      localStorage.clear();
-      sessionStorage.clear();
-
-      // Force navigation to landing page
-      window.location.href = '/';
-
+      console.log('🔐 Navigation logout clicked');
+      await logout();
     } catch (error) {
-      console.error('Logout error:', error);
+      console.error('🔐 Navigation logout error:', error);
       // Fallback: force navigation to landing page even if logout fails
       window.location.href = '/';
     }
@@ -222,23 +203,23 @@ export default function NavigationHeader() {
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                   <Avatar className="h-8 w-8">
-                    <AvatarImage src={user?.photoURL || undefined} alt={user?.displayName || 'User'} />
+                    <AvatarImage src={undefined} alt={user?.displayName || 'User'} />
                     <AvatarFallback className="bg-gradient-to-br from-teal-500 to-blue-500 text-white text-sm">
                       {user?.displayName?.[0] || user?.email?.[0] || 'U'}
                     </AvatarFallback>
                   </Avatar>
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="glass-effect border-white/20">
-                <DropdownMenuItem onClick={() => setLocation('/profile')}>
+              <DropdownMenuContent align="end" className="glass-effect border-white/20 bg-slate-900/95 text-white">
+                <DropdownMenuItem onClick={() => setLocation('/profile')} className="text-white hover:bg-white/10 focus:bg-white/10">
                   <User className="mr-2 h-4 w-4" />
                   Profile
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setLocation('/streaming')}>
+                <DropdownMenuItem onClick={() => setLocation('/streaming')} className="text-white hover:bg-white/10 focus:bg-white/10">
                   <Settings className="mr-2 h-4 w-4" />
                   Settings
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleLogout}>
+                <DropdownMenuItem onClick={handleLogout} className="text-white hover:bg-white/10 focus:bg-white/10">
                   <LogOut className="mr-2 h-4 w-4" />
                   Logout
                 </DropdownMenuItem>

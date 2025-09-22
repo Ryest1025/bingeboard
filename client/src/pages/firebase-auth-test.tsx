@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { 
-  getAuth, 
   signInWithPopup, 
   GoogleAuthProvider, 
   FacebookAuthProvider,
@@ -8,6 +7,7 @@ import {
   onAuthStateChanged,
   type User 
 } from "firebase/auth";
+import { auth } from "@/firebase/config"; // Use centralized auth instance
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -16,8 +16,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { SiGoogle, SiFacebook } from "react-icons/si";
 import { LogOut, User as UserIcon, CheckCircle, XCircle, Mail, Lock, RefreshCw } from "lucide-react";
-
-const auth = getAuth();
 
 export default function FirebaseAuthTest() {
   const { toast } = useToast();
@@ -421,7 +419,7 @@ export default function FirebaseAuthTest() {
       if (response.ok) {
         const data = await response.json();
         setServerStatus("Online ✅");
-        setDebugInfo(prev => ({ ...prev, serverOnline: true, users: data }));
+        setDebugInfo((prev: any) => ({ ...prev, serverOnline: true, users: data }));
         console.log("✅ Server is online. Users found:", data);
         
         toast({
@@ -430,6 +428,40 @@ export default function FirebaseAuthTest() {
       }
     } catch (error) {
       console.error("❌ Error checking account:", error);
+    }
+  };
+
+  const checkMyAccount = async () => {
+    try {
+      console.log("👤 Checking my account...");
+      const response = await fetch('/api/user/profile', {
+        credentials: 'include'
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setDebugInfo((prev: any) => ({ ...prev, myAccount: data }));
+        console.log("✅ Account found:", data);
+        
+        toast({
+          title: "Account Found!",
+          description: `Found account for ${data.email}`,
+        });
+      } else {
+        console.log("❌ No account found or not logged in");
+        toast({
+          title: "No Account Found",
+          description: "You may need to log in first",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("❌ Error checking account:", error);
+      toast({
+        title: "Error",
+        description: "Failed to check account",
+        variant: "destructive",
+      });
     }
   };
 

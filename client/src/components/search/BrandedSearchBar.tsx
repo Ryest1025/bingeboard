@@ -1,5 +1,6 @@
 // components/search/BrandedSearchBar.tsx - BingeBoard Branded Search
 import React, { useState, useRef, useEffect, KeyboardEvent, useId } from "react";
+import { useLocation } from "wouter";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -110,6 +111,10 @@ export default function BrandedSearchBar({
         const chosen = results[highlighted];
         if (chosen) {
           openShowModal(chosen.id, chosen.type || 'movie');
+        } else if (query.trim()) {
+          // Navigate to search results page if no specific result is highlighted
+          window.location.href = `/search?query=${encodeURIComponent(query.trim())}`;
+          setDropdownOpen(false);
         }
         break;
     }

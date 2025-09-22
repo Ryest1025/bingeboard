@@ -1,10 +1,10 @@
 // src/components/LoginButton.tsx
-import { getAuth, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { auth } from '@/firebase/config'; // Use centralized auth instance
 
 export const LoginButton = () => {
   const handleLogin = async () => {
     console.log('🚀 LOGIN BUTTON CLICKED!');
-    const auth = getAuth();
     const provider = new GoogleAuthProvider();
 
     try {

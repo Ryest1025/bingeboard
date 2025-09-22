@@ -25,6 +25,40 @@ export const StreamingLogos: React.FC<StreamingLogosProps> = ({
     );
   }
 
+  // Local logos mapping - prioritize these over TMDB logos for consistency
+  const localLogos: Record<string, string> = {
+    Netflix: "/logos/netflix.svg",
+    // Amazon Prime Video variations
+    "Amazon Prime Video": "/logos/primevideo.svg", 
+    "Prime Video": "/logos/primevideo.svg",
+    "Amazon Video": "/logos/primevideo.svg",
+    "Amazon Prime": "/logos/primevideo.svg",
+    "Amazon Prime Video with Ads": "/logos/primevideo.svg",
+    // Other platforms
+    Hulu: "/logos/hulu.svg",
+    "Disney Plus": "/logos/disney-plus.png",
+    "Disney+": "/logos/disney-plus.png",
+    "HBO Max": "/logos/max.svg",
+    "Max": "/logos/max.svg",
+    "Apple TV Plus": "/logos/appletv.svg",
+    "Apple TV": "/logos/appletv.svg",
+    "Apple TV+": "/logos/appletv.svg",
+    Peacock: "/logos/peacock.svg",
+    "Paramount Plus": "/logos/paramountplus.svg",
+    "Paramount+": "/logos/paramountplus.svg",
+    Crunchyroll: "/logos/crunchyroll.svg",
+    ESPN: "/logos/espn.svg",
+    Starz: "/logos/starz.svg"
+  };
+
+  // Helper function to get the best logo source
+  const getLogoSrc = (provider: any) => {
+    const providerName = provider.provider_name || provider.name || '';
+    return localLogos[providerName] || (provider.logo_path 
+      ? `https://image.tmdb.org/t/p/w45${provider.logo_path}` 
+      : '/bingeboard-logo.png');
+  };
+
   // Universal consistent sizing for all streaming logos
   const sizeClasses = {
     sm: 'w-5 h-5',
@@ -42,14 +76,14 @@ export const StreamingLogos: React.FC<StreamingLogosProps> = ({
     <div className={`flex items-center ${containerClasses[size]} mb-2 flex-wrap min-h-[24px]`}>
       <span className="text-xs text-gray-400 mr-2 whitespace-nowrap">Available on:</span>
       {providers.slice(0, maxLogos).map((provider: any, index: number) => (
-        <div key={provider.provider_id || index} className="flex items-center relative">
+        <div key={`${provider.provider_id || provider.provider_name || provider.name || 'unknown'}-${index}`} className="flex items-center relative">
           {showNames ? (
             <Badge
               variant="outline"
               className="text-xs bg-slate-800/50 border-slate-600 text-slate-300 hover:bg-slate-700/50 transition-colors h-6 px-2"
             >
               <img
-                src={provider.logo_path ? `https://image.tmdb.org/t/p/w45${provider.logo_path}` : '/bingeboard-logo.png'}
+                src={getLogoSrc(provider)}
                 alt={provider.provider_name || 'Streaming Platform'}
                 className="w-3 h-3 rounded-sm mr-1 flex-shrink-0"
                 onError={(e) => {
@@ -64,7 +98,7 @@ export const StreamingLogos: React.FC<StreamingLogosProps> = ({
           ) : (
             <div className="relative group">
               <img
-                src={provider.logo_path ? `https://image.tmdb.org/t/p/w45${provider.logo_path}` : '/bingeboard-logo.png'}
+                src={getLogoSrc(provider)}
                 alt={provider.provider_name || 'Streaming Platform'}
                 className={`${sizeClasses[size]} rounded-sm border border-slate-600 bg-white/10 backdrop-blur-sm hover:border-teal-400 transition-colors cursor-pointer flex-shrink-0`}
                 onError={(e) => {

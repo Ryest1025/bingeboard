@@ -6,6 +6,11 @@ import {
   StreamingLocation,
   UtellyResult
 } from '../clients/utellyClient.js';
+import {
+  getShowByTmdbId,
+  convertStreamingAvailabilityToPlatforms,
+  StreamingAvailabilityOption
+} from '../clients/streamingAvailabilityClient.js';
 import { streamingCache } from '../cache/streaming-cache.js';
 
 /**
@@ -22,7 +27,7 @@ export interface EnhancedStreamingPlatform {
   readonly android_url?: string;
   readonly price?: number;
   readonly format?: string;
-  readonly source: 'tmdb' | 'watchmode' | 'utelly';
+  readonly source: 'tmdb' | 'watchmode' | 'utelly' | 'streaming-availability';
   readonly affiliate_supported: boolean;
   readonly commission_rate?: number;
 }
@@ -39,6 +44,7 @@ interface StreamingAvailabilityResponse {
     tmdb: boolean;
     watchmode: boolean;
     utelly: boolean;
+    streamingAvailability: boolean;
   };
 }
 
@@ -200,7 +206,7 @@ export class MultiAPIStreamingService {
     }
 
     const allPlatforms: EnhancedStreamingPlatform[] = [];
-    const sources = { tmdb: false, watchmode: false, utelly: false };
+    const sources = { tmdb: false, watchmode: false, utelly: false, streamingAvailability: false };
 
     // 1. Get TMDB watch providers (normalize type based on flatrate|buy|rent arrays)
     try {
@@ -271,7 +277,40 @@ export class MultiAPIStreamingService {
       this.logger.warn('Utelly availability failed:', error);
     }
 
-    // 4. Deduplicate platforms by name (keep the one with most data)
+    // 4. Get Streaming Availability API data
+    try {
+      const streamingAvailabilityData = await getShowByTmdbId(mediaType, tmdbId, 'us');
+      
+      if (streamingAvailabilityData.show && 
+          streamingAvailabilityData.show.streamingOptions && 
+          streamingAvailabilityData.show.streamingOptions.us && 
+          streamingAvailabilityData.show.streamingOptions.us.length > 0) {
+        sources.streamingAvailability = true;
+        const streamingAvailabilityPlatforms = convertStreamingAvailabilityToPlatforms(
+          streamingAvailabilityData.show.streamingOptions.us
+        );
+        
+        // Convert to our EnhancedStreamingPlatform format
+        streamingAvailabilityPlatforms.forEach(platform => {
+          const normalizedName = this.normalizePlatformName(platform.provider_name);
+          allPlatforms.push({
+            provider_id: parseInt(platform.provider_id) || 0,
+            provider_name: normalizedName,
+            logo_path: platform.logo_path,
+            type: platform.type,
+            web_url: platform.web_url,
+            source: 'streaming-availability',
+            affiliate_supported: this.hasAffiliateSupport(normalizedName),
+            commission_rate: this.getCommissionRate(normalizedName),
+            price: platform.price
+          });
+        });
+      }
+    } catch (error) {
+      this.logger.warn('Streaming Availability API failed:', error);
+    }
+
+    // 5. Deduplicate platforms by name (keep the one with most data)
     const platformMap = new Map<string, EnhancedStreamingPlatform>();
 
     allPlatforms.forEach(platform => {
@@ -287,7 +326,7 @@ export class MultiAPIStreamingService {
 
     const finalPlatforms = Array.from(platformMap.values());
 
-    // 5. Calculate statistics
+    // 6. Calculate statistics
   const affiliatePlatforms = finalPlatforms.filter(p => p.affiliate_supported).length;
   const premiumPlatforms = finalPlatforms.filter(p => p.type === 'sub' || (p.price !== undefined && p.price > 0)).length;
   const freePlatforms = finalPlatforms.filter(p => p.type === 'free' || (p.price !== undefined && p.price === 0)).length;

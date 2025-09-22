@@ -8,8 +8,8 @@ import { Pool, neonConfig } from '@neondatabase/serverless';
 import Database from 'better-sqlite3';
 import ws from 'ws';
 
-import * as sqliteSchema from '../shared/schema'; 
-import * as pgSchema from '../shared/schema'; // Postgres schema
+import * as sqliteSchema from '../shared/schema/index.js'; 
+import * as pgSchema from '../shared/schema/index.js'; // Postgres schema
 
 if (!process.env.DATABASE_URL) {
   throw new Error('DATABASE_URL must be set. Did you forget to provision a database?');

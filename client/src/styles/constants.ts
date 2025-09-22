@@ -24,7 +24,7 @@ export const getRatingColor = (rating: number): string => {
   return 'text-red-400';
 };
 
-export const getVariantStyles = (variant: 'trending' | 'upcoming' | 'search' | 'award') => {
+export const getVariantStyles = (variant: 'trending' | 'upcoming' | 'search' | 'award' | 'detailed') => {
   switch (variant) {
     case 'trending':
       return { border: 'border-purple-500/30', shadow: 'shadow-purple-500/10', title: 'text-xl' };
@@ -34,6 +34,8 @@ export const getVariantStyles = (variant: 'trending' | 'upcoming' | 'search' | '
       return { border: 'border-teal-500/30', shadow: 'shadow-teal-500/10', title: 'text-base' };
     case 'award':
       return { border: 'border-yellow-500/30', shadow: 'shadow-yellow-500/10', title: 'text-lg' };
+    case 'detailed':
+      return { border: 'border-blue-500/30', shadow: 'shadow-blue-500/10', title: 'text-lg' };
     default:
       return { border: 'border-slate-600', shadow: 'shadow-slate-500/10', title: 'text-base' };
   }

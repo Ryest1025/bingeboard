@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { TopNav } from '@/components/top-nav';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
-import { EnhancedShowCard } from '../components/enhanced-show-card-clean';
+import { EnhancedShowCard } from '../components/EnhancedShowCard';
 import '../styles/discover-enhanced.css';
 import {
   DropdownMenu,

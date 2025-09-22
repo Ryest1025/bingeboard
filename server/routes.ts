@@ -33,6 +33,8 @@ import { registerFilterRoutes } from "./routes/filters";
 import { registerAIRecommendationRoutes } from "./routes/aiRecommendations";
 import { registerEnhancedRecommendationRoutes } from "./routes/enhancedRecommendations.js";
 import { registerABTestingRoutes } from "./routes/abTesting";
+import { registerAffiliateRoutes } from "./routes/affiliate.js";
+import testRoutes from "./routes/test.js";
 import { DatabaseIntegrationService } from "./services/databaseIntegration";
 import multer from "multer";
 import csvParser from "csv-parser";
@@ -115,10 +117,66 @@ export async function registerRoutes(app: Express): Promise<Server> {
   registerABTestingRoutes(app, dbService);
   console.log('🧪 A/B Testing Framework routes registered');
 
+  // Affiliate Routes
+  registerAffiliateRoutes(app);
+  console.log('💰 Affiliate routes registered');
+
+  // Test Routes for Development
+  app.use('/api/test', testRoutes);
+  console.log('🧪 Test routes registered');
+
+  // Test endpoint for streaming data (no auth required)
+  app.get('/api/test/recommendations-streaming', async (req, res) => {
+    try {
+      const tmdbService = new TMDBService();
+      
+      // Get some trending shows
+      const trending = await tmdbService.getTrending('tv', 'day');
+      const testShows = trending.results.slice(0, 3);
+      
+      console.log('🧪 Testing streaming enrichment on shows:', testShows.map((s: any) => s.name));
+      
+      // Enrich with streaming data
+      await Promise.all(testShows.map(async (item: any) => {
+        try {
+          const streamingData = await MultiAPIStreamingService.getComprehensiveAvailability(
+            item.id,
+            item.name || item.title || '',
+            'tv'
+          );
+          item.streamingPlatforms = streamingData.platforms;
+          item.streamingStats = streamingData;
+        } catch (e) {
+          console.warn('Streaming enrich failed:', (e as Error).message);
+        }
+      }));
+      
+      res.json({ 
+        shows: testShows,
+        message: 'Test recommendations with streaming data' 
+      });
+    } catch (error) {
+      console.error('Test recommendations error:', error);
+      res.status(500).json({ error: 'Failed to fetch test recommendations' });
+    }
+  });
+
   // Content API Routes for Enhanced Filter System
   app.get('/api/content/dashboard', getDashboardContent);
   app.get('/api/content/discover', getDiscoverContent);
   app.get('/api/content/search', getSearchContent);
+
+  // Enhanced Dashboard Clean API Routes
+  const { getRecommendations } = await import('./api/recommendations.js');
+  const { getContinueWatching } = await import('./api/continue-watching.js');
+  const { getAwards } = await import('./api/awards.js');
+  const { getProgress, updateProgress } = await import('./api/progress.js');
+  
+  app.get('/api/recommendations', getRecommendations);
+  app.get('/api/continue-watching', getContinueWatching);
+  app.get('/api/awards', getAwards);
+  app.get('/api/progress', getProgress);
+  app.post('/api/progress', updateProgress);
 
   // Import the new content functions - TEMPORARILY COMMENTED OUT
   // const { getTrendingByNetwork, getUpcoming, getNetworks, getGenres } = await import('./routes/content.js');
@@ -1132,6 +1190,78 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ authenticated: false, message: 'Session check failed' });
     }
   });
+
+  // 🔓 PUBLIC Authentication Status Check - No auth required
+  // This endpoint checks if user is authenticated without requiring authentication
+  app.get('/api/auth/status', async (req: any, res) => {
+    try {
+      const session = req.session;
+      const sessionUser = session?.user;
+
+      if (sessionUser) {
+        // Check if session is expired
+        const isExpired = sessionUser.claims?.exp && sessionUser.claims.exp < Math.floor(Date.now() / 1000);
+        if (isExpired) {
+          console.log('🔐 Session expired for user:', sessionUser.email);
+          req.session.user = null; // Clear expired session
+          return res.json({ user: null, isAuthenticated: false });
+        }
+
+        // Return authenticated status
+        return res.json({
+          user: {
+            id: sessionUser.id || sessionUser.claims?.sub,
+            email: sessionUser.email,
+            displayName: sessionUser.displayName
+          },
+          isAuthenticated: true
+        });
+      }
+
+      // Not authenticated
+      return res.json({ user: null, isAuthenticated: false });
+    } catch (error) {
+      console.error('Auth status check error:', error);
+      return res.json({ user: null, isAuthenticated: false });
+    }
+  });
+
+  // 🛠️ DEVELOPMENT LOGIN - Quick authentication for development
+  app.post('/api/auth/dev-login', async (req: any, res) => {
+    try {
+      console.log('🔐 Development login endpoint called');
+      
+      // Create development user session
+      const devUser = {
+        id: "manual_dev_user_123",
+        email: "rachel.gubin@gmail.com",
+        displayName: "Rachel Gubin",
+        claims: {
+          sub: "manual_dev_user_123",
+          email: "rachel.gubin@gmail.com",
+          exp: Math.floor(Date.now() / 1000) + (7 * 24 * 60 * 60) // 7 days
+        }
+      };
+
+      // Store in session
+      req.session.user = devUser;
+      
+      console.log('🔐 Development user session created:', devUser.email);
+      
+      return res.json({
+        user: {
+          id: devUser.id,
+          email: devUser.email,
+          displayName: devUser.displayName
+        },
+        isAuthenticated: true
+      });
+    } catch (error) {
+      console.error('❌ Dev login error:', error);
+      res.status(500).json({ message: 'Failed to create dev session' });
+    }
+  });
+
   // 🔐 CRITICAL AUTHENTICATION ENDPOINT - Session Validation
   // 🚨 PROTECTED: This endpoint validates local sessions and is ESSENTIAL
   // for the useAuth hook's local session check (first priority)
@@ -1773,9 +1903,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
           platforms: streamingData.platforms.filter(p => p.source === 'utelly'),
           count: streamingData.platforms.filter(p => p.source === 'utelly').length
         },
+        streamingAvailability: {
+          platforms: streamingData.platforms.filter(p => p.source === 'streaming-availability'),
+          count: streamingData.platforms.filter(p => p.source === 'streaming-availability').length
+        },
         other: {
-          platforms: streamingData.platforms.filter(p => !['tmdb', 'watchmode', 'utelly'].includes(p.source || '')),
-          count: streamingData.platforms.filter(p => !['tmdb', 'watchmode', 'utelly'].includes(p.source || '')).length
+          platforms: streamingData.platforms.filter(p => !['tmdb', 'watchmode', 'utelly', 'streaming-availability'].includes(p.source || '')),
+          count: streamingData.platforms.filter(p => !['tmdb', 'watchmode', 'utelly', 'streaming-availability'].includes(p.source || '')).length
         }
       };
 
@@ -2196,6 +2330,154 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error fetching general recommendations:', error);
       res.status(500).json({ error: 'Failed to fetch recommendations' });
+    }
+  });
+
+  // Personalized recommendations endpoint for enhanced dashboard
+  app.get('/api/recommendations/personalized', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims?.sub || req.user.id;
+      const includeStreaming = req.query.includeStreaming === 'true';
+      const tmdbService = new TMDBService();
+      
+      console.log(`🎯 Personalized recommendations -> userId=${userId} includeStreaming=${includeStreaming}`);
+      
+      // Get user preferences (you can expand this based on actual user data)
+      const [trending, popular] = await Promise.all([
+        tmdbService.getTrending('all', 'day'),
+        tmdbService.getPopular('tv')
+      ]);
+
+      // Combine and personalize recommendations
+      const personalizedContent = [
+        ...trending.results.slice(0, 8).map((item: any) => ({
+          ...item,
+          media_type: item.media_type || 'tv',
+          title: item.name || item.title,
+          personalizedScore: Math.random() * 0.3 + 0.7, // 0.7-1.0
+          reason: 'Because you like trending content'
+        })),
+        ...popular.results.slice(0, 4).map((item: any) => ({
+          ...item,
+          media_type: 'tv',
+          title: item.name || item.title,
+          personalizedScore: Math.random() * 0.3 + 0.6, // 0.6-0.9
+          reason: 'Popular in your area'
+        }))
+      ];
+
+      // Sort by personalized score
+      const sortedContent = personalizedContent.sort((a, b) => b.personalizedScore - a.personalizedScore);
+
+      // Conditional streaming enrichment
+      if (includeStreaming && sortedContent.length) {
+        const ENRICH_LIMIT = Math.min(8, sortedContent.length);
+        console.log(`🎬 Enriching first ${ENRICH_LIMIT} recommended items with streaming data`);
+        
+        await Promise.all(sortedContent.slice(0, ENRICH_LIMIT).map(async (item, idx) => {
+          try {
+            const streamingData = await MultiAPIStreamingService.getComprehensiveAvailability(
+              item.id,
+              item.title || item.name || '',
+              item.media_type === 'movie' ? 'movie' : 'tv'
+            );
+            item.streamingPlatforms = streamingData.platforms;
+            item.streamingStats = {
+              totalPlatforms: streamingData.totalPlatforms,
+              affiliatePlatforms: streamingData.affiliatePlatforms,
+              premiumPlatforms: streamingData.premiumPlatforms,
+              freePlatforms: streamingData.freePlatforms,
+              sources: streamingData.sources
+            };
+          } catch (e) {
+            if (idx < 3) console.warn('⚠️ Streaming enrich failed (personalized recommendations):', (e as Error).message);
+          }
+        }));
+      }
+
+      res.json({ 
+        recommendations: sortedContent.slice(0, 12),
+        success: true 
+      });
+    } catch (error) {
+      console.error('Error fetching personalized recommendations:', error);
+      res.status(500).json({ error: 'Failed to fetch personalized recommendations' });
+    }
+  });
+
+  // Continue watching endpoint for dashboard
+  app.get('/api/user/continue-watching', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims?.sub || req.user.id;
+      
+      // Mock continue watching data - in production, this would come from user viewing history
+      const mockContinueWatching = [
+        {
+          id: 'continue-1',
+          show: {
+            id: 66732,
+            title: 'Stranger Things',
+            poster_path: '/49WJfeN0moxb9IPfFn8G97lLBNJ.jpg',
+            backdrop_path: '/56v2KjBlU4XaOv9rVYEQypROD7P.jpg',
+            media_type: 'tv',
+            vote_average: 8.6,
+            overview: 'When a young boy vanishes, a small town uncovers a mystery involving secret experiments, terrifying supernatural forces, and one strange little girl.',
+            streaming_platforms: [
+              { provider_name: 'Netflix', logo_path: '/9A1JSVmSxsyaBK4SUFsYVqbAYfW.jpg' }
+            ]
+          },
+          progress: 65,
+          lastWatched: new Date(Date.now() - 86400000).toISOString(),
+          episodeNumber: 4,
+          seasonNumber: 4
+        },
+        {
+          id: 'continue-2',
+          show: {
+            id: 100088,
+            title: 'The Last of Us',
+            poster_path: '/uKvVjHNqB5VmOrdxqAt2F7J78ED.jpg',
+            backdrop_path: '/qGQf2OHIZOmVqaj5V3c26eZTQs9.jpg',
+            media_type: 'tv',
+            vote_average: 8.8,
+            overview: 'Twenty years after modern civilization has been destroyed, Joel, a hardened survivor, is hired to smuggle Ellie, a 14-year-old girl, out of an oppressive quarantine zone.',
+            streaming_platforms: [
+              { provider_name: 'HBO Max', logo_path: '/Ajqyt5aNxNGjmF9uOfxArGrdf3X.jpg' }
+            ]
+          },
+          progress: 80,
+          lastWatched: new Date(Date.now() - 172800000).toISOString(),
+          episodeNumber: 2,
+          seasonNumber: 1
+        },
+        {
+          id: 'continue-3',
+          show: {
+            id: 119051,
+            title: 'Wednesday',
+            poster_path: '/9PFonBhy4cQy7Jz20NpMygczOkv.jpg',
+            backdrop_path: '/iHSwvRVsRyxpX7FE7GbviaDvgGZ.jpg',
+            media_type: 'tv',
+            vote_average: 8.5,
+            overview: 'Wednesday Addams is sent to Nevermore Academy, a bizarre boarding school where she attempts to master her psychic powers, stop a monstrous killing spree of the town citizens, and solve the supernatural mystery that embroiled her parents 25 years ago.',
+            streaming_platforms: [
+              { provider_name: 'Netflix', logo_path: '/9A1JSVmSxsyaBK4SUFsYVqbAYfW.jpg' }
+            ]
+          },
+          progress: 45,
+          lastWatched: new Date(Date.now() - 259200000).toISOString(),
+          episodeNumber: 3,
+          seasonNumber: 1
+        }
+      ];
+
+      res.json({ 
+        items: mockContinueWatching,
+        success: true 
+      });
+    } catch (error) {
+      console.error('Error fetching continue watching:', error);
+      res.status(500).json({ error: 'Failed to fetch continue watching data' });
     }
   });
 
@@ -3491,6 +3773,76 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error fetching collection tags:', error);
       res.status(500).json({ error: 'Failed to fetch collection tags' });
+    }
+  });
+
+  // Watchlist endpoints
+  app.post('/api/collections/watchlist/add', isAuthenticated, async (req: any, res) => {
+    try {
+      const user_id = req.user?.id;
+      const { show_id, show_title, show_poster } = req.body;
+
+      if (!user_id || !show_id) {
+        return res.status(400).json({ 
+          error: 'Missing required fields: show_id' 
+        });
+      }
+
+      if (!sqlite) throw new Error('SQLite database not available');
+
+      // Create or get watchlist collection for user
+      let watchlistStmt = sqlite.prepare(`
+        SELECT id FROM user_collections 
+        WHERE user_id = ? AND name = 'Watchlist'
+      `);
+      
+      let watchlist = watchlistStmt.get(user_id) as { id: number } | undefined;
+      
+      if (!watchlist) {
+        // Create watchlist collection
+        const createWatchlistStmt = sqlite.prepare(`
+          INSERT INTO user_collections (
+            user_id, name, description, is_public, tags,
+            created_at, updated_at
+          ) VALUES (?, 'Watchlist', 'My shows to watch', 0, '[]', datetime('now'), datetime('now'))
+        `);
+        
+        const result = createWatchlistStmt.run(user_id);
+        watchlist = { id: Number(result.lastInsertRowid) };
+      }
+
+      // Add show to watchlist
+      const addShowStmt = sqlite.prepare(`
+        INSERT OR REPLACE INTO collection_items (
+          collection_id, show_id, show_title, show_poster, added_at
+        ) VALUES (?, ?, ?, ?, datetime('now'))
+      `);
+      
+      addShowStmt.run(watchlist.id, show_id, show_title || 'Unknown Title', show_poster || '');
+      
+      res.json({ success: true, message: 'Added to watchlist' });
+    } catch (error) {
+      console.error('Error adding to watchlist:', error);
+      res.status(500).json({ error: 'Failed to add to watchlist' });
+    }
+  });
+
+  // Share endpoint
+  app.post('/api/collections/share', async (req, res) => {
+    try {
+      const { show_id, show_title, platform } = req.body;
+      
+      // For now, just return success - real sharing would integrate with social platforms
+      console.log(`Sharing ${show_title} (${show_id}) on ${platform}`);
+      
+      res.json({ 
+        success: true, 
+        message: `Shared "${show_title}" successfully`,
+        share_url: `https://bingeboard.com/show/${show_id}`
+      });
+    } catch (error) {
+      console.error('Error sharing show:', error);
+      res.status(500).json({ error: 'Failed to share show' });
     }
   });
 

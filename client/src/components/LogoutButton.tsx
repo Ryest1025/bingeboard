@@ -1,10 +1,10 @@
 // src/components/LogoutButton.tsx
-import { getAuth, signOut } from 'firebase/auth';
+import { signOut } from 'firebase/auth';
+import { auth } from '@/firebase/config'; // Use centralized auth instance
 
 export const LogoutButton = () => {
   const handleLogout = async () => {
     console.log('👋 LOGOUT BUTTON CLICKED!');
-    const auth = getAuth();
 
     try {
       console.log('🔄 Signing out from Firebase...');

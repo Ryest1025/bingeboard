@@ -1,14 +1,20 @@
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo, useState, useEffect, memo } from 'react';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { EnhancedShowCard } from '@/components/enhanced-show-card-clean';
-import { GRADIENTS, HOVER_EFFECTS, getRatingColor } from '@/styles/constants';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { EnhancedShowCard } from '@/components/EnhancedShowCard';
+import FilterControls from '@/components/FilterControls';
+import StreamingLogos from '@/components/StreamingLogos';
+import NavigationHeader from '@/components/navigation-header';
+import { GRADIENTS, getRatingColor } from '@/styles/constants';
+import StreamingTest from '@/components/StreamingTest';
 import { useAuth } from '@/hooks/useAuth';
 import { useQuery } from '@tanstack/react-query';
-import { Star, TrendingUp, Play, Calendar, Users, Activity } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { Star, TrendingUp, Play, Calendar, Users, Activity, AlertCircle, RefreshCw } from 'lucide-react';
 
 // TMDB Genre Map
 const GENRE_MAP: Record<number, string> = {
@@ -68,24 +74,118 @@ interface ActivityItem {
   rating?: number;
 }
 
+// Memoized show card component for performance
+const MemoizedShowCard = memo(EnhancedShowCard);
+
 export default function PolishedDashboard() {
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
+  const { toast } = useToast();
   const [currentSpotlightIndex, setCurrentSpotlightIndex] = React.useState(0);
+  const [isSpotlightPaused, setIsSpotlightPaused] = React.useState(false);
+  
+  // Persistent filter state with localStorage - matching FilterControls interface
+  const [selectedGenre, setSelectedGenre] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('dashboard-filters');
+      return saved ? JSON.parse(saved).genre || '' : '';
+    }
+    return '';
+  });
+  
+  const [selectedNetwork, setSelectedNetwork] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('dashboard-filters');
+      return saved ? JSON.parse(saved).network || '' : '';
+    }
+    return '';
+  });
+  
+  const [selectedYear, setSelectedYear] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('dashboard-filters');
+      return saved ? JSON.parse(saved).year || '' : '';
+    }
+    return '';
+  });
+  
+  const [sortBy, setSortBy] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('dashboard-filters');
+      return saved ? JSON.parse(saved).sortBy || 'popularity' : 'popularity';
+    }
+    return 'popularity';
+  });
+
+  // Persist filters to localStorage
+  useEffect(() => {
+    const filterState = {
+      genre: selectedGenre,
+      network: selectedNetwork,
+      year: selectedYear,
+      sortBy: sortBy
+    };
+    localStorage.setItem('dashboard-filters', JSON.stringify(filterState));
+  }, [selectedGenre, selectedNetwork, selectedYear, sortBy]);
 
   // Fetch spotlight/trending content
-  const { data: spotlightData, isLoading: spotlightLoading } = useQuery({
+  const { 
+    data: spotlightData, 
+    isLoading: spotlightLoading, 
+    error: spotlightError,
+    refetch: refetchSpotlight 
+  } = useQuery({
     queryKey: ['spotlight-trending'],
     queryFn: async () => {
-      const res = await fetch('/api/content/trending-by-network');
-      if (!res.ok) throw new Error('Failed to fetch spotlight');
+      const res = await fetch('/api/content/trending-enhanced?includeStreaming=true');
+      if (!res.ok) throw new Error(`HTTP ${res.status}: Failed to fetch trending content`);
       return res.json();
     },
     staleTime: 5 * 60 * 1000,
+    retry: 2
   });
 
+  // Fetch genres for filter dropdown
+  const { 
+    data: genresData, 
+    error: genresError 
+  } = useQuery({
+    queryKey: ['genres-list'],
+    queryFn: async () => {
+      const res = await fetch('/api/content/genres-combined/list');
+      if (!res.ok) throw new Error(`HTTP ${res.status}: Failed to fetch genres`);
+      return res.json();
+    },
+    staleTime: 30 * 60 * 1000, // Cache for 30 minutes
+    retry: 2
+  });
+
+  // Handle errors with toasts
+  useEffect(() => {
+    if (spotlightError) {
+      console.error('Spotlight fetch error:', spotlightError);
+      toast({
+        title: "Failed to load trending content",
+        description: "Please try refreshing the page",
+        variant: "destructive",
+      });
+    }
+  }, [spotlightError, toast]);
+
+  useEffect(() => {
+    if (genresError) {
+      console.error('Genres fetch error:', genresError);
+      // Silent error for genres since it's not critical
+    }
+  }, [genresError]);
+
   // Fetch unified recommendations with filters
-  const { data: recommendationsData, isLoading: recommendationsLoading } = useQuery({
-    queryKey: ['unified-recommendations', user?.id],
+  const { 
+    data: recommendationsData, 
+    isLoading: recommendationsLoading,
+    error: recommendationsError,
+    refetch: refetchRecommendations 
+  } = useQuery({
+    queryKey: ['unified-recommendations', user?.id, selectedGenre, selectedNetwork, selectedYear, sortBy],
     queryFn: async () => {
       const res = await fetch('/api/recommendations/unified', {
         method: 'POST',
@@ -94,10 +194,12 @@ export default function PolishedDashboard() {
         },
         body: JSON.stringify({
           filters: {
-            // Add default filters - these will be properly processed by our new backend
             hideWatched: true,
-            genre: 'all', // Will be filtered out as invalid
-            rating: '7.0' // Minimum rating filter
+            genre: selectedGenre !== '' ? selectedGenre : undefined,
+            network: selectedNetwork !== '' ? selectedNetwork : undefined,
+            year: selectedYear !== '' ? selectedYear : undefined,
+            sortBy: sortBy,
+            rating: '7.0' // Default minimum rating
           },
           userProfile: {
             favoriteGenres: user?.preferences?.favoriteGenres || ['Drama', 'Comedy'],
@@ -110,24 +212,49 @@ export default function PolishedDashboard() {
           limit: 12
         })
       });
-      if (!res.ok) throw new Error('Failed to fetch unified recommendations');
+      if (!res.ok) throw new Error(`HTTP ${res.status}: Failed to fetch recommendations`);
       return res.json();
     },
     enabled: isAuthenticated,
     staleTime: 10 * 60 * 1000,
+    retry: 2
   });
 
   // Fetch continue watching
-  const { data: continueWatchingData, isLoading: continueWatchingLoading } = useQuery({
+  const { 
+    data: continueWatchingData, 
+    isLoading: continueWatchingLoading,
+    error: continueWatchingError 
+  } = useQuery({
     queryKey: ['continue-watching', user?.id],
     queryFn: async () => {
       const res = await fetch('/api/viewing-history/continue-watching-enhanced');
-      if (!res.ok) throw new Error('Failed to fetch continue watching');
+      if (!res.ok) throw new Error(`HTTP ${res.status}: Failed to fetch continue watching`);
       return res.json();
     },
     enabled: isAuthenticated,
     staleTime: 2 * 60 * 1000,
+    retry: 2
   });
+
+  // Handle API errors with toasts
+  useEffect(() => {
+    if (recommendationsError) {
+      console.error('Recommendations fetch error:', recommendationsError);
+      toast({
+        title: "Failed to load recommendations",
+        description: "We couldn't load your personalized recommendations",
+        variant: "destructive",
+      });
+    }
+  }, [recommendationsError, toast]);
+
+  useEffect(() => {
+    if (continueWatchingError) {
+      console.error('Continue watching fetch error:', continueWatchingError);
+      // Silent error since continue watching is not critical
+    }
+  }, [continueWatchingError]);
 
   /** Derived Data */
   const spotlightShows = useMemo(() => {
@@ -150,31 +277,112 @@ export default function PolishedDashboard() {
     return spotlightShows[currentSpotlightIndex] || null;
   }, [spotlightShows, currentSpotlightIndex]);
 
-  // Auto-cycle spotlight every 8 seconds
+  // Auto-cycle spotlight every 8 seconds (with pause on hover)
   React.useEffect(() => {
-    if (spotlightShows.length > 1) {
+    if (spotlightShows.length > 1 && !isSpotlightPaused) {
       const interval = setInterval(() => {
         setCurrentSpotlightIndex((prev) => (prev + 1) % spotlightShows.length);
       }, 8000);
       return () => clearInterval(interval);
     }
-  }, [spotlightShows.length]);
+  }, [spotlightShows.length, isSpotlightPaused]);
 
   /** Event Handlers */
-  const handleAddToWatchlist = useCallback((show: Show) => {
-    console.log('Adding to watchlist:', show.title || show.name);
-    // TODO: Implement watchlist functionality
-  }, []);
+  const handleAddToWatchlist = useCallback(async (show: Show) => {
+    if (!isAuthenticated || !user?.id) {
+      toast({
+        title: "Authentication required",
+        description: "Please log in to add shows to your watchlist",
+        variant: "destructive",
+      });
+      return;
+    }
 
-  const handleShareContent = useCallback((show: Show) => {
-    console.log('Sharing:', show.title || show.name);
-    // TODO: Implement share functionality
-  }, []);
+    try {
+      const response = await fetch('/api/watchlist/add', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: user.id,
+          showId: show.id,
+          showTitle: show.title || show.name,
+          showType: show.title ? 'movie' : 'tv',
+          posterPath: show.poster_path,
+          overview: show.overview,
+          voteAverage: show.vote_average,
+          releaseDate: show.release_date || show.first_air_date
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to add to watchlist');
+      }
+
+      toast({
+        title: "Added to watchlist",
+        description: `${show.title || show.name} has been added to your watchlist`,
+      });
+    } catch (error) {
+      console.error('Error adding to watchlist:', error);
+      toast({
+        title: "Failed to add to watchlist",
+        description: "Please try again later",
+        variant: "destructive",
+      });
+    }
+  }, [isAuthenticated, user?.id, toast]);
+
+  const handleShareContent = useCallback(async (show: Show) => {
+    const shareTitle = show.title || show.name;
+    const shareText = `Check out "${shareTitle}" - ${show.overview || 'A great show to watch!'}`;
+    const shareUrl = `${window.location.origin}/show/${show.id}`;
+
+    // Try native sharing first
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: shareTitle,
+          text: shareText,
+          url: shareUrl,
+        });
+        toast({
+          title: "Shared successfully",
+          description: `${shareTitle} has been shared`,
+        });
+      } catch (error) {
+        if ((error as Error).name !== 'AbortError') {
+          console.error('Error sharing:', error);
+        }
+      }
+    } else {
+      // Fallback to clipboard
+      try {
+        await navigator.clipboard.writeText(`${shareText}\n${shareUrl}`);
+        toast({
+          title: "Copied to clipboard",
+          description: `Link for "${shareTitle}" copied to clipboard`,
+        });
+      } catch (error) {
+        console.error('Error copying to clipboard:', error);
+        toast({
+          title: "Sharing failed",
+          description: "Unable to share or copy link",
+          variant: "destructive",
+        });
+      }
+    }
+  }, [toast]);
 
   const handleShowClick = useCallback((show: Show) => {
-    console.log('Show clicked:', show.title || show.name);
-    // TODO: Implement show details modal
-  }, []);
+    // For now, we'll show a toast with show details
+    // In the future, this would open a modal or navigate to a detail page
+    toast({
+      title: show.title || show.name || 'Show Details',
+      description: show.overview || 'No description available',
+    });
+  }, [toast]);
 
   // Mock friend activity data
   const friendActivities: ActivityItem[] = [
@@ -222,6 +430,9 @@ export default function PolishedDashboard() {
             <p className="text-slate-400">Discover your next favorite show</p>
           </div>
 
+          {/* TEMPORARY: Streaming Debug Test */}
+          <StreamingTest />
+
           {/* Spotlight Section */}
           <section className="space-y-4">
             <div className="flex items-center gap-2">
@@ -231,13 +442,33 @@ export default function PolishedDashboard() {
             
             {spotlightLoading ? (
               <Skeleton className="w-full h-96 rounded-xl" />
+            ) : spotlightError ? (
+              <Alert className="border-red-500/50 bg-red-900/20">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription className="flex items-center justify-between">
+                  <span>Failed to load trending content</span>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => refetchSpotlight()}
+                    className="ml-4"
+                  >
+                    <RefreshCw className="h-3 w-3 mr-1" />
+                    Retry
+                  </Button>
+                </AlertDescription>
+              </Alert>
             ) : currentSpotlightShow ? (
-              <Card className="relative overflow-hidden border-0 bg-gradient-to-r from-slate-800/50 to-slate-700/50 backdrop-blur-sm">
+              <Card 
+                className="relative overflow-hidden border-0 bg-gradient-to-r from-slate-800/50 to-slate-700/50 backdrop-blur-sm"
+                onMouseEnter={() => setIsSpotlightPaused(true)}
+                onMouseLeave={() => setIsSpotlightPaused(false)}
+              >
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent z-10" />
                 {currentSpotlightShow.backdrop_path && (
                   <img
                     src={`https://image.tmdb.org/t/p/original${currentSpotlightShow.backdrop_path}`}
-                    alt=""
+                    alt={`${currentSpotlightShow.title || currentSpotlightShow.name} backdrop`}
                     className="absolute inset-0 w-full h-full object-cover"
                   />
                 )}
@@ -284,17 +515,20 @@ export default function PolishedDashboard() {
                   </div>
                 </CardContent>
                 {spotlightShows.length > 1 && (
-                  <div className="absolute bottom-4 right-4 flex gap-2 z-20">
-                    {spotlightShows.map((_: any, index: number) => (
+                  <div className="absolute bottom-4 right-4 flex gap-2 z-20" role="tablist" aria-label="Spotlight navigation">
+                    {spotlightShows.map((show: Show, index: number) => (
                       <button
                         key={index}
                         onClick={() => setCurrentSpotlightIndex(index)}
-                        className={`w-3 h-3 rounded-full transition-colors ${
+                        className={`w-3 h-3 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-white/50 ${
                           index === currentSpotlightIndex
                             ? 'bg-white'
                             : 'bg-white/40 hover:bg-white/60'
                         }`}
-                        aria-label={`Show spotlight ${index + 1}`}
+                        role="tab"
+                        aria-selected={index === currentSpotlightIndex}
+                        aria-label={`View ${show.title || show.name} spotlight`}
+                        tabIndex={0}
                       />
                     ))}
                   </div>
@@ -315,19 +549,49 @@ export default function PolishedDashboard() {
                 <h2 className="text-2xl font-bold">Recommended for You</h2>
               </div>
               
+              {/* Filter Controls */}
+              <FilterControls
+                selectedGenre={selectedGenre}
+                selectedNetwork={selectedNetwork}
+                selectedYear={selectedYear}
+                sortBy={sortBy}
+                onGenreChange={setSelectedGenre}
+                onNetworkChange={setSelectedNetwork}
+                onYearChange={setSelectedYear}
+                onSortChange={setSortBy}
+                genres={genresData || []}
+                compact={true}
+              />
+              
               {recommendationsLoading ? (
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
                   {Array.from({ length: 10 }).map((_, i) => (
                     <Skeleton key={i} className="aspect-[2/3] rounded-lg" />
                   ))}
                 </div>
+              ) : recommendationsError ? (
+                <Alert className="border-red-500/50 bg-red-900/20">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription className="flex items-center justify-between">
+                    <span>Failed to load recommendations</span>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => refetchRecommendations()}
+                      className="ml-4"
+                    >
+                      <RefreshCw className="h-3 w-3 mr-1" />
+                      Retry
+                    </Button>
+                  </AlertDescription>
+                </Alert>
               ) : recommendations.length > 0 ? (
                 <div className="space-y-4">
                   {recommendations.slice(0, 10).map((show: Show) => (
-                    <EnhancedShowCard
+                    <MemoizedShowCard
                       key={show.id}
                       show={show}
-                      variant="detailed"
+                      variant="trending"
                       onAddToWatchlist={handleAddToWatchlist}
                       onShareContent={handleShareContent}
                       onCardClick={handleShowClick}
@@ -338,7 +602,7 @@ export default function PolishedDashboard() {
                 </div>
               ) : (
                 <div className="p-8 text-center bg-slate-800/20 rounded-xl">
-                  <p className="text-slate-400">No recommendations available yet</p>
+                  <p className="text-slate-400" role="status">No recommendations available yet</p>
                   <p className="text-sm text-slate-500 mt-2">
                     Start watching shows to get personalized recommendations!
                   </p>
@@ -357,10 +621,10 @@ export default function PolishedDashboard() {
               
               <div className="space-y-4">
                 {continueWatching.slice(0, 5).map((show: Show) => (
-                  <EnhancedShowCard
+                  <MemoizedShowCard
                     key={show.id}
                     show={show}
-                    variant="default"
+                    variant="search"
                     onAddToWatchlist={handleAddToWatchlist}
                     onShareContent={handleShareContent}
                     onCardClick={handleShowClick}

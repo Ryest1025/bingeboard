@@ -19,6 +19,7 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -107,6 +108,37 @@ function ShowCard({ show }: { show: Show }) {
     ? show.vote_average.toFixed(1)
     : 'N/A';
 
+  // Local logos mapping for better brand consistency
+  const localLogos: Record<string, string> = {
+    Netflix: "/logos/netflix.svg",
+    "Amazon Prime Video": "/logos/primevideo.svg",
+    "Prime Video": "/logos/primevideo.svg",
+    "Amazon Video": "/logos/primevideo.svg",
+    "Amazon Prime": "/logos/primevideo.svg",
+    Hulu: "/logos/hulu.svg",
+    "Disney Plus": "/logos/disney-plus.png",
+    "Disney+": "/logos/disney-plus.png",
+    "HBO Max": "/logos/max.svg",
+    "Max": "/logos/max.svg",
+    "Apple TV Plus": "/logos/appletv.svg",
+    "Apple TV": "/logos/appletv.svg",
+    "Apple TV+": "/logos/appletv.svg",
+    Peacock: "/logos/peacock.svg",
+    "Paramount Plus": "/logos/paramountplus.svg",
+    "Paramount+": "/logos/paramountplus.svg",
+    Crunchyroll: "/logos/crunchyroll.svg",
+    ESPN: "/logos/espn.svg",
+    Starz: "/logos/starz.svg"
+  };
+
+  // Helper function to get the best logo source
+  const getLogoSrc = (platform: any): string | undefined => {
+    const providerName = platform.provider_name || platform.name || '';
+    return localLogos[providerName] || (platform.logo_path 
+      ? `https://image.tmdb.org/t/p/w45${platform.logo_path}` 
+      : undefined);
+  };
+
   return (
     <Card className="show-card flex-shrink-0 w-36 glass-effect border-slate-700/50 rounded-xl transition-all duration-300 hover:scale-105 group">
       <CardContent className="p-0">
@@ -142,9 +174,9 @@ function ShowCard({ show }: { show: Show }) {
                 <div className="flex items-center space-x-1">
                   {(show as any).streamingPlatforms.slice(0, 2).map((platform: any, index: number) => (
                     <div key={index} className="w-6 h-4 rounded-sm bg-white p-0.5 flex-shrink-0">
-                      {platform.logo_path ? (
+                      {getLogoSrc(platform) ? (
                         <img
-                          src={`https://image.tmdb.org/t/p/w45${platform.logo_path}`}
+                          src={getLogoSrc(platform)}
                           alt={platform.provider_name}
                           className="w-full h-full object-contain rounded-sm"
                         />
@@ -352,8 +384,11 @@ export default function Landing() {
         description: "Successfully signed in with Google",
       });
 
-      // Force a page reload to refresh auth state
-      console.log("🔄 Forcing page reload to refresh auth state...");
+      // Wait a moment for session to be fully established
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      // Navigate to dashboard
+      console.log("🔄 Navigating to dashboard...");
       window.location.href = '/';
 
     } catch (err: any) {
@@ -458,8 +493,11 @@ export default function Landing() {
         description: "Successfully signed in with Facebook",
       });
 
-      // Force a page reload to refresh auth state
-      console.log("🔄 Forcing page reload to refresh auth state...");
+      // Wait a moment for session to be fully established
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      // Navigate to dashboard
+      console.log("🔄 Navigating to dashboard...");
       window.location.href = '/';
 
     } catch (err: any) {
@@ -530,7 +568,7 @@ export default function Landing() {
   useEffect(() => {
     const loadTrendingShows = async () => {
       console.log("🔄 Loading trending shows...");
-      const data = await safeFetch('/api/trending/tv/day');
+      const data = await safeFetch('/api/trending/tv/day?includeStreaming=true');
       console.log("📺 Trending shows data:", data);
       setTrendingShows(data);
     };
@@ -607,23 +645,25 @@ export default function Landing() {
             📅 Locked: July 20, 2025 - Modern design approved
             */}
             <div className="flex flex-col sm:flex-row gap-3 justify-center items-center pt-8">
-              <a
-                href="/signup"
+              <Button
+                onClick={handleGoogleLogin}
+                disabled={loading}
                 className="group relative bg-white/5 backdrop-blur-sm hover:bg-white/10 border border-white/10 hover:border-red-400/50 text-white font-medium px-6 py-3 text-sm inline-flex items-center gap-2 transition-all duration-300 hover:scale-[1.02] rounded-lg"
               >
                 <SiGoogle className="w-4 h-4 text-red-400" />
-                <span>Join with Google</span>
+                <span>{loading ? 'Signing in...' : 'Join with Google'}</span>
                 <div className="absolute inset-0 bg-gradient-to-r from-red-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity rounded-lg"></div>
-              </a>
+              </Button>
 
-              <a
-                href="/signup"
+              <Button
+                onClick={handleFacebookLogin}
+                disabled={loading}
                 className="group relative bg-white/5 backdrop-blur-sm hover:bg-white/10 border border-white/10 hover:border-blue-400/50 text-white font-medium px-6 py-3 text-sm inline-flex items-center gap-2 transition-all duration-300 hover:scale-[1.02] rounded-lg"
               >
                 <SiFacebook className="w-4 h-4 text-blue-400" />
-                <span>Join with Facebook</span>
+                <span>{loading ? 'Signing in...' : 'Join with Facebook'}</span>
                 <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity rounded-lg"></div>
-              </a>
+              </Button>
 
               <a
                 href="/signup"

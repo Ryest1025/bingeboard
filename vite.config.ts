@@ -27,29 +27,50 @@ export default defineConfig({
     sourcemap: true,
   },
   server: {
-    port: Number(process.env.VITE_PORT) || 5173,
-    host: '0.0.0.0', // Allow access from all network interfaces
-    open: true,
+    host: "0.0.0.0", // Allow external access for Codespaces
+    port: 3001, // Match the port we're actually using
     strictPort: true,
-    cors: true, // Enable CORS for all origins
+    hmr: {
+      protocol: "ws",
+      host: "localhost", // Client connects to localhost for HMR
+      port: 3001, // Match the server port
+    },
     allowedHosts: [
       '.app.github.dev',
       '.codespaces.app',
       '.github.dev',
-      'fuzzy-xylophone-5g97jqp4vq9wf4jjr-5173.app.github.dev' // Match new Vite port
+      'localhost',
+      '127.0.0.1'
     ],
     proxy: {
       '/api': {
-        target: process.env.BACKEND_URL || process.env.VITE_API_URL || 'http://localhost:5000',
+        target: 'http://localhost:5000',
         changeOrigin: true,
         secure: false,
-        configure: (proxy) => {
-          console.log('🔗 API proxy active: /api -> ' + (process.env.BACKEND_URL || 'http://localhost:5000'));
+        rewrite: (path) => path, // Keep path as-is
+        configure: (proxy, options) => {
+          console.log('🔗 API proxy active: /api -> http://localhost:5000');
+          proxy.on('error', (err, req, res) => {
+            console.error('❌ Proxy error:', err);
+          });
+          proxy.on('proxyReq', (proxyReq, req, res) => {
+            console.log('🔀 Proxying request:', req.method, req.url, '-> http://localhost:5000' + req.url);
+          });
+          proxy.on('proxyRes', (proxyRes, req, res) => {
+            console.log('📡 Proxy response:', proxyRes.statusCode, req.url);
+          });
         }
       }
     }
   },
   define: {
-    'process.env': process.env
+    'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV),
+    'process.env.VITE_API_URL': JSON.stringify(process.env.VITE_API_URL),
+    'process.env.VITE_FIREBASE_API_KEY': JSON.stringify(process.env.VITE_FIREBASE_API_KEY),
+    'process.env.VITE_FIREBASE_AUTH_DOMAIN': JSON.stringify(process.env.VITE_FIREBASE_AUTH_DOMAIN),
+    'process.env.VITE_FIREBASE_PROJECT_ID': JSON.stringify(process.env.VITE_FIREBASE_PROJECT_ID),
+    'process.env.VITE_FIREBASE_STORAGE_BUCKET': JSON.stringify(process.env.VITE_FIREBASE_STORAGE_BUCKET),
+    'process.env.VITE_FIREBASE_MESSAGING_SENDER_ID': JSON.stringify(process.env.VITE_FIREBASE_MESSAGING_SENDER_ID),
+    'process.env.VITE_FIREBASE_APP_ID': JSON.stringify(process.env.VITE_FIREBASE_APP_ID)
   }
 });

@@ -5,6 +5,10 @@
   "license": "MIT",
   "scripts": {
     "dev": "bash ./scripts/kill-port-5000.sh && NODE_ENV=development tsx server/index.ts",
+    "dev:full": "bash ./start-servers.sh",
+    "dev:stop": "bash ./stop-servers.sh",
+    "dev:restart": "bash ./stop-servers.sh && bash ./start-servers.sh",
+    "dev:status": "bash ./status.sh",
     "build": "vite build && esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist",
     "build:pages": "vite build",
     "start": "NODE_ENV=production node dist/index.js",
@@ -164,9 +168,10 @@
     "next": "^15.4.4",
     "postcss": "^8.4.47",
     "tailwindcss": "^3.4.17",
+    "ts-node": "^10.9.2",
     "ts-prune": "^0.10.3",
     "tsx": "^4.20.3",
-    "typescript": "5.6.3",
+    "typescript": "^5.6.3",
     "vite": "^6.3.5",
     "vite-tsconfig-paths": "^5.1.4",
     "vitest": "^3.2.4"

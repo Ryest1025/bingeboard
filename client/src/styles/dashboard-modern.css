@@ -1,0 +1,23 @@
+/* Enhanced Dashboard Modern Styles */
+/* This file contains modern styling enhancements for the dashboard */
+
+.dashboard-modern {
+  background-color: #0f172a;
+  color: white;
+}
+
+.dashboard-card {
+  background-color: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 0.5rem;
+}
+
+.dashboard-button {
+  background-color: #334155;
+  color: white;
+  transition: background-color 0.2s;
+}
+
+.dashboard-button:hover {
+  background-color: #475569;
+}

@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<head><title>Test</title></head>
+<body>
+<h1>API Test</h1>
+<script>
+fetch("/api/content/trending-enhanced?includeStreaming=true")
+  .then(r => r.json())
+  .then(data => {
+    console.log("API Response:", data.results[0]);
+    document.body.innerHTML += "<pre>" + JSON.stringify(data.results[0], null, 2) + "</pre>";
+  });
+</script>
+</body>
+</html>

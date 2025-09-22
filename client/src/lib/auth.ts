@@ -336,3 +336,155 @@ export const handleAccountLinking = async (email: string, password: string, soci
     throw new Error(error.message || 'Failed to link accounts');
   }
 };
+
+// Get authenticated user from request (for API routes)
+export const getAuthUser = async (req: any): Promise<{ id: string; email?: string; displayName?: string } | null> => {
+  try {
+    const authHeader = req.headers.authorization;
+    
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return null;
+    }
+
+    const token = authHeader.split(' ')[1];
+    
+    if (!token) {
+      return null;
+    }
+
+    // In production, verify the Firebase ID token
+    if (process.env.NODE_ENV === 'production') {
+      // Import Firebase Admin SDK for server-side token verification
+      // const admin = require('firebase-admin');
+      // 
+      // if (!admin.apps.length) {
+      //   admin.initializeApp({
+      //     credential: admin.credential.cert({
+      //       projectId: process.env.FIREBASE_PROJECT_ID,
+      //       clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+      //       privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+      //     }),
+      //   });
+      // }
+      // 
+      // const decodedToken = await admin.auth().verifyIdToken(token);
+      // return {
+      //   id: decodedToken.uid,
+      //   email: decodedToken.email,
+      //   displayName: decodedToken.name,
+      // };
+
+      // For now, return null in production until Firebase Admin is properly configured
+      console.warn('Firebase Admin SDK not configured - rejecting auth request');
+      return null;
+    }
+
+    // Development mode - basic token validation
+    if (token === 'dev-token' || token.length > 10) {
+      return { 
+        id: 'dev-user-id',
+        email: 'dev@example.com',
+        displayName: 'Dev User'
+      };
+    }
+
+    return null;
+  } catch (error) {
+    console.error('Error verifying auth token:', error);
+    return null;
+  }
+};
+
+// Middleware for Express routes to verify authentication
+export const requireAuth = (req: any, res: any, next: any) => {
+  getAuthUser(req).then(user => {
+    if (!user) {
+      return res.status(401).json({
+        error: 'Authentication required',
+        message: 'You must be authenticated to access this resource'
+      });
+    }
+    
+    req.user = user;
+    next();
+  }).catch(error => {
+    console.error('Authentication middleware error:', error);
+    res.status(500).json({
+      error: 'Authentication failed',
+      message: 'Failed to verify authentication'
+    });
+  });
+};
+
+// Optional auth middleware (doesn't reject unauthenticated requests)
+export const optionalAuth = (req: any, res: any, next: any) => {
+  getAuthUser(req).then(user => {
+    req.user = user; // Will be null if not authenticated
+    next();
+  }).catch(error => {
+    console.error('Optional auth middleware error:', error);
+    req.user = null;
+    next();
+  });
+};
+
+// Get Firebase ID token from current user (client-side)
+export const getIdToken = async (): Promise<string | null> => {
+  try {
+    const user = getCurrentUser();
+    if (!user) {
+      return null;
+    }
+
+    const token = await user.getIdToken();
+    return token;
+  } catch (error) {
+    console.error('Error getting ID token:', error);
+    return null;
+  }
+};
+
+// API client helper with authentication
+export const authenticatedFetch = async (url: string, options: RequestInit = {}): Promise<Response> => {
+  const token = await getIdToken();
+  
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...(options.headers as Record<string, string>),
+  };
+
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
+
+  return fetch(url, {
+    ...options,
+    headers,
+  });
+};
+
+// Production setup guide for Firebase Admin SDK
+export const FIREBASE_ADMIN_SETUP_GUIDE = `
+To enable proper Firebase token verification in production:
+
+1. Install Firebase Admin SDK:
+   npm install firebase-admin
+
+2. Set environment variables:
+   FIREBASE_PROJECT_ID=your-project-id
+   FIREBASE_CLIENT_EMAIL=your-service-account-email
+   FIREBASE_PRIVATE_KEY=your-private-key
+
+3. Uncomment the Firebase Admin code in getAuthUser function
+
+4. Use requireAuth middleware on protected routes:
+   app.get('/api/protected', requireAuth, (req, res) => {
+     // req.user will contain the authenticated user
+   });
+
+5. Use authenticatedFetch on the client:
+   const response = await authenticatedFetch('/api/protected');
+`;
+
+console.log('🔒 Auth module loaded. For production Firebase setup:');
+console.log(FIREBASE_ADMIN_SETUP_GUIDE);

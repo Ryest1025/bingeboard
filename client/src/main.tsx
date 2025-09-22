@@ -3,177 +3,142 @@ import { createRoot } from "react-dom/client";
 import App from "./App";
 import "./index.css";
 
+// ✅ Import shared Firebase instance
+import { auth } from "@/firebase/config";
+
 console.log("🚀 MAIN.TSX LOADED - Starting React app");
 
-// Debug React loading
-console.log("🔍 React object:", React);
-console.log("🔍 React.useEffect:", typeof React.useEffect);
-
-// Remove Firebase initialization from main.tsx to prevent conflicts
-// Firebase will be initialized properly in the config files
-
-// Add Firebase to global scope for debugging (after delay)
-const setupGlobalFirebase = async () => {
+// -------------------- Firebase Debug Helpers --------------------
+const setupFirebaseDebugHelpers = () => {
   try {
-    // Wait for Firebase to be properly initialized
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    if (!auth) {
+      console.warn("⚠️ Firebase auth not available");
+      return;
+    }
 
-    // Use mobile-safe Firebase config to avoid getModularInstance errors
-    const { auth, getAuthInstance } = await import('@/firebase/config-mobile');
-    const authInstance = getAuthInstance();
+    (window as any).firebaseAuth = auth;
 
-    // Make Firebase easily accessible in console
-    (window as any).firebaseAuth = authInstance;
     (window as any).testLogin = async () => {
-      console.log('🧪 Testing login from console...');
-      const { GoogleAuthProvider, signInWithPopup } = await import('firebase/auth');
+      console.log("🧪 Testing login from console...");
+      const { GoogleAuthProvider, signInWithPopup } = await import("firebase/auth");
       const provider = new GoogleAuthProvider();
-      provider.addScope('email');
-      provider.addScope('profile');
-      provider.setCustomParameters({
-        prompt: 'select_account'
-      });
+      provider.addScope("email");
+      provider.addScope("profile");
+      provider.setCustomParameters({ prompt: "select_account" });
 
       try {
-        console.log('🔐 Starting Google OAuth...');
-        const result = await signInWithPopup(authInstance, provider);
+        const result = await signInWithPopup(auth, provider);
         const user = result.user;
-        const token = await user.getIdToken(true); // Force refresh
+        const token = await user.getIdToken(true);
 
-        console.log("✅ Console login success:", user.email);
-        console.log("🔐 Token length:", token.length);
+        console.log("✅ Login success:", user.email);
         console.log("🔐 Token preview:", token.substring(0, 50) + "...");
 
-        // Test the API immediately
-        console.log('📡 Testing /api/auth/user endpoint...');
-        const apiResponse = await fetch('/api/auth/user', {
+        const apiResponse = await fetch("/api/auth/user", {
           headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
         });
 
-        console.log('📡 API Status:', apiResponse.status);
-
+        console.log("📡 API Status:", apiResponse.status);
         if (apiResponse.ok) {
-          const userData = await apiResponse.json();
-          console.log('✅ API SUCCESS - User data:', userData);
-          console.log('🎉 AUTHENTICATION COMPLETE! 401 → 200 transformation successful!');
+          console.log("✅ API SUCCESS - User data:", await apiResponse.json());
         } else {
-          const errorText = await apiResponse.text();
-          console.log('❌ API Error:', errorText);
+          console.log("❌ API Error:", await apiResponse.text());
         }
-
-        return { user, token, apiResponse };
-
-      } catch (error) {
-        console.error("❌ Console login failed:", error);
-        console.log('💡 Make sure popups are allowed and try again');
-        throw error;
+      } catch (err) {
+        console.error("❌ Console login failed:", err);
       }
     };
 
-    // Quick API test function
     (window as any).testAPI = async () => {
       const user = auth.currentUser;
-      if (!user) {
-        console.log('❌ No user signed in. Run window.testLogin() first.');
-        return;
-      }
+      if (!user) return console.log("❌ No user signed in. Run window.testLogin() first.");
 
-      console.log('📡 Testing API with current user...');
       const token = await user.getIdToken(true);
-      const response = await fetch('/api/auth/user', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
+      const res = await fetch("/api/auth/user", {
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
       });
 
-      console.log('📡 API Status:', response.status);
-      if (response.ok) {
-        const data = await response.json();
-        console.log('✅ API Response:', data);
-      } else {
-        const error = await response.text();
-        console.log('❌ API Error:', error);
+      console.log("📡 API Status:", res.status);
+      console.log(res.ok ? "✅ API Response:" : "❌ API Error:", await res.text());
+    };
+
+    (window as any).debugFirebase = async () => {
+      console.log("🧪 Firebase Debug Info");
+      const user = auth.currentUser;
+      console.log(
+        "🔹 Current User:",
+        user ? { uid: user.uid, email: user.email } : "None"
+      );
+      if (user) {
+        const token = await user.getIdToken(true);
+        console.log("🔹 Token preview:", token.substring(0, 50) + "...");
       }
     };
 
-    console.log('🧪 Firebase debug helpers available:');
-    console.log('  - window.firebaseAuth.currentUser (check login status)');
-    console.log('  - window.testLogin() (complete OAuth + API test)');
-    console.log('  - window.testAPI() (test current user\'s API access)');
-    console.log('🚀 Current user:', auth.currentUser?.email || 'None logged in');
-
-  } catch (error) {
-    console.warn('⚠️ Could not set up Firebase debug helpers:', error);
+    console.log("🧪 Firebase debug helpers available:");
+    console.log("  - window.firebaseAuth");
+    console.log("  - window.testLogin()");
+    console.log("  - window.testAPI()");
+    console.log("  - window.debugFirebase()");
+  } catch (err) {
+    console.warn("⚠️ Could not set up Firebase debug helpers:", err);
   }
 };
 
-setupGlobalFirebase();
-
-// Enhanced error handling
-window.addEventListener('error', (e) => {
-  console.error('❌ Global error caught:', e.error);
-  console.error('Error details:', {
-    message: e.error?.message,
-    stack: e.error?.stack,
-    filename: e.filename,
-    lineno: e.lineno
-  });
+// -------------------- Global Error Handling --------------------
+window.addEventListener("error", (e) => {
+  console.error("❌ Global error caught:", e.error);
+});
+window.addEventListener("unhandledrejection", (e) => {
+  console.error("❌ Unhandled promise rejection:", e.reason);
 });
 
-window.addEventListener('unhandledrejection', (e) => {
-  console.error('❌ Unhandled promise rejection:', e.reason);
-});
-
-// Apply mobile optimizations
-if (typeof window !== 'undefined') {
-  const userAgent = navigator.userAgent || '';
-  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|Windows Phone|Mobile/i.test(userAgent);
-
-  console.log('📱 Device detection:', { userAgent: userAgent.substring(0, 50), isMobile });
-
+// -------------------- Mobile Optimizations --------------------
+const applyMobileOptimizations = () => {
+  const ua = navigator.userAgent || "";
+  const isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(ua);
   if (isMobile) {
-    document.documentElement.classList.add('mobile-device');
+    document.documentElement.classList.add("mobile-device");
     console.log("📱 Mobile device detected - optimizations applied");
   }
-}
+  console.log("📱 Device detection:", { userAgent: ua.substring(0, 50), isMobile });
+};
 
-try {
-  const root = document.getElementById("root");
-  if (root) {
-    console.log("✅ Root element found, creating React app");
+// -------------------- Initialize React App --------------------
+const initApp = () => {
+  setupFirebaseDebugHelpers();
+  applyMobileOptimizations();
 
-    // Add timeout to detect stuck loading states
+  try {
+    const rootEl = document.getElementById("root");
+    if (!rootEl) throw new Error("Root element not found");
+
     const loadingTimeout = setTimeout(() => {
-      console.error("❌ React app took too long to load - showing fallback");
-      root.innerHTML = `
-        <div style="color: white; padding: 20px; background: #000; text-align: center;">
-          <h1 style="color: #14b8a6;">BingeBoard</h1>
+      rootEl.innerHTML = `
+        <div style="color:white;padding:20px;background:#000;text-align:center;">
+          <h1 style="color:#14b8a6;">BingeBoard</h1>
           <p>App is taking longer than expected to load...</p>
-          <p>Device: ${navigator.userAgent.substring(0, 50)}...</p>
-          <button onclick="window.location.reload()" style="background: #14b8a6; color: white; padding: 10px 20px; border: none; border-radius: 5px; margin: 10px;">
+          <button onclick="window.location.reload()" 
+            style="background:#14b8a6;color:white;padding:10px 20px;border:none;border-radius:5px;margin:10px;">
             Reload Page
           </button>
           <br><br>
-          <a href="/debug-mobile.html" style="color: #14b8a6;">Debug Tools</a>
-        </div>
-      `;
-    }, 10000); // 10 second timeout
+          <a href="/debug-mobile.html" style="color:#14b8a6;">Debug Tools</a>
+        </div>`;
+    }, 10000);
 
-    createRoot(root).render(<App />);
-    console.log("✅ React app rendered successfully");
-
-    // Clear timeout if app loads successfully
+    createRoot(rootEl).render(<App />);
     clearTimeout(loadingTimeout);
-  } else {
-    console.error("❌ Root element not found in DOM");
-    document.body.innerHTML = '<div style="color: red; padding: 20px;">Error: Root element not found</div>';
+    console.log("✅ React app rendered successfully");
+  } catch (err) {
+    console.error("❌ Critical error in main.tsx:", err);
+    document.body.innerHTML = `<div style="color:red;padding:20px;">Critical error: ${
+      (err as Error).message
+    }</div>`;
   }
-} catch (error) {
-  console.error("❌ Critical error in main.tsx:", error);
-  const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-  document.body.innerHTML = '<div style="color: red; padding: 20px;">Critical error: ' + errorMessage + '</div>';
-}
+};
+
+initApp();
