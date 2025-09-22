@@ -11,7 +11,12 @@
  * 🔒 DESIGN LOCKED: Modern CTA buttons with glassmorphism effect
  * ✨ Clean, professional header with B TV logo
  * 💫 Subtle animations and micro-interactions
- * 📅 Design approved and locked: July 20, 2025
+ * 📅 Design approved and locked: July 20, 2        const data = await response.json();
+        console.log(`✅ JSON data received:`, data);
+        if (data.results && data.results.length > 0) {
+          console.log(`🎬 First show streaming platforms:`, data.results[0].streamingPlatforms);
+          console.log(`📋 Sample show data:`, data.results[0]);
+        }5
  * 
  * Last Fixed: July 11, 2025 - Converted static imports to dynamic
  * Last Design Lock: July 20, 2025 - Modern CTA buttons locked
@@ -43,6 +48,14 @@ import { RecommendationCard } from "@/components/common";
 import { StreamingMarqueeModal } from "@/components/streaming-marquee-modal";
 import { StreamingMarqueeSection } from "@/components/streaming-marquee-section";
 
+
+interface ComparisonRowProps {
+  feature: string;
+  bingeboard: string | boolean;
+  trakt: string | boolean;
+  tvtime: string | boolean;
+  hobi: string | boolean;
+}
 
 interface Show {
   id: number;
