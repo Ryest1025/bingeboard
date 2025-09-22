@@ -111,32 +111,49 @@ function ShowCard({ show }: { show: Show }) {
   // Local logos mapping for better brand consistency
   const localLogos: Record<string, string> = {
     Netflix: "/logos/netflix.svg",
-    "Amazon Prime Video": "/logos/primevideo.svg",
-    "Prime Video": "/logos/primevideo.svg",
-    "Amazon Video": "/logos/primevideo.svg",
-    "Amazon Prime": "/logos/primevideo.svg",
+    "Amazon Prime Video": "/logos/PrimeVideo.svg",
+    "Prime Video": "/logos/PrimeVideo.svg",
+    "Amazon Video": "/logos/PrimeVideo.svg",
+    "Amazon Prime": "/logos/PrimeVideo.svg",
     Hulu: "/logos/hulu.svg",
-    "Disney Plus": "/logos/disney-plus.png",
-    "Disney+": "/logos/disney-plus.png",
-    "HBO Max": "/logos/max.svg",
-    "Max": "/logos/max.svg",
+    "Disney Plus": "/logos/disney.svg",
+    "Disney+": "/logos/disney.svg",
+    "HBO Max": "/logos/Max.svg",
+    "Max": "/logos/Max.svg",
     "Apple TV Plus": "/logos/appletv.svg",
     "Apple TV": "/logos/appletv.svg",
     "Apple TV+": "/logos/appletv.svg",
     Peacock: "/logos/peacock.svg",
     "Paramount Plus": "/logos/paramountplus.svg",
     "Paramount+": "/logos/paramountplus.svg",
+    Paramount: "/logos/Paramount.svg",
     Crunchyroll: "/logos/crunchyroll.svg",
     ESPN: "/logos/espn.svg",
-    Starz: "/logos/starz.svg"
+    Starz: "/logos/starz.svg",
+    Showtime: "/logos/showtime.svg",
+    "Discovery Plus": "/logos/discoveryplus.svg",
+    "Discovery+": "/logos/discoveryplus.svg"
   };
 
   // Helper function to get the best logo source
   const getLogoSrc = (platform: any): string | undefined => {
     const providerName = platform.provider_name || platform.name || '';
-    return localLogos[providerName] || (platform.logo_path 
-      ? `https://image.tmdb.org/t/p/w45${platform.logo_path}` 
-      : undefined);
+    const localLogo = localLogos[providerName];
+    
+    // Return local logo if available
+    if (localLogo) return localLogo;
+    
+    // Handle platform.logo_path
+    if (platform.logo_path) {
+      // If logo_path is already a full URL, return it as-is
+      if (platform.logo_path.startsWith('http')) {
+        return platform.logo_path;
+      }
+      // Otherwise, construct TMDB URL
+      return `https://image.tmdb.org/t/p/w45${platform.logo_path}`;
+    }
+    
+    return undefined;
   };
 
   return (
