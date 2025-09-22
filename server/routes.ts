@@ -96,6 +96,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Analytics routes for monetization tracking
   app.use('/api/analytics', analyticsRoutes);
 
+  // Multi-API trailer routes
+  const multiapiRoutes = await import('./routes/multiapi');
+  app.use('/api/multiapi', multiapiRoutes.default);
+
   // Viewing History & Progress Tracking Routes
   registerViewingHistoryRoutes(app);
 

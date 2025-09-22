@@ -4,15 +4,17 @@ import NavigationHeader from '@/components/navigation-header';
 import { EnhancedShowCard } from '@/components/EnhancedShowCard';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Play, Bell } from 'lucide-react';
 import { normalizeMedia } from '@/utils/normalizeMedia';
 import { filterMedia } from '@/utils/filterMedia';
 import type { NormalizedMedia } from '@/types/media';
+import { HeroCarousel } from '@/components/HeroCarousel';
+import StreamingLogos from '@/components/streaming-logos';
+import TrailerButton from '@/components/trailer-button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 // --- Section Wrapper ---
-export const Section: React.FC<{ title: string; children: React.ReactNode; action?: React.ReactNode }> = ({ title, children, action }) => (
+const Section: React.FC<{ title: string; children: React.ReactNode; action?: React.ReactNode }> = ({ title, children, action }) => (
   <section className="w-full space-y-6">
     <div className="flex items-center justify-between">
       <h2 className="text-2xl font-bold text-white">{title}</h2>
@@ -24,89 +26,93 @@ export const Section: React.FC<{ title: string; children: React.ReactNode; actio
   </section>
 );
 
-// --- Hero Carousel ---
-const HeroCarousel: React.FC<{ shows: NormalizedMedia[] }> = ({ shows }) => {
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const featuredShow = shows?.[currentIndex];
+// --- Multi-Select Filter Component ---
+const MultiSelectFilter: React.FC<{
+  label: string;
+  options: string[];
+  selected: string[];
+  onChange: (selected: string[]) => void;
+}> = ({ label, options, selected, onChange }) => {
+  const toggleOption = (value: string) => {
+    if (selected.includes(value)) {
+      onChange(selected.filter(v => v !== value));
+    } else {
+      onChange([...selected, value]);
+    }
+  };
 
-  if (!featuredShow) {
-    return (
-      <div className="relative w-full h-96 bg-slate-800 rounded-lg overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-slate-900 to-slate-700 animate-pulse">
-          <div className="absolute bottom-8 left-8 space-y-4">
-            <div className="h-8 bg-slate-600 rounded w-64 animate-pulse"></div>
-            <div className="h-4 bg-slate-600 rounded w-96 animate-pulse"></div>
-            <div className="h-4 bg-slate-600 rounded w-80 animate-pulse"></div>
-            <div className="flex gap-3 mt-6">
-              <div className="h-10 w-28 bg-slate-600 rounded animate-pulse"></div>
-              <div className="h-10 w-36 bg-slate-600 rounded animate-pulse"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const displayValue = selected.length > 0 
+    ? selected.length === 1 
+      ? selected[0] 
+      : `${selected.length} selected`
+    : `Select ${label}`;
 
   return (
-    <div className="relative w-full h-96 bg-slate-800 rounded-lg overflow-hidden">
-      {featuredShow.backdrop_path && (
-        <img 
-          src={`https://image.tmdb.org/t/p/w1280${featuredShow.backdrop_path}`} 
-          alt={featuredShow.displayTitle} 
-          className="w-full h-full object-cover" 
-        />
-      )}
-      <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/50 to-transparent">
-        <div className="absolute bottom-8 left-8 max-w-2xl">
-          <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
-            {featuredShow.displayTitle}
-          </h1>
-          {featuredShow.overview && (
-            <p className="text-lg text-gray-200 mb-6 line-clamp-3 max-w-xl">
-              {featuredShow.overview}
-            </p>
-          )}
-          <div className="flex items-center gap-3">
-            <Button size="lg" className="bg-white text-black hover:bg-gray-200">
-              <Play className="w-5 h-5 mr-2" />
-              Watch Now
-            </Button>
-            <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10">
-              <Bell className="w-5 h-5 mr-2" />
-              Add to Watchlist
-            </Button>
-          </div>
-        </div>
-      </div>
+    <div className="flex flex-col">
+      <span className="text-white font-semibold mb-2">{label}</span>
+      <Select>
+        <SelectTrigger className="bg-slate-800 border border-slate-700 text-white rounded-lg hover:bg-slate-700 transition-colors">
+          <SelectValue placeholder={displayValue} />
+        </SelectTrigger>
+        <SelectContent className="bg-slate-800 border border-slate-700 text-white max-h-60 overflow-y-auto">
+          {options.map(option => (
+            <div
+              key={option}
+              onClick={() => toggleOption(option)}
+              className="flex items-center gap-2 px-2 py-1.5 hover:bg-slate-700 cursor-pointer text-white text-sm transition-colors"
+            >
+              <input 
+                type="checkbox" 
+                checked={selected.includes(option)} 
+                readOnly 
+                className="accent-blue-500 pointer-events-none"
+              />
+              <span>{option}</span>
+            </div>
+          ))}
+        </SelectContent>
+      </Select>
     </div>
   );
-};
-
-// --- For You Filters ---
-const FILTERS = {
-  genre: ['Comedy', 'Drama', 'Action', 'Thriller'],
-  network: ['Netflix', 'HBO', 'Prime', 'Disney+'],
-  year: ['2025', '2024', '2023', '2022']
 };
 
 // --- Continue Watching Carousel ---
 const ContinueWatchingCarousel: React.FC<{ shows: any[] }> = ({ shows }) => {
   if (!shows?.length) return null;
   return (
-    <div className="flex gap-4 overflow-x-auto pb-4">
+    <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
       {shows.map(show => (
-        <Card key={show.id} className="min-w-64 bg-slate-800 border-slate-700">
+        <Card key={show.id} className="min-w-64 bg-slate-800 border-slate-700 flex-shrink-0">
           <CardContent className="p-4">
             <div className="flex gap-3">
               {show.poster_path ? (
-                <img src={`https://image.tmdb.org/t/p/w92${show.poster_path}`} alt={show.title || show.name} className="w-16 h-24 object-cover rounded" />
+                <img 
+                  src={`https://image.tmdb.org/t/p/w92${show.poster_path}`} 
+                  alt={show.title || show.name} 
+                  className="w-16 h-24 object-cover rounded" 
+                />
               ) : <Skeleton className="w-16 h-24 rounded" />}
               <div className="flex-1">
                 <h4 className="font-semibold text-white mb-1">{show.title || show.name}</h4>
-                <div className="w-full bg-slate-700 rounded-full h-2">
+                <div className="w-full bg-slate-700 rounded-full h-2 mb-2">
                   <div className="bg-blue-500 h-2 rounded-full" style={{ width: `${show.progress || 0}%` }} />
                 </div>
-                <p className="text-xs text-slate-400 mt-1">{show.progress || 0}% complete</p>
+                <p className="text-xs text-slate-400 mb-2">{show.progress || 0}% complete</p>
+                {/* Show streaming platforms if available */}
+                {(() => {
+                  const streamingPlatforms = show.streamingPlatforms || show.streaming_platforms || show.streamingProviders || show.watchProviders || show.streaming || [];
+                  return streamingPlatforms.length > 0 && (
+                    <StreamingLogos 
+                      providers={streamingPlatforms.map((platform: any) => ({
+                        provider_id: platform.provider_id || 0,
+                        provider_name: platform.provider_name || platform.name || '',
+                        logo_path: platform.logo_path
+                      }))}
+                      size="sm"
+                      maxDisplayed={3}
+                    />
+                  );
+                })()}
               </div>
             </div>
           </CardContent>
@@ -116,94 +122,232 @@ const ContinueWatchingCarousel: React.FC<{ shows: any[] }> = ({ shows }) => {
   );
 };
 
+
+
+// --- Filters ---
+const FILTERS = {
+  genre: ['Comedy', 'Drama', 'Action', 'Thriller', 'Horror', 'Romance', 'Sci-Fi', 'Documentary'],
+  network: ['Netflix', 'HBO', 'Prime Video', 'Disney+', 'Hulu', 'Apple TV+', 'Paramount+'],
+  year: ['2025', '2024', '2023', '2022', '2021', '2020']
+};
+
 // --- Dashboard Page ---
 const DashboardPage: React.FC = () => {
-  const [filters, setFilters] = useState<{ genre?: string; network?: string; year?: string }>({});
+  const [filters, setFilters] = useState<{ genre: string[]; network: string[]; year: string[] }>({ 
+    genre: [], 
+    network: [], 
+    year: [] 
+  });
 
-  const { data: trendingData } = useQuery({
+  // API Queries with proper error handling
+  const { data: trendingData, isError: trendingError, isLoading: trendingLoading } = useQuery({
     queryKey: ['trending'],
     queryFn: async () => {
-      const res = await fetch('/api/trending');
+      const res = await fetch('/api/trending/tv/day?includeStreaming=true');
       if (!res.ok) throw new Error('Failed to fetch trending');
       return res.json();
-    }
+    },
+    retry: 1,
+    retryDelay: 1000
   });
 
-  const { data: personalizedData } = useQuery({
-    queryKey: ['personalized'],
+  const { data: personalizedData, isError: personalizedError, isLoading: personalizedLoading } = useQuery({
+    queryKey: ['personalized-with-streaming', 'v2'],
     queryFn: async () => {
-      const res = await fetch('/api/recommendations');
+      const res = await fetch('/api/tmdb/discover/tv?sort_by=popularity.desc&includeStreaming=true');
       if (!res.ok) throw new Error('Failed to fetch recommendations');
       return res.json();
-    }
+    },
+    retry: 1,
+    retryDelay: 1000
   });
 
-  const { data: continueWatchingData } = useQuery({
+  const { data: continueWatchingData, isError: continueError } = useQuery({
     queryKey: ['continue'],
     queryFn: async () => {
       const res = await fetch('/api/user/continue-watching');
       if (!res.ok) throw new Error('Failed to fetch continue watching');
       return res.json();
-    }
+    },
+    retry: 1,
+    retryDelay: 1000
   });
 
-  const processedTrending = useMemo(() => normalizeMedia((trendingData as any)?.results || []), [trendingData]);
+  // Process data with fallbacks
+  const processedTrending = useMemo(() => {
+    if (trendingError || !trendingData) return [];
+    return normalizeMedia((trendingData as any)?.results || []);
+  }, [trendingData, trendingError]);
+
   const filteredRecommendations = useMemo(() => {
+    if (personalizedError || !personalizedData) return [];
+    
     let items = normalizeMedia((personalizedData as any)?.results || []);
-    if (filters.genre) items = filterMedia(items, { genre: filters.genre }).items;
-    if (filters.network) items = filterMedia(items, { network: filters.network }).items;
-    if (filters.year) items = filterMedia(items, { year: filters.year }).items;
-    return items;
-  }, [personalizedData, filters]);
+    
+    // Apply multi-select filters
+    if (filters.genre.length > 0) {
+      items = items.filter(item => 
+        filters.genre.some(genre => item.genre_ids?.includes(parseInt(genre)) || 
+        item.genres?.some(g => g.name === genre))
+      );
+    }
+    
+    if (filters.network.length > 0) {
+      items = items.filter(item => 
+        filters.network.some(network => 
+          item.streaming?.some(platform => 
+            platform.provider_name?.includes(network) || platform.name?.includes(network)
+          )
+        )
+      );
+    }
+    
+    if (filters.year.length > 0) {
+      items = items.filter(item => {
+        const releaseYear = new Date(item.release_date || item.first_air_date || '').getFullYear().toString();
+        return filters.year.includes(releaseYear);
+      });
+    }
+    
+    // Limit to 6 items for "For You" section
+    return items.slice(0, 6);
+  }, [personalizedData, personalizedError, filters]);
 
   const handleAddToWatchlist = async (show: any) => {
-    await fetch('/api/watchlist/add', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(show) });
+    try {
+      await fetch('/api/watchlist/add', { 
+        method: 'POST', 
+        headers: { 'Content-Type': 'application/json' }, 
+        body: JSON.stringify(show) 
+      });
+    } catch (err) {
+      console.error('Failed to add to watchlist:', err);
+    }
   };
+
+  const updateFilter = (type: keyof typeof filters, selectedValues: string[]) => {
+    setFilters(prev => ({
+      ...prev,
+      [type]: selectedValues
+    }));
+  };
+
+  const clearAllFilters = () => {
+    setFilters({ genre: [], network: [], year: [] });
+  };
+
+  const hasActiveFilters = filters.genre.length > 0 || filters.network.length > 0 || filters.year.length > 0;
 
   return (
     <div className="min-h-screen bg-slate-900 w-full overflow-x-hidden">
       <NavigationHeader />
       
-      {/* Debug Banner */}
-      <div className="bg-blue-600 text-white p-3 text-center text-sm">
-        🚀 RESTORED DASHBOARD - Hero Carousel • Filtered For You • Continue Watching
-      </div>
-      
       <main className="w-full max-w-none px-4 md:px-8 lg:px-16 py-8 space-y-12">
-        <HeroCarousel shows={processedTrending.slice(0,5)} />
+        {/* Hero Carousel */}
+        <HeroCarousel shows={processedTrending.slice(0, 5)} />
 
         {/* For You Section */}
-        <Section title="For You">
-          <div className="flex flex-wrap gap-3 mb-6">
-            {Object.entries(FILTERS).map(([key, values]) => (
-              <select
-                key={key}
-                className="bg-slate-800 border border-slate-700 text-white px-3 py-2 rounded-md text-sm min-w-[120px]"
-                onChange={e => setFilters(f => ({ ...f, [key]: e.target.value }))}
-                value={filters[key as keyof typeof filters] || ''}
-              >
-                <option value="">{key.charAt(0).toUpperCase() + key.slice(1)}</option>
-                {values.map(v => <option key={v} value={v}>{v}</option>)}
-              </select>
-            ))}
+        <Section title="For You" action={
+          hasActiveFilters ? (
+            <Button variant="outline" size="sm" onClick={clearAllFilters}>
+              Clear Filters
+            </Button>
+          ) : undefined
+        }>
+          {/* Interactive Multi-Select Dropdowns */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <MultiSelectFilter
+              label="Genre"
+              options={FILTERS.genre}
+              selected={filters.genre}
+              onChange={(vals) => updateFilter("genre", vals)}
+            />
+            <MultiSelectFilter
+              label="Network"
+              options={FILTERS.network}
+              selected={filters.network}
+              onChange={(vals) => updateFilter("network", vals)}
+            />
+            <MultiSelectFilter
+              label="Year"
+              options={FILTERS.year}
+              selected={filters.year}
+              onChange={(vals) => updateFilter("year", vals)}
+            />
           </div>
-          {!personalizedData ? (
+
+          {/* Recommendations Grid */}
+          {personalizedLoading ? (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
               {Array.from({ length: 12 }).map((_, i) => (
                 <div key={i} className="aspect-[2/3] bg-slate-800 rounded-lg animate-pulse" />
               ))}
             </div>
+          ) : personalizedError ? (
+            <div className="text-center py-12">
+              <p className="text-gray-400 text-lg mb-4">Unable to load recommendations</p>
+              <p className="text-gray-500 text-sm">Check your connection and try again</p>
+            </div>
+          ) : filteredRecommendations.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-gray-400 text-lg mb-4">
+                {hasActiveFilters ? 'No shows match your selected filters' : 'No recommendations available'}
+              </p>
+              {hasActiveFilters && (
+                <Button variant="outline" onClick={clearAllFilters}>
+                  Clear All Filters
+                </Button>
+              )}
+            </div>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
               {filteredRecommendations.map(show => (
-                <EnhancedShowCard key={show.id} show={show} onAddToWatchlist={handleAddToWatchlist} />
+                <div key={show.id} className="relative group">
+                  <EnhancedShowCard show={show} onAddToWatchlist={handleAddToWatchlist} />
+                  
+                  {/* Trailer Button Overlay */}
+                  <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <TrailerButton 
+                      show={{
+                        id: show.id,
+                        tmdbId: show.id,
+                        title: show.displayTitle
+                      }}
+                      variant="destructive"
+                      size="sm"
+                      className="bg-red-600/90 hover:bg-red-700 text-white border-none shadow-lg"
+                      showLabel={false}
+                    />
+                  </div>
+                  
+                  {/* Streaming Logos Overlay */}
+                  {(() => {
+                    const showData = show as any;
+                    const streamingPlatforms = showData.streamingPlatforms || showData.streaming_platforms || showData.streamingProviders || showData.watchProviders || [];
+                    return streamingPlatforms.length > 0 && (
+                      <div className="absolute top-2 left-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="bg-black/70 rounded-md p-1">
+                          <StreamingLogos 
+                            providers={streamingPlatforms.map((platform: any) => ({
+                              provider_id: platform.provider_id || 0,
+                              provider_name: platform.provider_name || platform.name || '',
+                              logo_path: platform.logo_path
+                            }))}
+                            size="sm"
+                            maxDisplayed={2}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </div>
               ))}
             </div>
           )}
         </Section>
 
         {/* Continue Watching */}
-        {(continueWatchingData as any)?.items?.length > 0 && (
+        {!continueError && (continueWatchingData as any)?.items?.length > 0 && (
           <Section title="Continue Watching">
             <ContinueWatchingCarousel shows={(continueWatchingData as any).items} />
           </Section>

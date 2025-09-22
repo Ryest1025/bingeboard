@@ -54,7 +54,7 @@ export default function LoginSimple() {
   const { toast } = useToast();
 
   // Import authentication hook
-  const { isAuthenticated, user, isLoading: authLoading } = useAuth();
+  const { isAuthenticated, user, isLoading: authLoading, refreshSession } = useAuth();
 
   const [isLogin, setIsLogin] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
@@ -217,10 +217,11 @@ export default function LoginSimple() {
         }
 
         // Wait a moment for session to be fully saved before redirecting
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise(resolve => setTimeout(resolve, 500));
 
-        // Force a page reload to ensure the useAuth hook detects the new session
-        window.location.href = "/";
+        // Refresh the auth state and navigate programmatically
+        await refreshSession();
+        setLocation("/");
       } else {
         // Enhanced error messages based on status code
         let errorMessage = data.message || "Authentication failed. Please try again.";
@@ -328,10 +329,9 @@ export default function LoginSimple() {
               description: "Welcome to BingeBoard!",
             });
 
-            // Wait for auth state to update, then redirect to home page
-            setTimeout(() => {
-              setLocation("/");
-            }, 1000);
+            // Refresh auth state and navigate programmatically
+            await refreshSession();
+            setLocation("/");
           } else {
             console.error('❌ Failed to create backend session');
             toast({
@@ -411,10 +411,9 @@ export default function LoginSimple() {
             description: "Welcome to BingeBoard!",
           });
 
-          // Wait for auth state to update, then redirect to home page
-          setTimeout(() => {
-            setLocation("/");
-          }, 1000);
+          // Refresh auth state and navigate programmatically
+          await refreshSession();
+          setLocation("/");
         } else {
           console.error('❌ Failed to create backend session');
           toast({
@@ -484,10 +483,9 @@ export default function LoginSimple() {
             description: "Welcome to BingeBoard!",
           });
 
-          // Wait for auth state to update, then redirect to home page
-          setTimeout(() => {
-            setLocation("/");
-          }, 1000);
+          // Refresh auth state and navigate programmatically
+          await refreshSession();
+          setLocation("/");
         } else {
           console.error('❌ Failed to create backend session');
           toast({

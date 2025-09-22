@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 interface AuthState {
   user: {
@@ -9,6 +9,7 @@ interface AuthState {
   isAuthenticated: boolean;
   isLoading: boolean;
   logout: () => Promise<void>;
+  refreshSession: () => Promise<void>;
 }
 
 export function useAuth(): AuthState {  
@@ -43,12 +44,9 @@ export function useAuth(): AuthState {
         isLoading: false,
       });
       
-      console.log('🔐 Auth state updated, redirecting...');
+      console.log('🔐 Auth state updated, user logged out');
       
-      // Small delay to ensure state update, then redirect
-      setTimeout(() => {
-        window.location.href = '/';
-      }, 100);
+      // Note: Logout complete - components will handle redirect based on auth state
       
     } catch (error) {
       console.error('🔐 Logout error:', error);
@@ -58,9 +56,56 @@ export function useAuth(): AuthState {
         isAuthenticated: false,
         isLoading: false,
       });
-      window.location.href = '/';
     }
   };
+
+  // Refresh session function to manually update auth state
+  const refreshSession = useCallback(async () => {
+    try {
+      console.log('🔄 Refreshing session...');
+      setAuthState(prevState => ({ ...prevState, isLoading: true }));
+      
+      const response = await fetch('/api/auth/status', {
+        credentials: 'include',
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        if (data.user) {
+          setAuthState({
+            user: data.user,
+            isAuthenticated: true,
+            isLoading: false,
+          });
+          console.log('🔐 Session refreshed successfully:', data.user.email);
+        } else {
+          // No session exists, user is not authenticated
+          console.log('🔐 No session found after refresh');
+          setAuthState({
+            user: null,
+            isAuthenticated: false,
+            isLoading: false,
+          });
+        }
+      } else {
+        // Not authenticated
+        console.log('🔐 Auth refresh failed, user not authenticated');
+        setAuthState({
+          user: null,
+          isAuthenticated: false,
+          isLoading: false,
+        });
+      }
+    } catch (error) {
+      console.error('🔐 Session refresh error:', error);
+      // Set unauthenticated state on error
+      setAuthState({
+        user: null,
+        isAuthenticated: false,
+        isLoading: false,
+      });
+    }
+  }, []);
 
   // Check authentication status on mount
   useEffect(() => {
@@ -114,5 +159,6 @@ export function useAuth(): AuthState {
   return {
     ...authState,
     logout,
+    refreshSession,
   };
 }
