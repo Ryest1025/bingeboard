@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { useLocation } from 'wouter';
 import { useAuth } from '@/hooks/useAuth';
 import { isMobileDevice } from '@/lib/deviceUtils';
-import Dashboard from './dashboard';
+import Dashboard from './dashboard-polished';
 import Landing from './landing';
 
 /**
@@ -41,6 +41,7 @@ export default function Home() {
   // Authenticated users get dashboard (mobile and desktop)
   if (isAuthenticated) {
     console.log("✅ Authenticated user accessing dashboard");
+    console.log("🔍 About to render DashboardFeature component");
     return <Dashboard />;
   }
 
