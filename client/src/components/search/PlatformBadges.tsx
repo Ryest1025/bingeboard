@@ -1,5 +1,6 @@
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/components/ui/tooltip';
 import { Badge } from '@/components/ui/badge';
+import { getPlatformLogo } from '@/utils/platformLogos';
 import React from 'react';
 
 export interface PlatformInfo {
@@ -21,41 +22,18 @@ export const PlatformBadges: React.FC<PlatformBadgesProps> = ({ platforms, maxVi
   const remaining = platforms.length - visible.length;
   const sizeClasses = size === 'xs' ? 'h-5 w-5 text-[10px]' : 'h-6 w-6 text-xs';
 
-  // Local logo mapping (same as landing page)
-  const localLogos: Record<string, string> = {
-    Netflix: "/logos/netflix.svg",
-    "Amazon Prime Video": "/logos/PrimeVideo.svg",
-    "Prime Video": "/logos/PrimeVideo.svg",
-    "Amazon Video": "/logos/PrimeVideo.svg",
-    "Amazon Prime": "/logos/PrimeVideo.svg",
-    Hulu: "/logos/hulu.svg",
-    "Disney Plus": "/logos/disney.svg",
-    "Disney+": "/logos/disney.svg",
-    "HBO Max": "/logos/Max.svg",
-    "Max": "/logos/Max.svg",
-    "Apple TV Plus": "/logos/appletv.svg",
-    "Apple TV": "/logos/appletv.svg",
-    "Apple TV+": "/logos/appletv.svg",
-    Peacock: "/logos/peacock.svg",
-    "Paramount Plus": "/logos/paramountplus.svg",
-    "Paramount+": "/logos/paramountplus.svg",
-    Paramount: "/logos/Paramount.svg",
-    Crunchyroll: "/logos/crunchyroll.svg",
-    ESPN: "/logos/espn.svg",
-    Starz: "/logos/starz.svg",
-    Showtime: "/logos/showtime.svg",
-    "Discovery Plus": "/logos/discoveryplus.svg",
-    "Discovery+": "/logos/discoveryplus.svg"
-  };
-
-  const getLogoSrc = (platform: PlatformInfo): string | null => {
+  const getLogoSrc = (platform: PlatformInfo): string => {
     const providerName = platform.provider_name || '';
-    const localLogo = localLogos[providerName];
     
-    // Return local logo if available
-    if (localLogo) return localLogo;
+    // Use centralized platform logo system
+    const centralizedLogo = getPlatformLogo(providerName);
     
-    // Handle platform.logo_path
+    // If centralized system has a logo, use it
+    if (centralizedLogo && !centralizedLogo.includes('default.svg')) { // default.svg is our fallback
+      return centralizedLogo;
+    }
+    
+    // Handle platform.logo_path from TMDB
     if (platform.logo_path) {
       // If logo_path is already a full URL, return it as-is
       if (platform.logo_path.startsWith('http')) {
@@ -65,7 +43,8 @@ export const PlatformBadges: React.FC<PlatformBadgesProps> = ({ platforms, maxVi
       return `https://image.tmdb.org/t/p/w45${platform.logo_path}`;
     }
     
-    return null;
+    // Return centralized fallback
+    return centralizedLogo;
   };
 
   return (
@@ -77,18 +56,18 @@ export const PlatformBadges: React.FC<PlatformBadgesProps> = ({ platforms, maxVi
           return (
             <Tooltip key={p.provider_id || label}>
               <TooltipTrigger asChild>
-                {logo ? (
-                  <img
-                    src={logo}
-                    alt={label}
-                    className={`rounded-sm object-cover bg-gray-800 ${sizeClasses}`}
-                    loading="lazy"
-                  />
-                ) : (
-                  <Badge variant="secondary" className="bg-gray-700 text-gray-200">
-                    {label.slice(0, 4)}
-                  </Badge>
-                )}
+                <img
+                  src={logo}
+                  alt={label}
+                  className={`rounded-sm object-contain bg-white/10 p-0.5 ${sizeClasses}`}
+                  loading="lazy"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    if (!target.src.includes('default.svg')) {
+                      target.src = '/logos/default.svg'; // Final fallback
+                    }
+                  }}
+                />
               </TooltipTrigger>
               <TooltipContent>{label}</TooltipContent>
             </Tooltip>

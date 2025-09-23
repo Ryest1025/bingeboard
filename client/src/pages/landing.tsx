@@ -45,6 +45,7 @@ import { useToast } from "@/hooks/use-toast";
 import { isMobileDevice } from "@/lib/deviceUtils";
 import BingeBoardHeader from "@/components/BingeBoardHeader";
 import { RecommendationCard } from "@/components/common";
+import { getPlatformLogo } from "@/utils/platformLogos";
 import { StreamingMarqueeModal } from "@/components/streaming-marquee-modal";
 import { StreamingMarqueeSection } from "@/components/streaming-marquee-section";
 
@@ -121,42 +122,19 @@ function ShowCard({ show }: { show: Show }) {
     ? show.vote_average.toFixed(1)
     : 'N/A';
 
-  // Local logos mapping for better brand consistency
-  const localLogos: Record<string, string> = {
-    Netflix: "/logos/netflix.svg",
-    "Amazon Prime Video": "/logos/PrimeVideo.svg",
-    "Prime Video": "/logos/PrimeVideo.svg",
-    "Amazon Video": "/logos/PrimeVideo.svg",
-    "Amazon Prime": "/logos/PrimeVideo.svg",
-    Hulu: "/logos/hulu.svg",
-    "Disney Plus": "/logos/disney.svg",
-    "Disney+": "/logos/disney.svg",
-    "HBO Max": "/logos/Max.svg",
-    "Max": "/logos/Max.svg",
-    "Apple TV Plus": "/logos/appletv.svg",
-    "Apple TV": "/logos/appletv.svg",
-    "Apple TV+": "/logos/appletv.svg",
-    Peacock: "/logos/peacock.svg",
-    "Paramount Plus": "/logos/paramountplus.svg",
-    "Paramount+": "/logos/paramountplus.svg",
-    Paramount: "/logos/Paramount.svg",
-    Crunchyroll: "/logos/crunchyroll.svg",
-    ESPN: "/logos/espn.svg",
-    Starz: "/logos/starz.svg",
-    Showtime: "/logos/showtime.svg",
-    "Discovery Plus": "/logos/discoveryplus.svg",
-    "Discovery+": "/logos/discoveryplus.svg"
-  };
-
-  // Helper function to get the best logo source
-  const getLogoSrc = (platform: any): string | undefined => {
+  // Helper function to get the best logo source using centralized system
+  const getLogoSrc = (platform: any): string => {
     const providerName = platform.provider_name || platform.name || '';
-    const localLogo = localLogos[providerName];
     
-    // Return local logo if available
-    if (localLogo) return localLogo;
+    // Use centralized platform logo system
+    const centralizedLogo = getPlatformLogo(providerName);
     
-    // Handle platform.logo_path
+    // If centralized system has a specific logo (not fallback), use it
+    if (centralizedLogo && !centralizedLogo.includes('default.svg')) {
+      return centralizedLogo;
+    }
+    
+    // Handle platform.logo_path from TMDB
     if (platform.logo_path) {
       // If logo_path is already a full URL, return it as-is
       if (platform.logo_path.startsWith('http')) {
@@ -166,7 +144,8 @@ function ShowCard({ show }: { show: Show }) {
       return `https://image.tmdb.org/t/p/w45${platform.logo_path}`;
     }
     
-    return undefined;
+    // Return centralized fallback
+    return centralizedLogo;
   };
 
   return (

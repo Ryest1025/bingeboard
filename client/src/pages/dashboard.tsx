@@ -11,6 +11,7 @@ import type { NormalizedMedia } from '@/types/media';
 import { HeroCarousel } from '@/components/HeroCarousel';
 import StreamingLogos from '@/components/streaming-logos';
 import TrailerButton from '@/components/trailer-button';
+import ContinueWatching from '@/components/ContinueWatching';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 // --- Section Wrapper ---
@@ -76,51 +77,7 @@ const MultiSelectFilter: React.FC<{
   );
 };
 
-// --- Continue Watching Carousel ---
-const ContinueWatchingCarousel: React.FC<{ shows: any[] }> = ({ shows }) => {
-  if (!shows?.length) return null;
-  return (
-    <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
-      {shows.map(show => (
-        <Card key={show.id} className="min-w-64 bg-slate-800 border-slate-700 flex-shrink-0">
-          <CardContent className="p-4">
-            <div className="flex gap-3">
-              {show.poster_path ? (
-                <img 
-                  src={`https://image.tmdb.org/t/p/w92${show.poster_path}`} 
-                  alt={show.title || show.name} 
-                  className="w-16 h-24 object-cover rounded" 
-                />
-              ) : <Skeleton className="w-16 h-24 rounded" />}
-              <div className="flex-1">
-                <h4 className="font-semibold text-white mb-1">{show.title || show.name}</h4>
-                <div className="w-full bg-slate-700 rounded-full h-2 mb-2">
-                  <div className="bg-blue-500 h-2 rounded-full" style={{ width: `${show.progress || 0}%` }} />
-                </div>
-                <p className="text-xs text-slate-400 mb-2">{show.progress || 0}% complete</p>
-                {/* Show streaming platforms if available */}
-                {(() => {
-                  const streamingPlatforms = show.streamingPlatforms || show.streaming_platforms || show.streamingProviders || show.watchProviders || show.streaming || [];
-                  return streamingPlatforms.length > 0 && (
-                    <StreamingLogos 
-                      providers={streamingPlatforms.map((platform: any) => ({
-                        provider_id: platform.provider_id || 0,
-                        provider_name: platform.provider_name || platform.name || '',
-                        logo_path: platform.logo_path
-                      }))}
-                      size="sm"
-                      maxDisplayed={3}
-                    />
-                  );
-                })()}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      ))}
-    </div>
-  );
-};
+
 
 
 
@@ -162,16 +119,7 @@ const DashboardPage: React.FC = () => {
     retryDelay: 1000
   });
 
-  const { data: continueWatchingData, isError: continueError } = useQuery({
-    queryKey: ['continue'],
-    queryFn: async () => {
-      const res = await fetch('/api/user/continue-watching');
-      if (!res.ok) throw new Error('Failed to fetch continue watching');
-      return res.json();
-    },
-    retry: 1,
-    retryDelay: 1000
-  });
+
 
   // Process data with fallbacks
   const processedTrending = useMemo(() => {
@@ -346,12 +294,8 @@ const DashboardPage: React.FC = () => {
           )}
         </Section>
 
-        {/* Continue Watching */}
-        {!continueError && (continueWatchingData as any)?.items?.length > 0 && (
-          <Section title="Continue Watching">
-            <ContinueWatchingCarousel shows={(continueWatchingData as any).items} />
-          </Section>
-        )}
+        {/* Enhanced Continue Watching */}
+        <ContinueWatching limit={10} />
       </main>
     </div>
   );

@@ -30,6 +30,16 @@ html, body {
   }
 }
 
+/* Hide scrollbars */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
 /* Marquee Animation for Streaming Services */
 @keyframes marquee {
   0% {

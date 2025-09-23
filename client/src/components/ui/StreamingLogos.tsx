@@ -1,6 +1,7 @@
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { ExternalLink } from 'lucide-react';
+import { getPlatformLogo } from '@/utils/platformLogos';
 
 interface StreamingLogosProps {
   providers: any[];
@@ -25,38 +26,12 @@ export const StreamingLogos: React.FC<StreamingLogosProps> = ({
     );
   }
 
-  // Local logos mapping - prioritize these over TMDB logos for consistency
-  const localLogos: Record<string, string> = {
-    Netflix: "/logos/netflix.svg",
-    // Amazon Prime Video variations
-    "Amazon Prime Video": "/logos/primevideo.svg", 
-    "Prime Video": "/logos/primevideo.svg",
-    "Amazon Video": "/logos/primevideo.svg",
-    "Amazon Prime": "/logos/primevideo.svg",
-    "Amazon Prime Video with Ads": "/logos/primevideo.svg",
-    // Other platforms
-    Hulu: "/logos/hulu.svg",
-    "Disney Plus": "/logos/disney-plus.png",
-    "Disney+": "/logos/disney-plus.png",
-    "HBO Max": "/logos/max.svg",
-    "Max": "/logos/max.svg",
-    "Apple TV Plus": "/logos/appletv.svg",
-    "Apple TV": "/logos/appletv.svg",
-    "Apple TV+": "/logos/appletv.svg",
-    Peacock: "/logos/peacock.svg",
-    "Paramount Plus": "/logos/paramountplus.svg",
-    "Paramount+": "/logos/paramountplus.svg",
-    Crunchyroll: "/logos/crunchyroll.svg",
-    ESPN: "/logos/espn.svg",
-    Starz: "/logos/starz.svg"
-  };
 
-  // Helper function to get the best logo source
+
+  // Helper function to get the best logo source using centralized system
   const getLogoSrc = (provider: any) => {
     const providerName = provider.provider_name || provider.name || '';
-    return localLogos[providerName] || (provider.logo_path 
-      ? `https://image.tmdb.org/t/p/w45${provider.logo_path}` 
-      : '/bingeboard-logo.png');
+    return getPlatformLogo(providerName);
   };
 
   // Universal consistent sizing for all streaming logos

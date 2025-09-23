@@ -2,24 +2,26 @@ import React, { useState, useEffect, useCallback } from 'react';
 
 // Local fallback logos mapping to your existing logo files
 export const PLATFORM_LOGOS: Record<string, string> = {
-  // Main streaming services
+  // Main streaming services - matching actual file names
   netflix: '/logos/netflix.svg',
   'amazon prime video': '/logos/PrimeVideo.svg',
   'prime video': '/logos/PrimeVideo.svg',
   'amazon video': '/logos/PrimeVideo.svg',
   'amazon prime': '/logos/PrimeVideo.svg',
+  'prime': '/logos/PrimeVideo.svg',
   hulu: '/logos/hulu.svg',
   'disney plus': '/logos/disney.svg',
   'disney+': '/logos/disney.svg',
+  'disney': '/logos/disney.svg',
   'hbo max': '/logos/Max.svg',
-  max: '/logos/Max.svg',
+  'max': '/logos/Max.svg',
   'apple tv plus': '/logos/appletv.svg',
   'apple tv': '/logos/appletv.svg',
   'apple tv+': '/logos/appletv.svg',
   peacock: '/logos/peacock.svg',
   'paramount plus': '/logos/paramountplus.svg',
   'paramount+': '/logos/paramountplus.svg',
-  paramount: '/logos/Paramount.svg',
+  'paramount': '/logos/Paramount.svg',
   crunchyroll: '/logos/crunchyroll.svg',
   espn: '/logos/espn.svg',
   starz: '/logos/starz.svg',
@@ -27,9 +29,17 @@ export const PLATFORM_LOGOS: Record<string, string> = {
   'discovery plus': '/logos/discoveryplus.svg',
   'discovery+': '/logos/discoveryplus.svg',
   
+  // Additional common variations
+  'netflix standard with ads': '/logos/netflix.svg',
+  'paramount plus apple tv channel': '/logos/paramountplus.svg',
+  'paramount+ amazon channel': '/logos/paramountplus.svg',
+  'hbo max amazon channel': '/logos/Max.svg',
+  'amazon prime video with ads': '/logos/PrimeVideo.svg',
+  'crunchyroll amazon channel': '/logos/crunchyroll.svg',
+  
   // Default fallback
-  all: '/logos/default.png',
-  unknown: '/logos/default.png',
+  all: '/logos/default.svg',
+  unknown: '/logos/default.svg',
 };
 
 // TMDB provider ID mapping for API integration
@@ -269,8 +279,9 @@ export const PlatformLogo: React.FC<PlatformLogoProps> = ({
       loading="lazy"
       onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
         const target = e.target as HTMLImageElement;
-        if (target.src !== PLATFORM_LOGOS.unknown) {
-          target.src = PLATFORM_LOGOS.unknown;
+        const fallback = PLATFORM_LOGOS.unknown;
+        if (target.src !== fallback) {
+          target.src = fallback;
         }
       }}
     />
