@@ -122,30 +122,16 @@ function ShowCard({ show }: { show: Show }) {
     ? show.vote_average.toFixed(1)
     : 'N/A';
 
-  // Helper function to get the best logo source using centralized system
+  // Helper function to get the best logo source using TMDB API data
   const getLogoSrc = (platform: any): string => {
-    const providerName = platform.provider_name || platform.name || '';
-    
-    // Use centralized platform logo system
-    const centralizedLogo = getPlatformLogo(providerName);
-    
-    // If centralized system has a specific logo (not fallback), use it
-    if (centralizedLogo && !centralizedLogo.includes('default.svg')) {
-      return centralizedLogo;
-    }
-    
-    // Handle platform.logo_path from TMDB
     if (platform.logo_path) {
-      // If logo_path is already a full URL, return it as-is
-      if (platform.logo_path.startsWith('http')) {
-        return platform.logo_path;
-      }
-      // Otherwise, construct TMDB URL
-      return `https://image.tmdb.org/t/p/w45${platform.logo_path}`;
+      // ✅ Use TMDB's official logo asset directly
+      return `https://image.tmdb.org/t/p/original${platform.logo_path}`;
     }
-    
-    // Return centralized fallback
-    return centralizedLogo;
+
+    // ✅ Otherwise fallback to local mapping
+    const providerName = platform.provider_name || platform.name || '';
+    return getPlatformLogo(providerName);
   };
 
   return (
@@ -209,11 +195,14 @@ function ShowCard({ show }: { show: Show }) {
 }
 
 export default function Landing() {
-  console.log('🏢 LANDING COMPONENT RENDERED - User is NOT authenticated');
-
   const [location, setLocation] = useLocation();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+  const { refreshSession, isAuthenticated, user } = useAuth();
+  
+  console.log('🏢 LANDING COMPONENT RENDERED - isAuthenticated:', isAuthenticated, 'user:', user?.email || 'null');
+  
+  // Note: Redirect logic moved to App.tsx root route
 
   // State for trending shows
   const [trendingShows, setTrendingShows] = useState<{ results: Show[] } | null>(null);
@@ -234,17 +223,26 @@ export default function Landing() {
           const sessionResult = await createBackendSession(result.user);
           console.log("✅ Backend session created:", sessionResult);
 
-          // Wait a moment for session to settle
-          await new Promise(resolve => setTimeout(resolve, 1000));
-
           toast({
             title: "Welcome to BingeBoard!",
             description: `Successfully signed in with ${result.user.email}`,
           });
 
-          // Force a page reload to refresh auth state
-          console.log("🔄 Forcing page reload to refresh auth state...");
-          window.location.href = '/';
+          // Force multiple refresh attempts to ensure state sync
+          console.log("🔄 REDIRECT - FORCING AUTH STATE REFRESH - Attempt 1");
+          await refreshSession();
+          
+          console.log("🔄 REDIRECT - Waiting for state propagation...");
+          await new Promise(resolve => setTimeout(resolve, 200));
+          
+          console.log("🔄 REDIRECT - FORCING AUTH STATE REFRESH - Attempt 2");
+          await refreshSession();
+          
+          console.log("🔄 REDIRECT - Final wait before navigation...");
+          await new Promise(resolve => setTimeout(resolve, 300));
+          
+          console.log("🔄 REDIRECT - Navigating to dashboard...");
+          setLocation('/');
         }
       } catch (error: any) {
         console.error("❌ Redirect login failed:", error);
@@ -385,20 +383,26 @@ export default function Landing() {
       const sessionResult = await createBackendSession(result.user);
       console.log("✅ Backend session created:", sessionResult);
 
-      // Wait a moment for session to settle
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
       toast({
         title: "Welcome to BingeBoard!",
         description: "Successfully signed in with Google",
       });
 
-      // Wait a moment for session to be fully established
-      await new Promise(resolve => setTimeout(resolve, 500));
-
-      // Navigate to dashboard
+      // Force multiple refresh attempts to ensure state sync
+      console.log("🔄 FORCING AUTH STATE REFRESH - Attempt 1");
+      await refreshSession();
+      
+      console.log("🔄 Waiting for state propagation...");
+      await new Promise(resolve => setTimeout(resolve, 200));
+      
+      console.log("🔄 FORCING AUTH STATE REFRESH - Attempt 2");
+      await refreshSession();
+      
+      console.log("🔄 Final wait before navigation...");
+      await new Promise(resolve => setTimeout(resolve, 300));
+      
       console.log("🔄 Navigating to dashboard...");
-      window.location.href = '/';
+      setLocation('/');
 
     } catch (err: any) {
       console.error("💥 Google login error:", err);
@@ -494,20 +498,26 @@ export default function Landing() {
       const sessionResult = await createBackendSession(result.user);
       console.log("✅ Backend session created:", sessionResult);
 
-      // Wait a moment for session to settle
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
       toast({
         title: "Welcome to BingeBoard!",
         description: "Successfully signed in with Facebook",
       });
 
-      // Wait a moment for session to be fully established
-      await new Promise(resolve => setTimeout(resolve, 500));
-
-      // Navigate to dashboard
+      // Force multiple refresh attempts to ensure state sync
+      console.log("🔄 FORCING AUTH STATE REFRESH - Attempt 1");
+      await refreshSession();
+      
+      console.log("🔄 Waiting for state propagation...");
+      await new Promise(resolve => setTimeout(resolve, 200));
+      
+      console.log("🔄 FORCING AUTH STATE REFRESH - Attempt 2");
+      await refreshSession();
+      
+      console.log("🔄 Final wait before navigation...");
+      await new Promise(resolve => setTimeout(resolve, 300));
+      
       console.log("🔄 Navigating to dashboard...");
-      window.location.href = '/';
+      setLocation('/');
 
     } catch (err: any) {
       console.error("💥 Facebook login error:", err);

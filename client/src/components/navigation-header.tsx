@@ -31,10 +31,15 @@ export default function NavigationHeader() {
     try {
       console.log('🔐 Navigation logout clicked');
       await logout();
+      
+      // Immediate navigation to landing page after logout
+      console.log('🔐 Redirecting to landing page immediately after logout');
+      setLocation('/');
+      
     } catch (error) {
       console.error('🔐 Navigation logout error:', error);
       // Fallback: force navigation to landing page even if logout fails
-      window.location.href = '/';
+      setLocation('/');
     }
   };
 

@@ -16,7 +16,7 @@ interface PlatformBadgesProps {
   className?: string;
 }
 
-export const PlatformBadges: React.FC<PlatformBadgesProps> = ({ platforms, maxVisible = 4, size = 'sm', className }) => {
+export const PlatformBadges: React.FC<PlatformBadgesProps> = ({ platforms, maxVisible = 1, size = 'sm', className }) => {
   if (!platforms || platforms.length === 0) return null;
   const visible = platforms.slice(0, maxVisible);
   const remaining = platforms.length - visible.length;

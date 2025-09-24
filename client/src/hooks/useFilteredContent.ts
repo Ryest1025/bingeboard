@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { FilterValues } from '@/components/common/FilterBadges';
 import { fetchFilteredContent, hasActiveFilters } from '@/utils/filterUtils';
 import { fetchTMDBPlatformLogo, preloadPlatformLogos } from '@/lib/tmdb';
+import { getPlatformLogo as getProperPlatformLogo } from '@/utils/platformLogos';
 import { useWatchlist, WatchlistItem } from '@/hooks/useWatchlist';
 
 export interface ContentItem {
@@ -277,10 +278,9 @@ export function useFilteredContent(items: ContentItem[], filters: FilterOptions 
     };
   };
 
-  // Get platform logo with fallback
-  const getPlatformLogo = (platformName: string): string => {
-    const normalizedPlatform = platformName.toLowerCase();
-    return logos[normalizedPlatform] || FALLBACK_LOGO;
+  // Get platform logo with fallback - use the updated logo system
+  const getPlatformLogo = (platform: string | any): string => {
+    return getProperPlatformLogo(platform);
   };
 
   return {

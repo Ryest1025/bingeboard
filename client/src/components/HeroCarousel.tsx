@@ -97,6 +97,12 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ shows }) => {
           src={`https://image.tmdb.org/t/p/w1280${featuredShow.backdrop_path}`}
           alt={featuredShow.displayTitle}
           className="w-full h-full object-cover transition-transform duration-700 ease-in-out"
+          onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
+            const target = e.target as HTMLImageElement;
+            // Fallback to a gradient background
+            target.style.display = 'none';
+            target.parentElement!.style.background = 'linear-gradient(135deg, #1f2937, #111827)';
+          }}
         />
       )}
       
@@ -154,7 +160,7 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ shows }) => {
                     logo_path: platform.logo_path
                   }))}
                   size="md"
-                  maxDisplayed={4}
+                  maxDisplayed={1}
                 />
               </div>
             )}
@@ -191,10 +197,27 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ shows }) => {
           {featuredShow.poster_path && (
             <div className="hidden lg:block flex-shrink-0">
               <img
-                src={`https://image.tmdb.org/t/p/w500${featuredShow.poster_path}`}
+                src={`https://image.tmdb.org/t/p/w300${featuredShow.poster_path}`}
                 alt={`${featuredShow.displayTitle} poster`}
-                className="w-64 h-96 object-cover rounded-lg shadow-2xl border-4 border-white/10"
+                className="w-48 h-72 object-cover rounded-lg shadow-2xl border-4 border-white/10"
                 loading="lazy"
+                onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
+                  const target = e.target as HTMLImageElement;
+                  // Fallback to a simple gradient placeholder
+                  target.src = `data:image/svg+xml;base64,${btoa(`
+                    <svg width="192" height="288" xmlns="http://www.w3.org/2000/svg">
+                      <defs>
+                        <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                          <stop offset="0%" style="stop-color:#1f2937;stop-opacity:1" />
+                          <stop offset="100%" style="stop-color:#111827;stop-opacity:1" />
+                        </linearGradient>
+                      </defs>
+                      <rect width="192" height="288" fill="url(#grad)" rx="8"/>
+                      <text x="96" y="144" font-family="Arial, sans-serif" font-size="14" 
+                            text-anchor="middle" fill="#9ca3af" opacity="0.7">No Poster</text>
+                    </svg>
+                  `)}`;
+                }}
               />
             </div>
           )}

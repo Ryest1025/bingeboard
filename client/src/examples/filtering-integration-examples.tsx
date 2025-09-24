@@ -56,7 +56,7 @@ function MyDiscoverPage() {
             <div key={item.id} className="bg-slate-800 rounded-lg p-4">
               {/* Platform Logo */}
               <img 
-                src={getPlatformLogo(item.platform)} 
+                src={getPlatformLogo({provider_name: item.platform})} 
                 alt={item.platform}
                 className="w-8 h-8 mb-2" 
               />

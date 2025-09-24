@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { getPlatformLogo } from "@/utils/platformLogos";
 
 interface StreamingMarqueeModalProps {
   isOpen: boolean;
@@ -11,18 +12,18 @@ interface StreamingMarqueeModalProps {
 }
 
 const streamingServices = [
-  { name: "Netflix", logo: "https://images.justwatch.com/icon/207360008/s200/netflix.png", color: "#E50914" },
-  { name: "Disney+", logo: "https://images.justwatch.com/icon/147638351/s200/disney-plus.png", color: "#0063D1" },
-  { name: "Max", logo: "https://images.justwatch.com/icon/52449539/s200/max.png", color: "#8A2BE2" },
-  { name: "Amazon Prime Video", logo: "https://images.justwatch.com/icon/52449062/s200/amazon-prime-video.png", color: "#00A8E1" },
-  { name: "Hulu", logo: "https://images.justwatch.com/icon/52449639/s200/hulu.png", color: "#1CE783" },
-  { name: "Apple TV+", logo: "https://images.justwatch.com/icon/190848813/s200/apple-tv-plus.png", color: "#FFFFFF" },
-  { name: "Paramount+", logo: "https://images.justwatch.com/icon/52449516/s200/paramount-plus.png", color: "#0064FF" },
-  { name: "Peacock", logo: "https://images.justwatch.com/icon/52449334/s200/peacock.png", color: "#FA6400" },
-  { name: "Crunchyroll", logo: "https://images.justwatch.com/icon/127514713/s200/crunchyroll.png", color: "#FF6500" },
-  { name: "YouTube TV", logo: "https://images.justwatch.com/icon/52449020/s200/youtube-tv.png", color: "#FF0000" },
-  { name: "Showtime", logo: "https://images.justwatch.com/icon/52449062/s200/showtime.png", color: "#D32F2F" },
-  { name: "Starz", logo: "https://images.justwatch.com/icon/52449051/s200/starz.png", color: "#000000" }
+  { name: "Netflix", color: "#E50914" },
+  { name: "Disney+", color: "#0063D1" },
+  { name: "Max", color: "#8A2BE2" },
+  { name: "Amazon Prime Video", color: "#00A8E1" },
+  { name: "Hulu", color: "#1CE783" },
+  { name: "Apple TV+", color: "#FFFFFF" },
+  { name: "Paramount+", color: "#0064FF" },
+  { name: "Peacock", color: "#FA6400" },
+  { name: "Crunchyroll", color: "#FF6500" },
+  { name: "YouTube TV", color: "#FF0000" },
+  { name: "Showtime", color: "#D32F2F" },
+  { name: "Starz", color: "#000000" }
 ];
 
 const marqueeServices = [...streamingServices, ...streamingServices, ...streamingServices];
@@ -87,7 +88,7 @@ export function StreamingMarqueeModal({
         {/* Header */}
         <div className="relative p-6 pb-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-4xl font-bold text-yellow-400 mb-2 animate-pulse">🚨 TESTING CHANGES VISIBLE? 🚨</h2>
+            <h2 className="text-3xl font-bold text-white mb-2">Available on Streaming Platforms</h2>
             <Button
               variant="ghost"
               size="sm"
@@ -109,7 +110,7 @@ export function StreamingMarqueeModal({
                 style={{ minWidth: "300px" }}
               >
                 <img
-                  src={`${service.logo}?cache=${Date.now()}&force=true`}
+                  src={getPlatformLogo(service.name)}
                   alt={service.name}
                   className="h-64 w-auto object-contain group-hover:scale-110 transition-all duration-300 drop-shadow-2xl border-2 border-red-500"
                   style={{
@@ -117,8 +118,12 @@ export function StreamingMarqueeModal({
                   }}
                   onError={(e) => {
                     const target = e.target as HTMLImageElement;
-                    target.style.display = "none";
-                    target.nextElementSibling?.classList.remove("hidden");
+                    if (target.src !== '/logos/default.svg') {
+                      target.src = '/logos/default.svg';
+                    } else {
+                      target.style.display = "none";
+                      target.nextElementSibling?.classList.remove("hidden");
+                    }
                   }}
                 />
                 <span

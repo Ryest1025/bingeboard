@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Logo Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #1a1a1a; color: white; }
+        .logo { width: 100px; height: 60px; object-fit: contain; margin: 10px; border: 1px solid #333; }
+        .section { margin: 20px 0; }
+    </style>
+</head>
+<body>
+    <h1>🎬 Logo System Test</h1>
+    
+    <div class="section">
+        <h2>PNG Logos (Should work):</h2>
+        <img src="/logos/netflix.png" alt="Netflix" class="logo">
+        <img src="/logos/prime-video.png" alt="Prime Video" class="logo">
+        <img src="/logos/disney-plus.png" alt="Disney+" class="logo">
+        <img src="/logos/hbo-max.png" alt="HBO Max" class="logo">
+        <img src="/logos/apple-tv.png" alt="Apple TV+" class="logo">
+    </div>
+    
+    <div class="section">
+        <h2>TMDB Logo Test:</h2>
+        <img src="https://image.tmdb.org/t/p/w92/9A1JSVmSxsyaBK4SUFsYVqbAYfW.jpg" alt="Netflix TMDB" class="logo">
+        <img src="https://image.tmdb.org/t/p/w92/emthp39XA2YScoYL1p0sdbAH2WA.jpg" alt="Prime TMDB" class="logo">
+    </div>
+    
+    <div class="section">
+        <h2>Changes Made:</h2>
+        <ul>
+            <li>✅ Streaming modal: Removed test overlay</li>
+            <li>✅ Dashboard spotlight: Limited to 1 logo (maxDisplayed=1)</li>
+            <li>✅ Trending section: Limited to 1 logo (maxVisible=1)</li>
+            <li>✅ Logo fallback system: PNG files → TMDB → badges</li>
+            <li>✅ Platform name normalization improved</li>
+        </ul>
+    </div>
+    
+    <div class="section">
+        <p><strong>To logout:</strong> <a href="/api/logout" style="color: #60a5fa;">Click here to logout</a></p>
+        <p><strong>Main site:</strong> <a href="/" style="color: #60a5fa;">Go to landing page</a></p>
+    </div>
+</body>
+</html>

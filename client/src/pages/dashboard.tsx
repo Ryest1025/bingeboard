@@ -282,7 +282,6 @@ const DashboardPage: React.FC = () => {
                               logo_path: platform.logo_path
                             }))}
                             size="sm"
-                            maxDisplayed={2}
                           />
                         </div>
                       </div>

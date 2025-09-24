@@ -1,4 +1,4 @@
-import { Switch, Route, useLocation } from "wouter";
+import { Switch, Route, useLocation, Redirect } from "wouter";
 import React, { useState, useEffect } from "react";
 import { SafeQueryProvider } from "./lib/safeQueryClient";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -58,7 +58,7 @@ function Router() {
       <div className="min-h-screen flex items-center justify-center bg-black">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-500 mx-auto"></div>
-          <p className="text-gray-400 mt-4">Loading BingeBoard...</p>
+          <p className="text-gray-400 mt-4">🔄 Checking authentication...</p>
         </div>
       </div>
     );
@@ -82,8 +82,14 @@ function Router() {
           {/* Root */}
           <Route path="/">
             {(() => {
-              console.log(`🛣️ Root route: isAuthenticated=${isAuthenticated}, rendering ${isAuthenticated ? 'Home' : 'Landing'}`);
-              return isAuthenticated ? <Home /> : <Landing />;
+              console.log(`🛣️ Root route: isAuthenticated=${isAuthenticated}, isLoading=${isLoading}, user=${user?.email || 'null'}, redirecting to ${isAuthenticated ? 'dashboard' : 'landing'}`);
+              
+              if (isAuthenticated) {
+                // Redirect to dashboard using wouter
+                return <Redirect to="/dashboard" />;
+              } else {
+                return <Landing />;
+              }
             })()}
           </Route>
 
@@ -122,8 +128,14 @@ function Router() {
             }
             setShowPremiumOnboarding(false);
           }}
-          userDisplayName={user?.displayName || user?.firstName || user?.email?.split('@')[0] || 'Friend'}
-          userData={user}
+          userDisplayName={user?.displayName || user?.email?.split('@')[0] || 'Friend'}
+          userData={user ? {
+            firstName: user.displayName?.split(' ')[0],
+            lastName: user.displayName?.split(' ')[1],
+            email: user.email,
+            profileImage: (user as any).photoURL,
+            provider: (user as any).authProvider as "email" | "google" | "facebook" | undefined
+          } : undefined}
         />
       )}
 

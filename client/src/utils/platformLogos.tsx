@@ -1,45 +1,30 @@
 import React, { useState, useEffect, useCallback } from 'react';
 
-// Local fallback logos mapping to your existing logo files
+// Local fallback logos mapping to existing SVG logo files
 export const PLATFORM_LOGOS: Record<string, string> = {
-  // Main streaming services - matching actual file names
-  netflix: '/logos/netflix.svg',
-  'amazon prime video': '/logos/PrimeVideo.svg',
-  'prime video': '/logos/PrimeVideo.svg',
-  'amazon video': '/logos/PrimeVideo.svg',
-  'amazon prime': '/logos/PrimeVideo.svg',
-  'prime': '/logos/PrimeVideo.svg',
-  hulu: '/logos/hulu.svg',
-  'disney plus': '/logos/disney.svg',
-  'disney+': '/logos/disney.svg',
-  'disney': '/logos/disney.svg',
-  'hbo max': '/logos/Max.svg',
-  'max': '/logos/Max.svg',
-  'apple tv plus': '/logos/appletv.svg',
-  'apple tv': '/logos/appletv.svg',
-  'apple tv+': '/logos/appletv.svg',
-  peacock: '/logos/peacock.svg',
-  'paramount plus': '/logos/paramountplus.svg',
-  'paramount+': '/logos/paramountplus.svg',
-  'paramount': '/logos/Paramount.svg',
-  crunchyroll: '/logos/crunchyroll.svg',
-  espn: '/logos/espn.svg',
-  starz: '/logos/starz.svg',
-  showtime: '/logos/showtime.svg',
-  'discovery plus': '/logos/discoveryplus.svg',
-  'discovery+': '/logos/discoveryplus.svg',
+  // Main streaming services - using normalized names to match PLATFORM_NORMALIZE_MAP
+  'Netflix': '/logos/icons8-netflix (1).svg',
+  'Prime Video': '/logos/icons8-amazon-prime-video (1).svg',
+  'Disney+': '/logos/icons8-disney-plus.svg',
+  'Max': '/logos/icons8-hbo-max.svg',
+  'Apple TV+': '/logos/Apple-tv-plus-official.svg',
+  'Peacock': '/logos/icons8-peacock-tv.svg',
+  'Paramount+': '/logos/icons8-paramount-plus.svg',
+  'Crunchyroll': '/logos/icons8-crunchyroll.svg',
+  'Starz': '/logos/Starz--Streamline-Simple-Icons.svg',
+  'Showtime': '/logos/Showtime--Streamline-Simple-Icons.svg',
   
-  // Additional common variations
-  'netflix standard with ads': '/logos/netflix.svg',
-  'paramount plus apple tv channel': '/logos/paramountplus.svg',
-  'paramount+ amazon channel': '/logos/paramountplus.svg',
-  'hbo max amazon channel': '/logos/Max.svg',
-  'amazon prime video with ads': '/logos/PrimeVideo.svg',
-  'crunchyroll amazon channel': '/logos/crunchyroll.svg',
-  
-  // Default fallback
-  all: '/logos/default.svg',
-  unknown: '/logos/default.svg',
+  // Add lowercase versions for backup lookup
+  'netflix': '/logos/icons8-netflix (1).svg',
+  'prime video': '/logos/icons8-amazon-prime-video (1).svg',
+  'disney+': '/logos/icons8-disney-plus.svg',
+  'max': '/logos/icons8-hbo-max.svg',
+  'apple tv+': '/logos/Apple-tv-plus-official.svg',
+  'peacock': '/logos/icons8-peacock-tv.svg',
+  'paramount+': '/logos/icons8-paramount-plus.svg',
+  'crunchyroll': '/logos/icons8-crunchyroll.svg',
+  'starz': '/logos/Starz--Streamline-Simple-Icons.svg',
+  'showtime': '/logos/Showtime--Streamline-Simple-Icons.svg',
 };
 
 // TMDB provider ID mapping for API integration
@@ -71,89 +56,189 @@ interface LogoCache {
 // Simple in-memory cache for logos
 const logoCache: LogoCache = {};
 
+// Platform name normalization map
+const PLATFORM_NORMALIZE_MAP: Record<string, string> = {
+  // Amazon Prime Video variations
+  'amazon prime video': 'Prime Video',
+  'amazon prime video with ads': 'Prime Video',
+  'prime video': 'Prime Video',
+  'amazon video': 'Prime Video',
+  'amazon prime': 'Prime Video',
+  'prime': 'Prime Video',
+  
+  // Netflix variations
+  'netflix': 'Netflix',
+  'netflix standard with ads': 'Netflix',
+  
+  // Disney variations
+  'disney plus': 'Disney+',
+  'disney+': 'Disney+',
+  'disney': 'Disney+',
+  
+  // HBO Max / Max variations
+  'hbo max': 'Max',
+  'max': 'Max',
+  'hbo max amazon channel': 'Max',
+  'hbo max  amazon channel': 'Max', // Extra space case
+  
+  // Apple TV variations
+  'apple tv': 'Apple TV+',
+  'apple tv+': 'Apple TV+',
+  'apple tv plus': 'Apple TV+',
+  
+  // Paramount variations
+  'paramount+': 'Paramount+',
+  'paramount plus': 'Paramount+',
+  'paramount': 'Paramount+',
+  'paramount plus apple tv channel': 'Paramount+',
+  'paramount+ amazon channel': 'Paramount+',
+  'paramount+ roku premium channel': 'Paramount+',
+  'paramount+ originals amazon channel': 'Paramount+',
+  'paramount+ mtv amazon channel': 'Paramount+',
+  
+  // Hulu variations
+  'hulu': 'Hulu',
+  
+  // Crunchyroll variations
+  'crunchyroll': 'Crunchyroll',
+  'crunchyroll amazon channel': 'Crunchyroll',
+  
+  // Other services
+  'peacock': 'Peacock',
+  'peacock premium': 'Peacock', 
+  'starz': 'Starz',
+  'starz amazon channel': 'Starz',
+  'showtime': 'Showtime',
+  'showtime amazon channel': 'Showtime',
+  'discovery+': 'Discovery+',
+  'discovery plus': 'Discovery+',
+  'espn': 'ESPN',
+  'espn+': 'ESPN',
+  'espn plus': 'ESPN',
+  'adult swim': 'Adult Swim',
+  'tbs': 'TBS',
+  'tnt': 'TNT',
+  'youtube premium': 'YouTube Premium',
+  'youtube tv': 'YouTube TV',
+  'fandango at home': 'Vudu',
+  'google play movies': 'Google Play',
+  'spectrum on demand': 'Spectrum',
+  'fubotv': 'fuboTV',
+  'amc+': 'AMC+',
+  'amc plus': 'AMC+',
+};
+
 /**
- * Get platform logo with fallback to local logos
+ * Normalize platform name to consistent format
  */
-export function getPlatformLogo(platform: string): string {
-  if (!platform) return PLATFORM_LOGOS.unknown;
+function normalizePlatformName(platformName: string): string {
+  if (!platformName || typeof platformName !== 'string') return 'Unknown';
   
-  const normalizedPlatform = platform.toLowerCase().trim();
-  
-  // Check local logos first
-  if (PLATFORM_LOGOS[normalizedPlatform]) {
-    return PLATFORM_LOGOS[normalizedPlatform];
-  }
-  
-  // Check cache
-  if (logoCache[normalizedPlatform]) {
-    return logoCache[normalizedPlatform];
-  }
-  
-  // Return default if no match
-  return PLATFORM_LOGOS.unknown;
+  const normalized = platformName.toLowerCase().trim();
+  return PLATFORM_NORMALIZE_MAP[normalized] || platformName;
 }
 
 /**
- * Hook for dynamic platform logo loading with TMDB integration
+ * Get platform logo URL - prioritizes API-provided logos over local files
+ * @param platform - Platform name or object with logo_path
+ * @param logoPath - Optional logo path (could be TMDB path or external URL)
+ */
+export const getPlatformLogo = (platform: string | { name: string; logo_path?: string } | any): string => {
+  console.log('🎬 getPlatformLogo called with:', platform);
+  
+  const platformName = typeof platform === 'string' ? platform : (platform.name || platform.provider_name);
+  const logoPath = typeof platform === 'object' && platform.logo_path ? platform.logo_path : null;
+  // Handle platform object with logo_path property (API data)
+  if (typeof platform === 'object' && platform?.logo_path) {
+    const path = platform.logo_path;
+    console.log('🔍 Using API logo path:', path, 'for platform:', platformName);
+    
+    // If it's already a full external URL, use it directly
+    if (path.startsWith('http')) {
+      return path;
+    }
+    
+    // If it's a TMDB path, construct TMDB URL with proper size
+    if (path.startsWith('/')) {
+      const tmdbUrl = `https://image.tmdb.org/t/p/w92${path}`;
+      console.log('✅ Constructed TMDB URL:', tmdbUrl);
+      return tmdbUrl;
+    }
+    
+    // Fallback to badge if logo_path format is unexpected
+    return generatePlatformBadge(normalizePlatformName(platformName || 'Unknown'));
+  }
+  
+  // Handle explicit logoPath parameter (API data)
+  if (logoPath) {
+    // If it's already a full external URL, use it directly
+    if (logoPath.startsWith('http')) {
+      return logoPath;
+    }
+    
+    // If it's a TMDB path, construct TMDB URL with proper size
+    if (logoPath.startsWith('/')) {
+      return `https://image.tmdb.org/t/p/w92${logoPath}`;
+    }
+    
+    // Fallback to badge if logoPath format is unexpected
+    return generatePlatformBadge(normalizePlatformName(platformName || 'Unknown'));
+  }
+  
+  // For string platform names (no API data), generate badge directly
+  if (!platformName) {
+    return generatePlatformBadge('Unknown');
+  }
+
+  // Generate a styled badge for the platform name
+  const normalizedName = normalizePlatformName(platformName);
+  return generatePlatformBadge(normalizedName);
+}
+
+/**
+ * Generate a colored badge with platform's first letter instead of using fake logos
+ */
+function generatePlatformBadge(platformName: string): string {
+  const colors = [
+    '#E50914', // Netflix red
+    '#113CCF', // Disney blue
+    '#002BE7', // Max blue
+    '#00A8E1', // Prime blue
+    '#1CE783', // Hulu green
+    '#000000', // Apple black
+    '#0064FF', // Paramount blue
+    '#FA6B00', // Peacock orange
+    '#FF6600', // Crunchyroll orange
+    '#FF0000', // YouTube red
+    '#0077C8', // Discovery blue
+  ];
+  
+  const platformKey = platformName.toLowerCase().trim();
+  const colorIndex = platformKey.split('').reduce((sum, char) => sum + char.charCodeAt(0), 0) % colors.length;
+  const color = colors[colorIndex];
+  const letter = platformName.charAt(0).toUpperCase();
+  
+  // Return a data URL for a simple colored badge
+  const svg = `<svg width="32" height="24" xmlns="http://www.w3.org/2000/svg">
+    <rect width="32" height="24" fill="${color}" rx="4"/>
+    <text x="16" y="16" font-family="Arial, sans-serif" font-size="12" font-weight="bold" 
+          text-anchor="middle" fill="white">${letter}</text>
+  </svg>`;
+  
+  return `data:image/svg+xml;base64,${btoa(svg)}`;
+}
+
+/**
+ * Hook for platform logo loading - LOCAL ONLY (no external fetching)
  */
 export function usePlatformLogo(platform: string): string {
-  const [logoUrl, setLogoUrl] = useState<string>(() => getPlatformLogo(platform));
-  const [isLoading, setIsLoading] = useState(false);
-
-  useEffect(() => {
-    if (!platform) {
-      setLogoUrl(PLATFORM_LOGOS.unknown);
-      return;
-    }
-
-    const normalizedPlatform = platform.toLowerCase().trim();
-
-    // Return local logo immediately if available
-    if (PLATFORM_LOGOS[normalizedPlatform]) {
-      setLogoUrl(PLATFORM_LOGOS[normalizedPlatform]);
-      return;
-    }
-
-    // Return cached logo if available
-    if (logoCache[normalizedPlatform]) {
-      setLogoUrl(logoCache[normalizedPlatform]);
-      return;
-    }
-
-    // Try to fetch from TMDB if we have a provider ID
-    const providerId = TMDB_PROVIDER_MAP[normalizedPlatform];
-    if (!providerId) {
-      setLogoUrl(PLATFORM_LOGOS.unknown);
-      return;
-    }
-
-    setIsLoading(true);
-
-    // Fetch logo from TMDB
-    const tmdbLogoUrl = `https://image.tmdb.org/t/p/original/logo/${providerId}.jpg`;
-    
-    // Preload image to check if it exists
-    const img = new Image();
-    img.onload = () => {
-      logoCache[normalizedPlatform] = tmdbLogoUrl;
-      setLogoUrl(tmdbLogoUrl);
-      setIsLoading(false);
-    };
-    img.onerror = () => {
-      // Fallback to default logo
-      logoCache[normalizedPlatform] = PLATFORM_LOGOS.unknown;
-      setLogoUrl(PLATFORM_LOGOS.unknown);
-      setIsLoading(false);
-    };
-    img.src = tmdbLogoUrl;
-
-  }, [platform]);
-
-  return logoUrl;
+  // Always use the getPlatformLogo function for consistency
+  // No useState or external fetching to avoid 404 errors
+  return getPlatformLogo(platform);
 }
 
 /**
- * Hook for preloading logos for multiple platforms
+ * Hook for preloading logos for multiple platforms - LOCAL ONLY
  */
 export function usePreloadedLogos(platforms: string[]): {
   logos: LogoCache;
@@ -161,75 +246,27 @@ export function usePreloadedLogos(platforms: string[]): {
   error: string | null;
 } {
   const [logos, setLogos] = useState<LogoCache>({});
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const preloadLogos = useCallback(async () => {
-    if (!platforms.length) return;
-
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const newLogos: LogoCache = {};
-      const uniquePlatforms = Array.from(new Set(platforms.map(p => p.toLowerCase().trim())));
-
-      // Process platforms in parallel
-      await Promise.allSettled(
-        uniquePlatforms.map(async (platform) => {
-          // Check local logos first
-          if (PLATFORM_LOGOS[platform]) {
-            newLogos[platform] = PLATFORM_LOGOS[platform];
-            return;
-          }
-
-          // Check cache
-          if (logoCache[platform]) {
-            newLogos[platform] = logoCache[platform];
-            return;
-          }
-
-          // Try TMDB
-          const providerId = TMDB_PROVIDER_MAP[platform];
-          if (!providerId) {
-            newLogos[platform] = PLATFORM_LOGOS.unknown;
-            logoCache[platform] = PLATFORM_LOGOS.unknown;
-            return;
-          }
-
-          const tmdbLogoUrl = `https://image.tmdb.org/t/p/original/logo/${providerId}.jpg`;
-
-          try {
-            // Preload image
-            await new Promise<void>((resolve, reject) => {
-              const img = new Image();
-              img.onload = () => resolve();
-              img.onerror = () => reject(new Error('Image failed to load'));
-              img.src = tmdbLogoUrl;
-            });
-
-            newLogos[platform] = tmdbLogoUrl;
-            logoCache[platform] = tmdbLogoUrl;
-          } catch {
-            newLogos[platform] = PLATFORM_LOGOS.unknown;
-            logoCache[platform] = PLATFORM_LOGOS.unknown;
-          }
-        })
-      );
-
-      setLogos(prevLogos => ({ ...prevLogos, ...newLogos }));
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to preload logos');
-    } finally {
-      setIsLoading(false);
-    }
-  }, [platforms]);
 
   useEffect(() => {
-    preloadLogos();
-  }, [preloadLogos]);
+    if (!platforms.length) return;
 
-  return { logos, isLoading, error };
+    const newLogos: LogoCache = {};
+    const uniquePlatforms = Array.from(new Set(platforms.map(p => p.toLowerCase().trim())));
+
+    // Only use local logos - no external fetching
+    uniquePlatforms.forEach(platform => {
+      newLogos[platform] = getPlatformLogo(platform);
+    });
+
+    setLogos(newLogos);
+  }, [platforms]);
+
+  // Always return no loading/error since we're only using local logos
+  return { 
+    logos, 
+    isLoading: false, 
+    error: null 
+  };
 }
 
 /**
@@ -261,7 +298,8 @@ export const PlatformLogo: React.FC<PlatformLogoProps> = ({
   alt,
   preloaded = false 
 }) => {
-  const logoUrl = preloaded ? getPlatformLogo(platform) : usePlatformLogo(platform);
+  // Always use getPlatformLogo for consistency (no external fetching)
+  const logoUrl = getPlatformLogo(platform);
 
   const sizeClasses = {
     xs: 'w-4 h-4',
@@ -281,6 +319,7 @@ export const PlatformLogo: React.FC<PlatformLogoProps> = ({
         const target = e.target as HTMLImageElement;
         const fallback = PLATFORM_LOGOS.unknown;
         if (target.src !== fallback) {
+          console.warn(`Logo failed for ${platform}, falling back to default:`, target.src);
           target.src = fallback;
         }
       }}

@@ -167,7 +167,7 @@ export default function UpcomingEnhanced() {
               {release.streamingProviders && release.streamingProviders.length > 0 && (
                 <div className="flex items-center">
                   <span className="text-xs text-gray-400 mr-2">Available on:</span>
-                  <StreamingLogos providers={release.streamingProviders} size="sm" maxDisplayed={3} />
+                  <StreamingLogos providers={release.streamingProviders} size="sm" />
                 </div>
               )}
             </div>

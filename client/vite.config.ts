@@ -11,12 +11,12 @@ export default defineConfig({
   },
   server: {
     host: '0.0.0.0', // Allow external access for Codespaces
-    port: 3001, // Use port 3001 for frontend (matching actual dev server)
-    strictPort: true, // Fail if 3001 is busy
+    port: 3000, // Use port 3000 for frontend
+    strictPort: true, // Fail if 3000 is busy
     hmr: {
       protocol: 'ws',
       host: 'localhost', // Match browser access for proper WebSocket connection
-      port: 3001, // Match actual frontend port
+      port: 3000, // Match actual frontend port
     },
     proxy: {
       '/api': {
@@ -30,6 +30,6 @@ export default defineConfig({
     }
   },
   preview: {
-    port: 3001,
+    port: 3000,
   },
 });

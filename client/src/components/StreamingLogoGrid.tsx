@@ -1,4 +1,5 @@
 import React from "react";
+import { getPlatformLogo } from '@/utils/platformLogos';
 
 type Provider = {
   provider_id?: number;
@@ -58,66 +59,25 @@ const StreamingLogoGrid: React.FC<StreamingLogoGridProps> = ({ providers }) => {
     return currentPriority > bestPriority ? current : best;
   });
 
-  const baseUrl = "https://image.tmdb.org/t/p/w92";
-  const localLogos: Record<string, string> = {
-    Netflix: "/logos/netflix.svg",
-    // Amazon Prime Video variations - all use the same local logo
-    "Amazon Prime Video": "/logos/primevideo.svg", 
-    "Prime Video": "/logos/primevideo.svg",
-    "Amazon Video": "/logos/primevideo.svg",
-    "Amazon Prime": "/logos/primevideo.svg",
-    "Amazon Prime Video with Ads": "/logos/primevideo.svg",
-    // Other platforms
-    Hulu: "/logos/hulu.svg",
-    "Disney Plus": "/logos/disney-plus.png",
-    "Disney+": "/logos/disney-plus.png",
-    "HBO Max": "/logos/max.svg",
-    "Max": "/logos/max.svg",
-    "HBO": "/logos/hbo-max.png",
-    "Apple TV Plus": "/logos/appletv.svg",
-    "Apple TV": "/logos/appletv.svg",
-    "Apple TV+": "/logos/appletv.svg",
-    Peacock: "/logos/peacock.svg",
-    "Paramount Plus": "/logos/paramountplus.svg",
-    "Paramount+": "/logos/paramount-plus.png",
-    Crunchyroll: "/logos/crunchyroll.svg",
-    ESPN: "/logos/espn.svg",
-    Starz: "/logos/starz.svg",
-    "YouTube TV": "/logos/youtube-tv.png",
-    Showtime: "/logos/showtime.png",
-    "Discovery Plus": "/logos/discovery-plus.png",
-    "Discovery+": "/logos/discovery-plus.png"
-  };
-
   const providerName = primaryProvider.provider_name || primaryProvider.name || '';
   
-  // Prioritize local logos for better brand consistency and to avoid incorrect TMDB logos
-  const src = localLogos[providerName] || (primaryProvider.logo_path
-    ? `${baseUrl}${primaryProvider.logo_path}`
-    : null);
+  // Use the proper logo system that handles TMDB logos and fallbacks
+  const src = getPlatformLogo(primaryProvider);
 
   return (
     <div className="flex items-center gap-2">
       <div className="flex items-center justify-center w-10 h-10 bg-gray-900 rounded-lg overflow-hidden">
-        {src ? (
-          <img
-            src={src}
-            alt={providerName}
-            className="object-contain w-full h-full"
-            onError={(e) => {
-              console.warn(
-                `⚠️ Logo missing for ${providerName}, falling back to text`
-              );
-              (e.currentTarget as HTMLImageElement).style.display = "none";
-              e.currentTarget.insertAdjacentHTML(
-                "afterend",
-                `<span style="color:white;font-size:0.7rem;">${providerName}</span>`
-              );
-            }}
-          />
-        ) : (
-          <span className="text-xs text-white">{providerName}</span>
-        )}
+        <img
+          src={src}
+          alt={providerName}
+          className="object-contain w-full h-full"
+          onError={(e) => {
+            console.warn(`❌ Logo failed for ${providerName}:`, src);
+          }}
+          onLoad={() => {
+            console.log(`✅ Logo loaded successfully for ${providerName}:`, src);
+          }}
+        />
       </div>
       {providers.length > 1 && (
         <span className="text-xs text-gray-400">+{providers.length - 1} more</span>

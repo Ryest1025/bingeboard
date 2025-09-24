@@ -3,7 +3,7 @@ import { createRoot } from "react-dom/client";
 import App from "./App";
 import "./index.css";
 
-// ✅ Import shared Firebase instance
+// ✅ Firebase still used for debug helpers only
 import { auth } from "@/firebase/config";
 
 console.log("🚀 MAIN.TSX LOADED - Starting React app");
@@ -78,9 +78,65 @@ const setupFirebaseDebugHelpers = () => {
       }
     };
 
+    // Simple email/password helpers
+    (window as any).createTestUser = async () => {
+      const { createUserWithEmailAndPassword } = await import("firebase/auth");
+      try {
+        const result = await createUserWithEmailAndPassword(auth, 'test@example.com', 'password123');
+        console.log('✅ Test user created:', result.user.email);
+        return result;
+      } catch (error: any) {
+        if (error.code === 'auth/email-already-in-use') {
+          console.log('ℹ️ Test user already exists - try window.testEmailLogin()');
+        } else {
+          console.error('❌ Create user error:', error.message);
+        }
+      }
+    };
+
+    (window as any).testEmailLogin = async () => {
+      const { signInWithEmailAndPassword } = await import("firebase/auth");
+      try {
+        const result = await signInWithEmailAndPassword(auth, 'test@example.com', 'password123');
+        console.log('✅ Email login success:', result.user.email);
+        return result;
+      } catch (error: any) {
+        console.error('❌ Email login error:', error.message);
+      }
+    };
+
+    (window as any).resetPassword = async (email: string) => {
+      const { sendPasswordResetEmail } = await import("firebase/auth");
+      try {
+        await sendPasswordResetEmail(auth, email);
+        console.log('✅ Password reset email sent to:', email);
+        alert('✅ Password reset email sent! Check your email inbox.');
+      } catch (error: any) {
+        console.error('❌ Password reset error:', error.message);
+        alert('❌ Password reset failed: ' + error.message);
+      }
+    };
+
+    // Mobile-friendly reset for rachel.gubin@gmail.com
+    (window as any).resetRachel = async () => {
+      const { sendPasswordResetEmail } = await import("firebase/auth");
+      try {
+        await sendPasswordResetEmail(auth, 'rachel.gubin@gmail.com');
+        console.log('✅ Password reset email sent to: rachel.gubin@gmail.com');
+        alert('✅ Password reset email sent to rachel.gubin@gmail.com! Check your email inbox.');
+      } catch (error: any) {
+        console.error('❌ Password reset error:', error.message);
+        alert('❌ Password reset failed: ' + error.message);
+      }
+    };
+
     console.log("🧪 Firebase debug helpers available:");
     console.log("  - window.firebaseAuth");
-    console.log("  - window.testLogin()");
+    console.log("  - window.testLogin() (Google OAuth)");
+    console.log("  - window.testEmailLogin() (test@example.com / password123)");
+    console.log("  - window.createTestUser() (creates test@example.com)");
+    console.log("  - window.resetPassword('email@example.com')");
+    console.log("  - window.resetRachel() (resets rachel.gubin@gmail.com)");
     console.log("  - window.testAPI()");
     console.log("  - window.debugFirebase()");
   } catch (err) {

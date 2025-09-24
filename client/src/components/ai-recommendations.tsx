@@ -760,7 +760,6 @@ export function AiRecommendations({ compact = false, horizontal = false }: { com
                                         <StreamingLogos
                                           providers={recommendation.show.streamingPlatforms}
                                           size="sm"
-                                          maxDisplayed={5}
                                         />
                                       </div>
                                       <span className="text-xs text-muted-foreground">

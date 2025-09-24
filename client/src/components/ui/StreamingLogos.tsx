@@ -13,7 +13,7 @@ interface StreamingLogosProps {
 
 export const StreamingLogos: React.FC<StreamingLogosProps> = ({
   providers = [],
-  maxLogos = 4,
+  maxLogos = 1,
   size = 'sm',
   showNames = false,
   showAffiliateIndicator = false
@@ -26,10 +26,54 @@ export const StreamingLogos: React.FC<StreamingLogosProps> = ({
     );
   }
 
+  // Platform priority ranking - higher priority platforms shown first
+  const platformPriority: Record<string, number> = {
+    "Netflix": 10,
+    "Disney+": 9,
+    "Disney Plus": 9,
+    // Amazon Prime Video variations - all same priority
+    "Amazon Prime Video": 8,
+    "Prime Video": 8,
+    "Amazon Video": 8,
+    "Amazon Prime": 8,
+    "Amazon Prime Video with Ads": 8,
+    // Other platforms
+    "HBO Max": 7,
+    "Max": 7,
+    "Apple TV+": 6,
+    "Apple TV Plus": 6,
+    "Apple TV": 6,
+    "Hulu": 5,
+    "Paramount+": 4,
+    "Paramount Plus": 4,
+    "Peacock": 3,
+    "Crunchyroll": 2,
+    "Discovery+": 1,
+    "Discovery Plus": 1
+  };
+
+  // Get the primary (highest priority) platform
+  const primaryProvider = providers.reduce((best, current) => {
+    const currentName = current.provider_name || current.name || '';
+    const bestName = best.provider_name || best.name || '';
+    const currentPriority = platformPriority[currentName] || 0;
+    const bestPriority = platformPriority[bestName] || 0;
+    return currentPriority > bestPriority ? current : best;
+  });
+
+  // Use only the primary provider
+  const displayProviders = [primaryProvider];
+
 
 
   // Helper function to get the best logo source using centralized system
   const getLogoSrc = (provider: any) => {
+    if (provider.logo_path) {
+      // ✅ Use TMDB's official logo asset directly
+      return `https://image.tmdb.org/t/p/original${provider.logo_path}`;
+    }
+
+    // ✅ Otherwise fallback to local mapping
     const providerName = provider.provider_name || provider.name || '';
     return getPlatformLogo(providerName);
   };
@@ -49,8 +93,8 @@ export const StreamingLogos: React.FC<StreamingLogosProps> = ({
 
   return (
     <div className={`flex items-center ${containerClasses[size]} mb-2 flex-wrap min-h-[24px]`}>
-      <span className="text-xs text-gray-400 mr-2 whitespace-nowrap">Available on:</span>
-      {providers.slice(0, maxLogos).map((provider: any, index: number) => (
+      <span className="text-xs text-gray-400 mr-2 whitespace-nowrap">On:</span>
+      {displayProviders.map((provider: any, index: number) => (
         <div key={`${provider.provider_id || provider.provider_name || provider.name || 'unknown'}-${index}`} className="flex items-center relative">
           {showNames ? (
             <Badge
@@ -92,9 +136,9 @@ export const StreamingLogos: React.FC<StreamingLogosProps> = ({
           )}
         </div>
       ))}
-      {providers.length > maxLogos && (
+      {providers.length > 1 && (
         <Badge variant="secondary" className="text-xs h-6 px-2 bg-slate-700/50 border-slate-600">
-          +{providers.length - maxLogos}
+          +{providers.length - 1} more
         </Badge>
       )}
     </div>

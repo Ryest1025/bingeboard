@@ -8,7 +8,7 @@ import Discover from "@/pages/discover";
 import Activity from "@/pages/activity";
 import Friends from "@/pages/social";
 import UpcomingEnhanced from "@/pages/upcoming-enhanced";
-import DashboardPolished from "@/pages/dashboard-polished";
+import Dashboard from "@/pages/dashboard";
 import SearchResultsPage from "@/pages/SearchResultsPage";
 import NotFound from "@/pages/not-found";
 
@@ -28,7 +28,7 @@ export const protectedRoutes = [
   { path: "/upcoming", component: UpcomingEnhanced, requireAuth: true },
   { path: "/activity", component: Activity, requireAuth: true },
   { path: "/friends", component: Friends, requireAuth: true },
-  { path: "/dashboard", component: DashboardPolished, requireAuth: true },
+  { path: "/dashboard", component: Dashboard, requireAuth: true },
   { path: "/modern-discover", component: Discover, requireAuth: true },
   { path: "/search", component: SearchResultsPage, requireAuth: true },
   { path: "/test-personalized", component: LazyTestPersonalized, lazy: true, requireAuth: true },

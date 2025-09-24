@@ -10,7 +10,7 @@ import FilterControls from '@/components/FilterControls';
 import StreamingLogos from '@/components/StreamingLogos';
 import NavigationHeader from '@/components/navigation-header';
 import { GRADIENTS, getRatingColor } from '@/styles/constants';
-import StreamingTest from '@/components/StreamingTest';
+
 import { useAuth } from '@/hooks/useAuth';
 import { useQuery } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
@@ -431,7 +431,7 @@ export default function PolishedDashboard() {
           </div>
 
           {/* TEMPORARY: Streaming Debug Test */}
-          <StreamingTest />
+
 
           {/* Spotlight Section */}
           <section className="space-y-4">

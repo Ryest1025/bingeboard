@@ -151,9 +151,9 @@ export default function LoginSimple() {
 
       if (isLogin) {
         // LOGIN: Use Firebase signInWithEmailAndPassword
-        console.log('🚀 Firebase email/password login attempt for:', formData.email.trim());
+        console.log('🚀 Firebase email/password login attempt for:', formData.email);
         
-        const userCredential = await signInWithEmailAndPassword(auth, formData.email.trim(), formData.password.trim());
+        const userCredential = await signInWithEmailAndPassword(auth, formData.email, formData.password);
         const firebaseUser = userCredential.user;
         
         console.log('✅ Firebase email/password login successful:', firebaseUser.email);
@@ -193,9 +193,9 @@ export default function LoginSimple() {
         
       } else {
         // REGISTRATION: Use Firebase createUserWithEmailAndPassword
-        console.log('🚀 Firebase email/password registration attempt for:', formData.email.trim());
+        console.log('🚀 Firebase email/password registration attempt for:', formData.email);
         
-        const userCredential = await createUserWithEmailAndPassword(auth, formData.email.trim(), formData.password.trim());
+        const userCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
         const firebaseUser = userCredential.user;
         
         console.log('✅ Firebase email/password registration successful:', firebaseUser.email);
