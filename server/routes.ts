@@ -1334,13 +1334,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
 
         console.log('✅ Session destroyed successfully');
-        // Clear the custom session cookie (bingeboard.session)
+        // Clear the custom session cookie (bingeboard.session) - development settings
         res.clearCookie('bingeboard.session', {
           path: '/',
           domain: undefined,
-          secure: true,
+          secure: false, // false in development
           httpOnly: true,
-          sameSite: 'none'
+          sameSite: 'lax' // lax in development
         });
 
         console.log('✅ Session cookie cleared');
@@ -1365,13 +1365,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
 
         console.log('✅ Session destroyed successfully');
-        // Clear the custom session cookie (bingeboard.session)
+        // Clear the custom session cookie (bingeboard.session) - development settings  
         res.clearCookie('bingeboard.session', {
           path: '/',
           domain: undefined,
-          secure: true,
+          secure: false, // false in development
           httpOnly: true,
-          sameSite: 'none'
+          sameSite: 'lax' // lax in development
         });
 
         console.log('✅ Session cookie cleared, redirecting to home');

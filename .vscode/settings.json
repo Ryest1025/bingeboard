@@ -1,5 +1,4 @@
 {
-<<<<<<< HEAD
   "files.exclude": {
     "**/.git": true,
     "**/node_modules": true,
@@ -15,9 +14,6 @@
   "git.diagnosticsCommitHook.enabled": true,
   "github.copilot.chat.codesearch.enabled": true,
   "github.copilot.chat.languageContext.fix.typescript.enabled": true,
-  "github.copilot.chat.languageContext.inline.typescript.enabled": true
+  "github.copilot.chat.languageContext.inline.typescript.enabled": true,
+  "CodeGPT.apiKey": "OpenAI"
 }
-=======
-    "CodeGPT.apiKey": "OpenAI"
-}
->>>>>>> ad00a93 (🚀 Major Mobile-First Redesign & Persistent Navigation Implementation)
