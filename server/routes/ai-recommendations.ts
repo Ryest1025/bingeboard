@@ -18,7 +18,6 @@ async function logUserBehavior(userId: string, actionType: string, metadata: any
     await db.insert(userBehavior).values({
       userId,
       actionType,
-  targetType: 'recommendation',
       timestamp: new Date(),
       metadata: JSON.stringify(metadata)
     });

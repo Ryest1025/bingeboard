@@ -1,13 +1,15 @@
 /**
- * BingeBoard Recommendations API (clean, deduplicated)
- * - Unified responses, zod validation, safe parsing
- * - Single authoritative /refresh
+ * 🎯 BingeBoard Recommendation Engine - API Endpoints
+ * 
+ * Production-ready API endpoints for serving personalized recommendations
+ * with real-time updates, A/B testing, and comprehensive analytics.
  */
 
 import { Router } from 'express';
-import { z } from 'zod';
+import rateLimit from 'express-rate-limit';
+import helmet from 'helmet';
 import { BingeBoardRecommendationEngine } from '../services/recommendationEngine.js';
-import * as APModule from '../services/advancedPersonalization.js';
+import { AdvancedPersonalization } from '../services/advancedPersonalization.js';
 import { PersonalizationMonitoring } from '../services/monitoring.js';
 import { isAuthenticated } from '../auth.js';
 import { db } from '../db.js';
@@ -16,155 +18,467 @@ import { eq, and, gte } from 'drizzle-orm';
 
 const router = Router();
 
-type JsonRecord = Record<string, unknown>;
+// === Main Recommendations Endpoint ===
 
-const sendOk = (res: any, data: unknown, meta: JsonRecord = {}) =>
-  res.json({ success: true, data, meta });
-
-const sendError = (res: any, status: number, message: string, meta: JsonRecord = {}) =>
-  res.status(status).json({ success: false, error: message, meta });
-
-const safeParse = <T = any>(json?: string | null, fallback: T = {} as T): T => {
-  if (!json) return fallback;
+/**
+ * GET /api/recommendations
+ * Get personalized recommendations for the authenticated user
+ */
+router.get('/', isAuthenticated, async (req, res) => {
   try {
-    return JSON.parse(json) as T;
-  } catch {
-    return fallback;
+    const userId = req.user.id;
+    const refresh = req.query.refresh === 'true';
+    
+    console.log(`📊 Fetching recommendations for user: ${userId} (refresh: ${refresh})`);
+
+    // Check for cached recommendations (unless refresh requested)
+    if (!refresh) {
+      const cached = await getCachedRecommendations(userId);
+      if (cached && cached.length > 0) {
+        console.log(`⚡ Serving cached recommendations (${cached.length} items)`);
+        return res.json({
+          success: true,
+          sections: cached,
+          cached: true,
+          generatedAt: new Date().toISOString()
+        });
+      }
+    }
+
+    // Generate fresh recommendations
+    const sections = await BingeBoardRecommendationEngine.generateRecommendations(userId);
+    
+    // Log recommendation generation event
+    await logUserBehavior(userId, 'recommendations_generated', {
+      sectionCount: sections.length,
+      totalItems: sections.reduce((sum, s) => sum + s.items.length, 0),
+      refresh
+    });
+
+    res.json({
+      success: true,
+      sections,
+      cached: false,
+      generatedAt: new Date().toISOString()
+    });
+
+  } catch (error) {
+    console.error('Error fetching recommendations:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to generate recommendations'
+    });
   }
-};
+});
 
-const asyncHandler = (fn: Function) => (req: any, res: any, next: any) =>
-  Promise.resolve(fn(req, res, next)).catch(next);
+// === Section-Specific Endpoints ===
 
-const performanceMiddleware = (methodName: string) => {
-  const AP: any = (APModule as any).AdvancedPersonalization || (APModule as any).default || APModule;
-  return (req: any, res: any, next: any) => {
-    const start = Date.now();
-    const originalJson = res.json.bind(res);
+/**
+ * GET /api/recommendations/for-you
+ * Get hybrid recommendations (For You section)
+ */
+router.get('/for-you', isAuthenticated, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const limit = parseInt(req.query.limit as string) || 20;
+    
+    const userProfile = await BingeBoardRecommendationEngine.buildUserProfile(userId);
+    const recommendations = await BingeBoardRecommendationEngine.getHybridRecommendations(userProfile, limit);
+    
+    await logUserBehavior(userId, 'recommendations_viewed', {
+      section: 'for_you',
+      itemCount: recommendations.length
+    });
 
-    res.json = (payload: any) => {
-      const ms = Date.now() - start;
-      setImmediate(async () => {
-        try {
-          if (typeof AP?.logPerformance === 'function') {
-            await AP.logPerformance(methodName, ms, {
-              userId: req.user?.id,
-              success: res.statusCode < 400,
-              statusCode: res.statusCode,
-              userAgent: req.get('User-Agent'),
-              ip: req.ip,
-            });
-          }
-        } catch (e) {
-          console.error('perf log failed:', e);
-        }
+    res.json({
+      success: true,
+      section: 'for_you',
+      items: recommendations,
+      generatedAt: new Date().toISOString()
+    });
+
+  } catch (error) {
+    console.error('Error fetching for-you recommendations:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch for-you recommendations'
+    });
+  }
+});
+
+/**
+ * GET /api/recommendations/social
+ * Get social recommendations (Friends Are Watching)
+ */
+router.get('/social', isAuthenticated, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const limit = parseInt(req.query.limit as string) || 15;
+    
+    const userProfile = await BingeBoardRecommendationEngine.buildUserProfile(userId);
+    const recommendations = await BingeBoardRecommendationEngine.getSocialRecommendations(userProfile, limit);
+    
+    await logUserBehavior(userId, 'recommendations_viewed', {
+      section: 'social',
+      itemCount: recommendations.length
+    });
+
+    res.json({
+      success: true,
+      section: 'social',
+      items: recommendations,
+      generatedAt: new Date().toISOString()
+    });
+
+  } catch (error) {
+    console.error('Error fetching social recommendations:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch social recommendations'
+    });
+  }
+});
+
+/**
+ * GET /api/recommendations/trending
+ * Get trending recommendations
+ */
+router.get('/trending', isAuthenticated, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const limit = parseInt(req.query.limit as string) || 20;
+    
+    const userProfile = await BingeBoardRecommendationEngine.buildUserProfile(userId);
+    const recommendations = await BingeBoardRecommendationEngine.getTrendingRecommendations(userProfile, limit);
+    
+    await logUserBehavior(userId, 'recommendations_viewed', {
+      section: 'trending',
+      itemCount: recommendations.length
+    });
+
+    res.json({
+      success: true,
+      section: 'trending',
+      items: recommendations,
+      generatedAt: new Date().toISOString()
+    });
+
+  } catch (error) {
+    console.error('Error fetching trending recommendations:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch trending recommendations'
+    });
+  }
+});
+
+// === Recommendation Feedback ===
+
+/**
+ * POST /api/recommendations/feedback
+ * Track user feedback on recommendations (like/dislike/dismiss)
+ */
+router.post('/feedback', isAuthenticated, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { contentId, action } = req.body || {};
+
+    if (!contentId || !action) {
+      return res.status(400).json({
+        success: false,
+        error: 'contentId and action are required'
       });
-      return originalJson(payload);
+    }
+
+    const normalized = String(action).toLowerCase();
+    const allowed = new Set(['liked', 'disliked', 'not_interested']);
+    const feedback = allowed.has(normalized) ? normalized : 'not_interested';
+
+    // Update AI recommendation record for this content (if present)
+    try {
+      await db
+        .update(aiRecommendations)
+        .set({
+          feedback,
+          isInteracted: true
+        })
+        .where(and(eq(aiRecommendations.userId, userId), eq(aiRecommendations.showId, contentId)));
+    } catch (e) {
+      console.warn('Could not update aiRecommendations feedback (non-fatal):', e);
+    }
+
+    // Log user behavior
+    await logUserBehavior(userId, 'recommendation_feedback', {
+      contentId,
+      action: feedback
+    });
+
+    return res.json({
+      success: true,
+      message: 'Feedback recorded',
+      data: { contentId, action: feedback }
+    });
+
+  } catch (error) {
+    console.error('Error recording feedback:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to record feedback'
+    });
+  }
+});
+
+// === Recommendation Analytics ===
+
+/**
+ * GET /api/recommendations/analytics
+ * Get recommendation performance analytics (admin only)
+ */
+router.get('/analytics', isAuthenticated, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    
+    // Check if user is admin (you'd implement this check)
+    // if (!req.user.isAdmin) {
+    //   return res.status(403).json({ success: false, error: 'Admin access required' });
+    // }
+
+    const timeframe = req.query.timeframe as string || '7d';
+    const daysBack = timeframe === '7d' ? 7 : timeframe === '30d' ? 30 : 1;
+    
+    const startDate = new Date(Date.now() - daysBack * 24 * 60 * 60 * 1000);
+
+    // Get recommendation generation stats
+    const generationStats = await db.query.userBehavior.findMany({
+      where: and(
+        eq(userBehavior.actionType, 'recommendations_generated'),
+        gte(userBehavior.timestamp, startDate)
+      ),
+      limit: 1000
+    });
+
+    // Get click-through rates
+    const viewStats = await db.query.userBehavior.findMany({
+      where: and(
+        eq(userBehavior.actionType, 'recommendations_viewed'),
+        gte(userBehavior.timestamp, startDate)
+      ),
+      limit: 1000
+    });
+
+    const feedbackStats = await db.query.userBehavior.findMany({
+      where: and(
+        eq(userBehavior.actionType, 'recommendation_feedback'),
+        gte(userBehavior.timestamp, startDate)
+      ),
+      limit: 1000
+    });
+
+    // Calculate metrics
+    const analytics = {
+      timeframe,
+      period: {
+        start: startDate.toISOString(),
+        end: new Date().toISOString()
+      },
+      metrics: {
+        totalGenerations: generationStats.length,
+        totalViews: viewStats.length,
+        totalFeedback: feedbackStats.length,
+        avgItemsPerGeneration: generationStats.reduce((sum, stat) => {
+          const metadata = JSON.parse(stat.metadata || '{}');
+          return sum + (metadata.totalItems || 0);
+        }, 0) / Math.max(generationStats.length, 1),
+        sectionStats: calculateSectionStats(viewStats),
+        feedbackBreakdown: calculateFeedbackBreakdown(feedbackStats)
+      }
     };
 
-    next();
-  };
-};
-
-// Schemas
-const baseListQuerySchema = z.object({
-  limit: z.coerce.number().int().positive().max(100).default(20),
-});
-
-const personalizedQuerySchema = z.object({
-  limit: z.coerce.number().int().positive().max(100).default(20),
-  offset: z.coerce.number().int().min(0).default(0),
-  category: z.string().min(1).optional(),
-  includeMetrics: z.enum(['true', 'false']).optional().default('false'),
-});
-
-const preferencesQuerySchema = z.object({
-  includeHistory: z.enum(['true', 'false']).optional().default('false'),
-});
-
-const analyticsQuerySchema = z.object({
-  timeframe: z.enum(['1d', '7d', '30d']).optional().default('7d'),
-});
-
-const feedbackBodySchema = z.object({
-  contentId: z.coerce.number().int().positive(),
-  action: z.enum(['clicked', 'added_to_watchlist', 'dismissed', 'not_interested', 'liked', 'disliked']),
-  section: z.string().optional(),
-  algorithmType: z.string().optional(),
-});
-
-function getSectionTitle(key: string): string {
-  const titles: Record<string, string> = {
-    for_you: 'For You',
-    friends_watching: 'Friends Are Watching',
-    trending_now: 'Trending Now',
-    because_you_watched: 'Because You Watched',
-    new_releases: 'New Releases',
-  };
-  return titles[key] ?? 'Recommendations';
-}
-
-function getSectionDescription(key: string): string {
-  const descriptions: Record<string, string> = {
-    for_you: 'Personalized picks based on your taste',
-    friends_watching: 'See what your friends are enjoying',
-    trending_now: 'Popular across all platforms',
-    because_you_watched: "More like what you've enjoyed",
-    new_releases: 'Fresh content you might like',
-  };
-  return descriptions[key] ?? 'Curated recommendations';
-}
-
-async function logUserBehavior(userId: string, actionType: string, metadata: JsonRecord) {
-  try {
-    await db.insert(userBehavior).values({
-      userId,
-      actionType,
-      targetType: 'recommendation',
-      timestamp: new Date(),
-      metadata: JSON.stringify(metadata ?? {}),
+    res.json({
+      success: true,
+      analytics
     });
-  } catch (e) {
-    console.error('Error logging user behavior:', e);
+
+  } catch (error) {
+    console.error('Error fetching recommendation analytics:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch analytics'
+    });
   }
-}
+});
+
+// === User Profile Endpoint ===
+
+/**
+ * GET /api/recommendations/profile
+ * Get user's recommendation profile (preferences, affinities, etc.)
+ */
+router.get('/profile', isAuthenticated, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    
+    const userProfile = await BingeBoardRecommendationEngine.buildUserProfile(userId);
+    
+    // Remove sensitive data before sending
+    const sanitizedProfile = {
+      explicitPreferences: userProfile.explicitPreferences,
+      implicitProfile: {
+        topGenres: Object.entries(userProfile.implicitProfile.genreAffinities)
+          .sort(([,a], [,b]) => b - a)
+          .slice(0, 10)
+          .map(([genre, score]) => ({ genre, score })),
+        viewingPatterns: userProfile.implicitProfile.viewingPatterns,
+        topPlatforms: Object.entries(userProfile.implicitProfile.platformUsage)
+          .sort(([,a], [,b]) => b - a)
+          .slice(0, 5)
+          .map(([platform, usage]) => ({ platform, usage }))
+      },
+      socialProfile: userProfile.socialProfile
+    };
+
+    res.json({
+      success: true,
+      profile: sanitizedProfile,
+      generatedAt: new Date().toISOString()
+    });
+
+  } catch (error) {
+    console.error('Error fetching user profile:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch user profile'
+    });
+  }
+});
+
+// === Explanation Endpoint ===
+
+/**
+ * GET /api/recommendations/explain/:contentId
+ * Get detailed explanation for why a specific item was recommended
+ */
+router.get('/explain/:contentId', isAuthenticated, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const contentId = parseInt(req.params.contentId);
+
+    if (isNaN(contentId)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid content ID'
+      });
+    }
+
+    // Find the recommendation in the database
+    const recommendation = await db.query.aiRecommendations.findFirst({
+      where: and(
+        eq(aiRecommendations.userId, userId),
+        eq(aiRecommendations.showId, contentId)
+      ),
+      with: {
+        show: true
+      }
+    });
+
+    if (!recommendation) {
+      return res.status(404).json({
+        success: false,
+        error: 'Recommendation not found'
+      });
+    }
+
+    // Parse the stored explanation
+    const metadata = JSON.parse(recommendation.metadata || '{}');
+    const explanation = metadata.explanation || {};
+
+    res.json({
+      success: true,
+      contentId,
+      explanation: {
+        primaryReason: recommendation.reason,
+        algorithmType: recommendation.recommendationType,
+        score: recommendation.score,
+        confidence: metadata.confidence || 0.5,
+        factors: explanation.factors || [],
+        similarContent: explanation.similarContent || [],
+        socialSignals: explanation.socialSignals || [],
+        availabilityInfo: explanation.availabilityInfo || {}
+      },
+      content: {
+        id: recommendation.show?.id,
+        title: recommendation.show?.title,
+        type: recommendation.show?.type || 'tv'
+      }
+    });
+
+  } catch (error) {
+    console.error('Error fetching recommendation explanation:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch explanation'
+    });
+  }
+});
+
+// === Real-time Updates ===
+
+/**
+ * POST /api/recommendations/refresh
+ * Force refresh of user recommendations
+ */
+router.post('/refresh', isAuthenticated, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    
+    // Clear cached recommendations
+    await db.delete(aiRecommendations).where(eq(aiRecommendations.userId, userId));
+    
+    // Generate fresh recommendations
+    const sections = await BingeBoardRecommendationEngine.generateRecommendations(userId);
+    
+    await logUserBehavior(userId, 'recommendations_refreshed', {
+      sectionCount: sections.length,
+      totalItems: sections.reduce((sum, s) => sum + s.items.length, 0)
+    });
+
+    res.json({
+      success: true,
+      message: 'Recommendations refreshed',
+      sections,
+      generatedAt: new Date().toISOString()
+    });
+
+  } catch (error) {
+    console.error('Error refreshing recommendations:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to refresh recommendations'
+    });
+  }
+});
+
+// === Helper Functions ===
 
 async function getCachedRecommendations(userId: string) {
   try {
     const cached = await db.query.aiRecommendations.findMany({
       where: eq(aiRecommendations.userId, userId),
-      with: { show: true },
-      limit: 100,
+      with: {
+        show: true
+      },
+      limit: 100
     });
 
-    if (!cached.length) return null;
+    if (cached.length === 0) return null;
 
-    type SectionItem = {
-      contentId: number;
-      userId: string;
-      algorithmType: string;
-      baseScore: number;
-      finalScore: number;
-      explanation: JsonRecord;
-      confidence: number;
-      content: any;
-    };
-
-    type Section = {
-      key: string;
-      title: string;
-      description: string;
-      items: SectionItem[];
-      algorithm: string;
-      refreshable: boolean;
-    };
-
-    const sections = new Map<string, Section>();
-
+    // Group by section
+    const sections = new Map();
+    
     for (const rec of cached) {
-      const metadata = safeParse(rec.metadata, {} as JsonRecord);
-      const sectionKey = (metadata.section as string) || 'for_you';
-
+      const metadata = JSON.parse(rec.metadata || '{}');
+      const sectionKey = metadata.section || 'for_you';
+      
       if (!sections.has(sectionKey)) {
         sections.set(sectionKey, {
           key: sectionKey,
@@ -172,434 +486,341 @@ async function getCachedRecommendations(userId: string) {
           description: getSectionDescription(sectionKey),
           items: [],
           algorithm: rec.recommendationType,
-          refreshable: true,
+          refreshable: true
         });
       }
 
-      sections.get(sectionKey)!.items.push({
+      sections.get(sectionKey).items.push({
         contentId: rec.showId,
         userId: rec.userId,
         algorithmType: rec.recommendationType,
         baseScore: rec.score,
         finalScore: rec.score,
-        explanation: (metadata.explanation as JsonRecord) || {},
-        confidence: (metadata.confidence as number) ?? 0.5,
-        content: rec.show,
+        explanation: metadata.explanation || {},
+        confidence: metadata.confidence || 0.5,
+        content: rec.show
       });
     }
 
     return Array.from(sections.values());
-  } catch (e) {
-    console.error('Error fetching cached recommendations:', e);
+  } catch (error) {
+    console.error('Error fetching cached recommendations:', error);
     return null;
+  }
+}
+
+function getSectionTitle(key: string): string {
+  const titles: Record<string, string> = {
+    'for_you': 'For You',
+    'friends_watching': 'Friends Are Watching',
+    'trending_now': 'Trending Now',
+    'because_you_watched': 'Because You Watched',
+    'new_releases': 'New Releases'
+  };
+  return titles[key] || 'Recommendations';
+}
+
+function getSectionDescription(key: string): string {
+  const descriptions: Record<string, string> = {
+    'for_you': 'Personalized picks based on your taste',
+    'friends_watching': 'See what your friends are enjoying',
+    'trending_now': 'Popular across all platforms',
+    'because_you_watched': 'More like what you\'ve enjoyed',
+    'new_releases': 'Fresh content you might like'
+  };
+  return descriptions[key] || 'Curated recommendations';
+}
+
+async function logUserBehavior(userId: string, actionType: string, metadata: any) {
+  try {
+    await db.insert(userBehavior).values({
+      userId,
+      actionType,
+      timestamp: new Date(),
+      metadata: JSON.stringify(metadata)
+    });
+  } catch (error) {
+    console.error('Error logging user behavior:', error);
   }
 }
 
 function calculateSectionStats(viewStats: any[]) {
   const sectionCounts: Record<string, number> = {};
+  
   for (const stat of viewStats) {
-    const metadata = safeParse<JsonRecord>(stat.metadata, {});
-    const section = (metadata.section as string) || 'unknown';
+    const metadata = JSON.parse(stat.metadata || '{}');
+    const section = metadata.section || 'unknown';
     sectionCounts[section] = (sectionCounts[section] || 0) + 1;
   }
+  
   return sectionCounts;
 }
 
 function calculateFeedbackBreakdown(feedbackStats: any[]) {
   const breakdown: Record<string, number> = {};
+  
   for (const stat of feedbackStats) {
-    const metadata = safeParse<JsonRecord>(stat.metadata, {});
-    const action = (metadata.action as string) || 'unknown';
+    const metadata = JSON.parse(stat.metadata || '{}');
+    const action = metadata.action || 'unknown';
     breakdown[action] = (breakdown[action] || 0) + 1;
   }
+  
   return breakdown;
 }
 
-// Routes
-router.get(
-  '/',
-  isAuthenticated,
-  performanceMiddleware('getRecommendations'),
-  asyncHandler(async (req: any, res: any) => {
-    const userId = req.user.id as string;
-    const refresh = req.query.refresh === 'true';
-
-    if (!refresh) {
-      const cached = await getCachedRecommendations(userId);
-      if (cached && cached.length) {
-        await logUserBehavior(userId, 'recommendations_served_cached', {
-          sectionCount: cached.length,
-          totalItems: cached.reduce((s, sec) => s + sec.items.length, 0),
-        });
-        return sendOk(
-          res,
-          { sections: cached },
-          { cached: true, generatedAt: new Date().toISOString() }
-        );
-      }
-    }
-
-    const sections = await BingeBoardRecommendationEngine.generateRecommendations(userId);
-    await logUserBehavior(userId, 'recommendations_generated', {
-      sectionCount: sections.length,
-      totalItems: sections.reduce((s: number, sec: any) => s + sec.items.length, 0),
-      refresh,
-    });
-
-    return sendOk(
-      res,
-      { sections },
-      { cached: false, generatedAt: new Date().toISOString() }
-    );
-  })
-);
-
-router.get(
-  '/for-you',
-  isAuthenticated,
-  performanceMiddleware('getForYou'),
-  asyncHandler(async (req: any, res: any) => {
-    try {
-      const userId = req.user.id as string;
-      const { limit } = baseListQuerySchema.parse(req.query);
-
-      const userProfile = await BingeBoardRecommendationEngine.buildUserProfile(userId);
-      const items = await BingeBoardRecommendationEngine.getHybridRecommendations(userProfile, limit);
-
-      await logUserBehavior(userId, 'recommendations_viewed', {
-        section: 'for_you',
-        itemCount: items.length,
+/**
+ * Performance monitoring middleware
+ */
+const performanceMiddleware = (methodName: string) => {
+  return (req: any, res: any, next: any) => {
+    const startTime = Date.now();
+    
+    // Store start time for logging
+    req.startTime = startTime;
+    req.methodName = methodName;
+    
+    // Override res.json to capture response time
+    const originalJson = res.json;
+    res.json = function(data: any) {
+      const duration = Date.now() - startTime;
+      
+      // Log performance data (async, don't block response)
+      setImmediate(async () => {
+        try {
+          await AdvancedPersonalization.logPerformance(
+            methodName,
+            duration,
+            {
+              userId: req.user?.id,
+              success: res.statusCode < 400,
+              statusCode: res.statusCode,
+              userAgent: req.get('User-Agent'),
+              ip: req.ip
+            }
+          );
+        } catch (error) {
+          console.error('Error logging performance:', error);
+        }
       });
-
-      return sendOk(
-        res,
-        { section: 'for_you', items },
-        { generatedAt: new Date().toISOString() }
-      );
-    } catch (e: any) {
-      console.error('Error in /for-you route:', e);
-      return sendError(res, 500, e?.message || 'Failed to generate recommendations');
-    }
-  })
-);
-
-router.get(
-  '/social',
-  isAuthenticated,
-  performanceMiddleware('getSocial'),
-  asyncHandler(async (req: any, res: any) => {
-    const userId = req.user.id as string;
-    const { limit } = baseListQuerySchema.parse(req.query);
-
-    const userProfile = await BingeBoardRecommendationEngine.buildUserProfile(userId);
-    const items = await BingeBoardRecommendationEngine.getSocialRecommendations(userProfile, limit);
-
-    await logUserBehavior(userId, 'recommendations_viewed', {
-      section: 'social',
-      itemCount: items.length,
-    });
-
-    return sendOk(
-      res,
-      { section: 'social', items },
-      { generatedAt: new Date().toISOString() }
-    );
-  })
-);
-
-router.get(
-  '/trending',
-  isAuthenticated,
-  performanceMiddleware('getTrending'),
-  asyncHandler(async (req: any, res: any) => {
-    const userId = req.user.id as string;
-    const { limit } = baseListQuerySchema.parse(req.query);
-
-    const userProfile = await BingeBoardRecommendationEngine.buildUserProfile(userId);
-    const items = await BingeBoardRecommendationEngine.getTrendingRecommendations(userProfile, limit);
-
-    await logUserBehavior(userId, 'recommendations_viewed', {
-      section: 'trending',
-      itemCount: items.length,
-    });
-
-    return sendOk(
-      res,
-      { section: 'trending', items },
-      { generatedAt: new Date().toISOString() }
-    );
-  })
-);
-
-router.post(
-  '/feedback',
-  isAuthenticated,
-  performanceMiddleware('postFeedback'),
-  asyncHandler(async (req: any, res: any) => {
-    const userId = req.user.id as string;
-    const { contentId, action, section, algorithmType } = feedbackBodySchema.parse(req.body);
-
-    await logUserBehavior(userId, 'recommendation_feedback', {
-      contentId,
-      action,
-      section,
-      algorithmType,
-    });
-
-    return sendOk(res, { message: 'Feedback recorded' });
-  })
-);
-
-router.get(
-  '/analytics',
-  isAuthenticated,
-  performanceMiddleware('getAnalytics'),
-  asyncHandler(async (req: any, res: any) => {
-    const { timeframe } = analyticsQuerySchema.parse(req.query);
-    const daysBack = timeframe === '30d' ? 30 : timeframe === '1d' ? 1 : 7;
-    const startDate = new Date(Date.now() - daysBack * 24 * 60 * 60 * 1000);
-
-    const generationStats = await db.query.userBehavior.findMany({
-      where: and(eq(userBehavior.actionType, 'recommendations_generated'), gte(userBehavior.timestamp, startDate)),
-      limit: 2000,
-    });
-
-    const viewStats = await db.query.userBehavior.findMany({
-      where: and(eq(userBehavior.actionType, 'recommendations_viewed'), gte(userBehavior.timestamp, startDate)),
-      limit: 5000,
-    });
-
-    const feedbackStats = await db.query.userBehavior.findMany({
-      where: and(eq(userBehavior.actionType, 'recommendation_feedback'), gte(userBehavior.timestamp, startDate)),
-      limit: 5000,
-    });
-
-    const avgItemsPerGeneration =
-      generationStats.reduce((sum: number, stat: any) => {
-        const metadata = safeParse<JsonRecord>(stat.metadata, {});
-        const totalItems = (metadata.totalItems as number) || 0;
-        return sum + totalItems;
-      }, 0) / Math.max(generationStats.length, 1);
-
-    const analytics = {
-      timeframe,
-      period: { start: startDate.toISOString(), end: new Date().toISOString() },
-      metrics: {
-        totalGenerations: generationStats.length,
-        totalViews: viewStats.length,
-        totalFeedback: feedbackStats.length,
-        avgItemsPerGeneration,
-        sectionStats: calculateSectionStats(viewStats),
-        feedbackBreakdown: calculateFeedbackBreakdown(feedbackStats),
-      },
+      
+      return originalJson.call(this, data);
     };
+    
+    next();
+  };
+};
 
-    return sendOk(res, analytics);
-  })
-);
+/**
+ * Error handling wrapper
+ */
+const asyncHandler = (fn: Function) => {
+  return (req: any, res: any, next: any) => {
+    Promise.resolve(fn(req, res, next)).catch(next);
+  };
+};
 
-router.get(
-  '/profile',
-  isAuthenticated,
-  performanceMiddleware('getProfile'),
-  asyncHandler(async (req: any, res: any) => {
-    const userId = req.user.id as string;
+// === Advanced Personalization Endpoints ===
 
-    const userProfile = await BingeBoardRecommendationEngine.buildUserProfile(userId);
-
-    const sanitizedProfile = {
-      explicitPreferences: userProfile.explicitPreferences,
-      implicitProfile: {
-        topGenres: Object.entries(userProfile.implicitProfile.genreAffinities)
-          .sort(([, a]: any, [, b]: any) => (b as number) - (a as number))
-          .slice(0, 10)
-          .map(([genre, score]) => ({ genre, score })),
-        viewingPatterns: userProfile.implicitProfile.viewingPatterns,
-        topPlatforms: Object.entries(userProfile.implicitProfile.platformUsage)
-          .sort(([, a]: any, [, b]: any) => (b as number) - (a as number))
-          .slice(0, 5)
-          .map(([platform, usage]) => ({ platform, usage })),
-      },
-      socialProfile: userProfile.socialProfile,
-    };
-
-    return sendOk(res, { profile: sanitizedProfile }, { generatedAt: new Date().toISOString() });
-  })
-);
-
-router.get(
-  '/explain/:contentId',
-  isAuthenticated,
-  performanceMiddleware('getExplanation'),
-  asyncHandler(async (req: any, res: any) => {
-    const userId = req.user.id as string;
-    const contentId = Number(req.params.contentId);
-
-    if (!Number.isFinite(contentId) || contentId <= 0) {
-      return sendError(res, 400, 'Invalid content ID');
-    }
-
-    const recommendation = await db.query.aiRecommendations.findFirst({
-      where: and(eq(aiRecommendations.userId, userId), eq(aiRecommendations.showId, contentId)),
-      with: { show: true },
-    });
-
-    if (!recommendation) {
-      return sendError(res, 404, 'Recommendation not found');
-    }
-
-    const metadata = safeParse<JsonRecord>(recommendation.metadata, {});
-    const explanation = (metadata.explanation as JsonRecord) || {};
-
-    return sendOk(res, {
-      contentId,
-      explanation: {
-        primaryReason: recommendation.reason,
-        algorithmType: recommendation.recommendationType,
-        score: recommendation.score,
-        confidence: (metadata.confidence as number) ?? 0.5,
-        factors: (explanation.factors as unknown[]) || [],
-        similarContent: (explanation.similarContent as unknown[]) || [],
-        socialSignals: (explanation.socialSignals as unknown[]) || [],
-        availabilityInfo: (explanation.availabilityInfo as JsonRecord) || {},
-      },
-      content: {
-        id: recommendation.show?.id,
-        title: recommendation.show?.title,
-        type: recommendation.show?.type || 'tv',
-      },
-    });
-  })
-);
-
-router.post(
-  '/refresh',
-  isAuthenticated,
-  performanceMiddleware('refreshRecommendations'),
-  asyncHandler(async (req: any, res: any) => {
-    const userId = req.user.id as string;
-
-    await db.delete(aiRecommendations).where(eq(aiRecommendations.userId, userId));
-
-    try {
-      const AP: any = (APModule as any).AdvancedPersonalization || (APModule as any).default || APModule;
-      await AP.clearUserCache?.(userId);
-    } catch {}
-
-    const sections = await BingeBoardRecommendationEngine.generateRecommendations(userId);
-
-    await logUserBehavior(userId, 'recommendations_refreshed', {
-      sectionCount: sections.length,
-      totalItems: sections.reduce((s: number, sec: any) => s + sec.items.length, 0),
-    });
-
-    return sendOk(
-      res,
-      { sections },
-      { message: 'Recommendations refreshed', generatedAt: new Date().toISOString() }
-    );
-  })
-);
-
-router.get(
-  '/personalized',
+/**
+ * 📊 GET /api/recommendations/personalized
+ * Get personalized recommendations using advanced algorithms
+ */
+router.get('/personalized', 
   isAuthenticated,
   performanceMiddleware('getPersonalizedRecommendations'),
   asyncHandler(async (req: any, res: any) => {
-    const userId = req.user?.id as string;
-    const { limit, offset, category, includeMetrics } = personalizedQuerySchema.parse(req.query);
+    const { limit = 20, offset = 0, category, includeMetrics = false } = req.query;
+    const userId = req.user?.id;
 
-    const AP: any = (APModule as any).AdvancedPersonalization || (APModule as any).default || APModule;
-    let data: any;
-    if (typeof AP?.getPersonalizedRecommendations === 'function') {
-      data = await AP.getPersonalizedRecommendations(userId, {
-        limit,
-        offset,
-        category: category || undefined,
-        includeDebugInfo: includeMetrics === 'true',
-      });
-    } else {
-      const profile = await BingeBoardRecommendationEngine.buildUserProfile(userId);
-      const items = await BingeBoardRecommendationEngine.getHybridRecommendations(profile, limit + offset);
-      data = items.slice(offset, offset + limit);
+    if (!userId) {
+      return res.status(401).json({ error: 'Authentication required' });
     }
 
-    return sendOk(res, data, {
-      userId,
-      limit,
-      offset,
-      timestamp: new Date().toISOString(),
-    });
+    // Validate parameters
+    if (limit > 100) {
+      return res.status(400).json({
+        error: 'Limit cannot exceed 100',
+        maxLimit: 100
+      });
+    }
+
+    try {
+      const recommendations = await AdvancedPersonalization.getPersonalizedRecommendations(
+        userId,
+        {
+          limit: parseInt(limit),
+          offset: parseInt(offset),
+          category: category || undefined,
+          includeDebugInfo: includeMetrics === 'true'
+        }
+      );
+
+      res.json({
+        success: true,
+        data: recommendations,
+        meta: {
+          userId,
+          limit: parseInt(limit),
+          offset: parseInt(offset),
+          timestamp: new Date().toISOString()
+        }
+      });
+    } catch (error) {
+      console.error('Error getting personalized recommendations:', error);
+      res.status(500).json({
+        error: 'Failed to get personalized recommendations',
+        timestamp: new Date().toISOString()
+      });
+    }
   })
 );
 
-router.get(
-  '/preferences',
+/**
+ * 🎯 GET /api/recommendations/preferences
+ * Get user's current preferences and metrics
+ */
+router.get('/preferences',
   isAuthenticated,
   performanceMiddleware('getUserPreferences'),
   asyncHandler(async (req: any, res: any) => {
-    const userId = req.user?.id as string;
-    const { includeHistory } = preferencesQuerySchema.parse(req.query);
+    const userId = req.user?.id;
+    const { includeHistory = false } = req.query;
 
-    const AP: any = (APModule as any).AdvancedPersonalization || (APModule as any).default || APModule;
-    let preferences: any = {};
-    if (typeof AP?.getUserPreferences === 'function') {
-      preferences = await AP.getUserPreferences(userId);
-    } else {
-      preferences = { userId, explicitPreferences: { genres: [], excluded: [] }, implicitProfile: {} };
+    if (!userId) {
+      return res.status(401).json({ error: 'Authentication required' });
     }
 
-    const payload: any = { ...preferences };
-
-    if (includeHistory === 'true') {
-      try {
-        const AP: any = (APModule as any).AdvancedPersonalization || (APModule as any).default || APModule;
-        if (typeof AP?.getRecentInteractions === 'function') {
-          payload.recentInteractions = await AP.getRecentInteractions(userId, 50);
-        } else {
-          payload.recentInteractions = [];
+    try {
+      const preferences = await AdvancedPersonalization.getUserPreferences(userId);
+      
+      let response: any = {
+        success: true,
+        data: preferences,
+        meta: {
+          userId,
+          timestamp: new Date().toISOString()
         }
-      } catch {
-        payload.recentInteractions = [];
-      }
-    }
+      };
 
-    return sendOk(res, payload, {
-      userId,
-      timestamp: new Date().toISOString(),
-    });
+      // Optionally include interaction history
+      if (includeHistory === 'true') {
+        // This would require implementing getRecentInteractions method
+        try {
+          response.data.recentInteractions = await AdvancedPersonalization.getRecentInteractions(userId, 50);
+        } catch (error) {
+          console.log('Could not get recent interactions:', error);
+          response.data.recentInteractions = [];
+        }
+      }
+
+      res.json(response);
+    } catch (error) {
+      console.error('Error getting user preferences:', error);
+      res.status(500).json({
+        error: 'Failed to get user preferences',
+        timestamp: new Date().toISOString()
+      });
+    }
   })
 );
 
-router.get(
-  '/health',
-  asyncHandler(async (_req: any, res: any) => {
+/**
+ * 🔄 POST /api/recommendations/refresh
+ * Force refresh user's recommendation cache
+ */
+router.post('/refresh',
+  isAuthenticated,
+  performanceMiddleware('refreshRecommendations'),
+  asyncHandler(async (req: any, res: any) => {
+    const userId = req.user?.id;
+
+    if (!userId) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+
     try {
-      const health = await PersonalizationMonitoring.healthCheck();
-      const status = health.status === 'healthy' ? 200 : 503;
-      return res.status(status).json({
-        status: health.status,
-        timestamp: new Date().toISOString(),
-        details: health.details,
+      // Clear user's cache
+      await AdvancedPersonalization.clearUserCache(userId);
+
+      // Pre-generate fresh recommendations
+      const freshRecommendations = await AdvancedPersonalization.getPersonalizedRecommendations(
+        userId,
+        { limit: 20, forceRefresh: true }
+      );
+
+      res.json({
+        success: true,
+        message: 'Recommendations refreshed successfully',
+        data: {
+          userId,
+          refreshedAt: new Date().toISOString(),
+          newRecommendationsCount: freshRecommendations.length
+        }
       });
-    } catch {
-      return res.status(503).json({
+    } catch (error) {
+      console.error('Error refreshing recommendations:', error);
+      res.status(500).json({
+        error: 'Failed to refresh recommendations',
+        timestamp: new Date().toISOString()
+      });
+    }
+  })
+);
+
+/**
+ * 🏥 GET /api/recommendations/health
+ * Health check endpoint for load balancers
+ */
+router.get('/health',
+  asyncHandler(async (req: any, res: any) => {
+    try {
+      const healthCheck = await PersonalizationMonitoring.healthCheck();
+      
+      const statusCode = healthCheck.status === 'healthy' ? 200 : 503;
+      
+      res.status(statusCode).json({
+        status: healthCheck.status,
+        timestamp: new Date().toISOString(),
+        details: healthCheck.details
+      });
+    } catch (error) {
+      res.status(503).json({
         status: 'unhealthy',
         error: 'Health check failed',
-        timestamp: new Date().toISOString(),
+        timestamp: new Date().toISOString()
       });
     }
   })
 );
 
-router.get(
-  '/metrics',
+/**
+ * 📊 GET /api/recommendations/metrics
+ * Get personalization performance metrics
+ */
+router.get('/metrics',
   isAuthenticated,
   performanceMiddleware('getMetrics'),
   asyncHandler(async (req: any, res: any) => {
-    const timeframe = (req.query.timeframe as string) ?? '24h';
-    const dashboardData = await PersonalizationMonitoring.getDashboardData();
-    return sendOk(res, dashboardData, { timeframe, generatedAt: new Date().toISOString() });
+    const { timeframe = '24h' } = req.query;
+
+    try {
+      const dashboardData = await PersonalizationMonitoring.getDashboardData();
+      
+      res.json({
+        success: true,
+        data: dashboardData,
+        meta: {
+          timeframe,
+          generatedAt: new Date().toISOString()
+        }
+      });
+    } catch (error) {
+      console.error('Error getting metrics:', error);
+      res.status(500).json({
+        error: 'Failed to get metrics',
+        timestamp: new Date().toISOString()
+      });
+    }
   })
 );
 
