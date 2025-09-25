@@ -10,7 +10,7 @@
   },
   "git.enabled": true,
   "git.blame.editorDecoration.enabled": true,
-  "github.copilot.nextEditSuggestions.enabled": false,
+  "github.copilot.nextEditSuggestions.enabled": true,
   "git.diagnosticsCommitHook.enabled": true,
   "github.copilot.chat.codesearch.enabled": true,
   "github.copilot.chat.languageContext.fix.typescript.enabled": true,

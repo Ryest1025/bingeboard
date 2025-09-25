@@ -1,0 +1,31 @@
+{
+  "$schema": "https://unpkg.com/knip/schema.json",
+  "entry": [
+    "client/src/main.tsx",
+    "server/index.ts"
+  ],
+  "ignoreDependencies": [
+    "bufferutil"
+  ],
+  "ignore": [
+    "migration-backup-*/**",
+    "**/*.test.*",
+    "**/*test-*.ts*",
+    "**/*-backup*.ts*",
+    "**/examples/**",
+    "**/*.stories.*",
+    "**/__tests__/**",
+    "**/__mocks__/**",
+    "scripts/**",
+    "analysis/**",
+    "ios/**",
+    "android/**",
+    "dist/**",
+    "build/**"
+  ],
+  "project": [
+    "client/src/**/*.{ts,tsx}",
+    "server/**/*.{ts,tsx}",
+    "shared/**/*.{ts,tsx}"
+  ]
+}

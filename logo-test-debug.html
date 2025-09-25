@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>🧪 Logo Debug Test</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            padding: 20px; 
+            background: #1a1a1a; 
+            color: white; 
+            line-height: 1.6;
+        }
+        .test-section { 
+            margin: 20px 0; 
+            padding: 15px; 
+            border: 1px solid #333; 
+            border-radius: 8px;
+        }
+        .logo-item { 
+            display: flex; 
+            align-items: center; 
+            margin: 10px 0; 
+            padding: 10px; 
+            background: #2a2a2a; 
+            border-radius: 4px;
+        }
+        .logo { 
+            width: 40px; 
+            height: 30px; 
+            margin-right: 15px; 
+            border: 1px solid #555;
+            object-fit: contain;
+            background: white;
+        }
+        .logo.error { border-color: red; }
+        .logo.success { border-color: green; }
+        .info { font-size: 14px; }
+        .url { 
+            font-family: monospace; 
+            font-size: 12px; 
+            color: #888; 
+            word-break: break-all;
+        }
+        .status { font-weight: bold; }
+        .success { color: #4ade80; }
+        .error { color: #f87171; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Logo System Debug Test</h1>
+    <p>This test verifies that real streaming platform logos are loading correctly.</p>
+    
+    <div class="test-section">
+        <h2>🔍 API Data Test</h2>
+        <div id="api-results">Loading API data...</div>
+    </div>
+    
+    <div class="test-section">
+        <h2>🖼️ Direct Logo Tests</h2>
+        <div id="direct-tests">
+            <div class="logo-item">
+                <img class="logo" src="https://image.tmdb.org/t/p/w92/bxBlRPEPpMVDc4jMhSrTf2339DW.jpg" alt="Hulu">
+                <div class="info">
+                    <strong>Hulu (TMDB)</strong><br>
+                    <span class="url">https://image.tmdb.org/t/p/w92/bxBlRPEPpMVDc4jMhSrTf2339DW.jpg</span>
+                </div>
+            </div>
+            <div class="logo-item">
+                <img class="logo" src="https://media.movieofthenight.com/services/hulu/logo-light-theme.svg" alt="Hulu SVG">
+                <div class="info">
+                    <strong>Hulu (External SVG)</strong><br>
+                    <span class="url">https://media.movieofthenight.com/services/hulu/logo-light-theme.svg</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Test direct logo loading
+        document.querySelectorAll('.logo').forEach(img => {
+            img.onload = () => {
+                img.classList.add('success');
+                console.log('✅ Logo loaded:', img.src);
+            };
+            img.onerror = () => {
+                img.classList.add('error');
+                console.log('❌ Logo failed:', img.src);
+            };
+        });
+
+        // Test API data
+        fetch('/api/trending/tv/day?includeStreaming=true')
+            .then(response => response.json())
+            .then(data => {
+                const resultsDiv = document.getElementById('api-results');
+                
+                // Find shows with streaming data
+                const showsWithStreaming = data.results.filter(show => 
+                    show.streamingPlatforms && show.streamingPlatforms.length > 0
+                ).slice(0, 3);
+                
+                if (showsWithStreaming.length === 0) {
+                    resultsDiv.innerHTML = '<div class="error">❌ No shows with streaming data found</div>';
+                    return;
+                }
+                
+                let html = `<div class="success">✅ Found ${showsWithStreaming.length} shows with streaming data</div>`;
+                
+                showsWithStreaming.forEach(show => {
+                    html += `<h3>${show.name || show.title}</h3>`;
+                    
+                    show.streamingPlatforms.slice(0, 3).forEach(platform => {
+                        const logoUrl = platform.logo_path.startsWith('http') 
+                            ? platform.logo_path 
+                            : `https://image.tmdb.org/t/p/w92${platform.logo_path}`;
+                            
+                        html += `
+                            <div class="logo-item">
+                                <img class="logo" src="${logoUrl}" alt="${platform.provider_name}">
+                                <div class="info">
+                                    <strong>${platform.provider_name}</strong><br>
+                                    <span class="url">${logoUrl}</span>
+                                </div>
+                            </div>
+                        `;
+                    });
+                });
+                
+                resultsDiv.innerHTML = html;
+                
+                // Add event listeners to new images
+                resultsDiv.querySelectorAll('.logo').forEach(img => {
+                    img.onload = () => {
+                        img.classList.add('success');
+                        console.log('✅ API Logo loaded:', img.src);
+                    };
+                    img.onerror = () => {
+                        img.classList.add('error');
+                        console.log('❌ API Logo failed:', img.src);
+                    };
+                });
+            })
+            .catch(error => {
+                document.getElementById('api-results').innerHTML = 
+                    `<div class="error">❌ API Error: ${error.message}</div>`;
+                console.error('API Error:', error);
+            });
+    </script>
+</body>
+</html>

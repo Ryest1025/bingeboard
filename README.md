@@ -176,3 +176,39 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ---
 
 Built with ❤️ by the BingeBoard team
+ 
+## 🔎 Unused Code Analysis
+
+This repo runs an "Analyze Unused Code" workflow in CI (Node 20) to track unused exports and dependencies.
+
+- How it works:
+   - Uses ts-prune for unused exports by default.
+   - If ts-prune crashes on dynamic imports, it automatically falls back to Knip to keep the analysis going.
+   - Uses depcheck for unused dependencies.
+   - Results are summarized and compared against baselines.
+
+- Run locally (same logic as CI):
+  
+   ```bash
+   bash scripts/analyze-unused.sh
+   ```
+
+- Update baselines intentionally (resets to current results):
+  
+   ```bash
+   bash scripts/analyze-unused.sh --update-baseline
+   ```
+
+Artifacts and baselines live in `analysis/` and are uploaded as CI artifacts. If you see noisy items, add patterns (one per line) to `analysis/unused-ignore.txt`.
+
+- Optional: To disable the Knip fallback (for A/B testing), set this env var before running:
+  
+   ```bash
+   UNUSED_DISABLE_KNIP_FALLBACK=1 bash scripts/analyze-unused.sh
+   ```
+  
+   You can also put `UNUSED_DISABLE_KNIP_FALLBACK=1` in your `.env`.
+
+See also: `docs/knip-baseline.md` for baseline maintenance.
+
+For preserving work from GitHub Codespaces without touching `main`, see: `docs/codespace-recovery.md`.

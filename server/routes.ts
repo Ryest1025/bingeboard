@@ -12,14 +12,14 @@ import { getDashboardContent, getDiscoverContent, getSearchContent } from './rou
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated, verifyPassword } from "./auth";
 import { db, sqlite } from "./db";
-import { eq } from "drizzle-orm";
+import { eq, and, inArray, desc, gte, lte } from "drizzle-orm";
 import {
   insertWatchlistSchema, insertActivitySchema, insertFriendshipSchema,
   insertActivityLikeSchema, insertActivityCommentSchema, insertUpcomingReleaseSchema,
   insertReleaseReminderSchema, insertNotificationSchema, insertStreamingIntegrationSchema,
   insertViewingHistorySchema, insertUserBehaviorSchema, insertRecommendationTrainingSchema
 } from "@shared/schema";
-import { users } from "../shared/schema";
+import { users, upcomingReleases, releaseReminders } from "../shared/schema";
 import { initializeFirebaseAdmin, sendPushNotification } from "./services/firebaseAdmin";
 import { TMDBService } from "./services/tmdb";
 import { sportsService } from "./services/sports";
@@ -247,7 +247,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             lastName: decodedToken.name?.split(' ').slice(1).join(' ') || '',
             phoneNumber: decodedToken.phone_number || null,
             profileImageUrl: decodedToken.picture || '',
-            authProvider: 'firebase'
+            // Map unsupported provider to allowed union member
+            authProvider: 'email'
           };
 
           console.log('✅ Firebase user object created:', {
@@ -307,7 +308,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           lastName: (userData.displayName)?.split(' ').slice(1).join(' ') || '',
           phoneNumber: userData.phoneNumber || null,
           profileImageUrl: userData.photoURL || '',
-          authProvider: 'firebase'
+          authProvider: 'email'
         };
 
         console.log('✅ Local Firebase user object created:', {
@@ -327,7 +328,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Store user in database
       console.log('Storage: Upserting user with data:', user);
-      const dbUser = await storage.upsertUser(user);
+  const dbUser = await storage.upsertUser(user as any);
       console.log('Storage: User upserted successfully:', dbUser.id, dbUser.email);
 
       console.log('User created/updated in database:', dbUser.id, dbUser.email);
@@ -1699,8 +1700,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (onboardingData?.preferences) {
         try {
           await storage.updateUserPreferences(userId, {
-            preferredGenres: onboardingData.preferences.genres || [],
-            preferredNetworks: onboardingData.preferences.platforms || [],
             favoriteSports: onboardingData.preferences.teams ? ["Sports"] : [],
             favoriteTeams: onboardingData.preferences.teams || [],
             watchingHabits: JSON.stringify({
@@ -1713,7 +1712,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             notificationFrequency: "weekly",
             sportsNotifications: true,
             onboardingCompleted: true
-          });
+          } as any);
           console.log('✅ User preferences saved successfully');
         } catch (prefError) {
           console.error('❌ Error saving preferences:', prefError);
@@ -1780,7 +1779,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       };
 
       console.log(`➕ Creating manual user:`, newUser);
-      const createdUser = await storage.upsertUser(newUser);
+  const createdUser = await storage.upsertUser(newUser as any);
 
       console.log('✅ Manual user created successfully:', createdUser.id, createdUser.email);
       res.json({ message: 'User created successfully', user: createdUser });
@@ -2636,8 +2635,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (userId) {
         try {
           const userPrefs = await storage.getUserPreferences(userId);
-          if (userPrefs?.preferredGenres) {
-            userGenres = JSON.parse(userPrefs.preferredGenres);
+          const userPrefsAny = userPrefs as any;
+          if (userPrefsAny?.preferredGenres) {
+            userGenres = JSON.parse(userPrefsAny.preferredGenres);
             console.log('👤 User preferred genres for spotlight:', userGenres);
           }
         } catch (error) {
@@ -2790,56 +2790,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Parse JSON fields from database
       let userPreferences = null;
       if (rawUserPreferences) {
-        console.log('🔍 Raw preferences from DB:', {
-          preferredGenres: rawUserPreferences.preferredGenres,
-          genresType: typeof rawUserPreferences.preferredGenres
-        });
-
-        let parsedGenres = [];
-        if (rawUserPreferences.preferredGenres) {
-          if (typeof rawUserPreferences.preferredGenres === 'string') {
+        const anyPrefs = rawUserPreferences as any;
+        // Gracefully handle legacy fields if present; otherwise default
+        let parsedGenres: any[] = [];
+        if (anyPrefs.preferredGenres) {
+          if (typeof anyPrefs.preferredGenres === 'string') {
             try {
-              parsedGenres = JSON.parse(rawUserPreferences.preferredGenres);
-              console.log('✅ Parsed genres from string:', parsedGenres);
-            } catch (parseError) {
-              console.error('❌ Failed to parse preferredGenres JSON:', parseError);
+              parsedGenres = JSON.parse(anyPrefs.preferredGenres);
+            } catch {
               parsedGenres = [];
             }
-          } else {
-            parsedGenres = rawUserPreferences.preferredGenres;
-            console.log('✅ Genres already an array:', parsedGenres);
+          } else if (Array.isArray(anyPrefs.preferredGenres)) {
+            parsedGenres = anyPrefs.preferredGenres;
           }
         }
 
-        let parsedNetworks = [];
-        if (rawUserPreferences.preferredNetworks) {
-          if (typeof rawUserPreferences.preferredNetworks === 'string') {
-            try {
-              parsedNetworks = JSON.parse(rawUserPreferences.preferredNetworks);
-            } catch (parseError) {
-              console.error('❌ Failed to parse preferredNetworks JSON:', parseError);
-              parsedNetworks = [];
-            }
-          } else {
-            parsedNetworks = rawUserPreferences.preferredNetworks;
+        let parsedNetworks: any[] = [];
+        if (anyPrefs.preferredNetworks) {
+          if (typeof anyPrefs.preferredNetworks === 'string') {
+            try { parsedNetworks = JSON.parse(anyPrefs.preferredNetworks); } catch { parsedNetworks = []; }
+          } else if (Array.isArray(anyPrefs.preferredNetworks)) {
+            parsedNetworks = anyPrefs.preferredNetworks;
           }
         }
 
         userPreferences = {
-          ...rawUserPreferences,
+          ...anyPrefs,
           preferredGenres: parsedGenres,
-          preferredNetworks: parsedNetworks
-        };
-
-        console.log('🔍 Final parsed preferences:', {
-          preferredGenres: userPreferences.preferredGenres,
-          genresType: typeof userPreferences.preferredGenres,
-          isArray: Array.isArray(userPreferences.preferredGenres)
-        });
+            preferredNetworks: parsedNetworks
+        } as any;
       }
 
       // If no preferences, create smart defaults based on popular choices
-      if (!userPreferences || !userPreferences.preferredGenres || userPreferences.preferredGenres.length === 0) {
+  if (!userPreferences || !(userPreferences as any).preferredGenres || (userPreferences as any).preferredGenres.length === 0) {
         console.log('📋 Creating smart default preferences for new user');
 
         const smartDefaults = {
@@ -2872,7 +2855,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // If user has preferences, mark onboarding as completed
-      if (userPreferences && userPreferences.preferredGenres?.length && !userPreferences.onboardingCompleted) {
+  if (userPreferences && (userPreferences as any).preferredGenres?.length && !userPreferences.onboardingCompleted) {
         try {
           userPreferences.onboardingCompleted = true;
           await storage.updateUserPreferences(userId, { ...userPreferences, onboardingCompleted: true });
@@ -4353,6 +4336,446 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('❌ Error fetching sports highlights by category:', error);
       res.status(500).json({ error: 'Failed to fetch sports highlights' });
+    }
+  });
+
+  // =========================================================
+  // 📅 Release Reminders API
+  // Endpoints:
+  //   GET    /api/reminders                -> List all reminders for user (with release details)
+  //   GET    /api/reminders/upcoming       -> Upcoming releases with active reminders (next X days)
+  //   POST   /api/reminders                -> Create a reminder (optionally creating the release)
+  //   DELETE /api/reminders/:id            -> Delete a reminder
+  // =========================================================
+
+  // GET /api/reminders
+  app.get('/api/reminders', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub || req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ error: 'Unauthorized' });
+      }
+
+      // Join reminders with their releases for richer payload
+      const results = await db
+        .select({
+          id: releaseReminders.id,
+            releaseId: releaseReminders.releaseId,
+            reminderType: releaseReminders.reminderType,
+            triggerDate: releaseReminders.triggerDate,
+            isTriggered: releaseReminders.isTriggered,
+            createdAt: releaseReminders.createdAt,
+            updatedAt: releaseReminders.updatedAt,
+            release: {
+              id: upcomingReleases.id,
+              showId: upcomingReleases.showId,
+              seasonNumber: upcomingReleases.seasonNumber,
+              episodeNumber: upcomingReleases.episodeNumber,
+              releaseDate: upcomingReleases.releaseDate,
+              releaseType: upcomingReleases.releaseType,
+              title: upcomingReleases.title,
+              description: upcomingReleases.description,
+              isConfirmed: upcomingReleases.isConfirmed,
+            }
+        })
+        .from(releaseReminders)
+        .leftJoin(upcomingReleases, eq(releaseReminders.releaseId, upcomingReleases.id))
+        .where(eq(releaseReminders.userId, userId))
+        .orderBy(desc(releaseReminders.triggerDate));
+
+      res.json({ reminders: results });
+    } catch (error) {
+      console.error('❌ Error fetching reminders:', error);
+      res.status(500).json({ error: 'Failed to fetch reminders' });
+    }
+  });
+
+  // GET /api/reminders/upcoming?days=30
+  app.get('/api/reminders/upcoming', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub || req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ error: 'Unauthorized' });
+      }
+
+      const days = Math.min(parseInt(req.query.days as string) || 30, 120); // cap at 120
+      const now = new Date();
+      const windowEnd = new Date(now.getTime() + days * 24 * 60 * 60 * 1000);
+
+      const joined = await db
+        .select({
+          id: releaseReminders.id,
+          releaseId: releaseReminders.releaseId,
+          reminderType: releaseReminders.reminderType,
+          triggerDate: releaseReminders.triggerDate,
+          releaseDate: upcomingReleases.releaseDate,
+          title: upcomingReleases.title,
+          releaseType: upcomingReleases.releaseType,
+          showId: upcomingReleases.showId,
+        })
+        .from(releaseReminders)
+        .innerJoin(upcomingReleases, eq(releaseReminders.releaseId, upcomingReleases.id))
+        .where(eq(releaseReminders.userId, userId));
+
+      const upcoming = joined.filter((r: any) => {
+        const d = new Date(r.releaseDate as any);
+        return d >= now && d <= windowEnd;
+      });
+
+      res.json({ windowDays: days, reminders: upcoming });
+    } catch (error) {
+      console.error('❌ Error fetching upcoming reminder releases:', error);
+      res.status(500).json({ error: 'Failed to fetch upcoming reminder releases' });
+    }
+  });
+
+  // POST /api/reminders
+  // Body options:
+  //   { releaseId, reminderType, triggerDate? }
+  //   or { release: { showId, releaseDate, releaseType, title?, description? }, reminderType, triggerDate? }
+  app.post('/api/reminders', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub || req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ error: 'Unauthorized' });
+      }
+
+      const { releaseId, reminderType, triggerDate, release } = req.body || {};
+      if (!reminderType) {
+        return res.status(400).json({ error: 'reminderType is required' });
+      }
+
+      let finalReleaseId = releaseId;
+
+      // Optionally create the release record if details provided instead of releaseId
+      if (!finalReleaseId && release) {
+        try {
+          // Minimal validation – required core fields
+            if (!release.showId || !release.releaseDate || !release.releaseType) {
+              return res.status(400).json({ error: 'release.showId, release.releaseDate, and release.releaseType are required' });
+            }
+
+          const newRelease = await storage.createUpcomingRelease({
+            showId: release.showId,
+            seasonNumber: release.seasonNumber || null,
+            episodeNumber: release.episodeNumber || 1,
+            releaseDate: new Date(release.releaseDate),
+            releaseType: release.releaseType,
+            title: release.title || null,
+            description: release.description || null,
+            isConfirmed: release.isConfirmed ?? false
+          });
+          finalReleaseId = newRelease.id;
+        } catch (e) {
+          console.error('Failed creating upcoming release for reminder:', e);
+          return res.status(500).json({ error: 'Failed to create upcoming release' });
+        }
+      }
+
+      if (!finalReleaseId) {
+        return res.status(400).json({ error: 'releaseId or release object required' });
+      }
+
+      // Fetch release for trigger date calculation if needed
+      let releaseRecord: any = null;
+      if (!triggerDate) {
+        const [found] = await db
+          .select()
+          .from(upcomingReleases)
+          .where(eq(upcomingReleases.id, finalReleaseId));
+        releaseRecord = found;
+        if (!releaseRecord) {
+          return res.status(404).json({ error: 'Release not found for trigger date calculation' });
+        }
+      }
+
+      // Default trigger: 24h before release (or now if already within 24h)
+      let triggerAt: Date;
+      if (triggerDate) {
+        triggerAt = new Date(triggerDate);
+      } else {
+        const rel = new Date(releaseRecord.releaseDate);
+        const fallback = new Date(rel.getTime() - 24 * 60 * 60 * 1000);
+        triggerAt = fallback < new Date() ? new Date() : fallback;
+      }
+
+      try {
+        const newReminder = await storage.createReleaseReminder({
+          userId,
+          releaseId: finalReleaseId,
+          reminderType,
+          triggerDate: triggerAt
+        });
+
+        res.status(201).json({ reminder: newReminder });
+      } catch (e: any) {
+        // Handle uniqueness constraint (duplicate reminder)
+        if (e?.message?.includes('duplicate') || e?.code === 'SQLITE_CONSTRAINT') {
+          return res.status(409).json({ error: 'Reminder already exists for this release and type' });
+        }
+        console.error('❌ Error creating reminder:', e);
+        res.status(500).json({ error: 'Failed to create reminder' });
+      }
+    } catch (error) {
+      console.error('❌ Unexpected error creating reminder:', error);
+      res.status(500).json({ error: 'Failed to create reminder' });
+    }
+  });
+
+  // DELETE /api/reminders/:id
+  app.delete('/api/reminders/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub || req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ error: 'Unauthorized' });
+      }
+      const { id } = req.params;
+      if (!id) {
+        return res.status(400).json({ error: 'Reminder id required' });
+      }
+      await storage.deleteReleaseReminder(Number(id), userId);
+      res.json({ success: true });
+    } catch (error) {
+      console.error('❌ Error deleting reminder:', error);
+      res.status(500).json({ error: 'Failed to delete reminder' });
+    }
+  });
+
+  // =========================================================
+  // 🚀 Upcoming Releases Aggregated Endpoint
+  // GET /api/content/upcoming?days=90&mediaType=all|tv|movie&limit=40
+  // Combines:
+  //   1. Local upcoming_releases (authoritative user-curated / previously stored)
+  //   2. TMDB discover upcoming (future window) for TV + Movies
+  // Adds reminder metadata for authenticated user
+  // =========================================================
+  app.get('/api/content/upcoming', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub || req.user?.id;
+      if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+
+      const days = Math.min(parseInt(req.query.days as string) || 90, 180);
+      const mediaType = (req.query.mediaType as string) || 'all'; // all|tv|movie
+      const limit = Math.min(parseInt(req.query.limit as string) || 40, 100);
+      const now = new Date();
+      const windowEnd = new Date(now.getTime() + days * 24 * 60 * 60 * 1000);
+
+      // 1. Local releases within window
+      const localReleases = await db
+        .select()
+        .from(upcomingReleases)
+        .where(and(
+          gte(upcomingReleases.releaseDate, now),
+          lte(upcomingReleases.releaseDate, windowEnd)
+        ))
+        .orderBy(desc(upcomingReleases.releaseDate));
+
+      // 2. User reminders mapped by releaseId for quick lookup
+      const userReminders = await storage.getUserReminders(userId);
+      const reminderByReleaseId = new Map<number, any>();
+      userReminders.forEach(r => reminderByReleaseId.set(r.releaseId as number, r));
+
+      // 3. TMDB upcoming (basic). We'll fetch TV and Movie unless mediaType restricts
+      const tmdbService = new TMDBService();
+      const tmdbResults: any[] = [];
+      const dateFrom = now.toISOString().split('T')[0];
+      const dateTo = windowEnd.toISOString().split('T')[0];
+
+      const fetchers: Promise<any>[] = [];
+      if (mediaType === 'all' || mediaType === 'tv') {
+        fetchers.push(tmdbService.discover('tv', {
+          // Cast to any: TMDB discover supports these dynamic range params
+          'first_air_date.gte': dateFrom,
+          'first_air_date.lte': dateTo,
+          sort_by: 'first_air_date.asc'
+        } as any).then(r => ({ type: 'tv', ...r })).catch(() => null));
+      }
+      if (mediaType === 'all' || mediaType === 'movie') {
+        fetchers.push(tmdbService.discover('movie', {
+          'primary_release_date.gte': dateFrom,
+          'primary_release_date.lte': dateTo,
+          sort_by: 'primary_release_date.asc'
+        } as any).then(r => ({ type: 'movie', ...r })).catch(() => null));
+      }
+
+      const remoteSets = await Promise.all(fetchers);
+      remoteSets.filter(Boolean).forEach(set => {
+        if (set?.results) {
+          set.results.forEach((item: any) => tmdbResults.push({ ...item, media_type: set.type }));
+        }
+      });
+
+      // 4. Normalize local releases to a common shape and add reminder metadata
+      const normalizedLocal = localReleases.map((r: any) => ({
+        source: 'local',
+        releaseId: r.id,
+        showId: r.showId,
+        seasonNumber: r.seasonNumber,
+        episodeNumber: r.episodeNumber,
+        releaseDate: r.releaseDate,
+        releaseType: r.releaseType,
+        title: r.title,
+        description: r.description,
+        isConfirmed: r.isConfirmed,
+        hasReminder: reminderByReleaseId.has(r.id),
+        reminder: reminderByReleaseId.get(r.id) || null
+      }));
+
+      // 5. Remote normalization (subset of fields)
+      const normalizedRemote = tmdbResults.map(item => ({
+        source: 'tmdb',
+        tmdbId: item.id,
+        mediaType: item.media_type,
+        title: item.name || item.title,
+        overview: item.overview,
+        posterPath: item.poster_path,
+        backdropPath: item.backdrop_path,
+        popularity: item.popularity,
+        voteAverage: item.vote_average,
+        releaseDate: item.first_air_date || item.release_date,
+        originalLanguage: item.original_language,
+      })).filter(i => i.releaseDate);
+
+      // 6. Combine & sort by date ascending (soonest first)
+      const combined = [...normalizedLocal, ...normalizedRemote].sort((a, b) => {
+        const da = new Date(a.releaseDate).getTime();
+        const db = new Date(b.releaseDate).getTime();
+        return da - db;
+      });
+
+      res.json({
+        windowDays: days,
+        total: combined.length,
+        results: combined.slice(0, limit),
+        localCount: normalizedLocal.length,
+        remoteCount: normalizedRemote.length,
+        reminderCount: normalizedLocal.filter((r: any) => r.hasReminder).length
+      });
+    } catch (error) {
+      console.error('❌ Error fetching upcoming releases aggregate:', error);
+      res.status(500).json({ error: 'Failed to fetch upcoming releases' });
+    }
+  });
+
+  // =========================================================
+  // 🔍 Discover Search Endpoint
+  // GET /api/discover/search?mediaType=tv|movie&genres=18,35&year=2025&platform=8&sort=popularity.desc&page=1&includeStreaming=true
+  // Maps to TMDB discover API and (optionally) enriches with streaming availability.
+  // Parameters:
+  //   mediaType: tv|movie (default tv)
+  //   genres: comma-separated TMDB genre ids
+  //   year: release year (tv: first_air_date_year, movie: primary_release_year)
+  //   platform: watch provider id (maps to with_watch_providers + watch_region=US)
+  //   sort: popularity.desc | vote_average.desc | first_air_date.desc | release_date.desc (fallback popularity.desc)
+  //   page: pagination (1..N)
+  //   includeStreaming: boolean to trigger enrichment (slow path)
+  // =========================================================
+  app.get('/api/discover/search', isAuthenticated, async (req: any, res) => {
+    const started = Date.now();
+    try {
+      const userId = req.user?.claims?.sub || req.user?.id; // reserved for future personalization
+      if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+
+      const mediaType = (req.query.mediaType as string) === 'movie' ? 'movie' : 'tv';
+      const rawGenres = (req.query.genres as string) || '';
+      const year = req.query.year ? parseInt(req.query.year as string) : undefined;
+      const platform = req.query.platform ? String(req.query.platform) : undefined; // watch provider id
+      const sort = (req.query.sort as string) || 'popularity.desc';
+      const page = Math.max(1, Math.min(parseInt(req.query.page as string) || 1, 50));
+      const includeStreaming = (req.query.includeStreaming === 'true' || req.query.includeStreaming === '1');
+
+      // Map allowed sort values to TMDB params
+      const allowedSort = new Set([
+        'popularity.desc', 'popularity.asc',
+        'vote_average.desc', 'vote_average.asc',
+        mediaType === 'tv' ? 'first_air_date.desc' : 'primary_release_date.desc',
+        mediaType === 'tv' ? 'first_air_date.asc' : 'primary_release_date.asc'
+      ]);
+      const sortBy = allowedSort.has(sort) ? sort : 'popularity.desc';
+
+      // Build discover query params (typed loosening with any for dynamic keys)
+      const discoverParams: any = { sort_by: sortBy, page };
+      if (rawGenres) discoverParams.with_genres = rawGenres;
+      if (year) {
+        if (mediaType === 'tv') {
+          discoverParams.first_air_date_year = year;
+        } else {
+          discoverParams.primary_release_year = year;
+        }
+      }
+      if (platform) {
+        discoverParams.with_watch_providers = platform;
+        discoverParams.watch_region = 'US';
+      }
+
+      const tmdbService = new TMDBService();
+      const response = await tmdbService.discover(mediaType as any, discoverParams);
+
+      let results = response.results || [];
+
+      // Streaming enrichment (optional & bounded)
+      if (includeStreaming && results.length > 0) {
+        const limited = results.slice(0, 12); // cap enrichment to reduce latency
+        await Promise.race([
+          Promise.all(limited.map(async (item: any) => {
+            try {
+              const streaming = await MultiAPIStreamingService.getComprehensiveAvailability(
+                item.id,
+                item.name || item.title || '',
+                mediaType
+              );
+              item.streamingPlatforms = streaming.platforms;
+              item.streamingStats = {
+                totalPlatforms: streaming.platforms?.length || 0,
+                lastUpdated: new Date().toISOString()
+              };
+            } catch (e) {
+              item.streamingError = (e as Error).message;
+            }
+          })),
+          new Promise(resolve => setTimeout(resolve, 3500)) // 3.5s timeout safety
+        ]);
+      }
+
+      // Normalize output structure
+      const normalized = results.map((item: any) => ({
+        tmdbId: item.id,
+        mediaType,
+        title: item.name || item.title,
+        overview: item.overview,
+        posterPath: item.poster_path,
+        backdropPath: item.backdrop_path,
+        popularity: item.popularity,
+        voteAverage: item.vote_average,
+        voteCount: item.vote_count,
+        firstAirDate: item.first_air_date,
+        releaseDate: item.release_date,
+        genreIds: item.genre_ids,
+        originCountry: item.origin_country,
+        originalLanguage: item.original_language,
+        streamingPlatforms: item.streamingPlatforms || null,
+        streamingStats: item.streamingStats || null,
+        streamingError: item.streamingError || null
+      }));
+
+      res.json({
+        page: response.page || page,
+        totalPages: response.total_pages || 1,
+        totalResults: response.total_results || normalized.length,
+        results: normalized,
+        meta: {
+          mediaType,
+          sort: sortBy,
+          genres: rawGenres || null,
+          year: year || null,
+          platform: platform || null,
+          includeStreaming,
+          elapsedMs: Date.now() - started
+        }
+      });
+    } catch (error) {
+      console.error('❌ Discover search error:', error);
+      res.status(500).json({ error: 'Failed to perform discover search' });
     }
   });
 

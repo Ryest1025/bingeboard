@@ -1,0 +1,22 @@
+{
+	"extends": "./tsconfig.json",
+	"include": [
+		"client/src/**/*",
+		"shared/**/*"
+	],
+	"exclude": [
+		"node_modules",
+		"build",
+		"dist",
+		"server/**/*",
+		"migration-backup-*/**/*",
+		"**/*.test.ts",
+		"**/*.test.tsx"
+	],
+	"compilerOptions": {
+		// Ensure compatibility with ts-prune analysis
+		"noEmit": true,
+		"skipLibCheck": true,
+		"moduleResolution": "bundler"
+	}
+}

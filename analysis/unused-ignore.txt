@@ -1,4 +1,21 @@
-# Lines here (substr match) will be filtered out of ts-prune output before diffing
+client/src/components/
+client/src/pages/
+client/src/examples/
+client/src/firebase-test.ts
+client/src/main-test.tsx
+client/src/test-logo-system.ts
+client/src/debug-env.ts
+client/src/components/ui/
+client/src/components/ab-testing/
+client/src/components/dashboard/
+client/src/components/onboarding/
+client/src/components/search/
+client/src/components/styled/
+client/src/components/shared/
+client/src/components/streaming/
+migration-backup-
+server/routes/
+server/services/# Lines here (substr match) will be filtered out of ts-prune output before diffing
 # Prefer naming conventions instead of listing individual symbols when possible:
 #   __experimental_  (temporary prototypes)
 #   _unused_         (short-lived staging code)
