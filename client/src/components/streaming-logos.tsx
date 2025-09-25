@@ -1,4 +1,5 @@
 import React from 'react';
+import BingeboardLogo from '@/components/ui/bingeboard-logo';
 
 interface StreamingLogosProps {
   providers?: Array<{
