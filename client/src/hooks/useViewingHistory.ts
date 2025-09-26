@@ -30,7 +30,7 @@ export interface ContinueWatchingItem {
   title: string;
   mediaType: 'tv' | 'movie';
   lastWatched: string;
-  platform: string;
+  platform: string | { provider_name?: string; name?: string; logo_path?: string; provider_id?: number };
   poster_path?: string; // TMDB poster path
   backdrop_path?: string; // TMDB backdrop path
   currentEpisode: {
@@ -141,7 +141,11 @@ function getFallbackContinueWatching(): ContinueWatchingItem[] {
       title: "Squid Game",
       mediaType: 'tv',
       lastWatched: "2025-08-04T15:30:00Z",
-      platform: "Netflix",
+      platform: {
+        provider_name: "Netflix",
+        provider_id: 8,
+        logo_path: "/9A1JSVmSxsyaBK4SUFsYVqbAYfW.jpg"
+      } as any,
       poster_path: "/dDlEmu3EZ0Pgg93K2SVNLCjCSvE.jpg", // Squid Game poster
       backdrop_path: "/qw3J9cNeLioOLoR68WX7z79aCdK.jpg",
       currentEpisode: {
@@ -159,7 +163,11 @@ function getFallbackContinueWatching(): ContinueWatchingItem[] {
       title: "Wednesday",
       mediaType: 'tv',
       lastWatched: "2025-08-03T20:15:00Z",
-      platform: "Netflix",
+      platform: {
+        provider_name: "Netflix",
+        provider_id: 8,
+        logo_path: "/9A1JSVmSxsyaBK4SUFsYVqbAYfW.jpg"
+      } as any,
       poster_path: "/9PFonBhy4cQy7Jz20NpMygczOkv.jpg", // Wednesday poster
       backdrop_path: "/iHSwvRVsRyxpX7FE7GbviaDvgGZ.jpg",
       currentEpisode: {
@@ -177,7 +185,11 @@ function getFallbackContinueWatching(): ContinueWatchingItem[] {
       title: "Breaking Bad",
       mediaType: 'tv',
       lastWatched: "2025-08-02T18:45:00Z",
-      platform: "Netflix",
+      platform: {
+        provider_name: "Netflix",
+        provider_id: 8,
+        logo_path: "/9A1JSVmSxsyaBK4SUFsYVqbAYfW.jpg"
+      } as any,
       poster_path: "/3xnWaLQjelJDDF7LT1WBo6f4BRe.jpg", // Breaking Bad poster
       backdrop_path: "/tsRy63Mu5cu8etL1X7ZLyf7UP1M.jpg",
       currentEpisode: {
@@ -314,7 +326,11 @@ function getFallbackCurrentProgress(): ContinueWatchingItem[] {
       title: "The Sandman",
       mediaType: 'tv',
       lastWatched: "2025-08-05T14:20:00Z",
-      platform: "Netflix",
+      platform: {
+        provider_name: "Netflix",
+        provider_id: 8,
+        logo_path: "/9A1JSVmSxsyaBK4SUFsYVqbAYfW.jpg"
+      } as any,
       poster_path: "/q54qEgagGOYCq5D1903eBVMNkbo.jpg", // The Sandman poster
       backdrop_path: "/2OMB0ynKlyIenMJWI2Dy9IWT4c.jpg",
       currentEpisode: {
@@ -332,7 +348,11 @@ function getFallbackCurrentProgress(): ContinueWatchingItem[] {
       title: "Attack on Titan",
       mediaType: 'tv',
       lastWatched: "2025-08-04T21:30:00Z",
-      platform: "Crunchyroll",
+      platform: {
+        provider_name: "Hulu",
+        provider_id: 15,
+        logo_path: "/giwM8XX4V2AQb9vsoN7yti82tKK.jpg"
+      } as any,
       poster_path: "/hTP1DtLGFamjfu8WqjnuQdP1n4i.jpg", // Attack on Titan poster
       backdrop_path: "/rqbCbjB19amtOtFQbb3K2lgm2zv.jpg",
       currentEpisode: {

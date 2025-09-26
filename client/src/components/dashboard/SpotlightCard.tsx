@@ -1,7 +1,8 @@
 import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Play } from "lucide-react";
+import { Play, Plus } from "lucide-react";
 import StreamingLogos from "@/components/streaming-logos";
+import TrailerButton from "@/components/trailer-button";
 
 interface SpotlightCardProps {
   spotlight?: any;
@@ -119,17 +120,59 @@ export default function SpotlightCard({ spotlight }: SpotlightCardProps) {
               </p>
 
               <div className="flex flex-wrap items-center gap-4 mt-4">
-                <button className="bg-white text-black px-6 py-3 font-medium flex items-center gap-2 hover:bg-gray-200 hover:scale-105 transition-all duration-200 rounded shadow-lg hover:shadow-xl">
+                <button 
+                  onClick={() => {
+                    // TODO: Integrate with watch functionality
+                    alert(`Watch Now: ${title}`);
+                  }}
+                  className="bg-white text-black px-6 py-3 font-medium flex items-center gap-2 hover:bg-gray-200 hover:scale-105 transition-all duration-200 rounded shadow-lg hover:shadow-xl"
+                >
                   <Play className="w-5 h-5" />
                   Watch Now
                 </button>
 
-                <button className="bg-gray-700/80 text-white px-6 py-3 font-medium flex items-center gap-2 hover:bg-gray-600 hover:scale-105 transition-all duration-200 rounded shadow-lg hover:shadow-xl backdrop-blur-sm">
-                  Trailer
-                </button>
+                <TrailerButton 
+                  show={{
+                    id: spotlight.id,
+                    tmdbId: spotlight.id,
+                    title: title
+                  }}
+                  variant="secondary"
+                  className="bg-gray-700/80 text-white px-6 py-3 font-medium hover:bg-gray-600 hover:scale-105 transition-all duration-200 rounded shadow-lg hover:shadow-xl backdrop-blur-sm border-none"
+                  showLabel={true}
+                />
 
-                <button className="bg-gray-700/80 text-white px-6 py-3 font-medium flex items-center gap-2 hover:bg-gray-600 hover:scale-105 transition-all duration-200 rounded shadow-lg hover:shadow-xl backdrop-blur-sm">
-                  ➕ Add to List
+                <button 
+                  onClick={async () => {
+                    try {
+                      const response = await fetch('/api/watchlist/add', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                          id: spotlight.id,
+                          title: title,
+                          poster_path: spotlight.poster_path,
+                          media_type: spotlight.media_type || 'tv',
+                          vote_average: spotlight.vote_average,
+                          overview: spotlight.overview
+                        }),
+                        credentials: 'include'
+                      });
+                      
+                      if (response.ok) {
+                        alert(`Added "${title}" to your watchlist!`);
+                      } else {
+                        alert('Failed to add to watchlist. Please try again.');
+                      }
+                    } catch (error) {
+                      console.error('Error adding to watchlist:', error);
+                      alert('Failed to add to watchlist. Please try again.');
+                    }
+                  }}
+                  className="bg-gray-700/80 text-white px-6 py-3 font-medium flex items-center gap-2 hover:bg-gray-600 hover:scale-105 transition-all duration-200 rounded shadow-lg hover:shadow-xl backdrop-blur-sm"
+                >
+                  <Plus className="w-5 h-5" />
+                  Add to List
                 </button>
               </div>
             </div>

@@ -233,52 +233,15 @@ const DashboardPage: React.FC = () => {
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
               {filteredRecommendations.map(show => (
                 <div key={show.id} className="relative group">
-                  <EnhancedShowCard show={show} onAddToWatchlist={handleAddToWatchlist} />
-                  
-                  {/* Trailer Button Overlay */}
-                  <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <TrailerButton 
-                      show={{
-                        id: show.id,
-                        tmdbId: show.id,
-                        title: show.displayTitle
-                      }}
-                      variant="destructive"
-                      size="sm"
-                      className="bg-red-600/90 hover:bg-red-700 text-white border-none shadow-lg"
-                      showLabel={false}
-                    />
-                  </div>
-                  
-                  {/* Streaming Logos Overlay */}
-                  {(() => {
-                    const showData = show as any;
-                    const rawProviders = showData.streamingPlatforms || showData.streaming_platforms || showData.streamingProviders || showData.watchProviders || [];
-                    const seen = new Set<string>();
-                    const streamingPlatforms = rawProviders.filter((p: any, idx: number) => {
-                      const name = (p.provider_name || p.name || `p-${idx}`).toLowerCase();
-                      const id = p.provider_id ?? 'na';
-                      const key = `${id}::${name}`;
-                      if (seen.has(key)) return false;
-                      seen.add(key);
-                      return true;
-                    });
-                    return streamingPlatforms.length > 0 && (
-                      <div className="absolute top-2 left-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <div className="bg-black/70 rounded-md p-1">
-                          <StreamingLogos 
-                            providers={streamingPlatforms.map((platform: any) => ({
-                              provider_id: platform.provider_id || 0,
-                              provider_name: platform.provider_name || platform.name || '',
-                              logo_path: platform.logo_path
-                            }))}
-                            size="sm"
-                            maxDisplayed={1}
-                          />
-                        </div>
-                      </div>
-                    );
-                  })()}
+                  <EnhancedShowCard 
+                    show={show} 
+                    onAddToWatchlist={handleAddToWatchlist}
+                    onWatchTrailer={(show) => {
+                      console.log('Watch trailer for:', show.title || show.name);
+                      // TODO: Implement trailer modal or use TrailerButton component
+                    }}
+                  />
+
                 </div>
               ))}
             </div>
