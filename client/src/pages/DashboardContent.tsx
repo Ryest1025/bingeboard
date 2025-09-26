@@ -3,7 +3,7 @@ import { TooltipProvider } from '@/components/ui/tooltip';
 import { Skeleton } from '@/components/ui/skeleton';
 import { UniversalButton } from '@/components/ui/universal-button';
 import NavigationHeader from '@/components/navigation-header';
-import Toast from '@/components/toast';
+import { useToast } from "@/hooks/use-toast";
 import RecommendationModal from '@/components/recommendation-modal';
 import ShowDetailsModal from '@/components/show-details-modal';
 import { Card, CardContent } from '@/components/ui/card';

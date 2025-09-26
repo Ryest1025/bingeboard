@@ -1,618 +1,1093 @@
-import React, { useEffect, useState } from "react";
-import { useQuery, useQueries } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Badge } from "@/components/ui/badge";
-import { useLocalStorage } from "@/hooks/useLocalStorage";
-import { Loader2, Filter, ChevronDown, ChevronUp, ChevronRight, Trophy, Award, TrendingUp, Flame, Star } from "lucide-react";
-import { isAwardSeason, getAwardBadgeStyles, AWARD_GRADIENTS } from "@/styles/constants";
+import React, { useState, useCallback, useMemo } from 'react';
+import { useQuery, useQueries } from '@tanstack/react-query';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from '@/components/ui/select';
+import { Slider } from '@/components/ui/slider';
+import { Switch } from '@/components/ui/switch';
+import { Separator } from '@/components/ui/separator';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { 
+  Filter, 
+  X, 
+  Star, 
+  Calendar, 
+  Clock, 
+  Users,
+  Sparkles,
+  AlertCircle,
+  RefreshCw,
+  TrendingUp,
+  Search
+} from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
-interface FilterValues {
-  genres: string[];
-  platforms: string[];
-  countries: string[];
-  sports: string[];
-  awardSeason: string[]; // "winners", "nominees", "trending"
-  trending: string[]; // "hot", "rising", "viral"
+// Enhanced TypeScript interfaces for better type safety
+export type SortOption = 'newest' | 'oldest' | 'rating' | 'popularity' | 'alphabetical';
+export type ContentType = 'all' | 'movie' | 'tv' | 'documentary' | 'anime';
+export type ContentStatus = 'all' | 'watching' | 'completed' | 'plan-to-watch' | 'dropped';
+export type RuntimeRange = [number, number];
+export type RatingRange = [number, number];
+
+export interface FilterState {
+  genre: string;
+  year: string;
+  rating: RatingRange;
+  runtime: RuntimeRange;
+  platform: string;
+  status: ContentStatus;
+  sortBy: SortOption;
+  hideWatched: boolean;
+  onlyWatchlist: boolean;
+  includeFriends: boolean;
+  searchQuery: string;
+  contentType: ContentType;
 }
 
-interface Props {
-  persistKey?: string;
-  showAdvanced?: boolean;
-  defaultExpanded?: boolean;
-  onFiltersChange?: (filters: FilterValues) => void;
-  onApply?: (filters: FilterValues) => void;
+interface EnhancedFilterSystemProps {
+  filters: FilterState;
+  onFiltersChange: (filters: FilterState) => void;
+  onApplyFilters: () => void;
+  onResetFilters: () => void;
+  isLoading?: boolean;
+  resultCount?: number;
   className?: string;
-  showFilterSummary?: boolean;
-  compactMode?: boolean;
-  activeTab?: string;
-  onActiveTabChange?: (tab: string) => void;
-  onFilterSummaryRender?: (summary: JSX.Element | null) => void;
+  enableDynamicData?: boolean; // Enable React Query data fetching
 }
 
-export default function EnhancedFilterSystem({
-  persistKey = "filters",
-  showAdvanced = false,
-  defaultExpanded = false,
+// Dynamic filter data interfaces
+interface Genre {
+  id: number;
+  name: string;
+}
+
+interface Platform {
+  id: string;
+  name: string;
+  logo_path?: string;
+}
+
+// Configuration-driven filter system
+interface FilterOption {
+  value: string;
+  label: string;
+  icon?: string | React.ComponentType<any>;
+  description?: string;
+  category?: string;
+}
+
+
+
+interface FilterSectionConfig {
+  key: keyof FilterState;
+  label: string;
+  icon: React.ComponentType<any>;
+  type: 'select' | 'slider' | 'switch' | 'input' | 'multiselect';
+  options?: FilterOption[];
+  min?: number;
+  max?: number;
+  step?: number;
+  placeholder?: string;
+  description?: string;
+  validation?: (value: any) => boolean;
+  transform?: (value: any) => any;
+}
+
+// Centralized filter configuration
+// Loading skeleton component with optional text
+const FilterSkeleton: React.FC<{ text?: string }> = ({ text }) => (
+  <div className="animate-pulse space-y-2">
+    {text && <div className="h-3 bg-slate-600 rounded w-16 mb-1"></div>}
+    <div className="h-4 bg-slate-600 rounded w-24"></div>
+    <div className="h-10 bg-slate-600 rounded"></div>
+  </div>
+);
+
+// Error component for filter sections with better accessibility
+const FilterError: React.FC<{ 
+  error: string; 
+  onRetry?: () => void;
+  filterName: string;
+}> = ({ error, onRetry, filterName }) => (
+  <Alert 
+    className="border-red-500/50 bg-red-950/20"
+    role="alert"
+    aria-live="polite"
+  >
+    <AlertCircle className="h-4 w-4 text-red-400" aria-hidden="true" />
+    <AlertTitle className="text-red-300">Error loading {filterName}</AlertTitle>
+    <AlertDescription className="text-red-200 mt-1">
+      {error}
+      {onRetry && (
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onRetry}
+          className="mt-2 border-red-500 text-red-300 hover:bg-red-900/20"
+          aria-label={`Retry loading ${filterName}`}
+        >
+          <RefreshCw className="w-3 h-3 mr-1" aria-hidden="true" />
+          Retry
+        </Button>
+      )}
+    </AlertDescription>
+  </Alert>
+);
+
+// Global loading state component
+const FilterSystemLoading: React.FC<{ className?: string }> = ({ className }) => (
+  <Card className={`w-full bg-slate-800/50 border-slate-700 ${className}`}>
+    <CardContent className="p-6">
+      <div className="space-y-4">
+        <div className="flex items-center gap-2">
+          <RefreshCw className="w-5 h-5 animate-spin text-purple-400" aria-hidden="true" />
+          <span className="text-slate-300">Loading filter options...</span>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <FilterSkeleton key={i} />
+          ))}
+        </div>
+      </div>
+    </CardContent>
+  </Card>
+);
+
+// Global error state component
+const FilterSystemError: React.FC<{ 
+  className?: string;
+  onRetryAll: () => void;
+}> = ({ className, onRetryAll }) => (
+  <Card className={`w-full bg-slate-800/50 border-slate-700 ${className}`}>
+    <CardContent className="p-6">
+      <Alert className="border-red-500/50 bg-red-950/20" role="alert">
+        <AlertCircle className="h-4 w-4 text-red-400" aria-hidden="true" />
+        <AlertTitle className="text-red-300">Unable to load filter options</AlertTitle>
+        <AlertDescription className="text-red-200 mt-2">
+          There was a problem loading the filter options. You can still use basic filters, or try refreshing the page.
+          <div className="flex gap-2 mt-3">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onRetryAll}
+              className="border-red-500 text-red-300 hover:bg-red-900/20"
+              aria-label="Retry loading all filter options"
+            >
+              <RefreshCw className="w-3 h-3 mr-1" aria-hidden="true" />
+              Retry All
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => window.location.reload()}
+              className="border-slate-500 text-slate-300 hover:bg-slate-700"
+            >
+              Refresh Page
+            </Button>
+          </div>
+        </AlertDescription>
+      </Alert>
+    </CardContent>
+  </Card>
+);
+
+const FILTER_CONFIG: Record<string, FilterSectionConfig> = {
+  searchQuery: {
+    key: 'searchQuery',
+    label: 'Search',
+    icon: Search,
+    type: 'input',
+    placeholder: 'Search titles, actors, directors...',
+    description: 'Search across all content metadata'
+  },
+  genre: {
+    key: 'genre',
+    label: 'Genre',
+    icon: Star,
+    type: 'select',
+    options: [
+      { value: 'all', label: 'All Genres', icon: '🎭' },
+      { value: '28', label: 'Action', icon: '💥', category: 'Adventure' },
+      { value: '12', label: 'Adventure', icon: '🗺️', category: 'Adventure' },
+      { value: '16', label: 'Animation', icon: '🎨', category: 'Family' },
+      { value: '35', label: 'Comedy', icon: '😂', category: 'Entertainment' },
+      { value: '80', label: 'Crime', icon: '🔍', category: 'Drama' },
+      { value: '99', label: 'Documentary', icon: '📚', category: 'Educational' },
+      { value: '18', label: 'Drama', icon: '🎭', category: 'Drama' },
+      { value: '10751', label: 'Family', icon: '👨‍👩‍👧‍👦', category: 'Family' },
+      { value: '14', label: 'Fantasy', icon: '🧙‍♂️', category: 'Adventure' },
+      { value: '27', label: 'Horror', icon: '👻', category: 'Thriller' },
+      { value: '10402', label: 'Music', icon: '🎵', category: 'Entertainment' },
+      { value: '9648', label: 'Mystery', icon: '🕵️', category: 'Thriller' },
+      { value: '10749', label: 'Romance', icon: '💕', category: 'Drama' },
+      { value: '878', label: 'Sci-Fi', icon: '🚀', category: 'Adventure' },
+      { value: '53', label: 'Thriller', icon: '😱', category: 'Thriller' },
+      { value: '10752', label: 'War', icon: '⚔️', category: 'Drama' },
+      { value: '37', label: 'Western', icon: '🤠', category: 'Adventure' }
+    ]
+  },
+  platform: {
+    key: 'platform',
+    label: 'Platform',
+    icon: Star,
+    type: 'select',
+    options: [
+      { value: 'all', label: 'All Platforms', icon: '📺' },
+      { value: 'netflix', label: 'Netflix', icon: '🔴', description: 'Netflix Originals and Licensed Content' },
+      { value: 'disney', label: 'Disney+', icon: '🏰', description: 'Disney, Marvel, Star Wars, Pixar' },
+      { value: 'hbo', label: 'HBO Max', icon: '🎬', description: 'HBO Originals and Warner Bros' },
+      { value: 'amazon', label: 'Prime Video', icon: '📦', description: 'Amazon Prime Video Content' },
+      { value: 'apple', label: 'Apple TV+', icon: '🍎', description: 'Apple Original Productions' },
+      { value: 'hulu', label: 'Hulu', icon: '🟢', description: 'Current TV and Originals' },
+      { value: 'paramount', label: 'Paramount+', icon: '⛰️', description: 'CBS, Paramount, Nickelodeon' },
+      { value: 'peacock', label: 'Peacock', icon: '🦚', description: 'NBC Universal Content' }
+    ]
+  },
+  sortBy: {
+    key: 'sortBy',
+    label: 'Sort By',
+    icon: TrendingUp,
+    type: 'select',
+    options: [
+      { value: 'popularity.desc', label: 'Most Popular', icon: TrendingUp, description: 'Trending and popular content' },
+      { value: 'vote_average.desc', label: 'Highest Rated', icon: Star, description: 'Top rated by critics and users' },
+      { value: 'release_date.desc', label: 'Newest First', icon: Calendar, description: 'Recently released content' },
+      { value: 'release_date.asc', label: 'Oldest First', icon: Clock, description: 'Classic and vintage content' },
+      { value: 'title.asc', label: 'A-Z', icon: Search, description: 'Alphabetical order' }
+    ]
+  },
+  rating: {
+    key: 'rating',
+    label: 'Rating Range',
+    icon: Star,
+    type: 'slider',
+    min: 0,
+    max: 10,
+    step: 0.1,
+    description: 'Filter by IMDb/TMDB rating',
+    validation: (value: number[]) => value[0] <= value[1]
+  },
+  runtime: {
+    key: 'runtime',
+    label: 'Runtime (minutes)',
+    icon: Clock,
+    type: 'slider',
+    min: 0,
+    max: 300,
+    step: 5,
+    description: 'Filter by episode/movie length',
+    validation: (value: number[]) => value[0] <= value[1]
+  },
+  year: {
+    key: 'year',
+    label: 'Release Year',
+    icon: Calendar,
+    type: 'select',
+    options: [
+      { value: 'all', label: 'Any Year' },
+      ...Array.from({ length: 30 }, (_, i) => {
+        const year = new Date().getFullYear() - i;
+        return { value: year.toString(), label: year.toString() };
+      })
+    ]
+  },
+  contentType: {
+    key: 'contentType',
+    label: 'Content Type',
+    icon: Sparkles,
+    type: 'select',
+    options: [
+      { value: 'all', label: 'Movies & TV Shows', description: 'All content types' },
+      { value: 'movie', label: 'Movies Only', description: 'Feature films only' },
+      { value: 'tv', label: 'TV Shows Only', description: 'Series and episodes' }
+    ]
+  },
+  hideWatched: {
+    key: 'hideWatched',
+    label: 'Hide Watched',
+    icon: X,
+    type: 'switch',
+    description: 'Hide content you\'ve already watched'
+  },
+  onlyWatchlist: {
+    key: 'onlyWatchlist',
+    label: 'Watchlist Only',
+    icon: Star,
+    type: 'switch',
+    description: 'Show only items in your watchlist'
+  },
+  includeFriends: {
+    key: 'includeFriends',
+    label: 'Friends\' Picks',
+    icon: Users,
+    type: 'switch',
+    description: 'Include recommendations from friends'
+  }
+};
+
+// Reusable filter component renderer with performance optimizations
+interface FilterComponentProps {
+  config: FilterSectionConfig;
+  value: any;
+  onChange: (value: any) => void;
+  className?: string;
+  isLoading?: boolean;
+  error?: string;
+  onRetry?: () => void;
+}
+
+const FilterComponent = React.memo<FilterComponentProps>(({ 
+  config, 
+  value, 
+  onChange, 
+  className, 
+  isLoading = false, 
+  error,
+  onRetry 
+}) => {
+  const IconComponent = config.icon;
+  const inputId = `filter-${config.key}`;
+  const descriptionId = `${inputId}-description`;
+
+  // Show loading skeleton for select components with dynamic data
+  if (isLoading && (config.type === 'select' || config.type === 'multiselect')) {
+    return (
+      <div className={`space-y-2 ${className}`}>
+        <Label className="text-sm font-medium text-slate-300 flex items-center gap-2">
+          <IconComponent className="w-4 h-4" aria-hidden="true" />
+          {config.label}
+        </Label>
+        <FilterSkeleton />
+      </div>
+    );
+  }
+
+  // Show error state for components with loading errors
+  if (error && (config.type === 'select' || config.type === 'multiselect')) {
+    return (
+      <div className={`space-y-2 ${className}`}>
+        <Label className="text-sm font-medium text-slate-300 flex items-center gap-2">
+          <IconComponent className="w-4 h-4" aria-hidden="true" />
+          {config.label}
+        </Label>
+        <FilterError 
+          error={error} 
+          filterName={config.label}
+          onRetry={onRetry}
+        />
+      </div>
+    );
+  }
+
+  switch (config.type) {
+    case 'input':
+      return (
+        <div className={`space-y-2 ${className}`}>
+          <Label 
+            htmlFor={inputId}
+            className="text-sm font-medium text-slate-300 flex items-center gap-2"
+          >
+            <IconComponent className="w-4 h-4" aria-hidden="true" />
+            {config.label}
+          </Label>
+          <div className="relative">
+            <IconComponent 
+              className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" 
+              aria-hidden="true" 
+            />
+            <Input
+              id={inputId}
+              placeholder={config.placeholder}
+              value={value}
+              onChange={(e) => onChange(e.target.value)}
+              className="pl-10 bg-slate-700 border-slate-600 text-white placeholder-slate-400 focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+              aria-describedby={config.description ? descriptionId : undefined}
+              disabled={isLoading}
+            />
+          </div>
+          {config.description && (
+            <p id={descriptionId} className="text-xs text-slate-500">
+              {config.description}
+            </p>
+          )}
+        </div>
+      );
+
+    case 'select':
+      return (
+        <div className={`space-y-2 ${className}`}>
+          <Label 
+            htmlFor={inputId}
+            className="text-sm font-medium text-slate-300 flex items-center gap-2"
+          >
+            <IconComponent className="w-4 h-4" aria-hidden="true" />
+            {config.label}
+          </Label>
+          <Select 
+            value={value} 
+            onValueChange={onChange}
+            disabled={isLoading}
+          >
+            <SelectTrigger 
+              id={inputId}
+              className="bg-slate-700 border-slate-600 text-white focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+              aria-describedby={config.description ? descriptionId : undefined}
+              aria-label={`Select ${config.label.toLowerCase()}`}
+            >
+              <SelectValue placeholder={config.placeholder} />
+            </SelectTrigger>
+            <SelectContent 
+              className="bg-slate-800 border-slate-700 max-h-60"
+              position="popper"
+            >
+              {config.options?.map((option) => (
+                <SelectItem 
+                  key={option.value} 
+                  value={option.value}
+                  className="text-white hover:bg-slate-700 focus:bg-slate-700"
+                >
+                  <div className="flex items-center gap-2">
+                    {typeof option.icon === 'string' ? (
+                      <span aria-hidden="true">{option.icon}</span>
+                    ) : option.icon ? (
+                      <option.icon className="w-4 h-4" aria-hidden="true" />
+                    ) : null}
+                    <span>{option.label}</span>
+                    {option.description && (
+                      <span className="sr-only"> - {option.description}</span>
+                    )}
+                  </div>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {config.description && (
+            <p id={descriptionId} className="text-xs text-slate-500">
+              {config.description}
+            </p>
+          )}
+        </div>
+      );
+
+    case 'slider':
+      const formatValue = (val: number) => {
+        if (config.key === 'rating') return val.toFixed(1);
+        return config.key === 'runtime' ? `${val}min` : val.toString();
+      };
+
+      return (
+        <div className={`space-y-3 ${className}`}>
+          <Label className="text-sm font-medium text-slate-300 flex items-center gap-2">
+            <IconComponent className="w-4 h-4" aria-hidden="true" />
+            {config.label}
+          </Label>
+          <div className="px-2">
+            <Slider
+              value={value}
+              onValueChange={onChange}
+              min={config.min}
+              max={config.max}
+              step={config.step}
+              className="w-full"
+              aria-label={`${config.label} range from ${formatValue(value[0])} to ${formatValue(value[1])}`}
+              disabled={isLoading}
+            />
+            <div className="flex justify-between text-xs text-slate-400 mt-1" role="status" aria-live="polite">
+              <span>
+                {config.key === 'rating' 
+                  ? `${value[0].toFixed(1)}+` 
+                  : `${value[0]}${config.key === 'runtime' ? 'min' : ''}`
+                }
+              </span>
+              <span>
+                {config.key === 'rating' 
+                  ? `up to ${value[1].toFixed(1)}` 
+                  : `${value[1]}${config.key === 'runtime' ? 'min+' : ''}`
+                }
+              </span>
+            </div>
+          </div>
+          {config.description && (
+            <p id={descriptionId} className="text-xs text-slate-500">
+              {config.description}
+            </p>
+          )}
+        </div>
+      );
+
+    case 'switch':
+      return (
+        <div className={`flex items-center space-x-2 ${className}`}>
+          <Switch
+            id={inputId}
+            checked={value}
+            onCheckedChange={onChange}
+            className="data-[state=checked]:bg-purple-600 focus:ring-2 focus:ring-purple-500"
+            aria-describedby={config.description ? descriptionId : undefined}
+            disabled={isLoading}
+          />
+          <Label 
+            htmlFor={inputId} 
+            className="text-sm text-slate-300 flex items-center gap-2 cursor-pointer"
+          >
+            <IconComponent className="w-4 h-4" aria-hidden="true" />
+            {config.label}
+            <span className="sr-only">
+              {value ? 'enabled' : 'disabled'}
+            </span>
+          </Label>
+          {config.description && (
+            <span id={descriptionId} className="text-xs text-slate-500 ml-2">
+              ({config.description})
+            </span>
+          )}
+        </div>
+      );
+
+    default:
+      return null;
+  }
+});
+
+FilterComponent.displayName = 'FilterComponent';
+
+// Custom hook for filter state management (can be extracted to separate file)
+export const useFilterManagement = (
+  filters: FilterState,
+  onFiltersChange: (filters: FilterState) => void
+) => {
+  const { toast } = useToast();
+
+  // Optimized update function with reduced object recreation
+  const updateFilter = useCallback(<K extends keyof FilterState>(
+    key: K,
+    value: FilterState[K]
+  ) => {
+    // Only update if value actually changed
+    if (filters[key] === value) return;
+    
+    onFiltersChange({
+      ...filters,
+      [key]: value
+    });
+  }, [filters, onFiltersChange]);
+
+  // Filter handlers for better organization
+  const filterHandlers = useMemo(() => ({
+    search: (query: string) => updateFilter('searchQuery', query),
+    genre: (genre: string) => updateFilter('genre', genre),
+    platform: (platform: string) => updateFilter('platform', platform),
+    contentType: (type: ContentType) => updateFilter('contentType', type),
+    year: (year: string) => updateFilter('year', year),
+    rating: (rating: RatingRange) => updateFilter('rating', rating),
+    runtime: (runtime: RuntimeRange) => updateFilter('runtime', runtime),
+    sortBy: (sort: SortOption) => updateFilter('sortBy', sort),
+    status: (status: ContentStatus) => updateFilter('status', status),
+    hideWatched: (hide: boolean) => updateFilter('hideWatched', hide),
+    onlyWatchlist: (only: boolean) => updateFilter('onlyWatchlist', only),
+    includeFriends: (include: boolean) => updateFilter('includeFriends', include),
+  }), [updateFilter]);
+
+  // Reset all filters to defaults
+  const resetFilters = useCallback(() => {
+    const defaultFilters: FilterState = {
+      genre: '',
+      year: '',
+      rating: [0, 10],
+      runtime: [0, 300],
+      platform: '',
+      status: 'all',
+      sortBy: 'newest',
+      hideWatched: false,
+      onlyWatchlist: false,
+      includeFriends: false,
+      searchQuery: '',
+      contentType: 'all',
+    };
+    onFiltersChange(defaultFilters);
+    toast({
+      title: "Filters reset",
+      description: "All filters have been cleared",
+    });
+  }, [onFiltersChange, toast]);
+
+  return {
+    filterHandlers,
+    resetFilters,
+    updateFilter
+  };
+};
+
+export const EnhancedFilterSystem = React.memo<EnhancedFilterSystemProps>(({
+  filters,
   onFiltersChange,
-  onApply,
-  className = "",
-  showFilterSummary = true,
-  compactMode = false,
-  activeTab,
-  onActiveTabChange,
-  onFilterSummaryRender
-}: Props) {
-  const [localFilters, setLocalFilters] = useLocalStorage<FilterValues>(persistKey, {
-    genres: [],
-    platforms: [],
-    countries: [],
-    sports: [],
-    awardSeason: [],
-    trending: []
-  });
+  onApplyFilters,
+  onResetFilters,
+  isLoading = false,
+  resultCount,
+  className = '',
+  enableDynamicData = false
+}) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const { toast } = useToast();
 
-  const [isExpanded, setIsExpanded] = useState(defaultExpanded);
-  const [currentTab, setCurrentTab] = useState(activeTab || 'genres'); // Default to genres tab
-
-  // Collapsible sections state for non-compact mode
-  const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({
-    genres: false,
-    platforms: false,
-    countries: false,
-    sports: false,
-    awardSeason: false,
-    trending: false
-  });
-
-  const toggleSection = (sectionKey: string) => {
-    setCollapsedSections(prev => ({
-      ...prev,
-      [sectionKey]: !prev[sectionKey]
-    }));
-  };
-
-  const toggle = (key: keyof FilterValues, value: string) => {
-    setLocalFilters((prev: FilterValues) => {
-      const next = prev[key].includes(value)
-        ? prev[key].filter((v: string) => v !== value)
-        : [...prev[key], value];
-      return { ...prev, [key]: next };
-    });
-  };
-
-  const clearAllFilters = () => {
-    setLocalFilters({
-      genres: [],
-      platforms: [],
-      countries: [],
-      sports: [],
-      awardSeason: [],
-      trending: []
-    });
-  };
-
-  // Optimized parallel queries using useQueries
-  const filterQueries = useQueries({
+  // React Query integration for dynamic filter data
+  const dynamicDataQueries = useQueries({
     queries: [
       {
-        queryKey: ["genres"],
-        queryFn: async () => {
-          const res = await fetch("/api/filters/genres");
-          if (!res.ok) throw new Error('Failed to fetch genres');
-          return res.json();
+        queryKey: ['filter-genres'],
+        queryFn: async (): Promise<Genre[]> => {
+          const response = await fetch('/api/content/genres');
+          if (!response.ok) {
+            throw new Error(`Failed to fetch genres: ${response.status} ${response.statusText}`);
+          }
+          return response.json();
         },
+        enabled: enableDynamicData,
+        staleTime: 1000 * 60 * 30, // 30 minutes
+        retry: (failureCount, error) => {
+          // Don't retry on 4xx errors (likely permanent)
+          if (error instanceof Error && error.message.includes('4')) {
+            return false;
+          }
+          return failureCount < 3;
+        },
+        retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+
       },
       {
-        queryKey: ["platforms"],
-        queryFn: async () => {
-          const res = await fetch("/api/filters/platforms");
-          if (!res.ok) throw new Error('Failed to fetch platforms');
-          return res.json();
+        queryKey: ['filter-platforms'],
+        queryFn: async (): Promise<Platform[]> => {
+          const response = await fetch('/api/content/platforms');
+          if (!response.ok) {
+            throw new Error(`Failed to fetch platforms: ${response.status} ${response.statusText}`);
+          }
+          return response.json();
         },
-      },
-      {
-        queryKey: ["countries"],
-        queryFn: async () => {
-          const res = await fetch("/api/filters/countries");
-          if (!res.ok) throw new Error('Failed to fetch countries');
-          return res.json();
+        enabled: enableDynamicData,
+        staleTime: 1000 * 60 * 60, // 1 hour
+        retry: (failureCount, error) => {
+          // Don't retry on 4xx errors (likely permanent)
+          if (error instanceof Error && error.message.includes('4')) {
+            return false;
+          }
+          return failureCount < 3;
         },
-      },
-      {
-        queryKey: ["sports"],
-        queryFn: async () => {
-          const res = await fetch("/api/filters/sports");
-          if (!res.ok) throw new Error('Failed to fetch sports');
-          return res.json();
-        },
+        retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+
       }
     ]
   });
 
-  // Extract data and loading states from parallel queries
-  const [genreQuery, platformQuery, countryQuery, sportQuery] = filterQueries;
-  const genres = genreQuery.data;
-  const platforms = platformQuery.data;
-  const countries = countryQuery.data;
-  const sports = sportQuery.data;
+  const [genresQuery, platformsQuery] = dynamicDataQueries;
+  const genresData = genresQuery.data;
+  const platformsData = platformsQuery.data;
+  const isLoadingData = genresQuery.isLoading || platformsQuery.isLoading;
 
-  const genresLoading = genreQuery.isLoading;
-  const platformsLoading = platformQuery.isLoading;
-  const countriesLoading = countryQuery.isLoading;
-  const sportsLoading = sportQuery.isLoading;
+  // Retry functions for failed queries
+  const retryGenres = useCallback(() => {
+    genresQuery.refetch();
+  }, [genresQuery]);
 
-  const isLoading = genresLoading || platformsLoading || countriesLoading || sportsLoading;
+  const retryPlatforms = useCallback(() => {
+    platformsQuery.refetch();
+  }, [platformsQuery]);
 
-  // Calculate active filter count
-  const activeFilterCount = [
-    ...localFilters.genres,
-    ...localFilters.platforms,
-    ...localFilters.countries,
-    ...localFilters.sports,
-    ...localFilters.awardSeason,
-    ...localFilters.trending
-  ].length;
-
-  useEffect(() => {
-    if (onFiltersChange) {
-      onFiltersChange(localFilters);
+  // Handle query errors with useEffect
+  React.useEffect(() => {
+    if (genresQuery.error) {
+      toast({
+        title: "Failed to load genres",
+        description: "Using default genre list",
+        variant: "destructive",
+      });
     }
-  }, [localFilters, onFiltersChange]);
+  }, [genresQuery.error, toast]);
 
-  // Sync active tab with parent component
-  useEffect(() => {
-    if (activeTab && activeTab !== currentTab) {
-      setCurrentTab(activeTab);
+  React.useEffect(() => {
+    if (platformsQuery.error) {
+      toast({
+        title: "Failed to load platforms", 
+        description: "Using default platform list",
+        variant: "destructive",
+      });
     }
-  }, [activeTab]);
+  }, [platformsQuery.error, toast]);
 
-  useEffect(() => {
-    if (onActiveTabChange && currentTab !== activeTab) {
-      onActiveTabChange(currentTab);
+  // Optimized update function with reduced object recreation
+  const updateFilter = useCallback(<K extends keyof FilterState>(
+    key: K,
+    value: FilterState[K]
+  ) => {
+    // Only update if value actually changed
+    if (filters[key] === value) return;
+    
+    onFiltersChange({
+      ...filters,
+      [key]: value
+    });
+  }, [filters, onFiltersChange]);
+
+  // Memoized filter handlers for different types
+  const filterHandlers = useMemo(() => ({
+    search: (value: string) => updateFilter('searchQuery', value),
+    genre: (value: string) => updateFilter('genre', value),
+    platform: (value: string) => updateFilter('platform', value),
+    sortBy: (value: string) => updateFilter('sortBy', value as SortOption),
+    rating: (value: number[]) => updateFilter('rating', value as RatingRange),
+    runtime: (value: number[]) => updateFilter('runtime', value as RuntimeRange),
+    year: (value: string) => updateFilter('year', value),
+    contentType: (value: 'all' | 'movie' | 'tv') => updateFilter('contentType', value),
+    hideWatched: (value: boolean) => updateFilter('hideWatched', value),
+    onlyWatchlist: (value: boolean) => updateFilter('onlyWatchlist', value),
+    includeFriends: (value: boolean) => updateFilter('includeFriends', value)
+  }), [updateFilter]);
+
+  // Dynamic configuration that merges static config with fetched data
+  const dynamicConfig = useMemo(() => {
+    const config = { ...FILTER_CONFIG };
+    
+    // Update genre options with fetched data
+    if (genresData && Array.isArray(genresData) && genresData.length > 0) {
+      config.genre = {
+        ...config.genre,
+        options: [
+          { value: 'all', label: 'All Genres', icon: '🎭' },
+          ...(genresData as Genre[]).map((genre: Genre) => ({
+            value: genre.id.toString(),
+            label: genre.name,
+            icon: getGenreIcon(genre.name)
+          }))
+        ]
+      };
     }
-  }, [currentTab, onActiveTabChange]);
+    
+    // Update platform options with fetched data
+    if (platformsData && Array.isArray(platformsData) && platformsData.length > 0) {
+      config.platform = {
+        ...config.platform,
+        options: [
+          { value: 'all', label: 'All Platforms', icon: '📺' },
+          ...(platformsData as Platform[]).map((platform: Platform) => ({
+            value: platform.id,
+            label: platform.name,
+            icon: getPlatformIcon(platform.name)
+          }))
+        ]
+      };
+    }
+    
+    return config;
+  }, [genresData, platformsData]);
 
-  // Generate and pass filter summary to parent
-  useEffect(() => {
-    if (onFilterSummaryRender) {
-      if (activeFilterCount === 0) {
-        onFilterSummaryRender(null);
-      } else {
-        const summary = (
-          <div className="flex items-center gap-2 text-sm text-gray-300 overflow-x-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800">
-            <span className="text-gray-500 whitespace-nowrap">Active:</span>
-            {localFilters.genres.length > 0 && (
-              <div className="bg-purple-600/20 text-purple-300 px-2 py-1 rounded-full text-xs whitespace-nowrap min-w-0 flex-shrink-0">
-                {localFilters.genres.join(' • ')}
-              </div>
-            )}
-            {localFilters.platforms.length > 0 && (
-              <div className="bg-blue-600/20 text-blue-300 px-2 py-1 rounded-full text-xs whitespace-nowrap min-w-0 flex-shrink-0">
-                {localFilters.platforms.join(' • ')}
-              </div>
-            )}
-            {localFilters.countries.length > 0 && (
-              <div className="bg-green-600/20 text-green-300 px-2 py-1 rounded-full text-xs whitespace-nowrap min-w-0 flex-shrink-0">
-                {localFilters.countries.join(' • ')}
-              </div>
-            )}
-            {localFilters.sports.length > 0 && (
-              <div className="bg-orange-600/20 text-orange-300 px-2 py-1 rounded-full text-xs whitespace-nowrap min-w-0 flex-shrink-0">
-                {localFilters.sports.join(' • ')}
-              </div>
-            )}
-            {localFilters.awardSeason.length > 0 && (
-              <div className="bg-yellow-600/20 text-yellow-300 px-2 py-1 rounded-full text-xs whitespace-nowrap min-w-0 flex-shrink-0">
-                🏆 {localFilters.awardSeason.join(' • ')}
-              </div>
-            )}
-            {localFilters.trending.length > 0 && (
-              <div className="bg-red-600/20 text-red-300 px-2 py-1 rounded-full text-xs whitespace-nowrap min-w-0 flex-shrink-0">
-                🔥 {localFilters.trending.join(' • ')}
-              </div>
-            )}
-            <span className="text-gray-500 text-xs whitespace-nowrap ml-2">
-              ({activeFilterCount} filter{activeFilterCount !== 1 ? 's' : ''})
-            </span>
-          </div>
-        );
-        onFilterSummaryRender(summary);
+  // Helper functions for icons
+  const getGenreIcon = (genreName: string): string => {
+    const iconMap: Record<string, string> = {
+      'Action': '💥', 'Adventure': '🗺️', 'Animation': '🎨', 'Comedy': '😂',
+      'Crime': '🔍', 'Documentary': '📚', 'Drama': '🎭', 'Family': '👨‍👩‍👧‍👦',
+      'Fantasy': '🧙‍♂️', 'Horror': '👻', 'Music': '🎵', 'Mystery': '🕵️',
+      'Romance': '💕', 'Science Fiction': '🚀', 'Thriller': '😱', 'War': '⚔️', 'Western': '🤠'
+    };
+    return iconMap[genreName] || '🎬';
+  };
+
+  const getPlatformIcon = (platformName: string): string => {
+    const iconMap: Record<string, string> = {
+      'Netflix': '🔴', 'Disney+': '🏰', 'HBO Max': '🎬', 'Prime Video': '📦',
+      'Apple TV+': '🍎', 'Hulu': '🟢', 'Paramount+': '⛰️', 'Peacock': '🦚'
+    };
+    return iconMap[platformName] || '📺';
+  };
+
+  // Configuration-driven active filter count calculation
+  const getActiveFilterCount = useCallback(() => {
+    let count = 0;
+    
+    Object.entries(dynamicConfig).forEach(([key, config]) => {
+      const filterKey = key as keyof FilterState;
+      const value = filters[filterKey];
+      
+      switch (config.type) {
+        case 'select':
+          if (value !== 'all' && value !== '') count++;
+          break;
+        case 'slider':
+          const sliderValue = value as number[];
+          if (config.key === 'rating' && (sliderValue[0] > 0 || sliderValue[1] < 10)) count++;
+          if (config.key === 'runtime' && (sliderValue[0] > 0 || sliderValue[1] < 300)) count++;
+          break;
+        case 'switch':
+          if (value === true) count++;
+          break;
+        case 'input':
+          if (value && typeof value === 'string' && value.trim()) count++;
+          break;
+      }
+    });
+    
+    return count;
+  }, [filters, dynamicConfig]);
+
+  const activeFilterCount = getActiveFilterCount();
+
+  // Keyboard navigation handler
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (e.key === 'Escape') {
+      // Close expanded filters on Escape
+      if (isExpanded) {
+        setIsExpanded(false);
+        e.preventDefault();
       }
     }
-  }, [localFilters, activeFilterCount, onFilterSummaryRender, clearAllFilters]);
+  }, [isExpanded]);
 
-  // Loading state
-  if (isLoading) {
+  // Show global loading state while critical data is loading
+  if (genresQuery.isLoading && platformsQuery.isLoading && enableDynamicData) {
+    return <FilterSystemLoading className={className} />;
+  }
+
+  // Show critical error state if both queries failed
+  const hasCriticalError = genresQuery.error && platformsQuery.error && enableDynamicData;
+  if (hasCriticalError) {
     return (
-      <Card className={`w-full ${className}`}>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Loader2 className="h-4 w-4 animate-spin" />
-            Loading filters...
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {/* Loading skeletons */}
-          {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="space-y-3">
-              <Skeleton className="h-4 w-20" />
-              <div className="flex flex-wrap gap-2">
-                {[1, 2, 3, 4, 5].map((j) => (
-                  <Skeleton key={j} className="h-8 w-16" />
-                ))}
-              </div>
-            </div>
-          ))}
-        </CardContent>
-      </Card>
+      <FilterSystemError 
+        className={className}
+        onRetryAll={() => {
+          retryGenres();
+          retryPlatforms();
+        }}
+      />
     );
   }
 
-  const FilterSection = ({ title, items, filterKey }: {
-    title: string;
-    items: any[];
-    filterKey: keyof FilterValues;
-  }) => {
-    const isCollapsed = collapsedSections[filterKey];
-
-    return (
-      <div className={compactMode ? "space-y-2" : "space-y-3"}>
+  return (
+    <Card 
+      className={`w-full bg-slate-800/50 border-slate-700 ${className}`}
+      role="region"
+      aria-label="Content filters"
+      onKeyDown={handleKeyDown}
+    >
+      <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            {!compactMode && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => toggleSection(filterKey)}
-                className="h-6 w-6 p-0 hover:bg-gray-700"
-              >
-                {isCollapsed ? (
-                  <ChevronRight className="h-3 w-3" />
-                ) : (
-                  <ChevronDown className="h-3 w-3" />
-                )}
-              </Button>
-            )}
-            <h3 className={`font-medium ${compactMode ? "text-xs" : "text-sm"} flex items-center gap-1`}>
-              {title}
-              {localFilters[filterKey].length === 0 && (
-                <span className="text-xs text-gray-500 font-normal">(multi-select)</span>
-              )}
-            </h3>
-          </div>
-          {localFilters[filterKey].length > 0 && (
-            <Badge 
-              variant="secondary" 
-              className={`text-xs ${
-                filterKey === 'awardSeason' ? 'bg-yellow-500/20 text-yellow-300 border-yellow-500/30' :
-                filterKey === 'trending' ? 'bg-red-500/20 text-red-300 border-red-500/30' :
-                'bg-blue-500/20 text-blue-300 border-blue-500/30'
-              }`}
-            >
-              {localFilters[filterKey].length} selected
-            </Badge>
-          )}
-        </div>
-        {(!isCollapsed || compactMode) && (
-          <div className="flex flex-wrap gap-2 overflow-x-auto snap-x snap-mandatory scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800 pb-1 md:overflow-visible">
-            {items?.map((item: any, index: number) => (
-              <Button
-                key={item.id || item.name || `${filterKey}-${index}`}
-                size={compactMode ? "sm" : "sm"}
-                onClick={() => toggle(filterKey, item.name)}
-                variant={localFilters[filterKey].includes(item.name) ? "default" : "outline"}
-                className={`${compactMode ? "text-xs h-7" : "h-8"} min-w-[48px] snap-start flex-shrink-0 touch-manipulation select-none
-                  ${filterKey === 'awardSeason' && localFilters[filterKey].includes(item.name) ? 'bg-gradient-to-r from-yellow-500 to-amber-500 text-white border-0 shadow-lg' : ''}
-                  ${filterKey === 'trending' && localFilters[filterKey].includes(item.name) ? 'bg-gradient-to-r from-red-500 to-orange-500 text-white border-0 shadow-lg' : ''}
-                  ${filterKey === 'trending' && item.name === 'hot' ? 'animate-pulse' : ''}
-                  ${filterKey === 'trending' && item.name === 'viral' ? 'animate-bounce' : ''}
-                `}
-              >
-                {item.displayName || item.name}
-              </Button>
-            ))}
-          </div>
-        )}
-      </div>
-    );
-  };
-
-  return (
-    <Card className={`w-full ${compactMode ? 'p-1 rounded-lg shadow border border-gray-700 bg-gray-850' : className}`}>
-      {/* Award Season Banner */}
-      {isAwardSeason(new Date()) && (
-        <div className={`${AWARD_GRADIENTS.winner} px-4 py-2 border-b border-yellow-500/20`}>
-          <div className="flex items-center justify-center gap-2 text-center">
-            <Trophy className="h-4 w-4 text-yellow-200" />
-            <span className="text-sm font-medium text-yellow-100">
-              🏆 Award Season Special - Filter by winners & nominees
-            </span>
-            <Award className="h-4 w-4 text-yellow-200" />
-          </div>
-        </div>
-      )}
-      <CardHeader className={compactMode ? "pb-2 px-2" : ""}>
-        <div className="flex items-center justify-between">
-          <CardTitle className={`flex items-center gap-2 ${compactMode ? "text-sm font-semibold" : ""}`}>
-            <Filter className="h-3 w-3" />
-            <span className={compactMode ? "text-xs" : ""}>Filter Content</span>
+            <Filter className="w-5 h-5 text-slate-400" aria-hidden="true" />
+            <CardTitle className="text-lg font-semibold text-white">
+              Filters
+            </CardTitle>
             {activeFilterCount > 0 && (
-              <Badge className="ml-2 bg-blue-600 text-white text-xs px-2 py-0.5">
+              <Badge 
+                variant="secondary" 
+                className="bg-purple-600 text-white"
+                aria-label={`${activeFilterCount} active filters`}
+              >
                 {activeFilterCount}
               </Badge>
             )}
-          </CardTitle>
-          {compactMode && (
+          </div>
+          <div className="flex items-center gap-2">
+            {resultCount !== undefined && (
+              <span 
+                className="text-sm text-slate-400"
+                role="status"
+                aria-live="polite"
+                aria-label={`${resultCount.toLocaleString()} results found`}
+              >
+                {resultCount.toLocaleString()} results
+              </span>
+            )}
             <Button
               variant="ghost"
               size="sm"
               onClick={() => setIsExpanded(!isExpanded)}
-              className="h-7 w-7 p-0"
+              className="text-slate-400 hover:text-white focus:ring-2 focus:ring-purple-500"
+              aria-expanded={isExpanded}
+              aria-controls="expanded-filters"
+              aria-label={isExpanded ? 'Hide advanced filters' : 'Show advanced filters'}
             >
-              {isExpanded ? (
-                <ChevronUp className="h-3 w-3" />
-              ) : (
-                <ChevronDown className="h-3 w-3" />
-              )}
+              {isExpanded ? 'Less' : 'More'}
             </Button>
-          )}
+          </div>
         </div>
-        {/* Filter Summary */}
-        {showFilterSummary && activeFilterCount > 0 && (
-          <div className="text-xs text-muted-foreground mt-1">
-            <div className="flex items-center justify-between">
-              <span className="flex items-center gap-1">
-                Active Filters: {activeFilterCount} selected
-                {activeFilterCount >= 5 && <Flame className="h-3 w-3 text-orange-400 animate-pulse" />}
-                {activeFilterCount >= 10 && <Star className="h-3 w-3 text-yellow-400 animate-pulse" />}
-              </span>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={clearAllFilters}
-                className="text-xs text-red-400 hover:text-red-500 h-5 px-2 hover:bg-red-500/10 transition-colors"
-              >
-                Clear All
-              </Button>
-            </div>
-            <div className="flex flex-wrap gap-1 mt-1">
-              {localFilters.genres.map(genre => (
-                <Badge key={genre} variant="outline" className="text-2xs px-1 py-0.5">
-                  {genre}
-                </Badge>
-              ))}
-              {localFilters.platforms.map(platform => (
-                <Badge key={platform} variant="outline" className="text-2xs px-1 py-0.5">
-                  {platform}
-                </Badge>
-              ))}
-              {localFilters.countries.map(country => (
-                <Badge key={country} variant="outline" className="text-2xs px-1 py-0.5">
-                  {country}
-                </Badge>
-              ))}
-              {localFilters.sports.map(sport => (
-                <Badge key={sport} variant="outline" className="text-2xs px-1 py-0.5">
-                  {sport}
-                </Badge>
-              ))}
-              {localFilters.awardSeason.map(award => (
-                <Badge key={award} variant="outline" className="text-2xs px-1 py-0.5 bg-yellow-500/10 text-yellow-400 border-yellow-500/30">
-                  🏆 {award}
-                </Badge>
-              ))}
-              {localFilters.trending.map(trend => (
-                <Badge key={trend} variant="outline" className="text-2xs px-1 py-0.5 bg-red-500/10 text-red-400 border-red-500/30">
-                  🔥 {trend}
-                </Badge>
-              ))}
-            </div>
+      </CardHeader>
+
+      <CardContent className="space-y-4">
+        {/* Quick Filters Row - Configuration Driven with Loading States */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          {/* Search Filter */}
+          <div className="col-span-2 md:col-span-1">
+            <FilterComponent
+              config={dynamicConfig.searchQuery}
+              value={filters.searchQuery}
+              onChange={filterHandlers.search}
+            />
+          </div>
+
+          {/* Genre Filter with Loading */}
+          <div className="relative">
+            {isLoadingData && (
+              <div className="absolute top-0 right-2 z-10 mt-2">
+                <RefreshCw className="w-4 h-4 animate-spin text-slate-400" />
+              </div>
+            )}
+            <FilterComponent
+              config={dynamicConfig.genre}
+              value={filters.genre}
+              onChange={filterHandlers.genre}
+              isLoading={genresQuery.isLoading}
+              error={genresQuery.error?.message}
+              onRetry={retryGenres}
+            />
+          </div>
+
+          {/* Platform Filter with Loading */}
+          <div className="relative">
+            {isLoadingData && (
+              <div className="absolute top-0 right-2 z-10 mt-2">
+                <RefreshCw className="w-4 h-4 animate-spin text-slate-400" />
+              </div>
+            )}
+            <FilterComponent
+              config={dynamicConfig.platform}
+              value={filters.platform}
+              onChange={filterHandlers.platform}
+              isLoading={platformsQuery.isLoading}
+              error={platformsQuery.error?.message}
+              onRetry={retryPlatforms}
+            />
+          </div>
+
+          {/* Sort Filter */}
+          <FilterComponent
+            config={dynamicConfig.sortBy}
+            value={filters.sortBy}
+            onChange={filterHandlers.sortBy}
+          />
+        </div>
+
+        {/* Loading indicator for dynamic data */}
+        {isLoadingData && (
+          <div className="flex items-center gap-2 text-sm text-slate-400">
+            <RefreshCw className="w-4 h-4 animate-spin" />
+            Loading filter options...
           </div>
         )}
-      </CardHeader>
-      {(!compactMode || isExpanded) && (
-        <CardContent className={`space-y-3 ${compactMode ? "pt-0 px-2 pb-2" : ""}`}>
 
-          {/* Filter Tabs UI - Only show if compact mode */}
-          {compactMode && (
-            <div className="flex gap-1 mb-3 overflow-x-auto snap-x snap-mandatory scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800 pb-1">
-              {[
-                { key: "genres", label: "Genres" },
-                { key: "platforms", label: "Platforms" },
-                { key: "countries", label: "Countries" },
-                { key: "sports", label: "Sports" },
-                ...(isAwardSeason(new Date()) ? [{ key: "awardSeason", label: "🏆 Awards" }] : []),
-                { key: "trending", label: "🔥 Trending" }
-              ].map((tab) => (
-                <Button
-                  key={tab.key}
-                  variant={currentTab === tab.key ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setCurrentTab(tab.key)}
-                  className="text-xs h-6 px-2 snap-start flex-shrink-0 min-w-[60px] touch-manipulation"
-                >
-                  {tab.label}
-                </Button>
-              ))}
-            </div>
-          )}
+        {/* Quick Toggle Switches - Configuration Driven */}
+        <div className="flex flex-wrap gap-6">
+          <FilterComponent
+            config={dynamicConfig.hideWatched}
+            value={filters.hideWatched}
+            onChange={filterHandlers.hideWatched}
+          />
 
-          {/* Render all sections in non-compact mode, or just current tab in compact mode */}
-          {compactMode ? (
-            // Tabbed view for compact mode
-            <>
-              {currentTab === 'genres' && (
-                genresLoading ? (
-                  <div className="space-y-2">
-                    <Skeleton className="h-4 w-16" />
-                    <div className="flex gap-2">
-                      {[1, 2, 3].map(i => <Skeleton key={i} className="h-6 w-12" />)}
-                    </div>
-                  </div>
-                ) : (
-                  <FilterSection title="Genres" items={genres} filterKey="genres" />
-                )
-              )}
-              {currentTab === 'platforms' && (
-                platformsLoading ? (
-                  <div className="space-y-2">
-                    <Skeleton className="h-4 w-20" />
-                    <div className="flex gap-2">
-                      {[1, 2, 3].map(i => <Skeleton key={i} className="h-6 w-16" />)}
-                    </div>
-                  </div>
-                ) : (
-                  <FilterSection title="Platforms" items={platforms} filterKey="platforms" />
-                )
-              )}
-              {currentTab === 'countries' && (
-                countriesLoading ? (
-                  <div className="space-y-2">
-                    <Skeleton className="h-4 w-20" />
-                    <div className="flex gap-2">
-                      {[1, 2, 3].map(i => <Skeleton key={i} className="h-6 w-12" />)}
-                    </div>
-                  </div>
-                ) : (
-                  <FilterSection title="Countries" items={countries} filterKey="countries" />
-                )
-              )}
-              {currentTab === 'sports' && (
-                sportsLoading ? (
-                  <div className="space-y-2">
-                    <Skeleton className="h-4 w-16" />
-                    <div className="flex gap-2">
-                      {[1, 2, 3].map(i => <Skeleton key={i} className="h-6 w-14" />)}
-                    </div>
-                  </div>
-                ) : (
-                  <FilterSection title="Sports" items={sports} filterKey="sports" />
-                )
-              )}
-              {currentTab === 'awardSeason' && (
-                <FilterSection 
-                  title="🏆 Award Season" 
-                  items={[
-                    { name: "winners", displayName: "🏆 Winners" },
-                    { name: "nominees", displayName: "🎯 Nominees" },
-                    { name: "contenders", displayName: "⭐ Contenders" }
-                  ]} 
-                  filterKey="awardSeason" 
-                />
-              )}
-              {currentTab === 'trending' && (
-                <FilterSection 
-                  title="🔥 Trending" 
-                  items={[
-                    { name: "hot", displayName: "🔥 Hot Now" },
-                    { name: "rising", displayName: "📈 Rising" },
-                    { name: "viral", displayName: "💥 Viral" },
-                    { name: "popular", displayName: "⭐ Popular" }
-                  ]} 
-                  filterKey="trending" 
-                />
-              )}
-            </>
-          ) : (
-            // Full view for non-compact mode
-            <>
-              {genresLoading ? (
-                <div className="space-y-3">
-                  <Skeleton className="h-4 w-20" />
-                  <div className="flex flex-wrap gap-2">
-                    {[1, 2, 3, 4, 5].map(i => <Skeleton key={i} className="h-8 w-16" />)}
-                  </div>
-                </div>
-              ) : (
-                <FilterSection title="Genres" items={genres} filterKey="genres" />
-              )}
+          <FilterComponent
+            config={dynamicConfig.onlyWatchlist}
+            value={filters.onlyWatchlist}
+            onChange={filterHandlers.onlyWatchlist}
+          />
 
-              {platformsLoading ? (
-                <div className="space-y-3">
-                  <Skeleton className="h-4 w-24" />
-                  <div className="flex flex-wrap gap-2">
-                    {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-8 w-20" />)}
-                  </div>
-                </div>
-              ) : (
-                <FilterSection title="Platforms" items={platforms} filterKey="platforms" />
-              )}
+          <FilterComponent
+            config={dynamicConfig.includeFriends}
+            value={filters.includeFriends}
+            onChange={filterHandlers.includeFriends}
+          />
+        </div>
 
-              {countriesLoading ? (
-                <div className="space-y-3">
-                  <Skeleton className="h-4 w-24" />
-                  <div className="flex flex-wrap gap-2">
-                    {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-8 w-16" />)}
-                  </div>
-                </div>
-              ) : (
-                <FilterSection title="Countries" items={countries} filterKey="countries" />
-              )}
-
-              {sportsLoading ? (
-                <div className="space-y-3">
-                  <Skeleton className="h-4 w-20" />
-                  <div className="flex flex-wrap gap-2">
-                    {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-8 w-18" />)}
-                  </div>
-                </div>
-              ) : (
-                <FilterSection title="Sports" items={sports} filterKey="sports" />
-              )}
-
-              {/* Award Season Section - Only show during award season */}
-              {isAwardSeason(new Date()) && (
-                <FilterSection 
-                  title="🏆 Award Season" 
-                  items={[
-                    { name: "winners", displayName: "🏆 Winners" },
-                    { name: "nominees", displayName: "🎯 Nominees" },
-                    { name: "contenders", displayName: "⭐ Contenders" }
-                  ]} 
-                  filterKey="awardSeason" 
-                />
-              )}
-
-              {/* Trending Section */}
-              <FilterSection 
-                title="🔥 Trending" 
-                items={[
-                  { name: "hot", displayName: "🔥 Hot Now" },
-                  { name: "rising", displayName: "📈 Rising" },
-                  { name: "viral", displayName: "💥 Viral" },
-                  { name: "popular", displayName: "⭐ Popular" }
-                ]} 
-                filterKey="trending" 
+        {/* Expanded Filters - Configuration Driven */}
+        {isExpanded && (
+          <>
+            <Separator className="bg-slate-700" />
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Rating Range */}
+              <FilterComponent
+                config={dynamicConfig.rating}
+                value={filters.rating}
+                onChange={filterHandlers.rating}
               />
-            </>
-          )}
 
-          {/* Apply Button */}
-          {onApply && (
-            <div className="pt-2 border-t flex gap-2">
-              <Button
-                onClick={() => onApply(localFilters)}
-                className="flex-1 bg-teal-600 hover:bg-teal-700 text-xs py-1 min-h-[44px] touch-manipulation"
-                disabled={activeFilterCount === 0}
-              >
-                Apply {activeFilterCount > 0 ? `${activeFilterCount} ` : ""}Filters
-              </Button>
-              {activeFilterCount > 0 && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={clearAllFilters}
-                  className="text-xs text-red-400 hover:text-red-500 px-3 min-h-[44px] min-w-[60px] touch-manipulation"
-                >
-                  Clear
-                </Button>
-              )}
+              {/* Runtime Range */}
+              <FilterComponent
+                config={dynamicConfig.runtime}
+                value={filters.runtime}
+                onChange={filterHandlers.runtime}
+              />
+
+              {/* Release Year */}
+              <FilterComponent
+                config={dynamicConfig.year}
+                value={filters.year}
+                onChange={filterHandlers.year}
+              />
+
+              {/* Content Type */}
+              <FilterComponent
+                config={dynamicConfig.contentType}
+                value={filters.contentType}
+                onChange={filterHandlers.contentType}
+              />
             </div>
+          </>
+        )}
+
+        {/* Action Buttons */}
+        <div className="flex items-center gap-3 pt-2" role="group" aria-label="Filter actions">
+          <Button
+            onClick={onApplyFilters}
+            disabled={isLoading || isLoadingData}
+            className="flex-1 bg-purple-600 hover:bg-purple-700 text-white focus:ring-2 focus:ring-purple-500 disabled:opacity-50"
+            aria-describedby={activeFilterCount > 0 ? "active-filters-status" : undefined}
+          >
+            {isLoading ? (
+              <>
+                <div 
+                  className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" 
+                  aria-hidden="true"
+                />
+                <span>Filtering...</span>
+                <span className="sr-only">Please wait while filters are being applied</span>
+              </>
+            ) : (
+              <>
+                <Filter className="w-4 h-4 mr-2" aria-hidden="true" />
+                Apply Filters
+              </>
+            )}
+          </Button>
+          
+          {activeFilterCount > 0 && (
+            <Button
+              variant="outline"
+              onClick={onResetFilters}
+              className="border-slate-600 text-slate-300 hover:bg-slate-700 hover:text-white focus:ring-2 focus:ring-purple-500"
+              aria-label={`Reset all ${activeFilterCount} active filters`}
+            >
+              <X className="w-4 h-4 mr-2" aria-hidden="true" />
+              Reset
+            </Button>
           )}
-        </CardContent>
-      )}
+          
+          {/* Screen reader status for active filters */}
+          {activeFilterCount > 0 && (
+            <span id="active-filters-status" className="sr-only">
+              {activeFilterCount} filter{activeFilterCount === 1 ? '' : 's'} currently active
+            </span>
+          )}
+        </div>
+      </CardContent>
     </Card>
   );
-}
+});
+
+EnhancedFilterSystem.displayName = 'EnhancedFilterSystem';
+
+export default EnhancedFilterSystem;

@@ -2,29 +2,37 @@ import React, { useState, useEffect, useCallback } from 'react';
 
 // Local fallback logos mapping to existing SVG logo files
 export const PLATFORM_LOGOS: Record<string, string> = {
-  // Main streaming services - using normalized names to match PLATFORM_NORMALIZE_MAP
-  'Netflix': '/logos/icons8-netflix (1).svg',
-  'Prime Video': '/logos/icons8-amazon-prime-video (1).svg',
-  'Disney+': '/logos/icons8-disney-plus.svg',
-  'Max': '/logos/icons8-hbo-max.svg',
-  'Apple TV+': '/logos/Apple-tv-plus-official.svg',
-  'Peacock': '/logos/icons8-peacock-tv.svg',
-  'Paramount+': '/logos/icons8-paramount-plus.svg',
-  'Crunchyroll': '/logos/icons8-crunchyroll.svg',
-  'Starz': '/logos/Starz--Streamline-Simple-Icons.svg',
-  'Showtime': '/logos/Showtime--Streamline-Simple-Icons.svg',
-  
-  // Add lowercase versions for backup lookup
-  'netflix': '/logos/icons8-netflix (1).svg',
-  'prime video': '/logos/icons8-amazon-prime-video (1).svg',
-  'disney+': '/logos/icons8-disney-plus.svg',
-  'max': '/logos/icons8-hbo-max.svg',
-  'apple tv+': '/logos/Apple-tv-plus-official.svg',
-  'peacock': '/logos/icons8-peacock-tv.svg',
-  'paramount+': '/logos/icons8-paramount-plus.svg',
-  'crunchyroll': '/logos/icons8-crunchyroll.svg',
-  'starz': '/logos/Starz--Streamline-Simple-Icons.svg',
-  'showtime': '/logos/Showtime--Streamline-Simple-Icons.svg',
+  // Main streaming services - using normalized names aligned with PLATFORM_NORMALIZE_MAP
+  'Netflix': '/logos/netflix.png',
+  'Prime Video': '/logos/prime-video.png',
+  'Disney+': '/logos/disney-plus.png',
+  'Max': '/logos/hbo-max.png',
+  'Apple TV+': '/logos/apple-tv.png',
+  'Peacock': '/logos/peacock.png',
+  'Paramount+': '/logos/paramount-plus.png',
+  'Crunchyroll': '/logos/crunchyroll.png',
+  'Starz': '/logos/starz.png',
+  'Showtime': '/logos/showtime.png',
+  'Hulu': '/logos/hulu.png',
+  'YouTube TV': '/logos/youtube-tv.png',
+  'Discovery+': '/logos/discovery-plus.png',
+  'ESPN': '/logos/espn.png',
+
+  // Lowercase variants for backup lookup
+  'netflix': '/logos/netflix.png',
+  'prime video': '/logos/prime-video.png',
+  'disney+': '/logos/disney-plus.png',
+  'max': '/logos/hbo-max.png',
+  'apple tv+': '/logos/apple-tv.png',
+  'peacock': '/logos/peacock.png',
+  'paramount+': '/logos/paramount-plus.png',
+  'crunchyroll': '/logos/crunchyroll.png',
+  'starz': '/logos/starz.png',
+  'showtime': '/logos/showtime.png',
+  'hulu': '/logos/hulu.png',
+  'youtube tv': '/logos/youtube-tv.png',
+  'discovery+': '/logos/discovery-plus.png',
+  'espn': '/logos/espn.png',
 };
 
 // TMDB provider ID mapping for API integration
@@ -131,7 +139,7 @@ const PLATFORM_NORMALIZE_MAP: Record<string, string> = {
 /**
  * Normalize platform name to consistent format
  */
-function normalizePlatformName(platformName: string): string {
+export function normalizePlatformName(platformName: string): string {
   if (!platformName || typeof platformName !== 'string') return 'Unknown';
   
   const normalized = platformName.toLowerCase().trim();
@@ -143,55 +151,25 @@ function normalizePlatformName(platformName: string): string {
  * @param platform - Platform name or object with logo_path
  * @param logoPath - Optional logo path (could be TMDB path or external URL)
  */
-export const getPlatformLogo = (platform: string | { name: string; logo_path?: string } | any): string => {
-  console.log('🎬 getPlatformLogo called with:', platform);
-  
-  const platformName = typeof platform === 'string' ? platform : (platform.name || platform.provider_name);
-  const logoPath = typeof platform === 'object' && platform.logo_path ? platform.logo_path : null;
-  // Handle platform object with logo_path property (API data)
-  if (typeof platform === 'object' && platform?.logo_path) {
-    const path = platform.logo_path;
-    console.log('🔍 Using API logo path:', path, 'for platform:', platformName);
-    
-    // If it's already a full external URL, use it directly
-    if (path.startsWith('http')) {
-      return path;
-    }
-    
-    // If it's a TMDB path, construct TMDB URL with proper size
-    if (path.startsWith('/')) {
-      const tmdbUrl = `https://image.tmdb.org/t/p/w92${path}`;
-      console.log('✅ Constructed TMDB URL:', tmdbUrl);
-      return tmdbUrl;
-    }
-    
-    // Fallback to badge if logo_path format is unexpected
-    return generatePlatformBadge(normalizePlatformName(platformName || 'Unknown'));
-  }
-  
-  // Handle explicit logoPath parameter (API data)
-  if (logoPath) {
-    // If it's already a full external URL, use it directly
-    if (logoPath.startsWith('http')) {
-      return logoPath;
-    }
-    
-    // If it's a TMDB path, construct TMDB URL with proper size
-    if (logoPath.startsWith('/')) {
-      return `https://image.tmdb.org/t/p/w92${logoPath}`;
-    }
-    
-    // Fallback to badge if logoPath format is unexpected
-    return generatePlatformBadge(normalizePlatformName(platformName || 'Unknown'));
-  }
-  
-  // For string platform names (no API data), generate badge directly
-  if (!platformName) {
-    return generatePlatformBadge('Unknown');
+export const getPlatformLogo = (platform: string | { name?: string; provider_name?: string; logo_path?: string } | any): string => {
+  const platformName: string | undefined = typeof platform === 'string' ? platform : (platform?.name || platform?.provider_name);
+  const normalizedName = platformName ? normalizePlatformName(platformName) : 'Unknown';
+
+  // 1) If TMDB or external logo is provided, use it.
+  if (platform && typeof platform === 'object' && platform.logo_path) {
+    const path: string = platform.logo_path;
+    if (path.startsWith('http')) return path;
+    if (path.startsWith('/')) return `https://image.tmdb.org/t/p/w92${path}`;
+    // If unexpected format, fall back to local mapping before badge
+    const local = PLATFORM_LOGOS[normalizedName] || PLATFORM_LOGOS[normalizedName.toLowerCase()];
+    return local || generatePlatformBadge(normalizedName);
   }
 
-  // Generate a styled badge for the platform name
-  const normalizedName = normalizePlatformName(platformName);
+  // 2) If a plain string or object without logo_path, try local known logos first
+  const local = PLATFORM_LOGOS[normalizedName] || PLATFORM_LOGOS[normalizedName.toLowerCase()];
+  if (local) return local;
+
+  // 3) As last resort, generate a badge
   return generatePlatformBadge(normalizedName);
 }
 
@@ -317,10 +295,11 @@ export const PlatformLogo: React.FC<PlatformLogoProps> = ({
       loading="lazy"
       onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
         const target = e.target as HTMLImageElement;
-        const fallback = PLATFORM_LOGOS.unknown;
-        if (target.src !== fallback) {
-          console.warn(`Logo failed for ${platform}, falling back to default:`, target.src);
-          target.src = fallback;
+        // Fallback to a generated badge to avoid broken image icons
+        const badge = generatePlatformBadge(normalizePlatformName(platform));
+        if (target.src !== badge) {
+          console.warn(`Logo failed for ${platform}, falling back to generated badge.`);
+          target.src = badge;
         }
       }}
     />

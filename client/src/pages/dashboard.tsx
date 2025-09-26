@@ -8,11 +8,11 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { normalizeMedia } from '@/utils/normalizeMedia';
 import { filterMedia } from '@/utils/filterMedia';
 import type { NormalizedMedia } from '@/types/media';
-import { HeroCarousel } from '@/components/HeroCarousel';
+import { SpotlightCard } from '@/components';
 import StreamingLogos from '@/components/streaming-logos';
 import TrailerButton from '@/components/trailer-button';
 import ContinueWatching from '@/components/ContinueWatching';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { MultiSelect } from "@/components/ui/multi-select";
 
 // --- Section Wrapper ---
 const Section: React.FC<{ title: string; children: React.ReactNode; action?: React.ReactNode }> = ({ title, children, action }) => (
@@ -34,45 +34,19 @@ const MultiSelectFilter: React.FC<{
   selected: string[];
   onChange: (selected: string[]) => void;
 }> = ({ label, options, selected, onChange }) => {
-  const toggleOption = (value: string) => {
-    if (selected.includes(value)) {
-      onChange(selected.filter(v => v !== value));
-    } else {
-      onChange([...selected, value]);
-    }
-  };
-
-  const displayValue = selected.length > 0 
-    ? selected.length === 1 
-      ? selected[0] 
-      : `${selected.length} selected`
-    : `Select ${label}`;
-
   return (
     <div className="flex flex-col">
       <span className="text-white font-semibold mb-2">{label}</span>
-      <Select>
-        <SelectTrigger className="bg-slate-800 border border-slate-700 text-white rounded-lg hover:bg-slate-700 transition-colors">
-          <SelectValue placeholder={displayValue} />
-        </SelectTrigger>
-        <SelectContent className="bg-slate-800 border border-slate-700 text-white max-h-60 overflow-y-auto">
-          {options.map(option => (
-            <div
-              key={option}
-              onClick={() => toggleOption(option)}
-              className="flex items-center gap-2 px-2 py-1.5 hover:bg-slate-700 cursor-pointer text-white text-sm transition-colors"
-            >
-              <input 
-                type="checkbox" 
-                checked={selected.includes(option)} 
-                readOnly 
-                className="accent-blue-500 pointer-events-none"
-              />
-              <span>{option}</span>
-            </div>
-          ))}
-        </SelectContent>
-      </Select>
+      <MultiSelect
+        options={options}
+        value={selected}
+        onValueChange={onChange}
+        placeholder={`Select ${label}`}
+        label={label}
+        showClearAll={true}
+        searchable={options.length > 10} // Enable search for long lists
+        className="bg-slate-800 border-slate-700 text-white hover:bg-slate-700"
+      />
     </div>
   );
 };
@@ -191,8 +165,16 @@ const DashboardPage: React.FC = () => {
       <NavigationHeader />
       
       <main className="w-full max-w-none px-4 md:px-8 lg:px-16 py-8 space-y-12">
-        {/* Hero Carousel */}
-        <HeroCarousel shows={processedTrending.slice(0, 5)} />
+        {/* Spotlight Section - Personal "Tonight's Pick" */}
+        {processedTrending.length > 0 && (
+          <SpotlightCard 
+            spotlight={{
+              ...processedTrending[0],
+              // Use the normalized streaming field
+              streamingPlatforms: processedTrending[0].streaming || []
+            }} 
+          />
+        )}
 
         {/* For You Section */}
         <Section title="For You" action={
@@ -271,7 +253,16 @@ const DashboardPage: React.FC = () => {
                   {/* Streaming Logos Overlay */}
                   {(() => {
                     const showData = show as any;
-                    const streamingPlatforms = showData.streamingPlatforms || showData.streaming_platforms || showData.streamingProviders || showData.watchProviders || [];
+                    const rawProviders = showData.streamingPlatforms || showData.streaming_platforms || showData.streamingProviders || showData.watchProviders || [];
+                    const seen = new Set<string>();
+                    const streamingPlatforms = rawProviders.filter((p: any, idx: number) => {
+                      const name = (p.provider_name || p.name || `p-${idx}`).toLowerCase();
+                      const id = p.provider_id ?? 'na';
+                      const key = `${id}::${name}`;
+                      if (seen.has(key)) return false;
+                      seen.add(key);
+                      return true;
+                    });
                     return streamingPlatforms.length > 0 && (
                       <div className="absolute top-2 left-2 opacity-0 group-hover:opacity-100 transition-opacity">
                         <div className="bg-black/70 rounded-md p-1">
@@ -282,6 +273,7 @@ const DashboardPage: React.FC = () => {
                               logo_path: platform.logo_path
                             }))}
                             size="sm"
+                            maxDisplayed={1}
                           />
                         </div>
                       </div>

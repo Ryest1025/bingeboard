@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Search } from 'lucide-react';
 import { SearchPreviewDropdown } from './SearchPreviewDropdown';
-import { ShowDetailsModal } from './ShowDetailsModal';
+import ShowDetailsModal from '@/components/show-details-modal';
 import { useDebounce } from '@/hooks/useDebounce';
 
 interface EnhancedSearchBarProps {

@@ -29,6 +29,7 @@ import {
 } from 'lucide-react';
 import { normalizeMediaBatch } from '@/utils/normalizeMedia';
 import { filterMedia } from '@/utils/filterMedia';
+import { HeroCarousel } from '@/components/HeroCarousel';
 import type { NormalizedMedia, RawMedia, MediaFilters, StreamingPlatform } from '@/types/media';
 import { MediaBadgeGroup, CompactMediaInfo } from '@/components/media/MediaBadges';
 
@@ -81,139 +82,7 @@ const Section: React.FC<{
   </section>
 );
 
-// Hero Carousel Component
-const HeroCarousel: React.FC<{ shows: Show[] }> = ({ shows }) => {
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [isAutoRotating, setIsAutoRotating] = useState(true);
-  const featuredShow = shows?.[currentIndex];
 
-  // Auto-rotation effect
-  useEffect(() => {
-    if (!isAutoRotating || !shows?.length || shows.length <= 1) return;
-    
-    const interval = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % shows.length);
-    }, 5000); // Change slide every 5 seconds
-
-    return () => clearInterval(interval);
-  }, [shows?.length, isAutoRotating]);
-
-  const nextSlide = () => {
-    if (!shows?.length) return;
-    setIsAutoRotating(false);
-    setCurrentIndex((prev) => (prev + 1) % shows.length);
-  };
-
-  const prevSlide = () => {
-    if (!shows?.length) return;
-    setIsAutoRotating(false);
-    setCurrentIndex((prev) => (prev - 1 + shows.length) % shows.length);
-  };
-
-  if (!featuredShow) {
-    return (
-      <div className="relative h-96 bg-slate-800 rounded-lg overflow-hidden">
-        <Skeleton className="w-full h-full" />
-      </div>
-    );
-  }
-
-  return (
-    <div 
-      className="relative h-96 bg-slate-800 rounded-lg overflow-hidden group"
-      onMouseEnter={() => setIsAutoRotating(false)}
-      onMouseLeave={() => setIsAutoRotating(true)}
-    >
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={currentIndex}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.5 }}
-          className="absolute inset-0"
-        >
-          {featuredShow.backdrop_path && (
-            <img
-              src={`https://image.tmdb.org/t/p/w1280${featuredShow.backdrop_path}`}
-              alt={featuredShow.title || featuredShow.name}
-              className="w-full h-full object-cover"
-            />
-          )}
-        </motion.div>
-      </AnimatePresence>
-
-      {/* Navigation Arrows */}
-      {shows.length > 1 && (
-        <>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={prevSlide}
-            className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white opacity-0 group-hover:opacity-100 transition-opacity"
-          >
-            <ChevronLeft className="w-6 h-6" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={nextSlide}
-            className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white opacity-0 group-hover:opacity-100 transition-opacity"
-          >
-            <ChevronRight className="w-6 h-6" />
-          </Button>
-        </>
-      )}
-
-      {/* Slide Indicators */}
-      {shows.length > 1 && (
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
-          {shows.map((_, index) => (
-            <button
-              key={index}
-              onClick={() => {
-                setCurrentIndex(index);
-                setIsAutoRotating(false);
-              }}
-              className={`w-2 h-2 rounded-full transition-all ${
-                index === currentIndex ? 'bg-white' : 'bg-white/50'
-              }`}
-            />
-          ))}
-        </div>
-      )}
-
-      <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/40 to-transparent">
-        <motion.div
-          key={`content-${currentIndex}`}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-          className="absolute bottom-8 left-8 max-w-lg"
-        >
-          <h1 className="text-4xl font-bold text-white mb-4">
-            {featuredShow.title || featuredShow.name}
-          </h1>
-          {featuredShow.overview && (
-            <p className="text-lg text-gray-200 mb-6 line-clamp-3">
-              {featuredShow.overview}
-            </p>
-          )}
-          <div className="flex items-center gap-3">
-            <Button size="lg" className="bg-white text-black hover:bg-gray-200">
-              <Play className="w-5 h-5 mr-2" />
-              Watch Now
-            </Button>
-            <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10">
-              <Bell className="w-5 h-5 mr-2" />
-              Add to Watchlist
-            </Button>
-          </div>
-        </motion.div>
-      </div>
-    </div>
-  );
-};
 
 // Live Sports Section
 const LiveSportsSection: React.FC<{ games: any[] }> = ({ games }) => {
@@ -652,7 +521,7 @@ const DiscoverPage: React.FC = () => {
         )}
 
         {/* Hero / Featured Carousel */}
-        <HeroCarousel shows={processedData.trending.slice(0, 5).map(convertToShowFormat)} />
+        <HeroCarousel shows={processedData.trending.slice(0, 5)} />
 
         {/* Streaming Platform Filter Bar */}
         <StreamingFilterBar 

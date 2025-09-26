@@ -36,37 +36,49 @@ const initAuth = () => {
   
   // Listen to Firebase auth state changes
   onAuthStateChanged(auth, async (firebaseUser: FirebaseUser | null) => {
+    updateState({ isLoading: true }); // mark loading at start
     if (firebaseUser) {
       try {
+        console.log("🔑 FirebaseUser detected:", firebaseUser?.email);
         // Get Firebase ID token
         const idToken = await firebaseUser.getIdToken();
+        console.log("📤 Sending ID token to backend:", idToken.substring(0, 10) + "...");
         
         // Send to backend for session creation
         const res = await fetch("/api/auth/firebase-session", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { 
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${idToken}`
+          },
           credentials: "include",
-          body: JSON.stringify({ idToken })
-        });
-        
-        if (res.ok) {
-          const data = await res.json();
-          updateState({
-            user: data.user || {
+          body: JSON.stringify({ 
+            user: {
               id: firebaseUser.uid,
               email: firebaseUser.email || "",
               displayName: firebaseUser.displayName || undefined
-            },
-            isAuthenticated: true,
-            isLoading: false,
-          });
-        } else {
-          // Firebase session sync failed - clear auth
-          console.error("Failed to sync Firebase session with backend");
-          updateState({ user: null, isAuthenticated: false, isLoading: false });
+            }
+          })
+        });
+        
+        if (!res.ok) {
+          console.error("❌ Backend rejected Firebase token:", res.status, res.statusText);
+          throw new Error(`Backend rejected Firebase token: ${res.status}`);
         }
+        
+        console.log("✅ Backend accepted Firebase token");
+        const data = await res.json();
+        updateState({
+          user: data.user || {
+            id: firebaseUser.uid,
+            email: firebaseUser.email || "",
+            displayName: firebaseUser.displayName || undefined
+          },
+          isAuthenticated: true,
+          isLoading: false,
+        });
       } catch (err) {
-        console.error("Error syncing Firebase auth:", err);
+        console.error("Auth sync error:", err);
         updateState({ user: null, isAuthenticated: false, isLoading: false });
       }
     } else {

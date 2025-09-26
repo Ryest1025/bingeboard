@@ -9,7 +9,7 @@ import { useFilterOptions } from '@/hooks/useFilterOptions';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { useFilters } from '@/hooks/useFilters';
 import NavigationHeader from '@/components/navigation-header';
-import Toast from '@/components/toast';
+import { useToast } from "@/hooks/use-toast";
 import RecommendationModal from '@/components/recommendation-modal';
 import ShowDetailsModal from '@/components/show-details-modal';
 import { ListSelectorModal } from '@/components/list-selector-modal';

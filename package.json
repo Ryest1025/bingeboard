@@ -38,7 +38,10 @@
     "test:strict": "LOG_FILTER=1 vitest --run",
     "knip": "bash scripts/analyze-unused.sh",
     "knip:update-baseline": "bash scripts/analyze-unused.sh --update-baseline",
-    "codespace:recover": "bash scripts/recover-from-codespace.sh"
+    "codespace:recover": "bash scripts/recover-from-codespace.sh",
+    "components:audit": "node scripts/audit-components.cjs",
+    "components:clean": "bash scripts/clean-components.sh",
+    "components:check": "npm run components:audit && echo '✅ Component audit passed'"
   },
   "dependencies": {
     "@capacitor/android": "^7.4.0",

@@ -5,12 +5,13 @@ import { useTrailer } from '@/hooks/useTrailer';
 import { getPlatformLogo } from '@/utils/platformLogos';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import StreamingLogos from '@/components/streaming-logos';
 
 interface ContinueWatchingItemProps {
   id: string;
   title: string;
   episode?: string;
-  platform: string;
+  platform: string | { provider_name?: string; name?: string; logo_path?: string };
   thumbnail: string;
   backdrop_path?: string;
   poster_path?: string;
@@ -58,7 +59,7 @@ const ContinueWatchingCard: React.FC<ContinueWatchingItemProps> = ({
     ? `https://image.tmdb.org/t/p/w500${poster_path}`
     : thumbnail;
 
-  const platformLogo = getPlatformLogo(platform);
+  const platformLogo = getPlatformLogo(platform as any);
 
   // Format episode info
   const episodeInfo = mediaType === 'tv' && seasonNumber && episodeNumber 
@@ -168,15 +169,15 @@ const ContinueWatchingCard: React.FC<ContinueWatchingItemProps> = ({
             </div>
           )}
 
-          {/* Platform logo - premium corner placement */}
-          <div className="absolute top-3 right-3 w-8 h-8 bg-black/80 backdrop-blur-sm rounded-lg p-1.5 flex items-center justify-center border border-white/10">
-            <img
-              src={platformLogo}
-              alt={platform}
-              className="w-full h-full object-contain opacity-90"
-              onError={(e) => {
-                (e.target as HTMLImageElement).style.display = 'none';
-              }}
+          {/* Platform logos - premium corner placement */}
+          <div className="absolute top-3 right-3">
+            <StreamingLogos 
+              providers={typeof platform === 'string' 
+                ? [{ provider_id: 0, provider_name: platform }] 
+                : [{ provider_id: 0, provider_name: platform?.provider_name || platform?.name || 'Platform', logo_path: platform?.logo_path }]
+              }
+              size="sm"
+              maxDisplayed={1}
             />
           </div>
 

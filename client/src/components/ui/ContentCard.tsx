@@ -3,7 +3,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Star, Play, Plus, Calendar, Bell, ExternalLink, DollarSign } from 'lucide-react';
-import { StreamingLogos } from './StreamingLogos';
+import StreamingLogos from '@/components/streaming-logos';
 import { StreamingPlatformSelector } from './StreamingPlatformSelector';
 import { useAuth } from '@/hooks/useAuth';
 import TrailerButton from '../trailer-button';
@@ -108,9 +108,7 @@ export const ContentCard: React.FC<ContentCardProps> = ({
                     <StreamingLogos
                       providers={providers}
                       size="sm"
-                      maxLogos={3}
-                      showNames={false}
-                      showAffiliateIndicator={showAffiliateLinks}
+                      maxDisplayed={3}
                     />
                   </div>
                 )}
@@ -239,9 +237,7 @@ export const ContentCard: React.FC<ContentCardProps> = ({
                 <StreamingLogos
                   providers={providers}
                   size="sm"
-                  maxLogos={4}
-                  showNames={false}
-                  showAffiliateIndicator={showAffiliateLinks}
+                  maxDisplayed={4}
                 />
               </div>
             )}

@@ -1,5 +1,20 @@
-import { auth } from './client/src/firebase/config.ts';
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
+// Create test user in Firebase - Node.js compatible
+const { initializeApp } = require('firebase/app');
+const { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } = require('firebase/auth');
+
+// Firebase config (same as client)
+const firebaseConfig = {
+  apiKey: "AIzaSyB45zr8b2HjIx1fzXOuQsHxeQK9wl_wC88",
+  authDomain: "bingeboard-73c5f.firebaseapp.com",
+  projectId: "bingeboard-73c5f",
+  storageBucket: "bingeboard-73c5f.firebasestorage.app",
+  messagingSenderId: "145846820194",
+  appId: "1:145846820194:web:047efd7a8e59b36944a03b",
+  measurementId: "G-TB1ZXQ79LB",
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
 
 async function createAndTestUser() {
   const testEmail = 'test@example.com';
@@ -35,6 +50,14 @@ async function createAndTestUser() {
   } catch (error) {
     console.error('❌ Error:', error.message);
     console.error('Error code:', error.code);
+    
+    if (error.code === 'auth/invalid-credential') {
+      console.log('');
+      console.log('🔍 This suggests:');
+      console.log('1. Email/password authentication might be disabled in Firebase Console');
+      console.log('2. The Firebase project configuration might be incorrect');
+      console.log('3. Network connectivity issues');
+    }
   }
 }
 

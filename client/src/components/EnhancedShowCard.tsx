@@ -3,7 +3,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Star, Plus, Play, Calendar, Clock, Share2 } from 'lucide-react';
-import StreamingLogoGrid from '@/components/StreamingLogoGrid';
+import StreamingLogos from '@/components/streaming-logos';
 
 interface Show {
   id: number;
@@ -192,7 +192,7 @@ export const EnhancedShowCard: React.FC<EnhancedShowCardProps> = ({
             {/* Streaming */}
             {providers.length > 0 && (
               <div className="mb-1">
-                <StreamingLogoGrid providers={providers} />
+                <StreamingLogos providers={providers} maxDisplayed={1} />
               </div>
             )}
 

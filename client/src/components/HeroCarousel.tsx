@@ -153,15 +153,39 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ shows }) => {
             {/* Streaming platforms */}
             {featuredShow.streaming && featuredShow.streaming.length > 0 && (
               <div className="mb-4">
-                <StreamingLogos 
-                  providers={featuredShow.streaming.map((platform: any) => ({
+                {(() => {
+                  const seen = new Set<string>();
+                  const providers = featuredShow.streaming.filter((p: any, idx: number) => {
+                    const name = (p.provider_name || p.name || `p-${idx}`).toLowerCase();
+                    const id = p.provider_id ?? 'na';
+                    const key = `${id}::${name}`;
+                    if (seen.has(key)) return false;
+                    seen.add(key);
+                    return true;
+                  }).map((platform: any) => ({
                     provider_id: platform.provider_id || 0,
                     provider_name: platform.provider_name || platform.name || '',
                     logo_path: platform.logo_path
-                  }))}
-                  size="md"
-                  maxDisplayed={1}
-                />
+                  }));
+                  
+                  // Debug logging for the current show
+                  if (process.env.NODE_ENV === 'development') {
+                    console.log(`🎬 HeroCarousel #${currentIndex + 1} "${featuredShow.displayTitle}" streaming:`, {
+                      originalCount: featuredShow.streaming.length,
+                      deduplicatedCount: providers.length,
+                      maxDisplayed: 1,
+                      providers: providers.map(p => p.provider_name)
+                    });
+                  }
+                  
+                  return (
+                    <StreamingLogos 
+                      providers={providers}
+                      size="md"
+                      maxDisplayed={1}
+                    />
+                  );
+                })()}
               </div>
             )}
 
