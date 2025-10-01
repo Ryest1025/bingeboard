@@ -1,6 +1,6 @@
 import React from 'react';
 import { Section } from '@/components/shared/Section';
-import EnhancedShowCard from '@/components/EnhancedShowCard';
+import { UniversalMediaCard } from '@/components/universal';
 
 interface ContinueWatchingItem {
   id: number;
@@ -9,7 +9,7 @@ interface ContinueWatchingItem {
   episode?: number;
   poster_path?: string;
   progress?: number;
-  // Allow passing through any additional props compatible with EnhancedShowCard's Show interface
+  // Allow passing through any additional props compatible with UniversalMediaCard's MediaItem interface
   [key: string]: any;
 }
 
@@ -21,10 +21,14 @@ const ContinueWatchingSection: React.FC<{ items: ContinueWatchingItem[] }> = ({ 
       <div className="flex gap-4 overflow-x-auto pb-2">
         {items.map((item) => (
           <div key={item.id} className="min-w-44 w-44">
-            <EnhancedShowCard
-              show={item as any}
+            <UniversalMediaCard
+              media={item}
               variant="compact"
-              onAddToWatchlist={() => {}}
+              size="sm"
+              showStreamingLogos={false}
+              showRating={false}
+              actions={{ addToList: false }}
+              onCardClick={(media) => console.log('Continue watching:', media)}
             />
             <div className="mt-2">
               <div className="w-full bg-slate-700 rounded-full h-2">

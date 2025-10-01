@@ -1,5 +1,5 @@
 import React from 'react';
-import { EnhancedShowCard } from '@/components/EnhancedShowCard';
+import { UniversalMediaCard } from '@/components/universal';
 import { Section } from '@/components/shared/Section';
 import type { NormalizedMedia } from '@/types/media';
 
@@ -18,11 +18,18 @@ const ForYouSection: React.FC<{ shows: NormalizedMedia[] }> = ({ shows }) => {
     <Section title="Recommended for You">
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
         {shows.slice(0, 12).map((show) => (
-          <EnhancedShowCard
-            key={show.id as any}
-            show={show as any}
-            variant="detailed"
+          <UniversalMediaCard
+            key={show.id}
+            media={show}
+            variant="vertical"
+            size="md"
+            showStreamingLogos={true}
+            showRating={true}
+            actions={{ watchNow: true, trailer: true, addToList: true }}
             onAddToWatchlist={() => {}}
+            onCardClick={(media) => console.log('Show details:', media)}
+            onWatchNow={(media) => console.log('Watch now:', media)}
+            onWatchTrailer={(media) => console.log('Watch trailer:', media)}
           />
         ))}
       </div>

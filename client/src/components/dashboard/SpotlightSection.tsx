@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Play, Bell } from 'lucide-react';
+import StreamingLogos from '@/components/streaming-logos';
 import type { NormalizedMedia } from '@/types/media';
 
 const SpotlightSection: React.FC<{ shows: NormalizedMedia[] }> = ({ shows }) => {
@@ -33,7 +34,23 @@ const SpotlightSection: React.FC<{ shows: NormalizedMedia[] }> = ({ shows }) => 
         <p className="text-gray-200 line-clamp-3">{spotlight.overview}</p>
         <div className="flex gap-3">
           <Button size="lg" className="bg-white text-black hover:bg-gray-200">
-            <Play className="w-5 h-5 mr-2" /> Watch Now
+            <Play className="w-5 h-5 mr-2" />
+            {spotlight.streaming && spotlight.streaming.length > 0 && spotlight.streaming[0].provider_id ? (
+              <span className="flex items-center gap-2">
+                Watch Now On
+                <StreamingLogos 
+                  providers={[{
+                    provider_id: spotlight.streaming[0].provider_id!,
+                    provider_name: spotlight.streaming[0].provider_name || '',
+                    logo_path: spotlight.streaming[0].logo_path
+                  }]}
+                  size="sm"
+                  maxDisplayed={1}
+                />
+              </span>
+            ) : (
+              'Watch Now'
+            )}
           </Button>
           <Button variant="outline" size="lg" className="border-white text-white hover:bg-white/10">
             <Bell className="w-5 h-5 mr-2" /> Add to Watchlist

@@ -128,7 +128,18 @@ export default function SpotlightCard({ spotlight }: SpotlightCardProps) {
                   className="bg-white text-black px-6 py-3 font-medium flex items-center gap-2 hover:bg-gray-200 hover:scale-105 transition-all duration-200 rounded shadow-lg hover:shadow-xl"
                 >
                   <Play className="w-5 h-5" />
-                  Watch Now
+                  {spotlight.streamingPlatforms && spotlight.streamingPlatforms.length > 0 ? (
+                    <span className="flex items-center gap-2">
+                      Watch Now On
+                      <StreamingLogos 
+                        providers={[spotlight.streamingPlatforms[0]]}
+                        size="sm"
+                        maxDisplayed={1}
+                      />
+                    </span>
+                  ) : (
+                    'Watch Now'
+                  )}
                 </button>
 
                 <TrailerButton 

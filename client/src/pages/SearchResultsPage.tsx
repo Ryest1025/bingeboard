@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useLocation } from 'wouter';
 import { searchShowsApi } from '@/lib/search-api';
 import { NormalizedShowSummary } from '@/lib/search-api';
-import EnhancedShowCard from '@/components/EnhancedShowCard';
+import { UniversalMediaCard } from '@/components/universal';
 
 export default function SearchResultsPage() {
   const [location] = useLocation();
@@ -96,9 +96,9 @@ export default function SearchResultsPage() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
           {results.map((show) => (
-            <EnhancedShowCard
+            <UniversalMediaCard
               key={show.id}
-              show={{
+              media={{
                 id: parseInt(show.id),
                 title: show.title,
                 poster_path: show.poster?.replace('https://image.tmdb.org/t/p/w300', ''),
@@ -109,7 +109,11 @@ export default function SearchResultsPage() {
                 release_date: show.year ? `${show.year}-01-01` : undefined,
                 first_air_date: show.type === 'tv' && show.year ? `${show.year}-01-01` : undefined,
               }}
-              variant="search"
+              variant="vertical"
+              size="md"
+              showStreamingLogos={true}
+              showRating={true}
+              actions={{ watchNow: true, trailer: true, addToList: true }}
               onAddToWatchlist={handleAddToWatchlist}
               onWatchTrailer={handleWatchTrailer}
               onCardClick={handleCardClick}

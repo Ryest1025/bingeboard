@@ -136,7 +136,11 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ shows }) => {
               {(featuredShow.first_air_date || featuredShow.release_date) && (
                 <div className="flex items-center gap-1">
                   <Calendar className="w-4 h-4" />
-                  <span>{new Date(featuredShow.first_air_date || featuredShow.release_date || '').getFullYear()}</span>
+                  <span>{(() => {
+                    const date = new Date(featuredShow.first_air_date || featuredShow.release_date || '');
+                    const year = date.getFullYear();
+                    return isNaN(year) ? 'Unknown' : year.toString();
+                  })()}</span>
                 </div>
               )}
               {featuredShow.genre_ids && featuredShow.genre_ids.length > 0 && (
@@ -150,43 +154,21 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ shows }) => {
               )}
             </div>
 
-            {/* Streaming platforms */}
-            {featuredShow.streaming && featuredShow.streaming.length > 0 && (
-              <div className="mb-4">
-                {(() => {
-                  const seen = new Set<string>();
-                  const providers = featuredShow.streaming.filter((p: any, idx: number) => {
-                    const name = (p.provider_name || p.name || `p-${idx}`).toLowerCase();
-                    const id = p.provider_id ?? 'na';
-                    const key = `${id}::${name}`;
-                    if (seen.has(key)) return false;
-                    seen.add(key);
-                    return true;
-                  }).map((platform: any) => ({
-                    provider_id: platform.provider_id || 0,
-                    provider_name: platform.provider_name || platform.name || '',
-                    logo_path: platform.logo_path
-                  }));
-                  
-                  // Debug logging for the current show
-                  if (process.env.NODE_ENV === 'development') {
-                    console.log(`🎬 HeroCarousel #${currentIndex + 1} "${featuredShow.displayTitle}" streaming:`, {
-                      originalCount: featuredShow.streaming.length,
-                      deduplicatedCount: providers.length,
-                      maxDisplayed: 1,
-                      providers: providers.map(p => p.provider_name)
-                    });
-                  }
-                  
-                  return (
-                    <StreamingLogos 
-                      providers={providers}
-                      size="md"
-                      maxDisplayed={1}
-                    />
-                  );
-                })()}
+                        {/* Genres */}
+            {featuredShow.genre_ids && featuredShow.genre_ids.length > 0 && (
+              <div className="flex gap-2 mb-4">
+                {featuredShow.genre_ids.slice(0, 3).map((genreId: number) => (
+                  <Badge key={genreId} variant="secondary" className="bg-white/20 text-white">
+                    {getGenreName(genreId)}
+                  </Badge>
+                ))}
               </div>
+            )}
+
+            {featuredShow.overview && (
+              <p className="text-lg text-gray-200 mb-6 line-clamp-3 max-w-xl leading-relaxed">
+                {featuredShow.overview}
+              </p>
             )}
 
             {featuredShow.overview && (
@@ -198,7 +180,37 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ shows }) => {
             <div className="flex items-center gap-3">
               <Button size="lg" className="bg-white text-black hover:bg-gray-200 font-semibold">
                 <Play className="w-5 h-5 mr-2" />
-                Watch Now
+                {(() => {
+                  if (featuredShow.streaming && featuredShow.streaming.length > 0) {
+                    const seen = new Set<string>();
+                    const providers = featuredShow.streaming.filter((p: any, idx: number) => {
+                      const name = (p.provider_name || p.name || `p-${idx}`).toLowerCase();
+                      const id = p.provider_id ?? 'na';
+                      const key = `${id}::${name}`;
+                      if (seen.has(key)) return false;
+                      seen.add(key);
+                      return true;
+                    }).map((platform: any) => ({
+                      provider_id: platform.provider_id || 0,
+                      provider_name: platform.provider_name || platform.name || '',
+                      logo_path: platform.logo_path
+                    }));
+
+                    if (providers.length > 0) {
+                      return (
+                        <span className="flex items-center gap-2">
+                          Watch Now On
+                          <StreamingLogos 
+                            providers={[providers[0]]}
+                            size="sm"
+                            maxDisplayed={1}
+                          />
+                        </span>
+                      );
+                    }
+                  }
+                  return 'Watch Now';
+                })()}
               </Button>
               <TrailerButton 
                 show={{
@@ -217,34 +229,35 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ shows }) => {
             </div>
           </div>
 
-          {/* Right side - Poster image */}
-          {featuredShow.poster_path && (
-            <div className="hidden lg:block flex-shrink-0">
-              <img
-                src={`https://image.tmdb.org/t/p/w300${featuredShow.poster_path}`}
-                alt={`${featuredShow.displayTitle} poster`}
-                className="w-48 h-72 object-cover rounded-lg shadow-2xl border-4 border-white/10"
-                loading="lazy"
-                onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
-                  const target = e.target as HTMLImageElement;
-                  // Fallback to a simple gradient placeholder
-                  target.src = `data:image/svg+xml;base64,${btoa(`
-                    <svg width="192" height="288" xmlns="http://www.w3.org/2000/svg">
-                      <defs>
-                        <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
-                          <stop offset="0%" style="stop-color:#1f2937;stop-opacity:1" />
-                          <stop offset="100%" style="stop-color:#111827;stop-opacity:1" />
-                        </linearGradient>
-                      </defs>
-                      <rect width="192" height="288" fill="url(#grad)" rx="8"/>
-                      <text x="96" y="144" font-family="Arial, sans-serif" font-size="14" 
-                            text-anchor="middle" fill="#9ca3af" opacity="0.7">No Poster</text>
-                    </svg>
-                  `)}`;
-                }}
-              />
+          {/* Right side - Poster image - Fixed size container to prevent jumping */}
+          <div className="hidden lg:block flex-shrink-0 w-48">
+            <div className="w-48 h-72 rounded-lg shadow-2xl border-4 border-white/10 overflow-hidden bg-gradient-to-br from-slate-800 to-slate-900">
+              {featuredShow.poster_path ? (
+                <img
+                  src={`https://image.tmdb.org/t/p/w300${featuredShow.poster_path}`}
+                  alt={`${featuredShow.displayTitle} poster`}
+                  className="w-full h-full object-cover"
+                  loading="lazy"
+                  onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
+                    const target = e.target as HTMLImageElement;
+                    target.style.display = 'none';
+                    const parent = target.parentElement;
+                    if (parent) {
+                      parent.innerHTML = `
+                        <div class="w-full h-full flex items-center justify-center text-slate-400">
+                          <span class="text-sm opacity-70">No Poster</span>
+                        </div>
+                      `;
+                    }
+                  }}
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-slate-400">
+                  <span className="text-sm opacity-70">No Poster</span>
+                </div>
+              )}
             </div>
-          )}
+          </div>
         </div>
       </div>
       

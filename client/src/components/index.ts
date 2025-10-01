@@ -11,15 +11,17 @@ export { default as BingeBoardHeader } from './BingeBoardHeader';
 // ===== STREAMING & MEDIA =====
 export { default as StreamingLogos } from './streaming-logos';
 
-// ===== DASHBOARD COMPONENTS =====
-export { default as SpotlightCard } from './dashboard/SpotlightCard';
+// ===== UNIVERSAL COMPONENTS (NEW STANDARD) =====
+export { UniversalMediaCard, UniversalScrollSection, UniversalHeroCarousel } from './universal';
 
 // ===== UI COMPONENTS =====
 export { Button } from './ui/button';
 export { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 export { Badge } from './ui/badge';
 
-// ===== ENHANCED COMPONENTS =====
+// ===== LEGACY COMPONENTS (DEPRECATED - Use Universal Components Instead) =====
+// These are kept for backward compatibility but should be replaced
+export { default as SpotlightCard } from './dashboard/SpotlightCard';
 export { default as EnhancedShowCard } from './EnhancedShowCard';
 export { HeroCarousel } from './HeroCarousel';
 export { default as TrailerButton } from './trailer-button';
@@ -33,11 +35,14 @@ export { default as TrailerButton } from './trailer-button';
 /**
  * Usage Examples:
  * 
- * // ✅ PREFERRED - Import from component index
- * import { StreamingLogos, SpotlightCard, Button } from '@/components';
+ * // ✅ PREFERRED - Use Universal Components
+ * import { UniversalMediaCard, UniversalScrollSection, UniversalHeroCarousel } from '@/components';
  * 
- * // ✅ ALSO OK - Direct import for specific components
- * import StreamingLogos from '@/components/streaming-logos';
+ * // ✅ ALSO OK - Direct import for universal components
+ * import { UniversalMediaCard } from '@/components/universal';
+ * 
+ * // ⚠️ LEGACY - Still works but consider upgrading to Universal Components
+ * import { EnhancedShowCard, SpotlightCard, HeroCarousel } from '@/components';
  * 
  * // ❌ AVOID - Relative imports or non-standard paths
  * import StreamingLogos from './streaming-logos';

@@ -1,18 +1,17 @@
 import React, { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import NavigationHeader from '@/components/navigation-header';
-import { EnhancedShowCard } from '@/components/EnhancedShowCard';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { normalizeMedia } from '@/utils/normalizeMedia';
 import { filterMedia } from '@/utils/filterMedia';
 import type { NormalizedMedia } from '@/types/media';
-import { SpotlightCard } from '@/components';
 import StreamingLogos from '@/components/streaming-logos';
 import TrailerButton from '@/components/trailer-button';
 import ContinueWatching from '@/components/ContinueWatching';
 import { MultiSelect } from "@/components/ui/multi-select";
+import { UniversalMediaCard, UniversalScrollSection } from '@/components/universal';
 
 // --- Section Wrapper ---
 const Section: React.FC<{ title: string; children: React.ReactNode; action?: React.ReactNode }> = ({ title, children, action }) => (
@@ -101,6 +100,11 @@ const DashboardPage: React.FC = () => {
     return normalizeMedia((trendingData as any)?.results || []);
   }, [trendingData, trendingError]);
 
+  // Find the first item with streaming platforms for spotlight
+  const spotlightItem = useMemo(() => {
+    return processedTrending.find(item => item.streaming && item.streaming.length > 0) || processedTrending[0];
+  }, [processedTrending]);
+
   const filteredRecommendations = useMemo(() => {
     if (personalizedError || !personalizedData) return [];
     
@@ -166,13 +170,25 @@ const DashboardPage: React.FC = () => {
       
       <main className="w-full max-w-none px-4 md:px-8 lg:px-16 py-8 space-y-12">
         {/* Spotlight Section - Personal "Tonight's Pick" */}
-        {processedTrending.length > 0 && (
-          <SpotlightCard 
-            spotlight={{
-              ...processedTrending[0],
+        {spotlightItem && (
+          <UniversalMediaCard
+            media={{
+              ...spotlightItem,
               // Use the normalized streaming field
-              streamingPlatforms: processedTrending[0].streaming || []
-            }} 
+              streaming_platforms: spotlightItem.streaming || []
+            }}
+            variant="spotlight"
+            size="xl"
+            showStreamingLogos={true}
+            showRating={true}
+            showGenres={true}
+            showReleaseDate={true}
+            showDescription={true}
+            actions={{ watchNow: true, trailer: true, addToList: true }}
+            onAddToWatchlist={(media) => console.log('Add to watchlist:', media)}
+            onWatchTrailer={(media) => console.log('Watch trailer:', media)}
+            onCardClick={(media) => console.log('Show details:', media)}
+            onWatchNow={(media) => console.log('Watch now:', media)}
           />
         )}
 
@@ -233,13 +249,20 @@ const DashboardPage: React.FC = () => {
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
               {filteredRecommendations.map(show => (
                 <div key={show.id} className="relative group">
-                  <EnhancedShowCard 
-                    show={show} 
+                  <UniversalMediaCard 
+                    media={show} 
+                    variant="vertical"
+                    size="md"
+                    showStreamingLogos={true}
+                    showRating={true}
+                    actions={{ watchNow: true, trailer: true, addToList: true }}
                     onAddToWatchlist={handleAddToWatchlist}
-                    onWatchTrailer={(show) => {
-                      console.log('Watch trailer for:', show.title || show.name);
+                    onWatchTrailer={(media) => {
+                      console.log('Watch trailer for:', media.title || media.name);
                       // TODO: Implement trailer modal or use TrailerButton component
                     }}
+                    onCardClick={(media) => console.log('Show details:', media)}
+                    onWatchNow={(media) => console.log('Watch now:', media)}
                   />
 
                 </div>
