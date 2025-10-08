@@ -2,37 +2,37 @@ import React, { useState, useEffect, useCallback } from 'react';
 
 // Local fallback logos mapping to existing SVG logo files
 export const PLATFORM_LOGOS: Record<string, string> = {
-  // Main streaming services - using normalized names aligned with PLATFORM_NORMALIZE_MAP
-  'Netflix': '/logos/netflix.png',
-  'Prime Video': '/logos/prime-video.png',
-  'Disney+': '/logos/disney-plus.png',
-  'Max': '/logos/hbo-max.png',
-  'Apple TV+': '/logos/apple-tv.png',
-  'Peacock': '/logos/peacock.png',
-  'Paramount+': '/logos/paramount-plus.png',
-  'Crunchyroll': '/logos/crunchyroll.png',
-  'Starz': '/logos/starz.png',
-  'Showtime': '/logos/showtime.png',
-  'Hulu': '/logos/hulu.png',
-  'YouTube TV': '/logos/youtube-tv.png',
-  'Discovery+': '/logos/discovery-plus.png',
-  'ESPN': '/logos/espn.png',
+  // Main streaming services - using actual available logo files
+  'Netflix': '/logos/icons8-netflix (1).svg',
+  'Prime Video': '/logos/icons8-amazon-prime-video (1).svg',
+  'Disney+': '/logos/icons8-disney-plus.svg',
+  'Max': '/logos/icons8-hbo-max.svg',
+  'Apple TV+': '/logos/Apple-tv-plus-official.svg',
+  'Peacock': '/logos/icons8-peacock-tv.svg',
+  'Paramount+': '/logos/icons8-paramount-plus.svg',
+  'Crunchyroll': '/logos/icons8-crunchyroll.svg',
+  'Starz': '/logos/Starz--Streamline-Simple-Icons.svg',
+  'Showtime': '/logos/Showtime--Streamline-Simple-Icons.svg',
+  'Hulu': '/logos/icons8-hulu.svg',  // Will fallback to badge if not found
+  'YouTube TV': '/logos/icons8-youtube-tv.svg', // Will fallback to badge if not found
+  'Discovery+': '/logos/icons8-discovery-plus.svg', // Will fallback to badge if not found
+  'ESPN': '/logos/icons8-espn.svg', // Will fallback to badge if not found
 
   // Lowercase variants for backup lookup
-  'netflix': '/logos/netflix.png',
-  'prime video': '/logos/prime-video.png',
-  'disney+': '/logos/disney-plus.png',
-  'max': '/logos/hbo-max.png',
-  'apple tv+': '/logos/apple-tv.png',
-  'peacock': '/logos/peacock.png',
-  'paramount+': '/logos/paramount-plus.png',
-  'crunchyroll': '/logos/crunchyroll.png',
-  'starz': '/logos/starz.png',
-  'showtime': '/logos/showtime.png',
-  'hulu': '/logos/hulu.png',
-  'youtube tv': '/logos/youtube-tv.png',
-  'discovery+': '/logos/discovery-plus.png',
-  'espn': '/logos/espn.png',
+  'netflix': '/logos/icons8-netflix (1).svg',
+  'prime video': '/logos/icons8-amazon-prime-video (1).svg',
+  'disney+': '/logos/icons8-disney-plus.svg',
+  'max': '/logos/icons8-hbo-max.svg',
+  'apple tv+': '/logos/Apple-tv-plus-official.svg',
+  'peacock': '/logos/icons8-peacock-tv.svg',
+  'paramount+': '/logos/icons8-paramount-plus.svg',
+  'crunchyroll': '/logos/icons8-crunchyroll.svg',
+  'starz': '/logos/Starz--Streamline-Simple-Icons.svg',
+  'showtime': '/logos/Showtime--Streamline-Simple-Icons.svg',
+  'hulu': '/logos/icons8-hulu.svg',
+  'youtube tv': '/logos/icons8-youtube-tv.svg',
+  'discovery+': '/logos/icons8-discovery-plus.svg',
+  'espn': '/logos/icons8-espn.svg',
 };
 
 // TMDB provider ID mapping for API integration
