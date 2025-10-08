@@ -1,14 +1,6 @@
-// Firebase configuration - SSR + Browser safe
-import { initializeApp, getApps, getApp, type FirebaseApp } from "firebase/app";
-import {
-  getAuth,
-  initializeAuth,
-  browserLocalPersistence,
-  browserPopupRedirectResolver,
-  GoogleAuthProvider,
-  FacebookAuthProvider,
-  type Auth,
-} from "firebase/auth";
+// Firebase configuration - Single authoritative source
+import { initializeApp, getApps } from "firebase/app";
+import { getAuth, GoogleAuthProvider, FacebookAuthProvider } from "firebase/auth";
 
 const firebaseConfig = {
   apiKey: "AIzaSyB45zr8b2HjIx1fzXOuQsHxeQK9wl_wC88",
@@ -20,44 +12,21 @@ const firebaseConfig = {
   measurementId: "G-TB1ZXQ79LB",
 };
 
-// ✅ Reuse app if already initialized (HMR safe)
-const app: FirebaseApp = getApps().length ? getApp() : initializeApp(firebaseConfig);
+// Initialize Firebase (only once)
+export const app = !getApps().length ? initializeApp(firebaseConfig) : getApps()[0];
 
-// ✅ Initialize Firebase Auth properly
-let auth: Auth;
+// Initialize Auth
+export const auth = getAuth(app);
 
-if (typeof window !== "undefined") {
-  // ---- Browser ----
-  try {
-    // Always call initializeAuth ONCE for web
-    auth = initializeAuth(app, {
-      persistence: browserLocalPersistence,
-      popupRedirectResolver: browserPopupRedirectResolver,
-    });
-  } catch (error) {
-    console.warn("initializeAuth failed, falling back to getAuth:", error);
-    auth = getAuth(app); // fallback if already initialized
-  }
-} else {
-  // ---- Server / Node ----
-  auth = getAuth(app);
-}
-
-// ✅ Store globally to survive hot reload in dev
-if (typeof window !== "undefined") {
-  (window as any).__auth = auth;
-}
-
-// ---- Providers ----
-const googleProvider = new GoogleAuthProvider();
+// Configure providers
+export const googleProvider = new GoogleAuthProvider();
 googleProvider.setCustomParameters({ prompt: "select_account" });
 googleProvider.addScope("email");
 googleProvider.addScope("profile");
 
-const facebookProvider = new FacebookAuthProvider();
+export const facebookProvider = new FacebookAuthProvider();
 facebookProvider.setCustomParameters({ display: "popup" });
 facebookProvider.addScope("email");
 
-// ---- Exports ----
-export { app, auth, googleProvider, facebookProvider };
+// Default export for the app
 export default app;

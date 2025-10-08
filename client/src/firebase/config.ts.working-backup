@@ -1,0 +1,54 @@
+// Firebase configuration - Clean and simple with delayed auth initialization
+import { initializeApp, getApps, type FirebaseApp } from "firebase/app";
+import {
+  getAuth,
+  GoogleAuthProvider,
+  FacebookAuthProvider,
+  type Auth,
+} from "firebase/auth";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyB45zr8b2HjIx1fzXOuQsHxeQK9wl_wC88",
+  authDomain: "bingeboard-73c5f.firebaseapp.com",
+  projectId: "bingeboard-73c5f",
+  storageBucket: "bingeboard-73c5f.firebasestorage.app",
+  messagingSenderId: "145846820194",
+  appId: "1:145846820194:web:047efd7a8e59b36944a03b",
+  measurementId: "G-TB1ZXQ79LB",
+};
+
+// ✅ Initialize Firebase only if not already initialized
+export const app: FirebaseApp = !getApps().length ? initializeApp(firebaseConfig) : getApps()[0];
+
+console.log("✅ Firebase app initialized successfully");
+
+// ✅ Delayed auth initialization to prevent "Component auth has not been registered yet" error
+let authInstance: Auth | null = null;
+
+const getAuthInstance = (): Auth => {
+  if (!authInstance) {
+    authInstance = getAuth(app);
+    console.log("✅ Firebase Auth initialized successfully");
+  }
+  return authInstance;
+};
+
+// ✅ Export auth as a getter to avoid initialization timing issues
+export const auth = new Proxy({} as Auth, {
+  get(target, prop) {
+    const authObj = getAuthInstance();
+    return authObj[prop as keyof Auth];
+  }
+});
+
+// ---- Providers ----
+export const googleProvider = new GoogleAuthProvider();
+googleProvider.setCustomParameters({ prompt: "select_account" });
+googleProvider.addScope("email");
+googleProvider.addScope("profile");
+
+export const facebookProvider = new FacebookAuthProvider();
+facebookProvider.setCustomParameters({ display: "popup" });
+facebookProvider.addScope("email");
+
+export default app;
