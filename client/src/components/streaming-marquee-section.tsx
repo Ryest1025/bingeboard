@@ -18,8 +18,7 @@ const streamingPlatforms: StreamingPlatform[] = [
   { name: 'Peacock', color: '#FA6B00' },
   { name: 'Crunchyroll', color: '#FF6600' },
   { name: 'Showtime', color: '#FF0000' },
-  { name: 'Starz', color: '#FFFFFF' },
-  { name: 'Discovery+', color: '#0077C8' }
+  { name: 'Starz', color: '#FFFFFF' }
 ];
 
 export function StreamingMarqueeSection() {
@@ -62,8 +61,15 @@ export function StreamingMarqueeSection() {
                     <img
                       src={getPlatformLogo(platform.name)}
                       alt={platform.name}
-                      className={`max-w-full max-h-full object-contain group-hover:brightness-125 transition-all duration-300 drop-shadow-2xl ${platform.color === '#FFFFFF' || platform.name === 'Apple TV+' || platform.name === 'Starz'
-                          ? 'filter invert brightness-100'
+                      className={`max-w-full max-h-full object-contain group-hover:brightness-125 transition-all duration-300 drop-shadow-2xl ${
+                        // Apply invert filter to make dark/black logos white for dark background
+                        platform.name === 'Apple TV+' || 
+                        platform.name === 'Starz' || 
+                        platform.name === 'Showtime' ||
+                        platform.name === 'Max' ||
+                        platform.name === 'Peacock' ||
+                        platform.color === '#FFFFFF'
+                          ? 'filter invert brightness-100' 
                           : 'filter brightness-110'
                         }`}
                       style={{ maxWidth: '64px', maxHeight: '48px' }}
