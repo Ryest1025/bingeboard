@@ -1,11 +1,18 @@
 import React from 'react';
 import { Play, PlayCircle, Plus } from 'lucide-react';
 import { ActionButton } from './ActionButton';
+import TrailerButton from '@/components/trailer-button';
 
 interface ActionConfig {
   watchNow?: boolean;
   trailer?: boolean;
   addToList?: boolean;
+}
+
+interface MediaItem {
+  id: number;
+  title?: string;
+  name?: string;
 }
 
 interface BottomActionButtonsProps {
@@ -16,6 +23,7 @@ interface BottomActionButtonsProps {
   onAddToWatchlist?: () => void;
   onWatchTrailer?: () => void;
   className?: string;
+  media?: MediaItem; // Add media prop for TrailerButton
 }
 
 export const BottomActionButtons: React.FC<BottomActionButtonsProps> = ({
@@ -25,7 +33,8 @@ export const BottomActionButtons: React.FC<BottomActionButtonsProps> = ({
   onWatchNow,
   onAddToWatchlist,
   onWatchTrailer,
-  className = ''
+  className = '',
+  media
 }) => {
   if (!actions.watchNow && !actions.trailer && !actions.addToList) {
     return null;
@@ -57,19 +66,18 @@ export const BottomActionButtons: React.FC<BottomActionButtonsProps> = ({
           
           {/* Secondary buttons in a row */}
           <div className="flex gap-2">
-            {actions.trailer && (
-              <ActionButton 
-                size="sm" 
-                variant="secondary" 
-                onClick={(e) => {
-                  e?.stopPropagation();
-                  onWatchTrailer?.();
+            {actions.trailer && media && (
+              <TrailerButton
+                show={{
+                  id: media.id,
+                  tmdbId: media.id,
+                  title: media.title || media.name || 'Unknown'
                 }}
-                className="flex-1 flex items-center justify-center gap-1.5 px-2 py-2 bg-slate-700 hover:bg-slate-600 border-slate-600 text-white"
-              >
-                <PlayCircle className="w-3 h-3 flex-shrink-0" />
-                <span className="text-xs font-medium">Trailer</span>
-              </ActionButton>
+                variant="secondary"
+                size="sm"
+                showLabel={true}
+                className="flex-1 text-xs"
+              />
             )}
             
             {actions.addToList && (
@@ -111,19 +119,18 @@ export const BottomActionButtons: React.FC<BottomActionButtonsProps> = ({
           </ActionButton>
         )}
         
-        {actions.trailer && (
-          <ActionButton 
-            size="sm" 
-            variant="secondary" 
-            onClick={(e) => {
-              e?.stopPropagation();
-              onWatchTrailer?.();
+        {actions.trailer && media && (
+          <TrailerButton
+            show={{
+              id: media.id,
+              tmdbId: media.id,
+              title: media.title || media.name || 'Unknown'
             }}
-            className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-slate-700 hover:bg-slate-600 border-slate-600 text-white min-w-0"
-          >
-            <PlayCircle className="w-3 h-3 flex-shrink-0" />
-            <span className="truncate text-xs font-medium">Trailer</span>
-          </ActionButton>
+            variant="secondary"
+            size="sm"
+            showLabel={true}
+            className="flex-1 text-xs"
+          />
         )}
         
         {actions.addToList && (

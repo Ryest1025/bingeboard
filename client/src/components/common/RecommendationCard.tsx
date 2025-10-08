@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Play, Plus, Check, Share, Eye, Heart, ThumbsUp, ThumbsDown, Star } from "lucide-react";
 import PlatformBadges from "@/components/search/PlatformBadges";
+import TrailerButton from "@/components/trailer-button";
 import { useRecommendationActions } from "@/hooks/useRecommendationActions";
 import { useQuickFeedback } from "@/components/common/UserFeedback";
 
@@ -170,17 +171,20 @@ export default function RecommendationCard({
               >
                 {isInWatchlist ? <Check className="w-5 h-5" /> : <Plus className="w-5 h-5" />}
               </Button>
-              {show.hasTrailer && show.trailerUrl && (
-                <Button
-                  size="icon"
-                  variant="outline"
-                  className="rounded-full"
-                  title="Play Trailer"
-                  onClick={handlePlayTrailer}
-                >
-                  <Play className="w-5 h-5" />
-                </Button>
-              )}
+              
+              {/* Always show trailer button - let TrailerButton handle availability */}
+              <TrailerButton
+                show={{
+                  id: show.tmdbId,
+                  tmdbId: show.tmdbId,
+                  title: show.title
+                }}
+                variant="outline"
+                size="sm"
+                showLabel={false}
+                className="rounded-full w-10 h-10 p-0"
+              />
+              
               <Button
                 size="icon"
                 variant={isSeen ? "secondary" : "outline"}

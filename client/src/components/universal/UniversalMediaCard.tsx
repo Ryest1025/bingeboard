@@ -12,6 +12,7 @@ import { BottomActionButtons } from '@/components/cards/BottomActionButtons';
 import { StreamingLogosSection } from '@/components/cards/StreamingLogosSection';
 import { CARD_VARIANTS, GENRE_NAMES } from '@/components/cards/cardVariants';
 import StreamingLogos from '@/components/streaming-logos';
+import TrailerButton from '@/components/trailer-button';
 
 interface StreamingPlatform {
   provider_id?: number;
@@ -218,10 +219,17 @@ const UniversalMediaCard: React.FC<UniversalMediaCardProps> = ({
                 )}
                 
                 {actions.trailer && (
-                  <ActionButton variant="secondary" size="lg" onClick={(e) => { e?.stopPropagation(); onWatchTrailer?.(media); }}>
-                    <Film className="w-5 h-5" />
-                    Trailer
-                  </ActionButton>
+                  <TrailerButton
+                    show={{
+                      id: media.id,
+                      tmdbId: media.id,
+                      title: title
+                    }}
+                    variant="secondary"
+                    size="default"
+                    showLabel={true}
+                    className="min-w-24"
+                  />
                 )}
                 
                 {actions.addToList && (
@@ -372,6 +380,7 @@ const UniversalMediaCard: React.FC<UniversalMediaCardProps> = ({
             onWatchNow={() => onWatchNow?.(media)}
             onAddToWatchlist={() => onAddToWatchlist?.(media)}
             onWatchTrailer={() => onWatchTrailer?.(media)}
+            media={media}
           />
         )}
         

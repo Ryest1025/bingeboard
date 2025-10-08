@@ -1,21 +1,10 @@
 import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle, 
-  DialogDescription 
-} from "@/components/ui/dialog";
 import { Play, Video } from "lucide-react";
 import { TrailerWithAds } from "@/components/ad-player";
 import { useAuth } from "@/hooks/useAuth";
-import { 
-  getBestTrailer, 
-  getYouTubeEmbedUrl,
-  trackTrailerView 
-} from "@/lib/trailerUtils";
+import { useTrailer } from "@/hooks/useTrailer";
 
 interface TrailerButtonProps {
   show: {
@@ -37,37 +26,31 @@ export default function TrailerButton({
   showLabel = true
 }: TrailerButtonProps) {
   const [showModal, setShowModal] = useState(false);
-  const [trailerData, setTrailerData] = useState<any>(null);
-  const [loading, setLoading] = useState(false);
   const { user } = useAuth();
 
-  // Check if user has premium plan for ad-free trailers
-  const userPlan = user?.subscription?.plan || "free";
-  const hasAdFreeTrailers = userPlan === "plus" || userPlan === "premium";
+  // Use the multi-API trailer hook
+  const { data: trailerData, isLoading, error } = useTrailer(
+    show.tmdbId || show.id, 
+    'tv', 
+    show.title
+  );
 
-  const handleTrailerClick = async () => {
-    setLoading(true);
-    try {
-      const trailer = await getBestTrailer(show.tmdbId || show.id, 'tv');
-      setTrailerData(trailer);
-      if (trailer) {
-        setShowModal(true);
-        // Track trailer view
-        if (user) {
-          await trackTrailerView(
-            show.tmdbId || show.id,
-            trailer.key,
-            user.id,
-            show.title,
-            !hasAdFreeTrailers
-          );
-        }
-      }
-    } catch (error) {
-      console.error('Error loading trailer:', error);
-    } finally {
-      setLoading(false);
+  // Check if user has premium plan for ad-free trailers (simplified)
+  const hasAdFreeTrailers = false; // For now, all users see ads
+
+  const handleTrailerClick = () => {
+    if (trailerData?.primaryTrailer) {
+      setShowModal(true);
     }
+  };
+
+  // Get embed URL helper function
+  const getEmbedUrl = (url: string) => {
+    if (url.includes('youtube.com/watch')) {
+      const videoId = url.split('v=')[1]?.split('&')[0];
+      return `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0`;
+    }
+    return url;
   };
 
   return (
@@ -75,31 +58,39 @@ export default function TrailerButton({
       <Button
         variant={variant}
         size={size}
-        className={`${className} ${loading ? 'opacity-75' : ''} bg-red-600 hover:bg-red-700 text-white border-red-500`}
+        className={`${className} ${isLoading ? 'opacity-75' : ''} bg-red-600 hover:bg-red-700 text-white border-red-500`}
         onClick={handleTrailerClick}
-        disabled={loading}
+        disabled={isLoading || !trailerData?.primaryTrailer}
       >
         <Play className="h-3 w-3 mr-1" />
-        {showLabel ? (loading ? "Loading..." : "Trailer") : "🎬"}
+        {showLabel ? (isLoading ? "Loading..." : "Trailer") : "🎬"}
       </Button>
 
       {/* Trailer Modal */}
-      <Dialog open={showModal} onOpenChange={setShowModal}>
-        <DialogContent className="max-w-4xl w-full">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Video className="h-5 w-5" />
-              {show.title} - Trailer
-            </DialogTitle>
-            <DialogDescription>
+      {showModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="fixed inset-0 bg-black/80" onClick={() => setShowModal(false)} />
+          <div className="relative bg-slate-900 rounded-lg p-6 w-full max-w-4xl max-h-[90vh] overflow-auto mx-4">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <Video className="h-5 w-5" />
+                <h2 className="text-lg font-semibold">{show.title} - Trailer</h2>
+              </div>
+              <button
+                onClick={() => setShowModal(false)}
+                className="text-slate-400 hover:text-white"
+              >
+                ✕
+              </button>
+            </div>
+            <p className="text-sm text-slate-400 mb-4">
               {hasAdFreeTrailers ? 
                 "Enjoy this ad-free preview trailer" : 
                 "Watch this trailer after a brief ad"
               }
-            </DialogDescription>
-          </DialogHeader>
+            </p>
           
-          {!trailerData ? (
+          {error || !trailerData?.primaryTrailer ? (
             <div className="aspect-video bg-black rounded-lg flex items-center justify-center">
               <div className="text-center text-white">
                 <Video className="h-12 w-12 mx-auto mb-4 opacity-50" />
@@ -114,14 +105,14 @@ export default function TrailerButton({
                   Premium: Ad-Free Trailer
                 </Badge>
                 <div className="text-sm text-muted-foreground">
-                  Enjoying your Plus/Premium experience!
+                  Multi-API Source: {trailerData.primaryTrailer.source}
                 </div>
               </div>
               <div className="aspect-video bg-black rounded-lg">
                 <iframe
                   width="100%"
                   height="100%"
-                  src={getYouTubeEmbedUrl(trailerData.key, true)}
+                  src={getEmbedUrl(trailerData.primaryTrailer.url)}
                   title={`${show.title} Trailer`}
                   frameBorder="0"
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
@@ -133,25 +124,31 @@ export default function TrailerButton({
           ) : (
             // Free users see ads before trailers
             <TrailerWithAds
-              trailerUrl={getYouTubeEmbedUrl(trailerData.key)}
+              trailerUrl={getEmbedUrl(trailerData.primaryTrailer.url)}
               showTitle={show.title}
             >
-              <div className="aspect-video bg-black rounded-lg">
-                <iframe
-                  width="100%"
-                  height="100%"
-                  src={getYouTubeEmbedUrl(trailerData.key, true)}
-                  title={`${show.title} Trailer`}
-                  frameBorder="0"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                  className="rounded-lg"
-                />
+              <div className="space-y-2">
+                <div className="text-sm text-muted-foreground text-center">
+                  Source: {trailerData.primaryTrailer.source} • {trailerData.stats?.total || 0} trailers found
+                </div>
+                <div className="aspect-video bg-black rounded-lg">
+                  <iframe
+                    width="100%"
+                    height="100%"
+                    src={getEmbedUrl(trailerData.primaryTrailer.url)}
+                    title={`${show.title} Trailer`}
+                    frameBorder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                    className="rounded-lg"
+                  />
+                </div>
               </div>
             </TrailerWithAds>
           )}
-        </DialogContent>
-      </Dialog>
+          </div>
+        </div>
+      )}
     </>
   );
 }

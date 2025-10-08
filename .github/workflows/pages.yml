@@ -50,8 +50,13 @@ jobs:
       - name: Build project (frontend only via vite)
         run: npm run build:pages
 
-      - name: Add .nojekyll file to disable Jekyll
-        run: touch dist/public/.nojekyll
+      - name: Copy favicon and add .nojekyll
+        run: |
+          # Copy favicon.ico to build output root
+          cp client/public/favicon.ico dist/public/favicon.ico
+          # Add .nojekyll file to disable Jekyll
+          touch dist/public/.nojekyll
+          echo "✅ Added favicon.ico and .nojekyll to build output"
 
       - name: Sanity check build output path
         run: |
