@@ -22,7 +22,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Eye, EyeOff, Mail, Lock, Tv, Info } from "lucide-react";
-import { auth, googleProvider } from "@/firebase/config-simple";
+import { auth, googleProvider } from "@/firebase/config";
 
 export default function MobileSocialLogin() {
   const [, setLocation] = useLocation();
@@ -54,10 +54,6 @@ export default function MobileSocialLogin() {
       try {
         const result = await getRedirectResult(auth);
         if (result?.user) {
-          toast({
-            title: "Login Successful",
-            description: `Welcome ${result.user.displayName || 'to BingeBoard'}!`,
-          });
           setUser(result.user);
           setLocation('/');
         }
@@ -93,10 +89,6 @@ export default function MobileSocialLogin() {
         : await createUserWithEmailAndPassword(auth, formData.email, formData.password);
 
       if (result.user) {
-        toast({
-          title: isLogin ? "Login Successful" : "Registration Successful",
-          description: isLogin ? "Welcome back!" : "Welcome to BingeBoard!",
-        });
         setLocation('/');
       } else {
         toast({
@@ -130,10 +122,6 @@ export default function MobileSocialLogin() {
         console.log("🖥️ Using popup for desktop device");
         const result = await signInWithPopup(auth, googleProvider);
         if (result.user) {
-          toast({
-            title: "Login Successful",
-            description: `Welcome ${result.user.displayName || 'to BingeBoard'}!`,
-          });
           setLocation('/');
         }
       }

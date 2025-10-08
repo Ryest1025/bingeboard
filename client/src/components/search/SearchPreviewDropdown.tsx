@@ -45,9 +45,9 @@ export function SearchPreviewDropdown({
     loadRecentSearches();
   }, []);
 
-  // Search when query changes
+  // Search when query changes - now triggers at 1 character for better UX
   useEffect(() => {
-    if (query.trim().length >= 2) {
+    if (query.trim().length >= 1) {
       searchShows(query);
     } else {
       setResults([]);
@@ -111,10 +111,14 @@ export function SearchPreviewDropdown({
   const searchShows = async (searchQuery: string) => {
     setLoading(true);
     try {
-      const response = await fetch(`/api/tmdb/search?query=${encodeURIComponent(searchQuery)}&type=multi`);
+      const response = await fetch(`/api/streaming/enhanced-search?query=${encodeURIComponent(searchQuery)}&type=multi`);
       if (response.ok) {
         const data = await response.json();
-        setResults(data.results?.slice(0, 8) || []);
+        // Show up to 8 results, prioritizing by relevance score
+        const sortedResults = (data.results || [])
+          .sort((a: any, b: any) => (b._relevance_score || 0) - (a._relevance_score || 0))
+          .slice(0, 8);
+        setResults(sortedResults);
         setSelectedIndex(-1);
       }
     } catch (error) {
@@ -156,7 +160,7 @@ export function SearchPreviewDropdown({
   if (!isVisible) return null;
 
   const showRecentSearches = query.trim().length === 0 && recentSearches.length > 0;
-  const showResults = query.trim().length >= 2 && results.length > 0;
+  const showResults = query.trim().length >= 1 && results.length > 0;
 
   return (
     <div className="absolute top-full left-0 right-0 mt-2 bg-slate-800 border border-slate-700 rounded-lg shadow-xl z-50 max-h-96 overflow-hidden">
@@ -177,7 +181,7 @@ export function SearchPreviewDropdown({
           <div className="flex flex-wrap gap-2">
             {recentSearches.map((search, index) => (
               <Badge
-                key={index}
+                key={search}
                 variant="outline"
                 className="cursor-pointer hover:bg-slate-700 text-gray-300 border-gray-600"
                 onClick={() => {
@@ -206,6 +210,7 @@ export function SearchPreviewDropdown({
             {results.map((show, index) => (
               <SearchResultCard
                 key={show.id}
+                id={`search-result-${show.id}`}
                 show={show}
                 genres={genres}
                 onHover={onHoverShow}
@@ -221,7 +226,7 @@ export function SearchPreviewDropdown({
       )}
 
       {/* No Results */}
-      {query.trim().length >= 2 && results.length === 0 && !loading && (
+      {query.trim().length >= 1 && results.length === 0 && !loading && (
         <div className="p-4 text-center">
           <p className="text-gray-400 mb-2">No results found for "{query}"</p>
           <p className="text-sm text-gray-500">
@@ -231,7 +236,7 @@ export function SearchPreviewDropdown({
       )}
 
       {/* Quick Actions */}
-      {query.trim().length >= 2 && (
+      {query.trim().length >= 1 && (
         <div className="border-t border-slate-700 p-3">
           <button
             onClick={() => {

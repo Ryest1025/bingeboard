@@ -218,7 +218,7 @@ export default function WorkingDashboard() {
                 <Avatar className="h-8 w-8">
                   <AvatarImage src={user.photoURL || ""} />
                   <AvatarFallback className="bg-teal-600 text-white text-sm">
-                    {user.displayName ? user.displayName.charAt(0).toUpperCase() : user.email?.charAt(0).toUpperCase()}
+                    {(user.displayName ? user.displayName.charAt(0).toUpperCase() : user.email?.charAt(0).toUpperCase()) || 'U'}
                   </AvatarFallback>
                 </Avatar>
                 <div className="hidden lg:block">

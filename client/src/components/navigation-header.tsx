@@ -115,10 +115,9 @@ export default function NavigationHeader() {
 
   const navItems = [
     { path: "/", label: "Dashboard", active: location === "/" },
-    { path: "/discover", label: "Discover", active: location === "/discover" },
-    { path: "/upcoming", label: "Upcoming", active: location === "/upcoming" },
-    { path: "/activity", label: "Activity", active: location === "/activity" },
-    { path: "/friends", label: "Binge Friends", active: location === "/friends" },
+    { path: "/discover", label: "Discover", active: location === "/discover" || location === "/upcoming" },
+    { path: "/lists", label: "Lists", active: location === "/lists" },
+    { path: "/friends", label: "Binge with Friends", active: location === "/friends" },
   ];
 
   return (

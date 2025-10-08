@@ -26,15 +26,15 @@ export function initializeFirebaseAdmin() {
       projectId: serviceAccount.project_id || 'bingeboard-73c5f',
     });
 
-    console.log('Firebase Admin SDK initialized successfully');
+    console.log('✅ Firebase Admin SDK initialized successfully');
     return app;
   } catch (error) {
-    console.error('Failed to initialize Firebase Admin SDK:', error);
+    console.error('❌ Failed to initialize Firebase Admin SDK:', error);
     return null;
   }
 }
 
-// Get Firebase Admin instance
+// Get Firebase Admin instance - returns the admin module, not the app
 export function getFirebaseAdmin() {
   if (!app) {
     app = initializeFirebaseAdmin();
@@ -45,6 +45,21 @@ export function getFirebaseAdmin() {
   }
   
   return admin;
+}
+
+// Helper function to get admin with proper error handling for routes
+export function getFirebaseAdminForAuth() {
+  try {
+    const firebaseApp = initializeFirebaseAdmin();
+    if (!firebaseApp) {
+      console.warn('⚠️ Firebase Admin not initialized');
+      return null;
+    }
+    return admin;
+  } catch (error) {
+    console.error('❌ Error getting Firebase Admin for auth:', error);
+    return null;
+  }
 }
 
 // Send a push notification (overloaded function for different parameter types)

@@ -20,7 +20,7 @@ import {
   insertViewingHistorySchema, insertUserBehaviorSchema, insertRecommendationTrainingSchema
 } from "@shared/schema";
 import { users, upcomingReleases, releaseReminders } from "../shared/schema";
-import { initializeFirebaseAdmin, sendPushNotification } from "./services/firebaseAdmin";
+import { initializeFirebaseAdmin, sendPushNotification, getFirebaseAdminForAuth } from "./services/firebaseAdmin";
 import { TMDBService } from "./services/tmdb";
 import { sportsService } from "./services/sports";
 import { StreamingService } from "./services/streamingService";
@@ -222,7 +222,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let user;
 
       // Check if Firebase Admin is available
-      const firebaseAdmin = initializeFirebaseAdmin();
+      const firebaseAdmin = getFirebaseAdminForAuth();
 
       if (authHeader?.startsWith('Bearer ') && firebaseAdmin) {
         // Verify Firebase ID token using Admin SDK
@@ -230,8 +230,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log('🔐 Firebase token extracted, attempting verification...');
 
         try {
+          console.log('🔐 Attempting Firebase token verification with Admin SDK...');
           const decodedToken = await firebaseAdmin.auth().verifyIdToken(idToken);
-          console.log('🔍 Firebase token decoded:', {
+          console.log('🔍 Firebase token decoded successfully:', {
             uid: decodedToken.uid,
             email: decodedToken.email,
             email_verified: decodedToken.email_verified,
@@ -486,6 +487,111 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('TMDB search error:', error);
       res.status(500).json({ message: 'Failed to search content' });
+    }
+  });
+
+  // Enhanced search with actor support and relevancy scoring
+  app.get('/api/streaming/enhanced-search', async (req, res) => {
+    try {
+      const { query, type = 'multi' } = req.query;
+      if (!query) {
+        return res.status(400).json({ message: 'Search query is required' });
+      }
+
+      // Search for content, people, and get trending data for relevancy scoring
+      const [contentResults, personResults, trendingMovies, trendingTV] = await Promise.all([
+        tmdbService.multiSearch(query as string),
+        tmdbService.searchPerson(query as string),
+        tmdbService.getTrending('movie', 'week').catch(() => ({ results: [] })),
+        tmdbService.getTrending('tv', 'week').catch(() => ({ results: [] }))
+      ]);
+
+      // Create trending lookup for relevancy boost
+      const trendingIds = new Set([
+        ...(trendingMovies.results || []).map((item: any) => `movie-${item.id}`),
+        ...(trendingTV.results || []).map((item: any) => `tv-${item.id}`)
+      ]);
+
+      let allResults = [...((contentResults as any).results || [])];
+
+      // Add content from actors' known_for (if person found)
+      if ((personResults as any).results?.length > 0) {
+        for (const person of (personResults as any).results.slice(0, 3)) { // Top 3 matching actors
+          if (person.known_for) {
+            const actorContent = person.known_for.map((item: any) => ({
+              ...item,
+              _from_actor: person.name,
+              _actor_relevance: person.popularity || 0
+            }));
+            allResults = [...allResults, ...actorContent];
+          }
+        }
+      }
+
+      // Enhanced relevancy scoring
+      const scoredResults = allResults.map((item: any) => {
+        let relevanceScore = 0;
+
+        const title = (item.title || item.name || '').toLowerCase();
+        const searchTerm = (query as string).toLowerCase();
+
+        // Exact title match gets highest score
+        if (title === searchTerm) {
+          relevanceScore += 1000;
+        }
+        // Title starts with search term
+        else if (title.startsWith(searchTerm)) {
+          relevanceScore += 500;
+        }
+        // Title contains search term
+        else if (title.includes(searchTerm)) {
+          relevanceScore += 200;
+        }
+
+        // Boost trending content
+        const itemKey = `${item.media_type || (item.title ? 'movie' : 'tv')}-${item.id}`;
+        if (trendingIds.has(itemKey)) {
+          relevanceScore += 300;
+        }
+
+        // Boost by popularity
+        relevanceScore += (item.popularity || 0) * 0.1;
+
+        // Boost if from actor search
+        if (item._from_actor) {
+          relevanceScore += (item._actor_relevance || 0) * 0.05;
+        }
+
+        // Boost recent content
+        const releaseYear = new Date(item.release_date || item.first_air_date || '2000').getFullYear();
+        const currentYear = new Date().getFullYear();
+        if (releaseYear >= currentYear - 2) {
+          relevanceScore += 50;
+        }
+
+        return { ...item, _relevance_score: relevanceScore };
+      });
+
+      // Sort by relevance score and remove duplicates
+      const uniqueResults = scoredResults
+        .sort((a, b) => (b._relevance_score || 0) - (a._relevance_score || 0))
+        .filter((item, index, arr) => 
+          arr.findIndex(other => other.id === item.id && 
+            (other.media_type || (other.title ? 'movie' : 'tv')) === 
+            (item.media_type || (item.title ? 'movie' : 'tv'))
+          ) === index
+        )
+        .slice(0, 20); // Limit to top 20 results
+
+      res.json({
+        results: uniqueResults,
+        total_results: uniqueResults.length,
+        query,
+        actor_matches: (personResults as any).results?.slice(0, 3).map((p: any) => p.name) || []
+      });
+    } catch (error) {
+      console.error('Enhanced search error:', error);
+      res.status(500).json({ message: 'Failed to perform enhanced search' });
     }
   });
 

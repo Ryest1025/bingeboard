@@ -31,10 +31,6 @@ export default function LoginMinimal() {
 
         if (response.ok) {
           console.log('✅ Backend session created');
-          toast({
-            title: "Login successful",
-            description: "Welcome to BingeBoard!",
-          });
 
           // Redirect to home page
           window.location.href = '/';
@@ -81,10 +77,6 @@ export default function LoginMinimal() {
 
         if (response.ok) {
           console.log('✅ Backend session created');
-          toast({
-            title: "Login successful",
-            description: "Welcome to BingeBoard!",
-          });
 
           // Redirect to home page
           window.location.href = '/';

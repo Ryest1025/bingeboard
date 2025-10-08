@@ -203,10 +203,6 @@ export default function FirebaseAuthTest() {
         const data = await response.json();
         setSessionUser(data.user);
         console.log("✅ Email login successful:", data);
-        toast({
-          title: "Login Successful!",
-          description: `Welcome back ${data.user.email}!`,
-        });
       } else {
         const errorData = await response.json();
         console.error("❌ Email login failed:", errorData);

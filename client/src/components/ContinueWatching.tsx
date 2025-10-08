@@ -173,8 +173,12 @@ const ContinueWatchingCard: React.FC<ContinueWatchingItemProps> = ({
           <div className="absolute top-3 right-3">
             <StreamingLogos 
               providers={typeof platform === 'string' 
-                ? [{ provider_id: 0, provider_name: platform }] 
-                : [{ provider_id: 0, provider_name: platform?.provider_name || platform?.name || 'Platform', logo_path: platform?.logo_path }]
+                ? [{ provider_id: 1, provider_name: platform }] 
+                : [{ 
+                    provider_id: 1, 
+                    provider_name: platform?.provider_name || platform?.name || 'Platform', 
+                    logo_path: platform?.logo_path 
+                  }]
               }
               size="sm"
               maxDisplayed={1}

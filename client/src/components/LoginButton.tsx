@@ -27,13 +27,11 @@ export const LoginButton = () => {
         try {
           const userData = await response.json();
           console.log('✅ API call successful:', userData);
-          alert(`🎉 LOGIN SUCCESS! Welcome ${user.email}`);
           window.location.reload(); // Refresh to update auth state
         } catch (jsonError) {
           console.error('❌ Failed to parse response as JSON:', jsonError);
           const text = await response.text();
           console.error('❌ Response was:', text);
-          alert(`⚠️ Login successful but got unexpected response format`);
         }
       } else {
         console.error('❌ API call failed:', response.status);
@@ -43,15 +41,11 @@ export const LoginButton = () => {
         // Check if we got HTML instead of JSON
         if (responseText.startsWith('<!DOCTYPE') || responseText.includes('<html>')) {
           console.error('❌ Got HTML instead of JSON - backend route might be missing');
-          alert(`⚠️ Backend API not configured correctly (got HTML instead of JSON)`);
-        } else {
-          alert(`⚠️ Login successful but API call failed: ${response.status}`);
         }
       }
       
     } catch (error: any) {
       console.error('❌ Login failed:', error);
-      alert(`❌ Login failed: ${error.message || 'Unknown error'}`);
     }
   };
 

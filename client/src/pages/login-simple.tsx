@@ -30,12 +30,11 @@ import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { Eye, EyeOff, Mail, Lock } from "lucide-react";
 import { SiGoogle, SiFacebook } from "react-icons/si";
-import { signInWithPopup, getRedirectResult, browserLocalPersistence, browserSessionPersistence, setPersistence, signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
+import { signInWithPopup, signInWithRedirect, getRedirectResult, signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
 import { auth, googleProvider, facebookProvider } from '@/firebase/config';
 
 // Helper function to create Firebase session
@@ -47,6 +46,12 @@ async function createFirebaseSession(firebaseToken: string) {
     body: JSON.stringify({ firebaseToken }),
   });
   return response.ok;
+}
+
+// Helper function to detect mobile Safari (needs redirect instead of popup)
+function isMobileSafari() {
+  const userAgent = navigator.userAgent;
+  return /iPhone|iPad|iPod/i.test(userAgent) && /Safari/i.test(userAgent) && !/CriOS|FxiOS|EdgiOS/i.test(userAgent);
 }
 
 export default function LoginSimple() {
@@ -146,8 +151,8 @@ export default function LoginSimple() {
     setIsLoading(true);
 
     try {
-      // Set Firebase persistence based on remember me preference
-      await setPersistence(auth, rememberMe ? browserLocalPersistence : browserSessionPersistence);
+      // Note: Persistence is already configured in firebase config via initializeAuth
+      // Removing setPersistence to avoid conflicts
 
       if (isLogin) {
         // LOGIN: Use Firebase signInWithEmailAndPassword
@@ -174,16 +179,13 @@ export default function LoginSimple() {
             localStorage.removeItem('userEmail');
           }
 
-          toast({
-            title: "Login successful",
-            description: "Welcome back!",
-          });
-
           // Refresh auth state and navigate
           await refreshSession();
           setLocation("/");
         } else {
           console.error('❌ Failed to create backend session');
+          // Force signOut to prevent ghost login state
+          await auth.signOut();
           toast({
             title: "Login failed",
             description: "Failed to complete authentication. Please try again.",
@@ -221,16 +223,13 @@ export default function LoginSimple() {
         if (response.ok) {
           console.log('✅ Backend session created successfully');
 
-          toast({
-            title: "Registration successful",
-            description: "Account created successfully!",
-          });
-
-          // Refresh auth state and navigate
+          // Navigate immediately without toast notification - seamless experience
           await refreshSession();
           setLocation("/");
         } else {
           console.error('❌ Failed to create backend session');
+          // Force signOut to prevent ghost login state
+          await auth.signOut();
           toast({
             title: "Registration failed",
             description: "Failed to complete registration. Please try again.",
@@ -355,16 +354,14 @@ export default function LoginSimple() {
 
           if (sessionCreated) {
             console.log('✅ Backend session created successfully');
-            toast({
-              title: "Login successful",
-              description: "Welcome to BingeBoard!",
-            });
-
+            
             // Refresh auth state and navigate programmatically
             await refreshSession();
             setLocation("/");
           } else {
             console.error('❌ Failed to create backend session');
+            // Force signOut to prevent ghost login state (OAuth redirect)
+            await auth.signOut();
             toast({
               title: "Login failed",
               description: "Failed to complete authentication. Please try again.",
@@ -412,13 +409,26 @@ export default function LoginSimple() {
 
   const handleGoogleAuth = async () => {
     try {
-      console.log('🚀 Starting Google authentication with popup...');
+      console.log('🚀 Starting Google authentication...');
       setIsLoading(true);
 
-      // Set Firebase persistence based on remember me preference
-      await setPersistence(auth, rememberMe ? browserLocalPersistence : browserSessionPersistence);
+      // Note: Persistence is already configured in firebase config via initializeAuth
+      // Removing setPersistence to avoid conflicts
 
-      // Use popup instead of redirect to avoid storage partitioning issues
+      // Use redirect for mobile Safari, popup for others
+      if (isMobileSafari()) {
+        console.log('📱 Mobile Safari detected, using redirect flow');
+        await signInWithRedirect(auth, googleProvider);
+        // Redirect will handle the rest, no need for further processing here
+        return;
+      }
+
+      // Use popup for desktop and other mobile browsers
+      console.log('💻 Using popup flow for Google auth');
+      
+      // Show user that popup is opening
+      setIsLoading(true);
+      
       const result = await signInWithPopup(auth, googleProvider);
 
       if (result.user) {
@@ -437,16 +447,13 @@ export default function LoginSimple() {
             localStorage.setItem('userEmail', result.user.email);
           }
 
-          toast({
-            title: "Login successful",
-            description: "Welcome to BingeBoard!",
-          });
-
-          // Refresh auth state and navigate programmatically
+          // Navigate immediately without toast notification
           await refreshSession();
           setLocation("/");
         } else {
           console.error('❌ Failed to create backend session');
+          // Force signOut to prevent ghost login state (Google OAuth)
+          await auth.signOut();
           toast({
             title: "Login failed",
             description: "Failed to complete authentication. Please try again.",
@@ -462,7 +469,7 @@ export default function LoginSimple() {
         toast({
           title: "Authentication cancelled",
           description: "Google login was cancelled",
-          variant: "destructive",
+          variant: "default",
         });
       } else if (error.code === 'auth/popup-blocked') {
         toast({
@@ -484,13 +491,27 @@ export default function LoginSimple() {
 
   const handleFacebookAuth = async () => {
     try {
-      console.log('🚀 Starting Facebook authentication with popup...');
+      console.log('🚀 Starting Facebook authentication...');
       setIsLoading(true);
 
-      // Set Firebase persistence based on remember me preference
-      await setPersistence(auth, rememberMe ? browserLocalPersistence : browserSessionPersistence);
+      // Note: Persistence is already configured in firebase config via initializeAuth
+      // Removing setPersistence to avoid conflicts
 
-      // Use popup instead of redirect to avoid storage partitioning issues  
+      // Use redirect for mobile Safari, popup for others
+      if (isMobileSafari()) {
+        console.log('📱 Mobile Safari detected, using redirect flow');
+        await signInWithRedirect(auth, facebookProvider);
+        // Redirect will handle the rest, no need for further processing here
+        return;
+      }
+
+      // Use popup for desktop and other mobile browsers
+      // Use popup for desktop and other mobile browsers
+      console.log('💻 Using popup flow for Facebook auth');
+      
+      // Show user that popup is opening
+      setIsLoading(true);
+      
       const result = await signInWithPopup(auth, facebookProvider);
 
       if (result.user) {
@@ -509,16 +530,13 @@ export default function LoginSimple() {
             localStorage.setItem('userEmail', result.user.email);
           }
 
-          toast({
-            title: "Login successful",
-            description: "Welcome to BingeBoard!",
-          });
-
-          // Refresh auth state and navigate programmatically
+          // Navigate immediately without toast notification
           await refreshSession();
           setLocation("/");
         } else {
           console.error('❌ Failed to create backend session');
+          // Force signOut to prevent ghost login state (Facebook OAuth)
+          await auth.signOut();
           toast({
             title: "Login failed",
             description: "Failed to complete authentication. Please try again.",
@@ -534,7 +552,7 @@ export default function LoginSimple() {
         toast({
           title: "Authentication cancelled",
           description: "Facebook login was cancelled",
-          variant: "destructive",
+          variant: "default",
         });
       } else if (error.code === 'auth/popup-blocked') {
         toast({
@@ -676,6 +694,7 @@ export default function LoginSimple() {
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-3 top-3 text-gray-400 hover:text-gray-300"
+                    aria-label={showPassword ? "Hide password" : "Show password"}
                   >
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
@@ -715,13 +734,14 @@ export default function LoginSimple() {
                 {isLogin && (
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
-                      <Checkbox
+                      <input
+                        type="checkbox"
                         id="remember"
                         checked={rememberMe}
-                        onCheckedChange={handleRememberMeChange}
-                        className="border-slate-600/50 data-[state=checked]:bg-teal-600 data-[state=checked]:border-teal-600"
+                        onChange={(e) => handleRememberMeChange(e.target.checked)}
+                        className="h-4 w-4 rounded border-slate-600/50 bg-gray-800/50 text-teal-600 focus:ring-teal-500/20"
                       />
-                      <label htmlFor="remember" className="text-sm text-gray-300">
+                      <label htmlFor="remember" className="text-sm text-gray-300 cursor-pointer">
                         Remember me
                       </label>
                     </div>

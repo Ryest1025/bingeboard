@@ -120,7 +120,6 @@ export default function MobileApp() {
       } else {
         const result = await signInWithPopup(auth, provider);
         const sessionResult = await createBackendSession(result.user);
-        toast({ title: "Welcome to BingeBoard!", description: "Successfully signed in with Google" });
         // Let the auth state change handle the UI update
       }
     } catch (err: any) {
@@ -146,7 +145,6 @@ export default function MobileApp() {
       } else {
         const result = await signInWithPopup(auth, provider);
         const sessionResult = await createBackendSession(result.user);
-        toast({ title: "Welcome to BingeBoard!", description: "Successfully signed in with Facebook" });
         // Let the auth state change handle the UI update
       }
     } catch (err: any) {
@@ -167,7 +165,6 @@ export default function MobileApp() {
         const result = await getRedirectResult(auth);
         if (result && result.user) {
           await createBackendSession(result.user);
-          toast({ title: "Welcome to BingeBoard!", description: "Successfully signed in!" });
           // Let the auth state change handle the UI update
         }
       } catch (err: any) {

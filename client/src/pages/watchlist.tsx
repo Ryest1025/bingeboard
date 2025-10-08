@@ -10,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Slider } from "@/components/ui/slider";
 import { TopNav } from "@/components/top-nav";
@@ -765,6 +765,9 @@ export default function Watchlist() {
           <DialogContent className="bg-slate-800 border-slate-700">
             <DialogHeader>
               <DialogTitle>Edit {selectedItem?.show.title}</DialogTitle>
+              <DialogDescription>
+                Update the details and progress for this show in your watchlist.
+              </DialogDescription>
             </DialogHeader>
             {selectedItem && (
               <EditItemForm
@@ -781,6 +784,9 @@ export default function Watchlist() {
           <DialogContent className="bg-slate-800 border-slate-700">
             <DialogHeader>
               <DialogTitle>Update Progress - {selectedItem?.show.title}</DialogTitle>
+              <DialogDescription>
+                Track your viewing progress and update your current episode.
+              </DialogDescription>
             </DialogHeader>
             {selectedItem && (
               <ProgressForm

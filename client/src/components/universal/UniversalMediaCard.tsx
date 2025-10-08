@@ -1,10 +1,17 @@
 import React from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Star, Plus, Play, Calendar, Clock, Share2, Clapperboard } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Star, Play, PlayCircle, Plus, Clapperboard, Film } from 'lucide-react';
+
+// Import modular components
+import { CardWrapper } from '@/components/cards/CardWrapper';
+import { ActionButton } from '@/components/cards/ActionButton';
+import { RatingBadge } from '@/components/cards/RatingBadge';
+import { PosterSection } from '@/components/cards/PosterSection';
+import { InfoSection } from '@/components/cards/InfoSection';
+import { BottomActionButtons } from '@/components/cards/BottomActionButtons';
+import { StreamingLogosSection } from '@/components/cards/StreamingLogosSection';
+import { CARD_VARIANTS, GENRE_NAMES } from '@/components/cards/cardVariants';
 import StreamingLogos from '@/components/streaming-logos';
-import TrailerButton from '@/components/trailer-button';
 
 interface StreamingPlatform {
   provider_id?: number;
@@ -19,73 +26,49 @@ interface MediaItem {
   name?: string;
   poster_path?: string;
   backdrop_path?: string;
-  vote_average?: number;
-  genre_ids?: number[];
-  overview?: string;
   release_date?: string;
   first_air_date?: string;
-  media_type?: 'movie' | 'tv';
+  vote_average?: number;
+  overview?: string;
+  genre_ids?: number[];
   streaming_platforms?: StreamingPlatform[];
   streamingPlatforms?: StreamingPlatform[];
   streaming?: StreamingPlatform[];
+  media_type?: 'movie' | 'tv';
 }
 
+interface ActionConfig {
+  watchNow?: boolean;
+  trailer?: boolean;
+  addToList?: boolean;
+  share?: boolean;
+}
+
+type SizeVariant = 'sm' | 'md' | 'lg' | 'xl';
+
 interface UniversalMediaCardProps {
-  /** Media item data */
   media: MediaItem;
-  
-  /** Card layout variant */
-  variant?: 'vertical' | 'horizontal' | 'spotlight' | 'hero' | 'compact';
-  
-  /** Card size */
-  size?: 'sm' | 'md' | 'lg' | 'xl';
-  
-  /** Available actions */
-  actions?: {
-    watchNow?: boolean;
-    trailer?: boolean;
-    addToList?: boolean;
-    share?: boolean;
-  };
-  
-  /** Show streaming platform logos */
+  variant?: 'vertical' | 'horizontal' | 'spotlight' | 'compact' | 'spotlight-polished' | 'vertical-polished' | 'spotlight-poster-backdrop';
+  size?: SizeVariant;
+  actions?: ActionConfig;
   showStreamingLogos?: boolean;
-  
-  /** Show rating badge */
+  showSecondaryPoster?: boolean;
+  showStreamingLogoInButton?: boolean;
+  hideStreamingLogos?: boolean;
+  streamingLogoInWatchNow?: boolean;
+  moveButtonsToBottom?: boolean;
   showRating?: boolean;
-  
-  /** Show genre badges */
   showGenres?: boolean;
-  
-  /** Show release date */
   showReleaseDate?: boolean;
-  
-  /** Show description */
   showDescription?: boolean;
-  
-  /** Action callbacks */
   onAddToWatchlist?: (media: MediaItem) => void;
   onWatchTrailer?: (media: MediaItem) => void;
   onCardClick?: (media: MediaItem) => void;
   onShareContent?: (media: MediaItem) => void;
   onWatchNow?: (media: MediaItem) => void;
-  
-  /** Custom genre mapping */
   genreMap?: Record<number, string>;
-  
-  /** Custom className */
   className?: string;
 }
-
-// Genre mapping
-const GENRE_NAMES: Record<number, string> = {
-  28: 'Action', 12: 'Adventure', 16: 'Animation', 35: 'Comedy', 80: 'Crime',
-  99: 'Documentary', 18: 'Drama', 10751: 'Family', 14: 'Fantasy', 36: 'History',
-  27: 'Horror', 10402: 'Music', 9648: 'Mystery', 10749: 'Romance', 878: 'Sci-Fi',
-  10770: 'TV Movie', 53: 'Thriller', 10752: 'War', 37: 'Western',
-  10759: 'Action & Adventure', 10762: 'Kids', 10763: 'News', 10764: 'Reality',
-  10765: 'Sci-Fi & Fantasy', 10766: 'Soap', 10767: 'Talk', 10768: 'War & Politics'
-};
 
 const UniversalMediaCard: React.FC<UniversalMediaCardProps> = ({
   media,
@@ -93,6 +76,11 @@ const UniversalMediaCard: React.FC<UniversalMediaCardProps> = ({
   size = 'md',
   actions = { watchNow: true, trailer: true, addToList: true },
   showStreamingLogos = true,
+  showSecondaryPoster = false,
+  showStreamingLogoInButton = false,
+  hideStreamingLogos = false,
+  streamingLogoInWatchNow = false,
+  moveButtonsToBottom = false,
   showRating = true,
   showGenres = false,
   showReleaseDate = false,
@@ -127,467 +115,282 @@ const UniversalMediaCard: React.FC<UniversalMediaCardProps> = ({
     logo_path: platform.logo_path
   })).filter(platform => platform.provider_id > 0);
   
+  // Debug streaming platforms for this media item
+  if (process.env.NODE_ENV === 'development' && normalizedPlatforms.length > 0) {
+    console.log(`🎬 "${title}" streaming platforms:`, normalizedPlatforms.map(p => ({
+      name: p.provider_name,
+      logo_path: p.logo_path,
+      hasLogo: !!p.logo_path
+    })));
+  }
+  
   // Get genres
   const genres = media.genre_ids?.slice(0, 3).map(id => genreMap[id]).filter(Boolean) || [];
+  
+  // Get variant configuration
+  const config = CARD_VARIANTS[variant] || CARD_VARIANTS.vertical;
+  
+  // Get first streaming logo for corner badges (for listings) and Watch Now button (for spotlight)
+  const firstStreamingLogo = normalizedPlatforms.length > 0 && normalizedPlatforms[0].logo_path
+    ? normalizedPlatforms[0].logo_path.startsWith('http')
+      ? normalizedPlatforms[0].logo_path
+      : `https://image.tmdb.org/t/p/w200${normalizedPlatforms[0].logo_path}`
+    : null;
 
-  // Size mappings
-  const sizeConfig = {
-    sm: {
-      width: 'w-32',
-      height: 'h-48',
-      textSize: 'text-xs',
-      titleSize: 'text-sm',
-      padding: 'p-2'
-    },
-    md: {
-      width: 'w-48',
-      height: 'h-72',
-      textSize: 'text-sm',
-      titleSize: 'text-base',
-      padding: 'p-3'
-    },
-    lg: {
-      width: 'w-56',
-      height: 'h-84',
-      textSize: 'text-base',
-      titleSize: 'text-lg',
-      padding: 'p-4'
-    },
-    xl: {
-      width: 'w-64',
-      height: 'h-96',
-      textSize: 'text-lg',
-      titleSize: 'text-xl',
-      padding: 'p-6'
-    }
-  };
+  // Determine if we should move buttons to bottom (from props or variant config)
+  const shouldMoveButtonsToBottom = moveButtonsToBottom || config.moveButtonsToBottom;
 
-  const config = sizeConfig[size];
-
-  // Variant-specific rendering
-  const renderVerticalCard = () => (
-    <Card 
-      className={`bg-slate-800 hover:bg-slate-700 transition-all duration-300 cursor-pointer group border-slate-600 hover:border-slate-500 ${config.width} ${className}`}
-      onClick={() => onCardClick?.(media)}
-    >
-      <CardContent className="p-0">
-        {/* Poster */}
-        <div className={`relative ${config.height} overflow-hidden rounded-t-lg`}>
-          {posterUrl ? (
-            <img
-              src={posterUrl}
-              alt={title}
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-              loading="lazy"
-            />
-          ) : (
-            <div className="w-full h-full bg-slate-700 flex items-center justify-center">
-              <Clapperboard className="w-12 h-12 text-slate-500" />
-            </div>
-          )}
-          
-          {/* Rating badge */}
-          {showRating && rating && (
-            <Badge 
-              variant="secondary" 
-              className="absolute top-2 left-2 bg-black/70 text-yellow-400 border-yellow-400/30"
+  // Render spotlight variants with special layouts
+  const renderSpotlight = () => {
+    if (variant === 'spotlight-poster-backdrop') {
+      return (
+        <CardWrapper variant={variant} className={`relative h-96 w-full ${className}`} onClick={() => onCardClick?.(media)}>
+          {/* Background Image with subtle overlay */}
+          {backdropUrl && (
+            <motion.div
+              initial={{ scale: 1.05, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ duration: 1, ease: 'easeOut' }}
+              className="absolute inset-0 overflow-hidden"
             >
-              <Star className="w-3 h-3 mr-1 fill-current" />
-              {rating}
-            </Badge>
+              <img src={backdropUrl} alt={title} className="w-full h-full object-cover" />
+              <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/50 to-black/30" />
+            </motion.div>
           )}
           
-          {/* Action overlay */}
-          <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-            <div className="flex gap-2">
-              {actions.watchNow && (
-                <Button
-                  size="sm"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onWatchNow?.(media);
-                  }}
-                  className="bg-white text-black hover:bg-gray-200"
-                >
-                  <Play className="w-4 h-4 mr-1" />
-                  {streamingPlatforms.length > 0 ? (
-                    <span className="flex items-center gap-1">
-                      Watch Now On
-                      <StreamingLogos 
-                        providers={normalizedPlatforms} 
-                        size="sm" 
-                        maxDisplayed={1}
-                      />
-                    </span>
-                  ) : (
-                    'Watch Now'
-                  )}
-                </Button>
-              )}
-              
-              {actions.addToList && (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onAddToWatchlist?.(media);
-                  }}
-                  className="border-white/50 text-white hover:bg-white/10"
-                >
-                  <Plus className="w-4 h-4" />
-                </Button>
-              )}
-            </div>
-          </div>
-        </div>
-        
-        {/* Content */}
-        <div className={config.padding}>
-          <h3 className={`font-semibold text-white ${config.titleSize} mb-1 line-clamp-2`}>
-            {title}
-          </h3>
-          
-          {showReleaseDate && year && (
-            <p className={`text-slate-400 ${config.textSize} mb-2`}>
-              {year}
-            </p>
-          )}
-          
-          {showGenres && genres.length > 0 && (
-            <div className="flex flex-wrap gap-1 mb-2">
-              {genres.map((genre, index) => (
-                <Badge 
-                  key={index} 
-                  variant="outline" 
-                  className={`${config.textSize} border-slate-600 text-slate-300`}
-                >
-                  {genre}
-                </Badge>
-              ))}
-            </div>
-          )}
-          
-          {showDescription && media.overview && (
-            <p className={`text-slate-400 ${config.textSize} line-clamp-3 mb-2`}>
-              {media.overview}
-            </p>
-          )}
-          
-          {showStreamingLogos && streamingPlatforms.length > 0 && (
-            <div className="mt-2">
-              <StreamingLogos 
-                providers={normalizedPlatforms} 
-                size="sm"
-                maxDisplayed={4}
-              />
-            </div>
-          )}
-        </div>
-      </CardContent>
-    </Card>
-  );
+          <motion.div
+            initial={{ opacity: 0, x: -30 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.8, delay: 0.2 }}
+            className="relative z-10 h-full p-6 flex items-center gap-6"
+          >
+            {/* Poster Image */}
+            {posterUrl && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.8, delay: 0.3 }}
+                className="flex-shrink-0"
+              >
+                <img
+                  src={posterUrl}
+                  alt={title}
+                  className="w-32 md:w-40 lg:w-48 h-48 md:h-60 lg:h-72 object-cover rounded-2xl shadow-2xl border border-white/10"
+                />
+              </motion.div>
+            )}
 
-  const renderHorizontalCard = () => (
-    <Card 
-      className={`bg-slate-800 hover:bg-slate-700 transition-all duration-300 cursor-pointer group border-slate-600 hover:border-slate-500 ${className}`}
-      onClick={() => onCardClick?.(media)}
-    >
-      <CardContent className="p-0 flex">
-        {/* Poster */}
-        <div className="relative w-24 h-36 flex-shrink-0 overflow-hidden rounded-l-lg">
-          {posterUrl ? (
-            <img
-              src={posterUrl}
-              alt={title}
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-              loading="lazy"
-            />
-          ) : (
-            <div className="w-full h-full bg-slate-700 flex items-center justify-center">
-              <Clapperboard className="w-6 h-6 text-slate-500" />
-            </div>
-          )}
-        </div>
-        
-        {/* Content */}
-        <div className="flex-1 p-4">
-          <div className="flex items-start justify-between">
-            <div className="flex-1">
-              <h3 className="font-semibold text-white text-base mb-1 line-clamp-1">
-                {title}
-              </h3>
+            {/* Text Content */}
+            <div className="flex-1 space-y-4">
+              <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white">{title}</h2>
               
-              <div className="flex items-center gap-2 mb-2">
-                {showRating && rating && (
-                  <Badge variant="secondary" className="bg-black/50 text-yellow-400 border-yellow-400/30">
-                    <Star className="w-3 h-3 mr-1 fill-current" />
-                    {rating}
-                  </Badge>
+              <div className="flex flex-wrap items-center gap-4">
+                {showReleaseDate && year && <p className="text-gray-300">{year}</p>}
+                {showGenres && genres.length > 0 && <p className="text-gray-300">{genres.slice(0, 3).join(', ')}</p>}
+                {showRating && rating && <RatingBadge rating={rating} />}
+              </div>
+
+              {showDescription && media.overview && (
+                <p className="text-gray-200 line-clamp-3 max-w-2xl">{media.overview}</p>
+              )}
+
+              {/* Action Buttons */}
+              <div className="flex gap-3 mt-4">
+                {actions.watchNow && (
+                  <ActionButton
+                    variant="primary"
+                    size="lg"
+                    onClick={(e) => { e?.stopPropagation(); onWatchNow?.(media); }}
+                    className="bg-teal-600 hover:bg-teal-700 text-white font-semibold"
+                  >
+                    <div className="flex items-center gap-2">
+                      {firstStreamingLogo && (
+                        <img 
+                          src={firstStreamingLogo} 
+                          alt="Streaming platform" 
+                          className="w-5 h-5 object-contain rounded-sm bg-white p-0.5" 
+                        />
+                      )}
+                      <Play className="w-5 h-5" />
+                      Watch Now
+                    </div>
+                  </ActionButton>
                 )}
                 
-                {showReleaseDate && year && (
-                  <span className="text-slate-400 text-sm">{year}</span>
+                {actions.trailer && (
+                  <ActionButton variant="secondary" size="lg" onClick={(e) => { e?.stopPropagation(); onWatchTrailer?.(media); }}>
+                    <Film className="w-5 h-5" />
+                    Trailer
+                  </ActionButton>
+                )}
+                
+                {actions.addToList && (
+                  <ActionButton variant="secondary" size="lg" onClick={(e) => { e?.stopPropagation(); onAddToWatchlist?.(media); }}>
+                    <Plus className="w-5 h-5" />
+                    Add to List
+                  </ActionButton>
                 )}
               </div>
-              
-              {showDescription && media.overview && (
-                <p className="text-slate-400 text-sm line-clamp-2 mb-2">
-                  {media.overview}
-                </p>
-              )}
-              
-              {showStreamingLogos && streamingPlatforms.length > 0 && (
-                <StreamingLogos 
-                  providers={normalizedPlatforms} 
-                  size="sm"
-                  maxDisplayed={3}
-                />
-              )}
             </div>
-            
-            {/* Actions */}
-            <div className="flex flex-col gap-2 ml-4">
-              {actions.watchNow && (
-                <Button
-                  size="sm"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onWatchNow?.(media);
-                  }}
-                  className="bg-white text-black hover:bg-gray-200"
-                >
-                  <Play className="w-4 h-4 mr-1" />
-                  Watch Now
-                </Button>
-              )}
-              
-              {actions.addToList && (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onAddToWatchlist?.(media);
-                  }}
-                  className="border-slate-500 text-white hover:bg-white/10"
-                >
-                  <Plus className="w-4 h-4" />
-                </Button>
-              )}
-            </div>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
+          </motion.div>
+        </CardWrapper>
+      );
+    }
 
-  const renderSpotlightCard = () => (
-    <Card 
-      className={`bg-slate-900 hover:shadow-2xl transition-all duration-300 cursor-pointer group overflow-hidden ${className}`}
-      onClick={() => onCardClick?.(media)}
-    >
-      <CardContent className="p-0">
-        <div className="relative h-80">
-          {/* Background */}
-          {backdropUrl ? (
-            <img
-              src={backdropUrl}
-              alt={title}
-              className="absolute inset-0 w-full h-full object-cover"
-              loading="lazy"
-            />
-          ) : (
-            <div className="absolute inset-0 bg-gradient-to-r from-slate-800 to-slate-700" />
+    // Default spotlight layout
+    return (
+      <CardWrapper variant={variant} className={`relative h-96 w-full ${className}`} onClick={() => onCardClick?.(media)}>
+        {/* Background Image */}
+        {backdropUrl && <img src={backdropUrl} alt={title} className="absolute inset-0 w-full h-full object-cover rounded-3xl" />}
+        
+        {/* Gradient Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent rounded-3xl" />
+        
+        {/* Content Container */}
+        <div className="absolute inset-0 flex flex-col md:flex-row items-center md:items-end justify-between h-full p-8 space-y-6 md:space-y-0">
+          {/* Secondary Poster */}
+          {showSecondaryPoster && posterUrl && (
+            <img src={posterUrl} alt={title} className="w-24 md:w-32 rounded-xl shadow-2xl border border-slate-700 object-cover" />
           )}
-          
-          {/* Overlay */}
-          <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent" />
-          
-          {/* Content */}
-          <div className="relative z-10 p-8 h-full flex flex-col justify-center">
-            <h3 className="text-3xl font-bold text-white mb-4 line-clamp-2">
-              {title}
-            </h3>
+
+          {/* Info + Actions */}
+          <div className="text-center md:text-left max-w-3xl md:ml-8 space-y-4">
+            {showRating && rating && <RatingBadge rating={rating} />}
             
-            <div className="flex items-center gap-4 mb-6">
-              {showRating && rating && (
-                <Badge variant="secondary" className="bg-black/50 text-yellow-400 border-yellow-400/30">
-                  <Star className="w-4 h-4 mr-1 fill-current" />
-                  {rating}
-                </Badge>
-              )}
-              
-              {showReleaseDate && year && (
-                <span className="text-white/80">{year}</span>
-              )}
-              
+            <h1 className="text-3xl md:text-5xl font-bold text-white mb-4 leading-tight group-hover:text-blue-300 transition-colors duration-300">
+              {title}
+            </h1>
+            
+            <div className="flex items-center justify-center md:justify-start gap-4 text-sm text-slate-300">
+              {showReleaseDate && year && <span>{year}</span>}
               {showGenres && genres.length > 0 && (
-                <span className="text-white/80">{genres.join(' • ')}</span>
+                <div className="flex gap-2">
+                  {genres.slice(0, 3).map((genre, index) => (
+                    <span key={index} className="px-2 py-1 bg-slate-700/70 rounded-md backdrop-blur-sm">{genre}</span>
+                  ))}
+                </div>
               )}
             </div>
             
             {showDescription && media.overview && (
-              <p className="text-white/90 text-lg mb-6 line-clamp-3 max-w-2xl">
-                {media.overview}
-              </p>
+              <p className="text-slate-200 leading-relaxed line-clamp-3 max-w-2xl text-sm md:text-base">{media.overview}</p>
             )}
             
-            {/* Actions */}
-            <div className="flex items-center gap-4">
+            {/* Action Buttons */}
+            <div className="flex flex-wrap justify-center md:justify-start gap-3 mt-4">
               {actions.watchNow && (
-                <Button
+                <ActionButton
+                  variant="primary"
                   size="lg"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onWatchNow?.(media);
-                  }}
-                  className="bg-white text-black hover:bg-gray-200"
+                  onClick={(e) => { e?.stopPropagation(); onWatchNow?.(media); }}
+                  className="flex items-center gap-2"
                 >
-                  <Play className="w-5 h-5 mr-2" />
-                  {streamingPlatforms.length > 0 ? (
-                    <span className="flex items-center gap-2">
-                      Watch Now On
-                      <StreamingLogos 
-                        providers={normalizedPlatforms} 
-                        size="sm" 
-                        maxDisplayed={1}
-                      />
-                    </span>
-                  ) : (
-                    'Watch Now'
+                  <Play className="w-5 h-5" />
+                  Watch Now
+                  {firstStreamingLogo && showStreamingLogoInButton && (
+                    <img 
+                      src={firstStreamingLogo} 
+                      alt="Streaming Logo" 
+                      className="w-5 h-5 rounded-sm bg-white p-0.5" 
+                    />
                   )}
-                </Button>
+                </ActionButton>
               )}
               
               {actions.trailer && (
-                <TrailerButton 
-                  show={{ 
-                    id: media.id, 
-                    title: title, 
-                    tmdbId: media.id 
-                  }} 
-                  size="lg"
-                  variant="outline"
-                  className="border-white/50 text-white hover:bg-white/10"
-                />
+                <ActionButton variant="secondary" size="lg" onClick={(e) => { e?.stopPropagation(); onWatchTrailer?.(media); }}>
+                  <PlayCircle className="w-5 h-5" />
+                  Trailer
+                </ActionButton>
               )}
               
               {actions.addToList && (
-                <Button
-                  size="lg"
-                  variant="outline"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onAddToWatchlist?.(media);
-                  }}
-                  className="border-white/50 text-white hover:bg-white/10"
-                >
-                  <Plus className="w-5 h-5 mr-2" />
-                  My List
-                </Button>
+                <ActionButton variant="secondary" size="lg" onClick={(e) => { e?.stopPropagation(); onAddToWatchlist?.(media); }}>
+                  <Plus className="w-5 h-5" />
+                  Add to List
+                </ActionButton>
               )}
             </div>
             
-            {showStreamingLogos && streamingPlatforms.length > 1 && (
+            {/* Streaming Logos - only show if not in button */}
+            {!hideStreamingLogos && showStreamingLogos && !showStreamingLogoInButton && normalizedPlatforms.length > 0 && (
               <div className="mt-4">
-                <p className="text-white/60 text-sm mb-2">Also available on:</p>
-                <StreamingLogos 
-                  providers={normalizedPlatforms.slice(1)} 
-                  size="sm"
-                  maxDisplayed={5}
-                />
+                <StreamingLogos providers={normalizedPlatforms} maxDisplayed={4} size="md" />
               </div>
             )}
           </div>
         </div>
-      </CardContent>
-    </Card>
-  );
+      </CardWrapper>
+    );
+  };
 
-  const renderCompactCard = () => (
-    <Card 
-      className={`bg-slate-800/50 hover:bg-slate-700/50 transition-all duration-300 cursor-pointer group border-slate-600/50 hover:border-slate-500/50 ${className}`}
+  // Handle special variant layouts
+  if (variant?.includes('spotlight')) {
+    return renderSpotlight();
+  }
+
+  // Default modular card for vertical variants
+  return (
+    <CardWrapper 
+      variant={variant}
+      className={`w-full min-h-fit ${className}`}
       onClick={() => onCardClick?.(media)}
     >
-      <CardContent className="p-3 flex items-center gap-3">
-        {/* Small poster */}
-        <div className="relative w-12 h-18 flex-shrink-0 overflow-hidden rounded">
-          {posterUrl ? (
-            <img
-              src={posterUrl}
-              alt={title}
-              className="w-full h-full object-cover"
-              loading="lazy"
-            />
-          ) : (
-            <div className="w-full h-full bg-slate-700 flex items-center justify-center">
-              <Clapperboard className="w-4 h-4 text-slate-500" />
-            </div>
-          )}
-        </div>
+      <div className="flex flex-col h-full">
+        <PosterSection
+          posterUrl={posterUrl}
+          backdropUrl={backdropUrl}
+          showRating={showRating}
+          rating={rating}
+          actions={actions}
+          onWatchNow={() => onWatchNow?.(media)}
+          onAddToWatchlist={() => onAddToWatchlist?.(media)}
+          onWatchTrailer={() => onWatchTrailer?.(media)}
+          firstStreamingLogo={firstStreamingLogo}
+          showStreamingLogoInButton={showStreamingLogoInButton}
+          moveButtonsToBottom={shouldMoveButtonsToBottom}
+          className="flex-shrink-0 aspect-[2/3] w-full"
+          variant={variant}
+        />
         
-        {/* Content */}
-        <div className="flex-1 min-w-0">
-          <h4 className="font-medium text-white text-sm mb-1 truncate">
-            {title}
-          </h4>
-          
-          <div className="flex items-center gap-2">
-            {showRating && rating && (
-              <span className="text-yellow-400 text-xs flex items-center">
-                <Star className="w-3 h-3 mr-1 fill-current" />
-                {rating}
-              </span>
-            )}
-            
-            {showReleaseDate && year && (
-              <span className="text-slate-400 text-xs">{year}</span>
-            )}
-          </div>
-          
-          {showStreamingLogos && streamingPlatforms.length > 0 && (
-            <div className="mt-1">
-              <StreamingLogos 
-                providers={normalizedPlatforms} 
-                size="sm"
-                maxDisplayed={3}
-              />
-            </div>
-          )}
-        </div>
+        <InfoSection
+          title={title}
+          year={year}
+          genres={genres}
+          showReleaseDate={showReleaseDate}
+          showGenres={showGenres}
+          showDescription={showDescription}
+          description={media.overview}
+          config={config}
+        />
         
-        {/* Actions */}
-        {actions.addToList && (
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={(e) => {
-              e.stopPropagation();
-              onAddToWatchlist?.(media);
-            }}
-            className="flex-shrink-0 text-slate-400 hover:text-white hover:bg-white/10"
-          >
-            <Plus className="w-4 h-4" />
-          </Button>
+        {shouldMoveButtonsToBottom && (
+          <BottomActionButtons
+            actions={actions}
+            firstStreamingLogo={firstStreamingLogo}
+            showStreamingLogoInButton={showStreamingLogoInButton}
+            onWatchNow={() => onWatchNow?.(media)}
+            onAddToWatchlist={() => onAddToWatchlist?.(media)}
+            onWatchTrailer={() => onWatchTrailer?.(media)}
+          />
         )}
-      </CardContent>
-    </Card>
+        
+        {/* Streaming Logos - only show if not in button */}
+        {!hideStreamingLogos && showStreamingLogos && !showStreamingLogoInButton && !shouldMoveButtonsToBottom && normalizedPlatforms.length > 0 && (
+          <div className="mt-3 pt-3 border-t border-slate-700/50 px-3">
+            <StreamingLogos 
+              providers={normalizedPlatforms}
+              maxDisplayed={3}
+              size="sm"
+            />
+          </div>
+        )}
+      </div>
+    </CardWrapper>
   );
-
-  // Render based on variant
-  switch (variant) {
-    case 'horizontal':
-      return renderHorizontalCard();
-    case 'spotlight':
-    case 'hero':
-      return renderSpotlightCard();
-    case 'compact':
-      return renderCompactCard();
-    case 'vertical':
-    default:
-      return renderVerticalCard();
-  }
 };
 
-export default UniversalMediaCard;
+const MemoizedUniversalMediaCard = React.memo(UniversalMediaCard);
+
+export default MemoizedUniversalMediaCard;
+export { UniversalMediaCard, MemoizedUniversalMediaCard };

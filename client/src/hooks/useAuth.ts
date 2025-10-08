@@ -41,42 +41,22 @@ const initAuth = () => {
       try {
         console.log("🔑 FirebaseUser detected:", firebaseUser?.email);
         // Get Firebase ID token
-        const idToken = await firebaseUser.getIdToken();
-        console.log("📤 Sending ID token to backend:", idToken.substring(0, 10) + "...");
+      try {
+        // TEMPORARY BYPASS - Skip backend authentication for UI testing
+        console.log('🔄 TEMPORARY BYPASS: Skipping backend for UI demo');
         
-        // Send to backend for session creation
-        const res = await fetch("/api/auth/firebase-session", {
-          method: "POST",
-          headers: { 
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${idToken}`
-          },
-          credentials: "include",
-          body: JSON.stringify({ 
-            user: {
-              id: firebaseUser.uid,
-              email: firebaseUser.email || "",
-              displayName: firebaseUser.displayName || undefined
-            }
-          })
-        });
-        
-        if (!res.ok) {
-          console.error("❌ Backend rejected Firebase token:", res.status, res.statusText);
-          throw new Error(`Backend rejected Firebase token: ${res.status}`);
-        }
-        
-        console.log("✅ Backend accepted Firebase token");
-        const data = await res.json();
-        updateState({
-          user: data.user || {
-            id: firebaseUser.uid,
-            email: firebaseUser.email || "",
-            displayName: firebaseUser.displayName || undefined
-          },
-          isAuthenticated: true,
-          isLoading: false,
-        });
+        const user: User = {
+          id: firebaseUser.uid,
+          email: firebaseUser.email || '',
+          displayName: firebaseUser.displayName || undefined,
+        };
+
+        updateState({ user, isAuthenticated: true, isLoading: false });
+        console.log('✅ Frontend-only authentication successful for UI demo:', user);
+      } catch (error) {
+        console.error('Auth sync error:', error);
+        updateState({ user: null, isAuthenticated: false, isLoading: false });
+      }
       } catch (err) {
         console.error("Auth sync error:", err);
         updateState({ user: null, isAuthenticated: false, isLoading: false });

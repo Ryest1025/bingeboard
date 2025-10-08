@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, Star, Calendar, Info } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Star, Calendar, Info, Play } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import UniversalMediaCard from './UniversalMediaCard';
@@ -124,8 +124,8 @@ const UniversalHeroCarousel: React.FC<UniversalHeroCarouselProps> = ({
   const heightConfig = {
     sm: 'h-64',
     md: 'h-80',
-    lg: 'h-96',
-    xl: 'h-[32rem]'
+    lg: 'h-[28rem]', // Increased from h-96 to h-[28rem] for better content spacing
+    xl: 'h-[36rem]'  // Increased from h-[32rem] to h-[36rem]
   };
 
   // Auto-advance functionality
@@ -253,18 +253,7 @@ const UniversalHeroCarousel: React.FC<UniversalHeroCarouselProps> = ({
 
             {/* Actions */}
             <div className="flex items-center gap-4 mb-6">
-              {actions.watchNow && (
-                <UniversalMediaCard
-                  media={currentItem}
-                  variant="spotlight"
-                  actions={{ watchNow: true }}
-                  showStreamingLogos={showStreamingLogos}
-                  onWatchNow={onWatchNow}
-                  className="hidden" // We'll use just the button styling
-                />
-              )}
-              
-              {/* Custom Watch Now Button with proper streaming integration */}
+              {/* Watch Now Button with streaming integration */}
               {actions.watchNow && (
                 <Button
                   size="lg"
@@ -272,6 +261,7 @@ const UniversalHeroCarousel: React.FC<UniversalHeroCarouselProps> = ({
                   className="bg-white text-black hover:bg-gray-200 font-semibold px-8"
                 >
                   <span className="flex items-center gap-2">
+                    <Play className="w-5 h-5 mr-1" />
                     Watch Now
                     {showStreamingLogos && streamingPlatforms.length > 0 && (
                       <span className="flex items-center gap-1">

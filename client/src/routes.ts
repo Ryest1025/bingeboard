@@ -11,6 +11,7 @@ import UpcomingEnhanced from "@/pages/upcoming-enhanced";
 import Dashboard from "@/pages/dashboard";
 import SearchResultsPage from "@/pages/SearchResultsPage";
 import NotFound from "@/pages/not-found";
+import CardDemo from "@/pages/card-demo";
 
 // Lazy imports
 const LazyTestPersonalized = React.lazy(() => import("@/pages/test-personalized"));
@@ -21,12 +22,12 @@ export const publicRoutes = [
   { path: "/login", component: LoginSimple },
   { path: "/signup", component: Signup },
   { path: "/reset", component: ResetPassword },
+  { path: "/card-demo", component: CardDemo }, // NEW: Demo route for premium cards
 ];
 
 export const protectedRoutes = [
   { path: "/discover", component: Discover, requireAuth: true },
-  { path: "/upcoming", component: UpcomingEnhanced, requireAuth: true },
-  { path: "/activity", component: Activity, requireAuth: true },
+  { path: "/lists", component: Activity, requireAuth: true }, // Rename activity to lists
   { path: "/friends", component: Friends, requireAuth: true },
   { path: "/dashboard", component: Dashboard, requireAuth: true },
   { path: "/modern-discover", component: Discover, requireAuth: true },
@@ -42,8 +43,7 @@ export const navHiddenRoutes = [
   "/",
   "/landing", 
   "/discover",
-  "/upcoming",
-  "/activity", 
+  "/lists",
   "/friends",
   "/dashboard",
   "/test-dashboard"

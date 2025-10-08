@@ -195,6 +195,16 @@ export class TMDBService {
     return this.makeRequest(`/search/multi?query=${encodeURIComponent(query)}&page=${page}`);
   }
 
+  // Search for people/actors
+  async searchPerson(query: string, page = 1) {
+    return this.makeRequest(`/search/person?query=${encodeURIComponent(query)}&page=${page}`);
+  }
+
+  // Get person details including known_for movies/shows
+  async getPersonDetails(personId: number) {
+    return this.makeRequest(`/person/${personId}?append_to_response=combined_credits,external_ids`);
+  }
+
   // Get collection details (for movie franchises)
   async getCollection(collectionId: number) {
     return this.makeRequest(`/collection/${collectionId}`);

@@ -223,11 +223,6 @@ export default function Landing() {
           const sessionResult = await createBackendSession(result.user);
           console.log("✅ Backend session created:", sessionResult);
 
-          toast({
-            title: "Welcome to BingeBoard!",
-            description: `Successfully signed in with ${result.user.email}`,
-          });
-
           // Force multiple refresh attempts to ensure state sync
           console.log("🔄 REDIRECT - FORCING AUTH STATE REFRESH - Attempt 1");
           await refreshSession();
@@ -383,11 +378,6 @@ export default function Landing() {
       const sessionResult = await createBackendSession(result.user);
       console.log("✅ Backend session created:", sessionResult);
 
-      toast({
-        title: "Welcome to BingeBoard!",
-        description: "Successfully signed in with Google",
-      });
-
       // Force multiple refresh attempts to ensure state sync
       console.log("🔄 FORCING AUTH STATE REFRESH - Attempt 1");
       await refreshSession();
@@ -497,11 +487,6 @@ export default function Landing() {
       console.log("🔄 Starting backend session creation...");
       const sessionResult = await createBackendSession(result.user);
       console.log("✅ Backend session created:", sessionResult);
-
-      toast({
-        title: "Welcome to BingeBoard!",
-        description: "Successfully signed in with Facebook",
-      });
 
       // Force multiple refresh attempts to ensure state sync
       console.log("🔄 FORCING AUTH STATE REFRESH - Attempt 1");

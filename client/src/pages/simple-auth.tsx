@@ -51,10 +51,6 @@ export default function SimpleAuth() {
       const data = await response.json();
 
       if (response.ok) {
-        toast({
-          title: isLogin ? "Login successful" : "Registration successful",
-          description: isLogin ? "Welcome back!" : "Account created successfully!",
-        });
         
         // Give a moment for the session to be established, then redirect
         setTimeout(() => {

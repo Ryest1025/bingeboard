@@ -51,12 +51,7 @@ export default function SimpleAuth() {
       const data = await response.json();
 
       if (response.ok) {
-        toast({
-          title: isLogin ? "Login successful" : "Registration successful",
-          description: isLogin ? "Welcome back!" : "Account created successfully!",
-        });
-        
-        // Redirect to home page
+        // Redirect to home page - no toast notification for seamless experience
         window.location.href = '/';
       } else {
         setMessage({ type: 'error', text: data.message || 'Authentication failed' });

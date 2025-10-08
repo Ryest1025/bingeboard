@@ -14,7 +14,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Eye, EyeOff, Mail, Lock, Tv } from "lucide-react";
-import { auth } from "@/firebase/config-simple";
+import { auth } from "@/firebase/config";
 
 export default function MobileLogin() {
   const [, setLocation] = useLocation();
@@ -42,10 +42,6 @@ export default function MobileLogin() {
         : await createUserWithEmailAndPassword(auth, formData.email, formData.password);
 
       if (result.user) {
-        toast({
-          title: isLogin ? "Login Successful" : "Registration Successful",
-          description: isLogin ? "Welcome back!" : "Welcome to BingeBoard!",
-        });
         setLocation('/');
       } else {
         toast({

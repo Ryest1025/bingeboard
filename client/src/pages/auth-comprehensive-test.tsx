@@ -43,7 +43,7 @@ export default function AuthComprehensiveTest() {
   const [smsLoading, setSmsLoading] = useState(false);
   
   // Debug state
-  const [debugInfo, setDebugInfo] = useState<any>({});
+  const [debugInfo, setDebugInfo] = useState<Record<string, any>>({});
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -200,10 +200,6 @@ export default function AuthComprehensiveTest() {
         setSessionUser(data.user);
         setDebugInfo(prev => ({ ...prev, emailLogin: data }));
         console.log("✅ Email login successful:", data);
-        toast({
-          title: "Login Successful!",
-          description: `Welcome back ${data.user.email}!`,
-        });
       } else {
         const errorData = await response.json();
         console.error("❌ Email login failed:", errorData);

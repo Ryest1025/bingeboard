@@ -25,6 +25,7 @@ import type { RecommendationFilters } from '@/components/filters/types';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
@@ -819,7 +820,7 @@ function DashboardContent({}: DashboardContentProps) {
         {isRecommendationsLoading ? (
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
             {Array.from({ length: 6 }, (_, i) => (
-              <div key={i} className="aspect-[2/3] bg-gray-200 rounded-lg animate-pulse" />
+              <div key={`skeleton-${i}`} className="aspect-[2/3] bg-gray-200 rounded-lg animate-pulse" />
             ))}
           </div>
         ) : unifiedRecommendations.length > 0 ? (
@@ -864,7 +865,7 @@ function DashboardContent({}: DashboardContentProps) {
           {continueWatchingLoading ? (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
               {Array.from({ length: 4 }, (_, i) => (
-                <div key={i} className="aspect-video bg-gray-200 rounded-lg animate-pulse" />
+                <div key={`activity-skeleton-${i}`} className="aspect-video bg-gray-200 rounded-lg animate-pulse" />
               ))}
             </div>
           ) : (
@@ -948,6 +949,9 @@ function DashboardContent({}: DashboardContentProps) {
               <Filter className="h-5 w-5" />
               Recommendation Filters
             </DialogTitle>
+            <DialogDescription>
+              Customize your content recommendations by selecting preferred genres, platforms, and content types.
+            </DialogDescription>
           </DialogHeader>
           
           <div className="space-y-4">

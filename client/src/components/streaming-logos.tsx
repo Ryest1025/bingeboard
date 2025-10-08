@@ -25,11 +25,7 @@ const FALLBACK_COLORS: Record<string, string> = {
 };
 
 export default function StreamingLogos({ providers = [], size = 'md', maxDisplayed = 1 }: StreamingLogosProps) {
-  // Debug logging to see what's happening
-  if (process.env.NODE_ENV === 'development') {
-    console.log('🎬 StreamingLogos called with:', { providers, size, maxDisplayed });
-  }
-  
+  // Early return if no providers
   if (!providers || providers.length === 0) {
     return null;
   }
@@ -72,28 +68,51 @@ export default function StreamingLogos({ providers = [], size = 'md', maxDisplay
     "Discovery Plus": 1
   };
 
-  // Dedupe providers by base platform name (treat Netflix variants as same platform)
-  const seen = new Set<string>();
-  const unique = providers.filter((p, idx) => {
-    const norm = normalizePlatformName(p.provider_name || `p-${idx}`);
+  // Enhanced deduplication by normalized base platform name
+  const seenPlatforms = new Set<string>();
+  const uniqueProviders = providers.filter(provider => {
+    if (!provider || !provider.provider_name) return false;
     
-    // Extract base platform name (remove "with Ads", "Standard", etc.)
-    let basePlatform = norm.toLowerCase();
-    basePlatform = basePlatform
-      .replace(/\s+(with\s+ads?|standard|premium|basic|plus).*$/i, '')
-      .replace(/\s+amazon\s+channel.*$/i, '')
-      .replace(/\s+apple\s+tv\s+channel.*$/i, '')
-      .replace(/\s+roku.*channel.*$/i, '')
-      .trim();
+    // Extract base platform name (remove variations like "with Ads", "Standard", etc.)
+    let baseName = provider.provider_name
+      .toLowerCase()
+      .trim()
+      .replace(/\s+(with\s+ads?|standard|premium|plus|4k|uhd|hd).*$/i, '')
+      .replace(/\s+/g, '');
     
-    // Use base platform name for deduplication
-    if (seen.has(basePlatform)) return false;
-    seen.add(basePlatform);
+    // Normalize common platform variations to prevent duplicates
+    if (baseName.includes('amazon') || baseName.includes('prime')) {
+      baseName = 'amazon';
+    } else if (baseName.includes('disney')) {
+      baseName = 'disney';
+    } else if (baseName.includes('hbo') || baseName.includes('max')) {
+      baseName = 'hbo';
+    } else if (baseName.includes('apple')) {
+      baseName = 'apple';
+    } else if (baseName.includes('paramount')) {
+      baseName = 'paramount';
+    } else if (baseName.includes('netflix')) {
+      baseName = 'netflix';
+    } else if (baseName.includes('hulu')) {
+      baseName = 'hulu';
+    } else if (baseName.includes('peacock')) {
+      baseName = 'peacock';
+    } else if (baseName.includes('crunchyroll')) {
+      baseName = 'crunchyroll';
+    } else if (baseName.includes('discovery')) {
+      baseName = 'discovery';
+    }
+    
+    if (seenPlatforms.has(baseName)) {
+      return false;
+    }
+    
+    seenPlatforms.add(baseName);
     return true;
   });
 
   // Sort by priority descending
-  const sorted = unique.slice().sort((a, b) => {
+  const sortedProviders = uniqueProviders.slice().sort((a, b) => {
     const aName = a.provider_name || '';
     const bName = b.provider_name || '';
     const ap = platformPriority[aName] || 0;
@@ -101,31 +120,31 @@ export default function StreamingLogos({ providers = [], size = 'md', maxDisplay
     return bp - ap;
   });
 
-  const displayedProviders = sorted.slice(0, Math.max(1, maxDisplayed));
-  const remaining = Math.max(0, sorted.length - displayedProviders.length);
+  const displayedProviders = sortedProviders.slice(0, Math.max(1, maxDisplayed));
+  const remaining = Math.max(0, sortedProviders.length - displayedProviders.length);
   const hasMore = remaining > 0;
 
-  // Debug logging
+  // Debug logging for development
   if (process.env.NODE_ENV === 'development') {
-    console.log('🎬 StreamingLogos dedupe result:', { 
+    console.log('🎬 StreamingLogos processing (updated 4:15pm):', { 
       originalCount: providers.length, 
-      uniqueCount: unique.length, 
-      sortedCount: sorted.length,
+      uniqueCount: uniqueProviders.length, 
+      sortedCount: sortedProviders.length,
       displayedCount: displayedProviders.length,
       remaining,
-      displayed: displayedProviders.map(p => p.provider_name)
+      displayed: displayedProviders.map((p: any) => p.provider_name)
     });
   }
 
   return (
     <div className="flex items-center gap-2">
-      {displayedProviders.map((provider) => {
+      {displayedProviders.map((provider: any, index: number) => {
         // Use the entire provider object so getPlatformLogo can access logo_path
         const logoUrl = getPlatformLogo(provider);
         
         return (
           <div
-            key={provider.provider_id}
+            key={`${provider.provider_id || index}-${provider.provider_name}`}
             className={`${sizeClasses[size]} rounded-md overflow-hidden flex items-center justify-center bg-white/10 p-1`}
             title={provider.provider_name}
           >
