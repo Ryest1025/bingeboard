@@ -582,45 +582,39 @@ export default function Landing() {
 
   return (
     <div className="min-h-screen bg-black text-white">
-      {/* Header Navigation */}
-      <header className="fixed top-0 left-0 right-0 bg-black/95 backdrop-blur-sm border-b border-gray-800 z-50">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between h-16">
-            {/* BingeBoard Logo with B TV */}
-            <BingeBoardHeader className="mb-0" />
-
-            {/* Auth Buttons */}
-            <div className="flex items-center space-x-4">
-              <a
-                href="/login"
-                className="text-gray-300 hover:text-white transition-colors font-medium"
-              >
-                Sign In
-              </a>
-              <a
-                href="/signup"
-                className="bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white font-medium px-4 py-2 text-sm rounded-lg transition-all duration-200"
-              >
-                Join Now
-              </a>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      {/* Hero Section */}
-      <div className="hero-section relative overflow-hidden bg-gradient-to-br from-black via-slate-900 to-black pt-16">
+      {/* Hero Section - Mobile First Design */}
+      <div className="hero-section relative overflow-hidden bg-gradient-to-br from-black via-slate-900 to-black">
         <div className="absolute inset-0 bg-[url('/grid.svg')] bg-center [mask-image:linear-gradient(180deg,white,rgba(255,255,255,0))]"></div>
 
-        <div className="relative container mx-auto px-4 py-20">
+        <div className="relative container mx-auto px-4 py-12 min-h-screen flex flex-col justify-center">
           <div className="text-center space-y-8 max-w-4xl mx-auto">
             <div className="space-y-6">
-              <h1 className="text-4xl md:text-6xl lg:text-7xl font-black leading-tight">
-                <span className="bg-gradient-to-r from-teal-400 via-cyan-400 to-blue-400 bg-clip-text text-transparent">Binge</span>
-                <span className="text-white font-light">Board</span>
-              </h1>
+              {/* Mobile-First Logo Design - TV Logo Above BingeBoard */}
+              <div className="flex flex-col items-center space-y-4 mb-8">
+                {/* TV Logo - Larger and more prominent for mobile */}
+                <div className="relative">
+                  <div className="w-16 h-12 md:w-20 md:h-16 bg-gradient-to-br from-slate-700 to-slate-900 rounded-xl shadow-2xl border-2 border-slate-600 relative">
+                    <div className="absolute inset-1 bg-gradient-to-br from-teal-500 via-cyan-500 to-blue-500 rounded-lg flex items-center justify-center">
+                      <div
+                        className="text-2xl md:text-3xl font-bold text-white drop-shadow-lg"
+                        style={{ textShadow: '0 0 8px rgba(0,0,0,0.8), 0 0 4px rgba(255,255,255,0.3)' }}
+                      >
+                        B
+                      </div>
+                    </div>
+                    <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-4 h-1.5 bg-slate-700 rounded-sm"></div>
+                    <div className="absolute -bottom-3 left-1/2 transform -translate-x-1/2 w-6 h-1.5 bg-slate-600 rounded-sm"></div>
+                  </div>
+                </div>
 
-              <p className="text-xl md:text-2xl text-gray-300 max-w-2xl mx-auto leading-relaxed">
+                {/* Brand Name - Mobile Optimized */}
+                <h1 className="text-4xl md:text-6xl lg:text-7xl font-black leading-tight">
+                  <span className="bg-gradient-to-r from-teal-400 via-cyan-400 to-blue-400 bg-clip-text text-transparent">Binge</span>
+                  <span className="text-white font-light">Board</span>
+                </h1>
+              </div>
+
+              <p className="text-lg md:text-xl lg:text-2xl text-gray-300 max-w-2xl mx-auto leading-relaxed">
                 Your <span className="text-teal-400 font-semibold">ultimate entertainment hub</span> for tracking shows, movies, and sports
               </p>
 
@@ -652,7 +646,7 @@ export default function Landing() {
               <Button
                 onClick={handleGoogleLogin}
                 disabled={loading}
-                className="group relative bg-white/5 backdrop-blur-sm hover:bg-white/10 border border-white/10 hover:border-red-400/50 text-white font-medium px-6 py-3 text-sm inline-flex items-center gap-2 transition-all duration-300 hover:scale-[1.02] rounded-lg"
+                className="group relative bg-white/5 backdrop-blur-sm hover:bg-white/10 border border-white/10 hover:border-red-400/50 text-white font-medium px-6 py-3 text-sm inline-flex items-center gap-2 transition-all duration-300 hover:scale-[1.02] rounded-lg w-full sm:w-auto"
               >
                 <SiGoogle className="w-4 h-4 text-red-400" />
                 <span>{loading ? 'Signing in...' : 'Join with Google'}</span>
@@ -662,7 +656,7 @@ export default function Landing() {
               <Button
                 onClick={handleFacebookLogin}
                 disabled={loading}
-                className="group relative bg-white/5 backdrop-blur-sm hover:bg-white/10 border border-white/10 hover:border-blue-400/50 text-white font-medium px-6 py-3 text-sm inline-flex items-center gap-2 transition-all duration-300 hover:scale-[1.02] rounded-lg"
+                className="group relative bg-white/5 backdrop-blur-sm hover:bg-white/10 border border-white/10 hover:border-blue-400/50 text-white font-medium px-6 py-3 text-sm inline-flex items-center gap-2 transition-all duration-300 hover:scale-[1.02] rounded-lg w-full sm:w-auto"
               >
                 <SiFacebook className="w-4 h-4 text-blue-400" />
                 <span>{loading ? 'Signing in...' : 'Join with Facebook'}</span>
@@ -671,7 +665,7 @@ export default function Landing() {
 
               <a
                 href="/signup"
-                className="group relative bg-white/5 backdrop-blur-sm hover:bg-white/10 border border-white/10 hover:border-teal-400/50 text-white font-medium px-6 py-3 text-sm inline-flex items-center gap-2 transition-all duration-300 hover:scale-[1.02] rounded-lg"
+                className="group relative bg-white/5 backdrop-blur-sm hover:bg-white/10 border border-white/10 hover:border-teal-400/50 text-white font-medium px-6 py-3 text-sm inline-flex items-center gap-2 transition-all duration-300 hover:scale-[1.02] rounded-lg w-full sm:w-auto"
               >
                 <ArrowRight className="w-4 h-4 text-teal-400" />
                 <span>Create Account</span>
@@ -779,21 +773,22 @@ export default function Landing() {
       )}
 
       {/* 
-      🔒 LOCKED DESIGN: Footer with B TV Logo - DO NOT MODIFY
-      ✨ Matches header logo exactly for brand consistency
-      🎨 TV-shaped logo with gradient B and proper typography
-      📅 Locked: July 20, 2025 - Brand consistency approved
+      🔒 MOBILE-OPTIMIZED FOOTER: TV Logo Above BingeBoard - Brand Consistency
+      ✨ Matches mobile hero design for consistent branding
+      🎨 TV-shaped logo with gradient B and proper mobile typography
+      � Mobile-first design with better spacing and layout
+      📅 Updated: October 8, 2025 - Mobile optimization
       */}
       <footer className="bg-slate-900 py-12 border-t border-slate-800">
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row justify-between items-center">
-            <div className="flex items-center space-x-3 mb-4 md:mb-0">
-              {/* TV Logo - matching header */}
+            <div className="flex flex-col items-center md:flex-row md:items-center space-y-3 md:space-y-0 md:space-x-3 mb-4 md:mb-0">
+              {/* TV Logo - Mobile Optimized */}
               <div className="relative">
-                <div className="w-10 h-8 bg-gradient-to-br from-slate-700 to-slate-900 rounded-lg shadow-xl border-2 border-slate-600 relative">
+                <div className="w-12 h-10 bg-gradient-to-br from-slate-700 to-slate-900 rounded-lg shadow-xl border-2 border-slate-600 relative">
                   <div className="absolute inset-1 bg-gradient-to-br from-teal-500 via-cyan-500 to-blue-500 rounded-md flex items-center justify-center">
                     <div
-                      className="text-sm font-bold text-white drop-shadow-lg"
+                      className="text-lg font-bold text-white drop-shadow-lg"
                       style={{ textShadow: '0 0 6px rgba(0,0,0,0.8), 0 0 2px rgba(255,255,255,0.3)' }}
                     >
                       B
@@ -804,8 +799,8 @@ export default function Landing() {
                 </div>
               </div>
 
-              {/* Brand Name - matching header */}
-              <span className="text-xl select-none">
+              {/* Brand Name - Mobile Optimized */}
+              <span className="text-xl select-none text-center md:text-left">
                 <span className="font-black bg-gradient-to-r from-teal-400 via-cyan-400 to-blue-400 bg-clip-text text-transparent">
                   Binge
                 </span>
