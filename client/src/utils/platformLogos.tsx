@@ -11,9 +11,9 @@ export const PLATFORM_LOGOS: Record<string, string> = {
   'Peacock': '/logos/icons8-peacock-tv.svg',
   'Paramount+': '/logos/icons8-paramount-plus.svg',
   'Crunchyroll': '/logos/icons8-crunchyroll.svg',
-  'Starz': '/logos/Starz--Streamline-Simple-Icons.svg',
+    'Starz': '/logos/Starz--Streamline-Simple-Icons.svg',
   'Showtime': '/logos/Showtime--Streamline-Simple-Icons.svg',
-  'Hulu': '/logos/icons8-hulu.svg',  // Will fallback to badge if not found
+  'Hulu': '/logos/hulu-official.svg',
   'YouTube TV': '/logos/icons8-youtube-tv.svg', // Will fallback to badge if not found
   'Discovery+': '/logos/icons8-discovery-plus.svg', // Will fallback to badge if not found
   'ESPN': '/logos/icons8-espn.svg', // Will fallback to badge if not found
@@ -29,7 +29,7 @@ export const PLATFORM_LOGOS: Record<string, string> = {
   'crunchyroll': '/logos/icons8-crunchyroll.svg',
   'starz': '/logos/Starz--Streamline-Simple-Icons.svg',
   'showtime': '/logos/Showtime--Streamline-Simple-Icons.svg',
-  'hulu': '/logos/icons8-hulu.svg',
+  'hulu': '/logos/hulu-official.svg',
   'youtube tv': '/logos/icons8-youtube-tv.svg',
   'discovery+': '/logos/icons8-discovery-plus.svg',
   'espn': '/logos/icons8-espn.svg',
