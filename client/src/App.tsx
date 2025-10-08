@@ -12,9 +12,11 @@ import SimpleNav from "@/components/simple-nav";
 import { ConsentBanner } from "@/components/consent-banner";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import RouteWrapper from "@/components/RouteWrapper";
+import { TrailerModalProvider } from "@/components/TrailerModal";
 import { publicRoutes, protectedRoutes, notFoundRoute, navHiddenRoutes } from "@/routes";
 import Home from "@/pages/home";
 import Landing from "@/pages/landing";
+import AuthDebug from "@/pages/auth-debug";
 
 
 function Router() {
@@ -71,15 +73,32 @@ function Router() {
       {shouldShowNav && (isAuthenticated ? <TopNav /> : <SimpleNav />)}
 
       <main className={`flex-1 ${shouldShowNav ? "pt-16 pb-20 md:pb-20" : "pt-0 pb-0"}`}>
-        <Switch>
-          {/* Public */}
+                <Switch>
+          {/* Public routes */}
           {publicRoutes.map((r) => (
             <Route key={r.path} path={r.path}>
-              <RouteWrapper component={r.component} />
+              <RouteWrapper
+                component={r.component}
+              />
             </Route>
           ))}
 
-          {/* Root */}
+          {/* Debug route for testing auth */}
+          <Route path="/auth-debug">
+            <AuthDebug />
+          </Route>
+
+          {/* Redirect upcoming to discover */}
+          <Route path="/upcoming">
+            <Redirect to="/discover" />
+          </Route>
+
+          {/* Redirect activity to lists */}
+          <Route path="/activity">
+            <Redirect to="/lists" />
+          </Route>
+
+          {/* Root route - dynamic behavior based on auth */}
           <Route path="/">
             {(() => {
               console.log(`🛣️ Root route: isAuthenticated=${isAuthenticated}, isLoading=${isLoading}, user=${user?.email || 'null'}, redirecting to ${isAuthenticated ? 'dashboard' : 'landing'}`);
@@ -162,10 +181,12 @@ export default function App() {
   return (
     <SafeQueryProvider>
       <TooltipProvider>
-        <ErrorBoundary>
-          <Router />
-          <Toaster />
-        </ErrorBoundary>
+        <TrailerModalProvider>
+          <ErrorBoundary>
+            <Router />
+            <Toaster />
+          </ErrorBoundary>
+        </TrailerModalProvider>
       </TooltipProvider>
     </SafeQueryProvider>
   );
