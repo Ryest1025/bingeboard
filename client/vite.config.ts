@@ -13,6 +13,7 @@ export default defineConfig({
     host: '0.0.0.0', // Allow external access for Codespaces
     port: 3000, // Use port 3000 for frontend
     strictPort: true, // Fail if 3000 is busy
+    allowedHosts: ['localhost', '.loca.lt', '.localtunnel.me'], // Allow tunnel hosts
     hmr: {
       protocol: 'ws',
       host: 'localhost', // Match browser access for proper WebSocket connection
