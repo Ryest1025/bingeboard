@@ -19,6 +19,15 @@ const app = express();
 // Set Express environment explicitly
 app.set('env', process.env.NODE_ENV || 'development');
 
+// Simple health check endpoint (before any complex initialization)
+app.get('/api/health', (req, res) => {
+  res.json({ 
+    status: 'ok', 
+    timestamp: new Date().toISOString(),
+    env: process.env.NODE_ENV || 'development'
+  });
+});
+
 console.log('🔍 Environment check:');
 console.log('  process.env.NODE_ENV:', process.env.NODE_ENV);
 console.log('  app.get("env"):', app.get('env'));
