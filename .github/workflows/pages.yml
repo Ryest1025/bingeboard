@@ -61,9 +61,10 @@ jobs:
             exit 1
           fi
           
-          # Create CNAME file for custom domain
-          echo "bingeboardapp.com" > client/dist/CNAME
-          echo "✅ Created CNAME file"
+          # Temporarily disable CNAME to allow direct GitHub Pages access
+          # while custom domain DNS is propagating
+          # echo "bingeboardapp.com" > client/dist/CNAME
+          echo "✅ CNAME temporarily disabled for direct access"
           
           # Add .nojekyll file to disable Jekyll processing
           touch client/dist/.nojekyll
