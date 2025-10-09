@@ -1,7 +1,7 @@
 // Service Worker for BingeBoard PWA
-const CACHE_NAME = 'bingeboard-v1';
-const STATIC_CACHE_NAME = 'bingeboard-static-v1';
-const DYNAMIC_CACHE_NAME = 'bingeboard-dynamic-v1';
+const CACHE_NAME = 'bingeboard-v2';
+const STATIC_CACHE_NAME = 'bingeboard-static-v2';
+const DYNAMIC_CACHE_NAME = 'bingeboard-dynamic-v2';
 
 // Static assets to cache immediately
 const STATIC_ASSETS = [

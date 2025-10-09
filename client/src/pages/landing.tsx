@@ -585,7 +585,7 @@ export default function Landing() {
     <div className="min-h-screen bg-black text-white">
       {/* Hero Section - Mobile First Design */}
       <div className="hero-section relative overflow-hidden bg-gradient-to-br from-black via-slate-900 to-black">
-        <div className="absolute inset-0 bg-[url('/grid.svg')] bg-center [mask-image:linear-gradient(180deg,white,rgba(255,255,255,0))]"></div>
+        <div className="absolute inset-0 bg-[url('/grid.svg?v=2')] bg-center [mask-image:linear-gradient(180deg,white,rgba(255,255,255,0))]"></div>
 
         <div className="relative container mx-auto px-4 py-12 min-h-screen flex flex-col justify-center">
           <div className="text-center space-y-8 max-w-4xl mx-auto">
