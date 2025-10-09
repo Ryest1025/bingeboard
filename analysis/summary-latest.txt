@@ -1,5 +1,3 @@
 STATUS: PASS
-Exports => current:684 baseline:681 new:0 removed:1 growth:0%
+Exports => current:1037 baseline:1040 new:0 removed:0 growth:0%
 Deps    => current:0 baseline:0 new:0 removed:0
-Removed exports (first 10):
-client/src/hooks/useEnhancedSearch.ts:15 - default

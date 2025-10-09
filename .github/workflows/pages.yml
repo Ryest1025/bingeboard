@@ -3,10 +3,7 @@ name: Deploy Frontend to GitHub Pages
 on:
   push:
     branches: [ main ]
-  wor      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: client/distw_dispatch:
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -76,20 +73,10 @@ jobs:
           echo "📁 Build output contents:"
           ls -la client/dist/ | head -20
 
-      - name: Sanity check build output path
-        run: |
-          if [ ! -d dist/public ]; then
-            echo "Expected dist/public (configured in root vite.config.ts) missing" >&2
-            ls -Ral dist || true
-            exit 1
-          fi
-          find dist/public -maxdepth 1 -type f -printf '%f\n' | head -25
-
-      - name: Upload Pages artifact
+      - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: dist/public
-          # If this path changes, update root vite.config.ts (build.outDir) & this path.
+          path: client/dist
 
       - name: Debug build failure (if any)
         if: failure()

@@ -157,6 +157,10 @@ if [[ -f "$BASELINE_DEPS" ]]; then
   REMOVED_DEPS=$(wc -l < "$DIFF_REMOVED_DEPS")
 else
   echo "[analyze-unused] No dependency baseline found -> will create." >&2
+  BASELINE_DEPS_COUNT=0
+  NEW_DEPS=$CURRENT_DEPS_COUNT
+  REMOVED_DEPS=0
+  touch "$DIFF_NEW_DEPS" "$DIFF_REMOVED_DEPS"
 fi
 
 # Determine status for exports
