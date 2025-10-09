@@ -713,6 +713,8 @@ client/src/types/enhancedSearch.ts:2 - StreamingSource (used in module)
 client/src/types/preferences.ts:16 - PreferencesPanelProps
 client/src/types/preferences.ts:48 - ViewingStyleOption
 client/src/types/preferences.ts:55 - RecommendationMode
+client/src/utils/api-config.ts:13 - makeApiUrl (used in module)
+client/src/utils/api-config.ts:2 - getApiBaseUrl (used in module)
 client/src/utils/award-season.ts:49 - getActiveAwardSeason (used in module)
 client/src/utils/award-season.ts:5 - AwardSeason (used in module)
 client/src/utils/award-season.ts:60 - isAwardSeason
