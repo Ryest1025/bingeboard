@@ -62,7 +62,7 @@ app.get('/api/trending/tv/day', (req, res) => {
         id: 2,
         name: "The Bear",
         overview: "A young chef from the fine dining world returns to Chicago to run his family's sandwich shop.",
-        poster_path: "/sHFlbKS3WLqfGp94YksR0yWwhrm.jpg",
+        poster_path: "/placeholder.jpg", 
         vote_average: 8.5,
         first_air_date: "2022-06-23"
       },
