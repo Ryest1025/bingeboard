@@ -1,16 +1,23 @@
 {
   "name": "BingeBoard Dev",
-  "image": "mcr.microsoft.com/devcontainers/javascript-node:18",
+  "dockerFile": "Dockerfile",
   "platform": "linux/arm64",
   "customizations": {
     "vscode": {
       "extensions": [
         "dbaeumer.vscode-eslint",
-        "esbenp.prettier-vscode"
+        "esbenp.prettier-vscode",
+        "github.copilot",
+        "github.copilot-chat"
       ]
     }
   },
   "mounts": [
-    "source=bingeboard-node-modules,target=${containerWorkspaceFolder}/node_modules,type=volume"
-  ]
+    "source=bingeboard-node-modules,target=${containerWorkspaceFolder}/node_modules,type=volume",
+    "source=/mnt/c/Users/rache/.config/gh,target=/home/node/.config/gh,type=bind,consistency=cached"
+  ],
+  "postCreateCommand": ".devcontainer/setup.sh",
+  "containerEnv": {
+    "GITHUB_TOKEN": "${localEnv:GITHUB_TOKEN}"
+  }
 }
