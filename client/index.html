@@ -35,6 +35,16 @@
 
   <title>BingeBoard - TV Show Tracker & Discovery Platform</title>
 
+  <!-- Force HTTPS redirect when SSL is available -->
+  <script>
+    if (location.protocol !== 'https:' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
+      // Only redirect if we're on the custom domain and not already on HTTPS
+      if (location.hostname === 'bingeboardapp.com') {
+        location.replace('https:' + window.location.href.substring(window.location.protocol.length));
+      }
+    }
+  </script>
+
   <style>
     /* Basic Reset & Fonts */
     body {
