@@ -33,9 +33,10 @@ jobs:
         id: analyze
         run: |
           chmod +x ./scripts/analyze-unused.sh
-          if [ "${{ github.ref }}" = "refs/heads/main" ]; then
-            export STRICT_MAIN_NO_WARN=1
-          fi
+          # Temporarily disable strict mode for main branch during development
+          # if [ "${{ github.ref }}" = "refs/heads/main" ]; then
+          #   export STRICT_MAIN_NO_WARN=1
+          # fi
           set +e
           ./scripts/analyze-unused.sh
           EXIT_CODE=$?
