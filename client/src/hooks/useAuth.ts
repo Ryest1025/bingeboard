@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
-import { onAuthStateChanged, User as FirebaseUser } from "firebase/auth";
+import { onAuthStateChanged, type User as FirebaseUser } from "firebase/auth";
 import { auth } from "../firebase/config";
+import { apiFetch } from "../utils/api-config";
 
 interface User {
   id: string;
@@ -64,7 +65,7 @@ const initAuth = () => {
     } else {
       // No Firebase user - check backend session
       try {
-        const res = await fetch("/api/auth/status", { credentials: "include" });
+        const res = await apiFetch("/api/auth/status");
         const data = res.ok ? await res.json() : null;
         updateState({
           user: data?.user || null,
@@ -100,7 +101,7 @@ export function useAuth(): AuthState {
       await auth.signOut();
       
       // Clear backend session
-      await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
+      await apiFetch("/api/auth/logout", { method: "POST" });
       
       updateState({ user: null, isAuthenticated: false, isLoading: false });
     } catch (err) {
@@ -111,7 +112,7 @@ export function useAuth(): AuthState {
   
   const refreshSession = useCallback(async () => {
     try {
-      const res = await fetch("/api/auth/status", { credentials: "include" });
+      const res = await apiFetch("/api/auth/status");
       const data = res.ok ? await res.json() : null;
       updateState({
         user: data?.user || null,

@@ -36,20 +36,30 @@ app.use(cors({
 
     // Allow specific origins in production
     const allowedOrigins = [
+      'https://bingeboardapp.com',
+      'https://www.bingeboardapp.com',
       'https://www.joinbingeboard.com',
       'https://joinbingeboard.com',
-      /\.replit\.dev$/
-    ];
+      process.env.CORS_ORIGIN, // Configurable CORS origin
+      /\.replit\.dev$/,
+      /\.vercel\.app$/ // Allow Vercel preview deployments
+    ].filter(Boolean); // Remove any undefined values
 
     const isAllowed = allowedOrigins.some(allowed => {
       if (typeof allowed === 'string') {
         return origin === allowed;
-      } else {
+      } else if (allowed instanceof RegExp) {
         return allowed.test(origin);
       }
+      return false;
     });
 
-    callback(null, isAllowed);
+    if (isAllowed) {
+      callback(null, true);
+    } else {
+      console.log(`CORS blocked origin: ${origin}`);
+      callback(new Error('Not allowed by CORS'));
+    }
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
@@ -186,3 +196,6 @@ app.use((req, res, next) => {
     log(`serving on port ${port}`);
   });
 })();
+
+// Export for Vercel serverless functions
+export default app;

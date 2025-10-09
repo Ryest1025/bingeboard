@@ -48,6 +48,7 @@ import { RecommendationCard } from "@/components/common";
 import { getPlatformLogo } from "@/utils/platformLogos";
 import { StreamingMarqueeModal } from "@/components/streaming-marquee-modal";
 import { StreamingMarqueeSection } from "@/components/streaming-marquee-section";
+import { apiFetch } from "../utils/api-config";
 
 
 interface ComparisonRowProps {
@@ -541,7 +542,7 @@ export default function Landing() {
   const safeFetch = async (url: string) => {
     try {
       console.log(`🌐 Fetching: ${url}`);
-      const response = await fetch(url, { credentials: 'include' });
+      const response = await apiFetch(url);
       console.log(`📡 Response status: ${response.status} ${response.statusText}`);
       console.log(`📋 Content-Type: ${response.headers.get('content-type')}`);
 
