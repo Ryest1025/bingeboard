@@ -1,5 +1,6 @@
 // hooks/useTrailer.ts - fetch aggregated trailer data via multi-api endpoint
 import { useQuery } from '@tanstack/react-query';
+import { apiFetch } from '../utils/api-config';
 
 export interface TrailerItem {
   source: string;
@@ -30,7 +31,7 @@ export function useTrailer(id: string | number | null, type: string, title?: str
     queryKey: ['trailer', type, id],
     enabled: !!id && (type === 'movie' || type === 'tv'),
     queryFn: async () => {
-      const res = await fetch(`/api/multi-api/trailer/${type}/${id}?title=${encodeURIComponent(title || '')}`);
+      const res = await apiFetch(`/api/multi-api/trailer/${type}/${id}?title=${encodeURIComponent(title || '')}`);
       if (!res.ok) throw new Error('Failed to load trailer');
       return res.json();
     },

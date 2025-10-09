@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { X, Play } from "lucide-react";
 import type { Show } from "@/lib/utils";
+import { apiFetch } from "@/utils/api-config";
 
 interface TrailerTabProps {
   show: Show;
@@ -33,7 +34,7 @@ export default function TrailerTab({
     const fetchTrailer = async () => {
       setLoading(true);
       try {
-        const res = await fetch(`/api/multiapi/trailer/${show.id}`);
+        const res = await apiFetch(`/api/multi-api/trailer/tv/${show.id}`);
         if (!res.ok) throw new Error("Failed to fetch trailer");
         const data = await res.json();
         setTrailerData(data);
