@@ -37,12 +37,15 @@ app.use(cors({
     // Allow specific origins in production
     const allowedOrigins = [
       'https://bingeboardapp.com',
+      'http://bingeboardapp.com', // Allow HTTP during SSL cert provisioning
       'https://www.bingeboardapp.com',
+      'http://www.bingeboardapp.com', // Allow HTTP during SSL cert provisioning
       'https://www.joinbingeboard.com',
       'https://joinbingeboard.com',
       process.env.CORS_ORIGIN, // Configurable CORS origin
       /\.replit\.dev$/,
-      /\.vercel\.app$/ // Allow Vercel preview deployments
+      /\.vercel\.app$/, // Allow Vercel preview deployments
+      /\.github\.io$/ // Allow GitHub Pages direct URLs
     ].filter(Boolean); // Remove any undefined values
 
     const isAllowed = allowedOrigins.some(allowed => {
