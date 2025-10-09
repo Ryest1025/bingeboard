@@ -48,124 +48,113 @@ AUTO_UPDATE_BASELINE=0
 for arg in "$@"; do
   case "$arg" in
     --update-baseline)
-      #!/usr/bin/env bash
-      set -eu
-      # Enable pipefail when available (dash/older shells may not support it)
-      set -o pipefail 2>/dev/null || true
+      AUTO_UPDATE_BASELINE=1
+      shift || true
+      ;;
+    --help|-h)
+      cat <<EOF
+Usage: $(basename "$0") [--update-baseline]
 
-      # ---------------------------------------
-      # Unused exports & dependency analyzer
-      # Supports PASS / WARN / FAIL exit codes:
-      #   0 = PASS, 1 = FAIL, 2 = WARN
-      # ---------------------------------------
+  Environment overrides:
+    UNUSED_EXPORT_FAIL_THRESHOLD (default $UNUSED_EXPORT_FAIL_THRESHOLD)
+    UNUSED_EXPORT_WARN_THRESHOLD (default $UNUSED_EXPORT_WARN_THRESHOLD)
+    UNUSED_GROWTH_FAIL_PERCENT  (default $UNUSED_GROWTH_FAIL_PERCENT)
+    UNUSED_GROWTH_WARN_PERCENT  (default $UNUSED_GROWTH_WARN_PERCENT)
+    UNUSED_DEP_FAIL_THRESHOLD   (default $UNUSED_DEP_FAIL_THRESHOLD)
+    UNUSED_DEP_WARN_THRESHOLD   (default $UNUSED_DEP_WARN_THRESHOLD)
+    STRICT_BASELINE=1             (treat any diff as at least WARN)
+    UNUSED_DISABLE_KNIP_FALLBACK=1 (disable Knip fallback when ts-prune fails)
 
-      SCRIPT_DIR="$(dirname "$0")"
-      REPO_ROOT="$SCRIPT_DIR/.."
-      REPORT_DIR="$REPO_ROOT/analysis"
-      mkdir -p "$REPORT_DIR"
+Exit codes:
+  0 = PASS
+  1 = FAIL
+  2 = WARN
+EOF
+      exit 0
+      ;;
+  esac
+done
 
-      # Load relevant tuning vars from .env safely (ignore secrets / spaced values)
-      if [[ -f "$REPO_ROOT/.env" ]]; then
-        while IFS='=' read -r key val; do
-          case "$key" in
-            UNUSED_EXPORT_*|UNUSED_GROWTH_*|UNUSED_DEP_*|STRICT_BASELINE|AUTO_UPDATE_BASELINE|UNUSED_DISABLE_KNIP_FALLBACK)
-              # Trim possible CR/LF
-              val="${val%$'\r'}"
-              export "$key"="$val"
-              ;;
-          esac
-        done < <(grep -E '^(UNUSED_EXPORT_|UNUSED_GROWTH_|UNUSED_DEP_|STRICT_BASELINE|AUTO_UPDATE_BASELINE|UNUSED_DISABLE_KNIP_FALLBACK)=' "$REPO_ROOT/.env" || true)
-      fi
+DATE=$(date +%Y%m%d)
+REPORT_MD="$REPORT_DIR/report-$DATE.md"
 
-      # Defaults (can be overridden by env)
-      #  - WARN on any growth (>0%)
-      #  - FAIL on >5% growth
-      #  - WARN on any new unused export (>0 new) and FAIL if >5 new
-      UNUSED_EXPORT_FAIL_THRESHOLD=${UNUSED_EXPORT_FAIL_THRESHOLD:-5}
-      UNUSED_EXPORT_WARN_THRESHOLD=${UNUSED_EXPORT_WARN_THRESHOLD:-0}
-      UNUSED_GROWTH_FAIL_PERCENT=${UNUSED_GROWTH_FAIL_PERCENT:-5}
-      UNUSED_GROWTH_WARN_PERCENT=${UNUSED_GROWTH_WARN_PERCENT:-0}
+TS_PRUNE_OUT="/tmp/ts-prune-unused.txt"
+TS_PRUNE_FILTERED="/tmp/ts-prune-unused.filtered.txt"
+BASELINE_FILTERED="/tmp/ts-prune-baseline.filtered.txt"
+DEPCHECK_OUT="/tmp/depcheck-unused.txt"
 
-      UNUSED_DEP_FAIL_THRESHOLD=${UNUSED_DEP_FAIL_THRESHOLD:-5}
-      UNUSED_DEP_WARN_THRESHOLD=${UNUSED_DEP_WARN_THRESHOLD:-1}
+BASELINE_EXPORTS="$REPORT_DIR/baseline-unused-exports.txt"
+BASELINE_DEPS="$REPORT_DIR/baseline-unused-deps.txt"
 
-      STRICT_BASELINE=${STRICT_BASELINE:-0} # if 1, any change triggers at least WARN (or FAIL if above warn threshold)
-  STRICT_MAIN_NO_WARN=${STRICT_MAIN_NO_WARN:-0} # if 1 (on main branch), escalate what would be WARN growth to FAIL
-  UNUSED_DISABLE_KNIP_FALLBACK=${UNUSED_DISABLE_KNIP_FALLBACK:-0}
+DIFF_NEW_EXPORTS="/tmp/ts-prune-new.txt"
+DIFF_REMOVED_EXPORTS="/tmp/ts-prune-removed.txt"
+DIFF_NEW_DEPS="/tmp/dep-new.txt"
+DIFF_REMOVED_DEPS="/tmp/dep-removed.txt"
 
-      AUTO_UPDATE_BASELINE=0
-      for arg in "$@"; do
-        case "$arg" in
-          --update-baseline)
-            AUTO_UPDATE_BASELINE=1
-            shift || true
-            ;;
-          --help|-h)
-            cat <<EOF
-  Usage: $(basename "$0") [--update-baseline]
+STATUS="PASS"
 
-      Environment overrides:
-        UNUSED_EXPORT_FAIL_THRESHOLD (default $UNUSED_EXPORT_FAIL_THRESHOLD)
-        UNUSED_EXPORT_WARN_THRESHOLD (default $UNUSED_EXPORT_WARN_THRESHOLD)
-        UNUSED_GROWTH_FAIL_PERCENT  (default $UNUSED_GROWTH_FAIL_PERCENT)
-        UNUSED_GROWTH_WARN_PERCENT  (default $UNUSED_GROWTH_WARN_PERCENT)
-        UNUSED_DEP_FAIL_THRESHOLD   (default $UNUSED_DEP_FAIL_THRESHOLD)
-        UNUSED_DEP_WARN_THRESHOLD   (default $UNUSED_DEP_WARN_THRESHOLD)
-  STRICT_BASELINE=1             (treat any diff as at least WARN)
-  UNUSED_DISABLE_KNIP_FALLBACK=1 (disable Knip fallback when ts-prune fails)
+echo "[analyze-unused] Running ts-prune..." >&2
+set +e
+npx ts-prune -p "$REPO_ROOT/tsconfig.tsprune.json" > "$TS_PRUNE_OUT.raw" 2> /tmp/ts-prune.err
+TS_PRUNE_EXIT=$?
+set -e
+if [[ $TS_PRUNE_EXIT -ne 0 ]]; then
+  if [[ "${UNUSED_DISABLE_KNIP_FALLBACK:-0}" == "1" ]]; then
+    echo "[analyze-unused] ts-prune failed (exit $TS_PRUNE_EXIT) and UNUSED_DISABLE_KNIP_FALLBACK=1; skipping Knip fallback." >&2
+    echo "# ts-prune failed; fallback disabled. See /tmp/ts-prune.err" > "$TS_PRUNE_OUT.raw"
+  else
+    echo "[analyze-unused] ts-prune failed (exit $TS_PRUNE_EXIT). Falling back to Knip exports analysis..." >&2
+    # Fallback: use Knip to produce a similar 'file: ExportName' list for unused exports
+    export DATABASE_URL=${DATABASE_URL:-postgres://user:pass@localhost:5432/db}
+    TMP_KNIP_JSON="/tmp/knip-exports.json"
+    npx knip --exports --reporter json --no-progress > "$TMP_KNIP_JSON"
+    # Extract unused type exports and duplicate exported value names
+    # Output format: path: ExportName
+    jq -r '
+      .issues[]? as $f | ($f.types // [])[]?.name as $n | "",$f.file,": ",$n
+    ' "$TMP_KNIP_JSON" | paste -sd '' - > "$TS_PRUNE_OUT.raw" || true
+  fi
+fi
 
-      Exit codes: 0 PASS, 1 FAIL, 2 WARN
-      EOF
-            exit 0
-            ;;
-        esac
-      done
+sort -u "$TS_PRUNE_OUT.raw" > "$TS_PRUNE_OUT" && rm -f "$TS_PRUNE_OUT.raw" || true
 
-      DATE=$(date +%Y%m%d)
-      REPORT_MD="$REPORT_DIR/report-$DATE.md"
+echo "[analyze-unused] Running depcheck..." >&2
+npx depcheck --json | jq -r '.unusedDependencies[]?, .unusedDevDependencies[]?' | sort -u > "$DEPCHECK_OUT" || true
 
-      TS_PRUNE_OUT="/tmp/ts-prune-unused.txt"
-      TS_PRUNE_FILTERED="/tmp/ts-prune-unused.filtered.txt"
-      BASELINE_FILTERED="/tmp/ts-prune-baseline.filtered.txt"
-      DEPCHECK_OUT="/tmp/depcheck-unused.txt"
+# Filter ts-prune output (remove test files, build artifacts, etc.)
+grep -v '/\(test\|spec\|__tests__\|\.test\.\|\.spec\.\|dist/\|build/\)' "$TS_PRUNE_OUT" > "$TS_PRUNE_FILTERED" || true
 
-      BASELINE_EXPORTS="$REPORT_DIR/baseline-unused-exports.txt"
-      BASELINE_DEPS="$REPORT_DIR/baseline-unused-deps.txt"
+# Compare with baselines
+CURRENT_EXPORT_COUNT=$(wc -l < "$TS_PRUNE_FILTERED")
+CURRENT_DEPS_COUNT=$(wc -l < "$DEPCHECK_OUT")
 
-      DIFF_NEW_EXPORTS="/tmp/ts-prune-new.txt"
-      DIFF_REMOVED_EXPORTS="/tmp/ts-prune-removed.txt"
-      DIFF_NEW_DEPS="/tmp/dep-new.txt"
-      DIFF_REMOVED_DEPS="/tmp/dep-removed.txt"
+if [[ -f "$BASELINE_EXPORTS" ]]; then
+  BASELINE_EXPORT_COUNT=$(wc -l < "$BASELINE_EXPORTS")
+  grep -v '/\(test\|spec\|__tests__\|\.test\.\|\.spec\.\|dist/\|build/\)' "$BASELINE_EXPORTS" > "$BASELINE_FILTERED" || true
+  comm -13 "$BASELINE_FILTERED" "$TS_PRUNE_FILTERED" > "$DIFF_NEW_EXPORTS" || true
+  comm -23 "$BASELINE_FILTERED" "$TS_PRUNE_FILTERED" > "$DIFF_REMOVED_EXPORTS" || true
+  NEW_EXPORTS=$(wc -l < "$DIFF_NEW_EXPORTS")
+  REMOVED_EXPORTS=$(wc -l < "$DIFF_REMOVED_EXPORTS")
+  if (( BASELINE_EXPORT_COUNT > 0 )); then
+    GROWTH_PERCENT=$(( (CURRENT_EXPORT_COUNT - BASELINE_EXPORT_COUNT) * 100 / BASELINE_EXPORT_COUNT ))
+  else
+    GROWTH_PERCENT=0
+  fi
+else
+  echo "[analyze-unused] No export baseline found -> will create." >&2
+  BASELINE_EXPORT_COUNT=0
+  NEW_EXPORTS=$CURRENT_EXPORT_COUNT
+  REMOVED_EXPORTS=0
+  GROWTH_PERCENT=0
+  touch "$DIFF_NEW_EXPORTS" "$DIFF_REMOVED_EXPORTS"
+fi
 
-      STATUS="PASS"
-
-      echo "[analyze-unused] Running ts-prune..." >&2
-      set +e
-      npx ts-prune -p "$REPO_ROOT/tsconfig.tsprune.json" > "$TS_PRUNE_OUT.raw" 2> /tmp/ts-prune.err
-      TS_PRUNE_EXIT=$?
-      set -e
-      if [[ $TS_PRUNE_EXIT -ne 0 ]]; then
-        if [[ "${UNUSED_DISABLE_KNIP_FALLBACK:-0}" == "1" ]]; then
-          echo "[analyze-unused] ts-prune failed (exit $TS_PRUNE_EXIT) and UNUSED_DISABLE_KNIP_FALLBACK=1; skipping Knip fallback." >&2
-          echo "# ts-prune failed; fallback disabled. See /tmp/ts-prune.err" > "$TS_PRUNE_OUT.raw"
-        else
-          echo "[analyze-unused] ts-prune failed (exit $TS_PRUNE_EXIT). Falling back to Knip exports analysis..." >&2
-          # Fallback: use Knip to produce a similar 'file: ExportName' list for unused exports
-          export DATABASE_URL=${DATABASE_URL:-postgres://user:pass@localhost:5432/db}
-          TMP_KNIP_JSON="/tmp/knip-exports.json"
-          npx knip --exports --reporter json --no-progress > "$TMP_KNIP_JSON"
-          # Extract unused type exports and duplicate exported value names
-          # Output format: path: ExportName
-          jq -r '
-            .issues[]? as $f | ($f.types // [])[]?.name as $n | "",$f.file,": ",$n
-          ' "$TMP_KNIP_JSON" | paste -sd '' - > "$TS_PRUNE_OUT.raw" || true
-        fi
-      fi
-
-      sort -u "$TS_PRUNE_OUT.raw" > "$TS_PRUNE_OUT" && rm -f "$TS_PRUNE_OUT.raw" || true
-
-      echo "[analyze-unused] Running depcheck..." >&2
-      npx depcheck --json | jq -r '.unusedDependencies[]?, .unusedDevDependencies[]?' | sort -u > "$DEPCHECK_OUT" || true
+if [[ -f "$BASELINE_DEPS" ]]; then
+  BASELINE_DEPS_COUNT=$(wc -l < "$BASELINE_DEPS")
+  comm -13 "$BASELINE_DEPS" "$DEPCHECK_OUT" > "$DIFF_NEW_DEPS" || true
+  comm -23 "$BASELINE_DEPS" "$DEPCHECK_OUT" > "$DIFF_REMOVED_DEPS" || true
+  NEW_DEPS=$(wc -l < "$DIFF_NEW_DEPS")
+  REMOVED_DEPS=$(wc -l < "$DIFF_REMOVED_DEPS")
 else
   echo "[analyze-unused] No dependency baseline found -> will create." >&2
 fi

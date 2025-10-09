@@ -3,7 +3,10 @@ name: Deploy Frontend to GitHub Pages
 on:
   push:
     branches: [ main ]
-  workflow_dispatch:
+  wor      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: client/distw_dispatch:
 
 permissions:
   contents: read
@@ -32,7 +35,7 @@ jobs:
         run: |
           echo "Node version: $(node -v)"
           echo "NPM version: $(npm -v)"
-          npm ci --verbose
+          npm ci
 
       - name: Create .env (Firebase config injected as Vite vars)
         run: |
@@ -48,17 +51,30 @@ jobs:
           echo "Created .env with $(grep -c '^VITE_FIREBASE_' .env) Firebase Vite vars"
 
       - name: Build project (frontend only via vite)
-        run: npm run build:pages
-
-      - name: Copy favicon, CNAME and add .nojekyll
         run: |
-          # Copy favicon.ico to build output root
-          cp client/public/favicon.ico dist/public/favicon.ico
-          # Copy CNAME file for custom domain
-          cp CNAME dist/public/CNAME
-          # Add .nojekyll file to disable Jekyll
-          touch dist/public/.nojekyll
-          echo "✅ Added favicon.ico, CNAME, and .nojekyll to build output"
+          npm run build:pages
+          echo "✅ Build completed successfully"
+
+      - name: Ensure required files for GitHub Pages
+        run: |
+          # Ensure build output directory exists
+          if [ ! -d client/dist ]; then
+            echo "❌ Build output directory client/dist not found!"
+            ls -la client/ || echo "client directory doesn't exist"
+            exit 1
+          fi
+          
+          # Create CNAME file for custom domain
+          echo "bingeboardapp.com" > client/dist/CNAME
+          echo "✅ Created CNAME file"
+          
+          # Add .nojekyll file to disable Jekyll processing
+          touch client/dist/.nojekyll
+          echo "✅ Created .nojekyll file"
+          
+          # Verify all files are in place
+          echo "📁 Build output contents:"
+          ls -la client/dist/ | head -20
 
       - name: Sanity check build output path
         run: |
