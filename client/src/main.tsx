@@ -8,6 +8,22 @@ import { auth } from "@/firebase/config";
 
 console.log("🚀 MAIN.TSX LOADED - Starting React app");
 
+// Handle GitHub Pages SPA routing
+const handleSPARouting = () => {
+  const urlParams = new URLSearchParams(window.location.search);
+  const redirectPath = urlParams.get('p');
+  
+  if (redirectPath && redirectPath !== '/') {
+    // Remove the redirect parameter and navigate to the intended path
+    const newUrl = window.location.origin + redirectPath;
+    window.history.replaceState(null, '', newUrl);
+    console.log('🔄 SPA routing: redirected from 404 to', redirectPath);
+  }
+};
+
+// Call SPA routing handler before app initialization
+handleSPARouting();
+
 // -------------------- Firebase Debug Helpers --------------------
 const setupFirebaseDebugHelpers = () => {
   try {
