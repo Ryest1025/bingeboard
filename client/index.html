@@ -13,6 +13,7 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="msapplication-TileColor" content="#3B82F6">
   <meta name="robots" content="index, follow">
+  <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
 
   <!-- Preload Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -148,7 +149,8 @@
 
   <!-- Service Worker Registration (production only); in dev, ensure any SW is unregistered to avoid cache issues -->
   <script type="module">
-    if (import.meta.env.PROD && 'serviceWorker' in navigator) {
+    // Temporarily disable service worker to debug security issues
+    if (import.meta.env.PROD && 'serviceWorker' in navigator && false) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('/sw.js')
           .then(reg => console.log('Service Worker registered:', reg))
