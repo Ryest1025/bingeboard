@@ -1,7 +1,7 @@
 // Service Worker for BingeBoard PWA
-const CACHE_NAME = 'bingeboard-v2';
-const STATIC_CACHE_NAME = 'bingeboard-static-v2';
-const DYNAMIC_CACHE_NAME = 'bingeboard-dynamic-v2';
+const CACHE_NAME = 'bingeboard-v3';
+const STATIC_CACHE_NAME = 'bingeboard-static-v3';
+const DYNAMIC_CACHE_NAME = 'bingeboard-dynamic-v3';
 
 // Static assets to cache immediately
 const STATIC_ASSETS = [
@@ -73,6 +73,13 @@ self.addEventListener('fetch', (event) => {
   
   // Skip chrome-extension requests
   if (url.protocol === 'chrome-extension:') {
+    return;
+  }
+  
+  // Force HTTPS for all requests
+  if (url.protocol === 'http:' && url.hostname !== 'localhost' && url.hostname !== '127.0.0.1') {
+    const httpsUrl = url.toString().replace('http:', 'https:');
+    event.respondWith(fetch(httpsUrl));
     return;
   }
   
