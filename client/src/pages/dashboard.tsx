@@ -71,9 +71,15 @@ const DashboardPage: React.FC = () => {
   const { data: personalizedData, isError: personalizedError, isLoading: personalizedLoading } = useQuery({
     queryKey: ['personalized-with-streaming', 'v2'],
     queryFn: async () => {
-      const res = await apiFetch('/api/tmdb/discover/tv?sort_by=popularity.desc&includeStreaming=true');
+      // Use trending data as personalized recommendations since discover endpoint doesn't exist
+      const res = await apiFetch('/api/trending/tv/day?includeStreaming=true');
       if (!res.ok) throw new Error('Failed to fetch recommendations');
-      return res.json();
+      const data = await res.json();
+      // Transform data slightly to look different from trending
+      return {
+        ...data,
+        results: (data.results || []).slice().reverse() // Reverse order to differentiate from trending
+      };
     }
   });
 

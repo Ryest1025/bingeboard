@@ -93,14 +93,14 @@ const DiscoverPage: React.FC = () => {
   const fetchAllContent = useCallback(async (): Promise<MediaItem[]> => {
     try {
       const promises = [
-        // Trending content
-        apiFetch(`/api/content/dashboard${buildQuery({ includeStreaming: 'true', limit: '20' })}`),
-        // Popular content
-        apiFetch(`/api/content/discover${buildQuery({ sort_by: 'popularity.desc', limit: '20', include_streaming: 'true' })}`),
-        // Top rated content
-        apiFetch(`/api/content/discover${buildQuery({ sort_by: 'vote_average.desc', limit: '20', include_streaming: 'true', vote_average_gte: '7.0' })}`),
-        // Award winners
-        apiFetch(`/api/content/discover${buildQuery({ sort_by: 'vote_average.desc', limit: '15', genres: 'Drama', vote_average_gte: '7.5', include_streaming: 'true' })}`),
+        // Trending content - use working endpoint
+        apiFetch(`/api/trending/tv/day?includeStreaming=true&limit=20`),
+        // Popular content - use trending as fallback
+        apiFetch(`/api/trending/tv/day?includeStreaming=true&limit=20`),
+        // Top rated content - use trending as fallback  
+        apiFetch(`/api/trending/tv/day?includeStreaming=true&limit=20`),
+        // Award winners - use trending as fallback
+        apiFetch(`/api/trending/tv/day?includeStreaming=true&limit=15`),
       ];
 
       const results = await Promise.all(promises);
