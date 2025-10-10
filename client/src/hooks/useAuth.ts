@@ -35,6 +35,21 @@ const initAuth = () => {
   if (initialized) return;
   initialized = true;
   
+  // Check for demo mode in URL
+  const urlParams = new URLSearchParams(window.location.search);
+  const isDemoMode = urlParams.get('demo') === 'true';
+  
+  if (isDemoMode) {
+    console.log('🎭 Demo mode activated');
+    const demoUser: User = {
+      id: 'demo-user-123',
+      email: 'demo@bingeboardapp.com',
+      displayName: 'Demo User',
+    };
+    updateState({ user: demoUser, isAuthenticated: true, isLoading: false });
+    return;
+  }
+  
   // Listen to Firebase auth state changes
   onAuthStateChanged(auth, async (firebaseUser: FirebaseUser | null) => {
     updateState({ isLoading: true }); // mark loading at start
