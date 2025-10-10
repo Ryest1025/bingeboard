@@ -3,6 +3,8 @@
  * Handles trailer discovery and playback functionality
  */
 
+import { apiFetch } from '@/utils/api-config';
+
 export interface MediaItem {
   id: string;
   title?: string;
@@ -49,7 +51,7 @@ class TrailerService {
       if (media.name) params.append('title', media.name);
 
       const url = params.toString() ? `${endpoint}?${params}` : endpoint;
-      const response = await fetch(url);
+      const response = await apiFetch(url);
 
       if (!response.ok) {
         throw new Error(`TMDB API error: ${response.status}`);
@@ -106,7 +108,7 @@ class TrailerService {
     
     try {
       // Use YouTube search through our API proxy
-      const response = await fetch(`/api/youtube/search?q=${encodeURIComponent(searchQuery)}&type=video&part=snippet&maxResults=5`);
+      const response = await apiFetch(`/api/youtube/search?q=${encodeURIComponent(searchQuery)}&type=video&part=snippet&maxResults=5`);
       
       if (!response.ok) {
         throw new Error(`YouTube API error: ${response.status}`);

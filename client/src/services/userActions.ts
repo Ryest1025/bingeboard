@@ -3,6 +3,8 @@
  * Centralized service for watchlist, reminders, and user preferences
  */
 
+import { apiFetch } from '@/utils/api-config';
+
 export interface MediaItem {
   id: string;
   title?: string;
@@ -112,8 +114,7 @@ class UserActionsService {
     options: RequestInit = {}
   ): Promise<T | null> {
     try {
-      const response = await fetch(endpoint, {
-        credentials: 'include',
+      const response = await apiFetch(endpoint, {
         headers: {
           'Content-Type': 'application/json',
           ...options.headers,

@@ -290,7 +290,7 @@ export default function Landing() {
       };
 
       console.log('📤 Sending session request to backend...');
-      const response = await fetch('/api/auth/firebase-session', {
+      const response = await apiFetch('/api/auth/firebase-session', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

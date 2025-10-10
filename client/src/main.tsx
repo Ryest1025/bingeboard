@@ -5,6 +5,7 @@ import "./index.css";
 
 // ✅ Firebase still used for debug helpers only
 import { auth } from "@/firebase/config";
+import { apiFetch } from "@/utils/api-config";
 
 console.log("🚀 MAIN.TSX LOADED - Starting React app");
 
@@ -50,7 +51,7 @@ const setupFirebaseDebugHelpers = () => {
         console.log("✅ Login success:", user.email);
         console.log("🔐 Token preview:", token.substring(0, 50) + "...");
 
-        const apiResponse = await fetch("/api/auth/user", {
+        const apiResponse = await apiFetch("/api/auth/user", {
           headers: {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
@@ -73,7 +74,7 @@ const setupFirebaseDebugHelpers = () => {
       if (!user) return console.log("❌ No user signed in. Run window.testLogin() first.");
 
       const token = await user.getIdToken(true);
-      const res = await fetch("/api/auth/user", {
+      const res = await apiFetch("/api/auth/user", {
         headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
       });
 
