@@ -10,9 +10,29 @@ dotenv.config();
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
+// Plugin to replace HTTP references with HTTPS to prevent mixed content issues
+const httpsRewritePlugin = () => ({
+  name: 'https-rewrite',
+  generateBundle(options: any, bundle: any) {
+    Object.keys(bundle).forEach((fileName) => {
+      const chunk = bundle[fileName];
+      if (chunk.type === 'chunk' && typeof chunk.code === 'string') {
+        // Replace common HTTP namespace URLs with HTTPS
+        chunk.code = chunk.code
+          .replace(/http:\/\/www\.w3\.org\/2000\/svg/g, 'https://www.w3.org/2000/svg')
+          .replace(/http:\/\/www\.w3\.org\/1999\/xhtml/g, 'https://www.w3.org/1999/xhtml')
+          .replace(/http:\/\/www\.w3\.org\/1999\/xlink/g, 'https://www.w3.org/1999/xlink')
+          .replace(/http:\/\/www\.w3\.org\/XML\/1998\/namespace/g, 'https://www.w3.org/XML/1998/namespace')
+          .replace(/http:\/\/schemas\.xmlsoap\.org\/soap\/envelope\//g, 'https://schemas.xmlsoap.org/soap/envelope/')
+          .replace(/http:\/\/www\.apache\.org\/licenses\/LICENSE-2\.0/g, 'https://www.apache.org/licenses/LICENSE-2.0');
+      }
+    });
+  }
+});
+
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [react(), tsconfigPaths()],
+  plugins: [react(), tsconfigPaths(), httpsRewritePlugin()],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './client/src'),

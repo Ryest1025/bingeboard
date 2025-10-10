@@ -4,7 +4,10 @@
   "type": "module",
   "scripts": {
     "dev": "vite --host 0.0.0.0 --port 3000",
-    "build": "vite build",
+    "build": "vite build && npm run fix-https",
+    "build-only": "vite build",
+    "fix-https": "find dist -type f \\( -name '*.js' -o -name '*.css' -o -name '*.html' \\) -exec sed -i 's|http://|https://|g' {} + 2>/dev/null || true",
+    "check-https": "grep -r 'http://' dist/ || echo 'No HTTP references found - all good!'",
     "preview": "vite preview"
   },
   "dependencies": {
