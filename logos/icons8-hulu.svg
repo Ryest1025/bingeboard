@@ -1,0 +1,35 @@
+<svg width="64" height="48" viewBox="0 0 64 48" xmlns="http://www.w3.org/2000/svg">
+  <!-- Official Hulu logo recreation based on brand guidelines -->
+  <defs>
+    <!-- Hulu's signature green gradient -->
+    <linearGradient id="huluBrandGreen" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#3CBB3C;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#66D366;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#3CBB3C;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Dark background matching official branding -->
+  <rect width="64" height="48" fill="#0B1426" rx="4"/>
+  
+  <!-- Hulu wordmark using official proportions and spacing -->
+  <g fill="url(#huluBrandGreen)" font-family="Arial, Helvetica, sans-serif" font-weight="700">
+    <!-- 'h' -->
+    <rect x="8" y="16" width="3" height="16"/>
+    <rect x="8" y="22" width="7" height="3"/>
+    <rect x="12" y="22" width="3" height="10"/>
+    
+    <!-- 'u' -->
+    <rect x="18" y="19" width="3" height="10"/>
+    <rect x="18" y="26" width="7" height="3"/>
+    <rect x="22" y="19" width="3" height="10"/>
+    
+    <!-- 'l' -->
+    <rect x="28" y="16" width="3" height="16"/>
+    
+    <!-- 'u' -->
+    <rect x="34" y="19" width="3" height="10"/>
+    <rect x="34" y="26" width="7" height="3"/>
+    <rect x="38" y="19" width="3" height="10"/>
+  </g>
+</svg>
