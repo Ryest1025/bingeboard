@@ -10,11 +10,15 @@ interface NewReleasesCardProps {
 export default function NewReleasesCard({ releases }: NewReleasesCardProps) {
   // Fetch real new releases data
   const { data: releasesData, isLoading } = useQuery({
-    queryKey: ["/api/content/new-releases"],
+    queryKey: ["/api/trending/tv/day"],
     queryFn: async () => {
-      const res = await apiFetch("/api/content/new-releases");
+      const res = await apiFetch("/api/trending/tv/day");
       if (!res.ok) throw new Error("Failed to fetch new releases");
-      return res.json();
+      const data = await res.json();
+      // Transform data to match expected format
+      return {
+        releases: data.results?.slice(0, 8) || []
+      };
     },
   });
 

@@ -252,12 +252,23 @@ export interface EnhancedSearchFilters { query?: string; genres?: string[]; rati
 export interface EnhancedSearchResult { results: NormalizedShowSummary[]; totalResults: number; }
 export async function enhancedSearchApi(filters: EnhancedSearchFilters): Promise<ApiResult<EnhancedSearchResult>> {
   try {
-    const res = await apiFetch('/api/content/enhanced-search', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(filters) });
+    // Use trending TV endpoint as fallback since enhanced search doesn't exist
+    const res = await apiFetch('/api/trending/tv/day');
     const raw = await safeJson(res);
-    // Re-use generic envelope schema for results array
-    const data = validateOrThrow(SearchResultsEnvelopeSchema.extend({ totalResults: z.number().optional() }), raw, 'enhancedSearchApi results');
-    const mapped: NormalizedShowSummary[] = (data.results || []).map((item) => mapRawSearchItem(item));
-    return { ok: true, data: { results: mapped, totalResults: data.totalResults || 0 } };
+    // Transform the trending data to match the search format
+    const data = validateOrThrow(SearchResultsEnvelopeSchema, raw, 'enhancedSearchApi results');
+    let mapped: NormalizedShowSummary[] = (data.results || []).map((item) => mapRawSearchItem(item));
+    
+    // Apply basic filtering if filters are provided
+    if (filters.query) {
+      const query = filters.query.toLowerCase();
+      mapped = mapped.filter(item => 
+        item.title.toLowerCase().includes(query) || 
+        item.synopsis.toLowerCase().includes(query)
+      );
+    }
+    
+    return { ok: true, data: { results: mapped, totalResults: mapped.length } };
   } catch (error: any) {
     return { ok: false, error };
   }

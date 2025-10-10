@@ -1,0 +1,7 @@
+<svg width="500" height="750" viewBox="0 0 500 750" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="500" height="750" fill="#1F2937"/>
+  <path d="M250 325C272.091 325 290 307.091 290 285C290 262.909 272.091 245 250 245C227.909 245 210 262.909 210 285C210 307.091 227.909 325 250 325Z" fill="#374151"/>
+  <path d="M190 375H310C320.493 375 329 383.507 329 394V454C329 464.493 320.493 473 310 473H190C179.507 473 171 464.493 171 454V394C171 383.507 179.507 375 190 375Z" fill="#374151"/>
+  <text x="250" y="520" font-family="Arial, sans-serif" font-size="18" font-weight="500" text-anchor="middle" fill="#9CA3AF">No Image</text>
+  <text x="250" y="545" font-family="Arial, sans-serif" font-size="14" text-anchor="middle" fill="#6B7280">Available</text>
+</svg>

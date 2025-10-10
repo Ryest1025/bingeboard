@@ -647,43 +647,51 @@ export const EnhancedFilterSystem = React.memo<EnhancedFilterSystemProps>(({
       {
         queryKey: ['filter-genres'],
         queryFn: async (): Promise<Genre[]> => {
-          const response = await apiFetch('/api/content/genres');
-          if (!response.ok) {
-            throw new Error(`Failed to fetch genres: ${response.status} ${response.statusText}`);
-          }
-          return response.json();
+          // Use static genre data since /api/content/genres doesn't exist
+          return [
+            { id: 10759, name: 'Action & Adventure' },
+            { id: 16, name: 'Animation' },
+            { id: 35, name: 'Comedy' },
+            { id: 80, name: 'Crime' },
+            { id: 99, name: 'Documentary' },
+            { id: 18, name: 'Drama' },
+            { id: 10751, name: 'Family' },
+            { id: 10762, name: 'Kids' },
+            { id: 9648, name: 'Mystery' },
+            { id: 10763, name: 'News' },
+            { id: 10764, name: 'Reality' },
+            { id: 10765, name: 'Sci-Fi & Fantasy' },
+            { id: 10766, name: 'Soap' },
+            { id: 10767, name: 'Talk' },
+            { id: 10768, name: 'War & Politics' },
+            { id: 37, name: 'Western' }
+          ];
         },
         enabled: enableDynamicData,
         staleTime: 1000 * 60 * 30, // 30 minutes
-        retry: (failureCount, error) => {
-          // Don't retry on 4xx errors (likely permanent)
-          if (error instanceof Error && error.message.includes('4')) {
-            return false;
-          }
-          return failureCount < 3;
-        },
-        retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+        retry: false, // Don't retry for static data
 
       },
       {
         queryKey: ['filter-platforms'],
         queryFn: async (): Promise<Platform[]> => {
-          const response = await apiFetch('/api/content/platforms');
-          if (!response.ok) {
-            throw new Error(`Failed to fetch platforms: ${response.status} ${response.statusText}`);
-          }
-          return response.json();
+          // Use static platform data since /api/content/platforms doesn't exist
+          return [
+            { id: 'netflix', name: 'Netflix' },
+            { id: 'disney', name: 'Disney+' },
+            { id: 'hbo', name: 'HBO Max' },
+            { id: 'amazon', name: 'Prime Video' },
+            { id: 'apple', name: 'Apple TV+' },
+            { id: 'hulu', name: 'Hulu' },
+            { id: 'paramount', name: 'Paramount+' },
+            { id: 'peacock', name: 'Peacock' },
+            { id: 'youtube', name: 'YouTube TV' },
+            { id: 'crunchyroll', name: 'Crunchyroll' }
+          ];
         },
         enabled: enableDynamicData,
         staleTime: 1000 * 60 * 60, // 1 hour
-        retry: (failureCount, error) => {
-          // Don't retry on 4xx errors (likely permanent)
-          if (error instanceof Error && error.message.includes('4')) {
-            return false;
-          }
-          return failureCount < 3;
-        },
-        retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+        retry: false, // Don't retry for static data
 
       }
     ]

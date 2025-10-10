@@ -131,6 +131,8 @@
       color: #9ca3af;
     }
   </style>
+  <script type="module" crossorigin src="/assets/index-H-WiZrgv.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/index-DoqAR6TZ.css">
 </head>
 
 <body>
@@ -147,8 +149,7 @@
 
   <div id="root"></div>
 
-  <!-- React Entry -->
-  <script type="module" src="/src/main.tsx"></script>
+  <!-- React Entry -->
 
   <!-- GitHub Pages SPA redirect handling -->
   <script>
@@ -165,22 +166,7 @@
     })();
   </script>
 
-  <!-- Service Worker Registration -->
-  <script type="module">
-    if (import.meta.env.PROD && 'serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js')
-          .then(reg => console.log('Service Worker registered:', reg))
-          .catch(err => console.error('Service Worker registration failed:', err));
-      });
-    } else if ('serviceWorker' in navigator) {
-      // Dev environment: make sure no old SW caches interfere with HMR/updates
-      navigator.serviceWorker.getRegistrations().then(regs => {
-        if (regs.length) console.log('Unregistering service workers in dev to avoid stale caches');
-        regs.forEach(r => r.unregister());
-      });
-    }
-  </script>
+  <!-- Service Worker Registration -->
 </body>
 
 </html>

@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BingeBoard Mobile Debug</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            margin: 0;
+        }
+        .debug-panel {
+            background: rgba(0,0,0,0.8);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        .error-log {
+            background: #ff4757;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .success-log {
+            background: #2ed573;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        .test-button {
+            background: #3742fa;
+            color: white;
+            border: none;
+            padding: 15px 20px;
+            border-radius: 5px;
+            margin: 10px 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .info-panel {
+            background: rgba(255,255,255,0.1);
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>🐛 BingeBoard Mobile Debug Console</h1>
+    
+    <div class="debug-panel">
+        <h2>Device Information</h2>
+        <div class="info-panel">
+            <strong>User Agent:</strong><br>
+            <span id="userAgent"></span>
+        </div>
+        <div class="info-panel">
+            <strong>Screen Size:</strong> <span id="screenSize"></span><br>
+            <strong>Viewport:</strong> <span id="viewport"></span><br>
+            <strong>Device Pixel Ratio:</strong> <span id="devicePixelRatio"></span>
+        </div>
+        <div class="info-panel">
+            <strong>Platform:</strong> <span id="platform"></span><br>
+            <strong>Touch Support:</strong> <span id="touchSupport"></span><br>
+            <strong>Connection:</strong> <span id="connection"></span>
+        </div>
+    </div>
+
+    <div class="debug-panel">
+        <h2>JavaScript Error Log</h2>
+        <div id="errorLog">No errors detected yet...</div>
+    </div>
+
+    <div class="debug-panel">
+        <h2>API Tests</h2>
+        <button class="test-button" onclick="testAPI()">Test API Connection</button>
+        <button class="test-button" onclick="testTrending()">Test Trending API</button>
+        <button class="test-button" onclick="testFirebase()">Test Firebase</button>
+        <button class="test-button" onclick="clearLogs()">Clear Logs</button>
+        <div id="apiResults"></div>
+    </div>
+
+    <div class="debug-panel">
+        <h2>Quick App Test</h2>
+        <button class="test-button" onclick="loadMainApp()">Load Main App</button>
+        <button class="test-button" onclick="testResponsive()">Test Responsive Design</button>
+        <div id="appResults"></div>
+    </div>
+
+    <script>
+        // Global error handler
+        window.onerror = function(msg, url, lineNo, columnNo, error) {
+            logError(`JS Error: ${msg} at ${url}:${lineNo}:${columnNo}`, error);
+            return false;
+        };
+
+        // Unhandled promise rejection handler
+        window.addEventListener('unhandledrejection', function(event) {
+            logError(`Unhandled Promise Rejection: ${event.reason}`);
+        });
+
+        // Console override to catch logs
+        const originalConsoleError = console.error;
+        console.error = function(...args) {
+            logError('Console Error: ' + args.join(' '));
+            originalConsoleError.apply(console, args);
+        };
+
+        function logError(message, error = null) {
+            const errorLog = document.getElementById('errorLog');
+            const timestamp = new Date().toLocaleTimeString();
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'error-log';
+            errorDiv.innerHTML = `[${timestamp}] ${message}`;
+            if (error && error.stack) {
+                errorDiv.innerHTML += `<br><small>${error.stack}</small>`;
+            }
+            errorLog.appendChild(errorDiv);
+            errorLog.scrollTop = errorLog.scrollHeight;
+        }
+
+        function logSuccess(message) {
+            const apiResults = document.getElementById('apiResults');
+            const timestamp = new Date().toLocaleTimeString();
+            const successDiv = document.createElement('div');
+            successDiv.className = 'success-log';
+            successDiv.innerHTML = `[${timestamp}] ✅ ${message}`;
+            apiResults.appendChild(successDiv);
+        }
+
+        // Initialize device info
+        function initDeviceInfo() {
+            document.getElementById('userAgent').textContent = navigator.userAgent;
+            document.getElementById('screenSize').textContent = `${screen.width}x${screen.height}`;
+            document.getElementById('viewport').textContent = `${window.innerWidth}x${window.innerHeight}`;
+            document.getElementById('devicePixelRatio').textContent = window.devicePixelRatio;
+            document.getElementById('platform').textContent = navigator.platform;
+            document.getElementById('touchSupport').textContent = 'ontouchstart' in window ? 'Yes' : 'No';
+            
+            // Check connection
+            if (navigator.connection) {
+                document.getElementById('connection').textContent = `${navigator.connection.effectiveType} (${navigator.connection.downlink}Mbps)`;
+            } else {
+                document.getElementById('connection').textContent = 'Unknown';
+            }
+        }
+
+        // API Tests
+        async function testAPI() {
+            try {
+                logSuccess('Testing basic API connection...');
+                const response = await fetch('/api/auth/user');
+                if (response.ok || response.status === 401) {
+                    logSuccess('API endpoint reachable');
+                } else {
+                    logError(`API returned status: ${response.status}`);
+                }
+            } catch (error) {
+                logError('API connection failed', error);
+            }
+        }
+
+        async function testTrending() {
+            try {
+                logSuccess('Testing trending API...');
+                const response = await fetch('/api/trending/tv/day');
+                if (response.ok) {
+                    const data = await response.json();
+                    logSuccess(`Trending API working - ${data.results?.length || 0} shows loaded`);
+                } else {
+                    logError(`Trending API failed with status: ${response.status}`);
+                }
+            } catch (error) {
+                logError('Trending API test failed', error);
+            }
+        }
+
+        async function testFirebase() {
+            try {
+                logSuccess('Testing Firebase configuration...');
+                // Try to load Firebase config
+                const configResponse = await fetch('/api/firebase-config');
+                if (configResponse.ok) {
+                    logSuccess('Firebase config accessible');
+                } else {
+                    logError('Firebase config not accessible');
+                }
+            } catch (error) {
+                logError('Firebase test failed', error);
+            }
+        }
+
+        function loadMainApp() {
+            try {
+                logSuccess('Attempting to load main app...');
+                window.location.href = '/';
+            } catch (error) {
+                logError('Failed to load main app', error);
+            }
+        }
+
+        function testResponsive() {
+            logSuccess('Testing responsive design...');
+            const viewport = document.querySelector('meta[name="viewport"]');
+            if (viewport) {
+                logSuccess('Viewport meta tag found: ' + viewport.content);
+            } else {
+                logError('Viewport meta tag missing');
+            }
+            
+            // Test CSS media queries
+            const isMobile = window.matchMedia('(max-width: 768px)').matches;
+            logSuccess(`Mobile breakpoint active: ${isMobile}`);
+        }
+
+        function clearLogs() {
+            document.getElementById('errorLog').innerHTML = 'Logs cleared...';
+            document.getElementById('apiResults').innerHTML = '';
+            document.getElementById('appResults').innerHTML = '';
+        }
+
+        // Initialize on load
+        document.addEventListener('DOMContentLoaded', function() {
+            initDeviceInfo();
+            logSuccess('Mobile debug console initialized');
+            
+            // Auto-test basic functionality
+            setTimeout(() => {
+                testAPI();
+                testTrending();
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

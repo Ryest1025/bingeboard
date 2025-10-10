@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BingeBoard Mobile Test - Firebase Fix</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            margin: 0;
+            line-height: 1.6;
+        }
+        .test-panel {
+            background: rgba(0,0,0,0.8);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        .success {
+            color: #2ed573;
+            font-weight: bold;
+        }
+        .error {
+            color: #ff4757;
+            font-weight: bold;
+        }
+        .test-button {
+            background: #3742fa;
+            color: white;
+            border: none;
+            padding: 15px 20px;
+            border-radius: 5px;
+            margin: 10px 5px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+            max-width: 300px;
+        }
+        .log {
+            background: rgba(255,255,255,0.1);
+            padding: 10px;
+            border-radius: 5px;
+            margin: 5px 0;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        h1 { text-align: center; margin-bottom: 30px; }
+        h2 { color: #ffa502; margin-bottom: 15px; }
+    </style>
+</head>
+<body>
+    <h1>🔥 Firebase Mobile Fix Test</h1>
+    
+    <div class="test-panel">
+        <h2>Firebase Status</h2>
+        <div id="firebaseStatus">Testing Firebase...</div>
+        <button class="test-button" onclick="testFirebase()">Test Firebase Auth</button>
+        <button class="test-button" onclick="testLogin()">Test Google Login</button>
+    </div>
+
+    <div class="test-panel">
+        <h2>Error Log</h2>
+        <div id="errorLog">No errors yet...</div>
+        <button class="test-button" onclick="clearLog()">Clear Log</button>
+    </div>
+
+    <div class="test-panel">
+        <h2>Main App Access</h2>
+        <button class="test-button" onclick="loadMainApp()">Load Main BingeBoard App</button>
+        <button class="test-button" onclick="window.location.reload()">Reload This Page</button>
+    </div>
+
+    <script type="module">
+        let firebaseAuth = null;
+        
+        // Global error handler
+        window.onerror = function(msg, url, lineNo, columnNo, error) {
+            logError(`JS Error: ${msg} at line ${lineNo}`);
+            return false;
+        };
+
+        window.addEventListener('unhandledrejection', function(event) {
+            logError(`Promise Rejection: ${event.reason}`);
+        });
+
+        function logSuccess(message) {
+            const log = document.createElement('div');
+            log.className = 'log success';
+            log.innerHTML = `✅ ${new Date().toLocaleTimeString()}: ${message}`;
+            document.getElementById('errorLog').appendChild(log);
+        }
+
+        function logError(message) {
+            const log = document.createElement('div');
+            log.className = 'log error';
+            log.innerHTML = `❌ ${new Date().toLocaleTimeString()}: ${message}`;
+            document.getElementById('errorLog').appendChild(log);
+        }
+
+        function logInfo(message) {
+            const log = document.createElement('div');
+            log.className = 'log';
+            log.innerHTML = `ℹ️ ${new Date().toLocaleTimeString()}: ${message}`;
+            document.getElementById('errorLog').appendChild(log);
+        }
+
+        // Test Firebase initialization
+        async function testFirebase() {
+            try {
+                document.getElementById('firebaseStatus').innerHTML = 'Loading Firebase...';
+                logInfo('Testing Firebase mobile-safe config...');
+                
+                // Try to import the mobile-safe config
+                const { auth, getAuthInstance } = await import('/src/firebase/config-mobile.ts');
+                
+                logSuccess('Firebase mobile config imported successfully');
+                
+                // Test auth instance
+                firebaseAuth = getAuthInstance();
+                logSuccess('Firebase Auth instance created');
+                
+                // Test auth state
+                firebaseAuth.onAuthStateChanged((user) => {
+                    if (user) {
+                        logSuccess(`User signed in: ${user.email}`);
+                        document.getElementById('firebaseStatus').innerHTML = `<span class="success">✅ Signed in as ${user.email}</span>`;
+                    } else {
+                        logInfo('No user signed in');
+                        document.getElementById('firebaseStatus').innerHTML = '<span class="error">❌ Not signed in</span>';
+                    }
+                });
+                
+                document.getElementById('firebaseStatus').innerHTML = '<span class="success">✅ Firebase Auth working</span>';
+                
+            } catch (error) {
+                logError(`Firebase test failed: ${error.message}`);
+                document.getElementById('firebaseStatus').innerHTML = `<span class="error">❌ Firebase Error: ${error.message}</span>`;
+                
+                // Try fallback to regular config
+                try {
+                    logInfo('Trying fallback to regular Firebase config...');
+                    const fallback = await import('/src/firebase/config.ts');
+                    const auth = await fallback.getAuthInstance();
+                    logSuccess('Fallback Firebase config worked');
+                    firebaseAuth = auth;
+                } catch (fallbackError) {
+                    logError(`Fallback also failed: ${fallbackError.message}`);
+                }
+            }
+        }
+
+        // Test Google login
+        async function testLogin() {
+            if (!firebaseAuth) {
+                logError('Firebase Auth not initialized - run Firebase test first');
+                return;
+            }
+            
+            try {
+                logInfo('Testing Google OAuth login...');
+                
+                const { GoogleAuthProvider, signInWithPopup } = await import('firebase/auth');
+                const provider = new GoogleAuthProvider();
+                provider.addScope('email');
+                provider.addScope('profile');
+                
+                logInfo('Starting Google sign-in popup...');
+                const result = await signInWithPopup(firebaseAuth, provider);
+                
+                logSuccess(`Login successful: ${result.user.email}`);
+                
+                // Test API with token
+                const token = await result.user.getIdToken();
+                logInfo('Testing API with Firebase token...');
+                
+                const response = await fetch('/api/auth/user', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    logSuccess('API authentication successful');
+                } else {
+                    logError(`API returned status: ${response.status}`);
+                }
+                
+            } catch (error) {
+                logError(`Login test failed: ${error.message}`);
+            }
+        }
+
+        function loadMainApp() {
+            logInfo('Loading main BingeBoard app...');
+            window.location.href = '/';
+        }
+
+        function clearLog() {
+            document.getElementById('errorLog').innerHTML = 'Log cleared...';
+        }
+
+        // Make functions global
+        window.testFirebase = testFirebase;
+        window.testLogin = testLogin;
+        window.loadMainApp = loadMainApp;
+        window.clearLog = clearLog;
+
+        // Auto-run Firebase test on load
+        document.addEventListener('DOMContentLoaded', () => {
+            logSuccess('Mobile Firebase test page loaded');
+            setTimeout(testFirebase, 1000);
+        });
+    </script>
+</body>
+</html>

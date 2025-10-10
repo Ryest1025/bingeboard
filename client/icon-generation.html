@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Icon Generator</title>
+</head>
+<body>
+  <canvas id="canvas192" width="192" height="192" style="border: 1px solid #ccc; margin: 10px;"></canvas>
+  <canvas id="canvas512" width="512" height="512" style="border: 1px solid #ccc; margin: 10px;"></canvas>
+  <script>
+    function drawIcon(canvas, size) {
+      const ctx = canvas.getContext('2d');
+      
+      // Background gradient
+      const gradient = ctx.createLinearGradient(0, 0, size, size);
+      gradient.addColorStop(0, '#8b5cf6');
+      gradient.addColorStop(1, '#ec4899');
+      
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, size, size);
+      
+      // TV Screen
+      const screenWidth = size * 0.625;
+      const screenHeight = size * 0.40625;
+      const screenX = (size - screenWidth) / 2;
+      const screenY = size * 0.25;
+      
+      ctx.fillStyle = '#374151';
+      ctx.fillRect(screenX, screenY, screenWidth, screenHeight);
+      
+      ctx.strokeStyle = '#9ca3af';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(screenX, screenY, screenWidth, screenHeight);
+      
+      // Play button
+      const centerX = size / 2;
+      const centerY = screenY + screenHeight / 2;
+      const playRadius = size * 0.09375;
+      
+      ctx.fillStyle = '#10b981';
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, playRadius, 0, 2 * Math.PI);
+      ctx.fill();
+      
+      // Play triangle
+      ctx.fillStyle = 'white';
+      ctx.beginPath();
+      ctx.moveTo(centerX - playRadius * 0.4, centerY - playRadius * 0.5);
+      ctx.lineTo(centerX - playRadius * 0.4, centerY + playRadius * 0.5);
+      ctx.lineTo(centerX + playRadius * 0.5, centerY);
+      ctx.closePath();
+      ctx.fill();
+    }
+    
+    drawIcon(document.getElementById('canvas192'), 192);
+    drawIcon(document.getElementById('canvas512'), 512);
+  </script>
+</body>
+</html>

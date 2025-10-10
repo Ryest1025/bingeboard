@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>BingeBoard</title>
+  <script>
+    // GitHub Pages SPA redirect hack
+    // Store the current path and redirect to index.html with a query parameter
+    const currentPath = window.location.pathname;
+    const currentSearch = window.location.search;
+    
+    // If we're on a subpath, redirect to index.html with the path as a parameter
+    if (currentPath !== '/') {
+      const redirectUrl = '/?p=' + encodeURIComponent(currentPath + currentSearch);
+      window.location.replace(redirectUrl);
+    } else {
+      // If we're already on the root, just redirect to index.html
+      window.location.replace('/');
+    }
+  </script>
+</head>
+<body>
+  <p>Redirecting to BingeBoard...</p>
+</body>
+</html>
