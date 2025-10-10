@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { apiFetch } from '@/utils/api-config';
 import { 
   Select, 
   SelectContent, 
@@ -646,7 +647,7 @@ export const EnhancedFilterSystem = React.memo<EnhancedFilterSystemProps>(({
       {
         queryKey: ['filter-genres'],
         queryFn: async (): Promise<Genre[]> => {
-          const response = await fetch('/api/content/genres');
+          const response = await apiFetch('/api/content/genres');
           if (!response.ok) {
             throw new Error(`Failed to fetch genres: ${response.status} ${response.statusText}`);
           }
@@ -667,7 +668,7 @@ export const EnhancedFilterSystem = React.memo<EnhancedFilterSystemProps>(({
       {
         queryKey: ['filter-platforms'],
         queryFn: async (): Promise<Platform[]> => {
-          const response = await fetch('/api/content/platforms');
+          const response = await apiFetch('/api/content/platforms');
           if (!response.ok) {
             throw new Error(`Failed to fetch platforms: ${response.status} ${response.statusText}`);
           }

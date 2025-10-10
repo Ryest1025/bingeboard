@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { apiFetch } from '@/utils/api-config';
 
 interface Genre { id: number; name: string }
 
@@ -25,7 +26,7 @@ async function loadGenres(): Promise<Genre[]> {
   if (fetchPromise) return fetchPromise;
   fetchPromise = (async (): Promise<Genre[]> => {
     try {
-      const res = await fetch('/api/content/genres-combined/list');
+      const res = await apiFetch('/api/content/genres-combined/list');
       if (!res.ok) throw new Error('Failed to fetch genres');
       const data = await res.json();
   cachedGenres = data.genres || [];

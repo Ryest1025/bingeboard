@@ -2,6 +2,7 @@
 // This file now only exports data-fetching helpers to avoid esbuild parse errors.
 // lib/search-api.ts - Enhanced search API with Multi-API integration (typed + result unions + runtime validation)
 import { z } from 'zod';
+import { apiFetch } from '@/utils/api-config';
 
 // ---------------- Types ----------------
 export interface RawSearchItem {
@@ -251,7 +252,7 @@ export interface EnhancedSearchFilters { query?: string; genres?: string[]; rati
 export interface EnhancedSearchResult { results: NormalizedShowSummary[]; totalResults: number; }
 export async function enhancedSearchApi(filters: EnhancedSearchFilters): Promise<ApiResult<EnhancedSearchResult>> {
   try {
-    const res = await fetch('/api/content/enhanced-search', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(filters) });
+    const res = await apiFetch('/api/content/enhanced-search', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(filters) });
     const raw = await safeJson(res);
     // Re-use generic envelope schema for results array
     const data = validateOrThrow(SearchResultsEnvelopeSchema.extend({ totalResults: z.number().optional() }), raw, 'enhancedSearchApi results');

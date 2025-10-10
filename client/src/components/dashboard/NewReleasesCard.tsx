@@ -1,6 +1,7 @@
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { apiFetch } from "@/utils/api-config";
 
 interface NewReleasesCardProps {
   releases?: any[];
@@ -11,7 +12,7 @@ export default function NewReleasesCard({ releases }: NewReleasesCardProps) {
   const { data: releasesData, isLoading } = useQuery({
     queryKey: ["/api/content/new-releases"],
     queryFn: async () => {
-      const res = await fetch("/api/content/new-releases");
+      const res = await apiFetch("/api/content/new-releases");
       if (!res.ok) throw new Error("Failed to fetch new releases");
       return res.json();
     },
