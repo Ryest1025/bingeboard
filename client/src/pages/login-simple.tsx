@@ -36,13 +36,13 @@ import { Eye, EyeOff, Mail, Lock } from "lucide-react";
 import { SiGoogle, SiFacebook } from "react-icons/si";
 import { signInWithPopup, signInWithRedirect, getRedirectResult, signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
 import { auth, googleProvider, facebookProvider } from '@/firebase/config';
+import { apiFetch } from '@/utils/api-config';
 
 // Helper function to create Firebase session
 async function createFirebaseSession(firebaseToken: string) {
-  const response = await fetch('/api/auth/firebase-session', {
+  const response = await apiFetch('/api/auth/firebase-session', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    credentials: 'include',
     body: JSON.stringify({ firebaseToken }),
   });
   return response.ok;
@@ -207,10 +207,9 @@ export default function LoginSimple() {
         const firebaseToken = await firebaseUser.getIdToken();
         
         // Send both Firebase token and additional user data for registration
-        const response = await fetch('/api/auth/firebase-session', {
+        const response = await apiFetch('/api/auth/firebase-session', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
           body: JSON.stringify({ 
             firebaseToken,
             user: {
@@ -304,7 +303,7 @@ export default function LoginSimple() {
 
     setIsLoading(true);
     try {
-      const response = await fetch("/api/auth/forgot-password", {
+      const response = await apiFetch("/api/auth/forgot-password", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
