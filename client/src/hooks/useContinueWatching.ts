@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+import { apiFetch } from '@/utils/api-config';
 
 interface Show {
   id: string;
@@ -32,7 +33,7 @@ export function useContinueWatching(userId?: string) {
       if (!userId) return [];
       
       try {
-        const res = await fetch(`/api/continue-watching?userId=${userId}`);
+        const res = await apiFetch(`/api/continue-watching?userId=${userId}`);
         if (!res.ok) {
           throw new Error(`Failed to fetch continue watching: ${res.status} ${res.statusText}`);
         }

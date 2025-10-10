@@ -16,7 +16,6 @@
   <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests; default-src 'self' https:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https:; style-src 'self' 'unsafe-inline' https:; img-src 'self' data: https:; connect-src 'self' https:; font-src 'self' https:; media-src 'self' https:;">
   <meta http-equiv="Strict-Transport-Security" content="max-age=31536000; includeSubDomains; preload">
   <meta http-equiv="X-Content-Type-Options" content="nosniff">
-  <meta http-equiv="X-Frame-Options" content="DENY">
   <meta http-equiv="X-XSS-Protection" content="1; mode=block">
 
   <!-- Preload Google Fonts -->
@@ -132,7 +131,7 @@
       color: #9ca3af;
     }
   </style>
-  <script type="module" crossorigin src="/assets/index-DFB8vurI.js"></script>
+  <script type="module" crossorigin src="/assets/index-H-WiZrgv.js"></script>
   <link rel="stylesheet" crossorigin href="/assets/index-DoqAR6TZ.css">
 </head>
 
@@ -151,6 +150,21 @@
   <div id="root"></div>
 
   <!-- React Entry -->
+
+  <!-- GitHub Pages SPA redirect handling -->
+  <script>
+    // Handle GitHub Pages SPA redirects from 404.html
+    (function() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const redirectPath = urlParams.get('p');
+      
+      if (redirectPath) {
+        // Remove the redirect parameter and replace the URL
+        const newUrl = window.location.origin + redirectPath;
+        window.history.replaceState(null, '', newUrl);
+      }
+    })();
+  </script>
 
   <!-- Service Worker Registration -->
 </body>

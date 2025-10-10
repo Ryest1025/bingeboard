@@ -8,6 +8,7 @@ import ContinueWatching from '@/components/ContinueWatching';
 import { MultiSelect } from "@/components/ui/multi-select";
 import { UniversalMediaCard } from '@/components/universal';
 import useMediaActions from '@/hooks/useMediaActions';
+import { apiFetch } from '@/utils/api-config';
 
 // --- Section Wrapper ---
 const Section: React.FC<{ title: string; children: React.ReactNode; action?: React.ReactNode }> = ({ title, children, action }) => (
@@ -61,7 +62,7 @@ const DashboardPage: React.FC = () => {
   const { data: trendingData, isError: trendingError } = useQuery({
     queryKey: ['trending'],
     queryFn: async () => {
-      const res = await fetch('/api/trending/tv/day?includeStreaming=true');
+      const res = await apiFetch('/api/trending/tv/day?includeStreaming=true');
       if (!res.ok) throw new Error('Failed to fetch trending');
       return res.json();
     }
@@ -70,7 +71,7 @@ const DashboardPage: React.FC = () => {
   const { data: personalizedData, isError: personalizedError, isLoading: personalizedLoading } = useQuery({
     queryKey: ['personalized-with-streaming', 'v2'],
     queryFn: async () => {
-      const res = await fetch('/api/tmdb/discover/tv?sort_by=popularity.desc&includeStreaming=true');
+      const res = await apiFetch('/api/tmdb/discover/tv?sort_by=popularity.desc&includeStreaming=true');
       if (!res.ok) throw new Error('Failed to fetch recommendations');
       return res.json();
     }

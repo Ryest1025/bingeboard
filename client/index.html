@@ -16,7 +16,6 @@
   <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests; default-src 'self' https:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https:; style-src 'self' 'unsafe-inline' https:; img-src 'self' data: https:; connect-src 'self' https:; font-src 'self' https:; media-src 'self' https:;">
   <meta http-equiv="Strict-Transport-Security" content="max-age=31536000; includeSubDomains; preload">
   <meta http-equiv="X-Content-Type-Options" content="nosniff">
-  <meta http-equiv="X-Frame-Options" content="DENY">
   <meta http-equiv="X-XSS-Protection" content="1; mode=block">
 
   <!-- Preload Google Fonts -->
@@ -150,6 +149,21 @@
 
   <!-- React Entry -->
   <script type="module" src="/src/main.tsx"></script>
+
+  <!-- GitHub Pages SPA redirect handling -->
+  <script>
+    // Handle GitHub Pages SPA redirects from 404.html
+    (function() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const redirectPath = urlParams.get('p');
+      
+      if (redirectPath) {
+        // Remove the redirect parameter and replace the URL
+        const newUrl = window.location.origin + redirectPath;
+        window.history.replaceState(null, '', newUrl);
+      }
+    })();
+  </script>
 
   <!-- Service Worker Registration -->
   <script type="module">
