@@ -83,14 +83,15 @@ export default function LoginSimple() {
 
   // Load remembered credentials on component mount
   useEffect(() => {
-    const rememberedEmail = localStorage.getItem('userEmail');
-    const wasRemembered = localStorage.getItem('rememberLogin') === 'true';
+    // Temporarily disable auto-filling remembered email to avoid confusion
+    // const rememberedEmail = localStorage.getItem('userEmail');
+    // const wasRemembered = localStorage.getItem('rememberLogin') === 'true';
 
-    if (wasRemembered && rememberedEmail) {
-      setRememberMe(true);
-      setFormData(prev => ({ ...prev, email: rememberedEmail }));
-      console.log('📧 Loaded remembered email:', rememberedEmail);
-    }
+    // if (wasRemembered && rememberedEmail) {
+    //   setRememberMe(true);
+    //   setFormData(prev => ({ ...prev, email: rememberedEmail }));
+    //   console.log('📧 Loaded remembered email:', rememberedEmail);
+    // }
   }, []);
 
   // Quick test account creation (development only)
