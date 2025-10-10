@@ -46,6 +46,49 @@ app.get('/api/auth/status', (req, res) => {
   });
 });
 
+// Firebase session creation endpoint
+app.post('/api/auth/firebase-session', (req, res) => {
+  res.json({
+    success: true,
+    message: 'Session creation endpoint - Firebase integration needed'
+  });
+});
+
+// User info endpoint
+app.get('/api/auth/user', (req, res) => {
+  res.json({
+    user: null,
+    message: 'User endpoint - Firebase integration needed'
+  });
+});
+
+// User watchlist endpoint
+app.get('/api/user/watchlist', (req, res) => {
+  res.json([]);
+});
+
+// User reminders endpoint
+app.get('/api/user/reminders', (req, res) => {
+  res.json([]);
+});
+
+// Continue watching endpoint
+app.get('/api/continue-watching', (req, res) => {
+  res.json([]);
+});
+
+// Notifications history endpoint
+app.get('/api/notifications/history', (req, res) => {
+  res.json([]);
+});
+
+// Discover TV endpoint
+app.get('/api/tmdb/discover/tv', (req, res) => {
+  res.json({
+    results: []
+  });
+});
+
 // Basic trending endpoint (mock data for now)
 app.get('/api/trending/tv/day', (req, res) => {
   res.json({
