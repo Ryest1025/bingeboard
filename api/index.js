@@ -89,6 +89,22 @@ app.get('/api/tmdb/discover/tv', (req, res) => {
   });
 });
 
+// Forgot password endpoint
+app.post('/api/auth/forgot-password', (req, res) => {
+  res.json({
+    success: true,
+    message: 'Password reset email sent (Firebase integration needed)'
+  });
+});
+
+// Login endpoint
+app.post('/api/auth/login', (req, res) => {
+  res.json({
+    success: true,
+    message: 'Login endpoint (Firebase integration needed)'
+  });
+});
+
 // Basic trending endpoint (mock data for now)
 app.get('/api/trending/tv/day', (req, res) => {
   res.json({
