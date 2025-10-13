@@ -1,3 +1,8 @@
+/**
+ * Routes Configuration
+ * Last updated: October 13, 2025
+ * Changed: Dashboard route now points to October 10th restored dashboard.tsx
+ */
 import React from "react";
 import Landing from "@/pages/landing";
 import LoginSimple from "@/pages/login-simple";

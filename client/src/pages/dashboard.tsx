@@ -1,3 +1,8 @@
+/**
+ * Dashboard Page - Restored October 10th, 2025 version
+ * Last updated: October 13, 2025
+ * Features: Spotlight section, filtering system, "For You" recommendations, Continue Watching
+ */
 import React, { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import NavigationHeader from '@/components/navigation-header';
@@ -169,6 +174,8 @@ const DashboardPage: React.FC = () => {
   const clearAllFilters = () => setFilters({ genre: [], network: [], year: [] });
   const hasActiveFilters = filters.genre.length > 0 || filters.network.length > 0 || filters.year.length > 0;
 
+    console.log('🎯 OCTOBER 10TH DASHBOARD LOADED - Latest version with all features');
+  
   return (
     <div className="min-h-screen bg-slate-900 w-full overflow-x-hidden">
       <NavigationHeader />
