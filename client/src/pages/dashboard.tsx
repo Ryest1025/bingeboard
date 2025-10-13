@@ -176,14 +176,29 @@ const DashboardPage: React.FC = () => {
   const clearAllFilters = () => setFilters({ genre: [], network: [], year: [] });
   const hasActiveFilters = filters.genre.length > 0 || filters.network.length > 0 || filters.year.length > 0;
 
-    console.log('🚨🚨🚨 DIRECT NUCLEAR TEST - DASHBOARD LOADED - October 13, 2025 6:45pm 🚨🚨🚨');
+  console.log('🚨🚨🚨 DIRECT NUCLEAR TEST - DASHBOARD LOADED - October 13, 2025 6:45pm 🚨🚨🚨');
   console.log('🎯 DASHBOARD VERSION: CACHE-BUSTED BUILD:', new Date().toISOString());
+  console.log('📊 DATA STATUS:', {
+    trendingData: !!trendingData,
+    trendingError,
+    personalizedData: !!personalizedData,
+    personalizedError,
+    personalizedLoading,
+    spotlightItem: !!spotlightItem,
+    filteredRecommendations: filteredRecommendations.length
+  });
   
   return (
     <div className="min-h-screen bg-slate-900 w-full overflow-x-hidden">
       <NavigationHeader />
 
       <main className="w-full max-w-none px-2 sm:px-4 md:px-8 lg:px-16 py-4 sm:py-8 space-y-8 sm:space-y-12">
+        {/* DEBUG BANNER */}
+        <div className="bg-green-600 text-white p-4 rounded-lg text-center">
+          <h2 className="text-xl font-bold">✅ DASHBOARD IS RENDERING!</h2>
+          <p className="text-sm">October 13, 2025 - New deployment active</p>
+          <p className="text-xs mt-2">Trending: {processedTrending.length} | Recommendations: {filteredRecommendations.length}</p>
+        </div>
         {/* Spotlight Section - Mobile Optimized */}
         {spotlightItem ? (
           <div className="w-full">
