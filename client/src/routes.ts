@@ -22,6 +22,7 @@ const LazyTestPersonalized = React.lazy(() => import("@/pages/test-personalized"
 const LazyDashboardReconstructed = React.lazy(() => import("@/pages/dashboard-reconstructed"));
 const LazyDashboard = React.lazy(() => import("@/pages/dashboard")); // The REAL dashboard from October 10th!
 const LazyComprehensiveDashboard = React.lazy(() => import("@/pages/dashboard-comprehensive")); // Old comprehensive version
+const LazyDeploymentTest = React.lazy(() => import("@/pages/deployment-test-page")); // NUCLEAR TEST
 
 export const publicRoutes = [
   { path: "/landing", component: Landing },
@@ -35,7 +36,8 @@ export const protectedRoutes = [
   { path: "/discover", component: Discover, requireAuth: true },
   { path: "/lists", component: Activity, requireAuth: true }, // Rename activity to lists
   { path: "/friends", component: Friends, requireAuth: true },
-  { path: "/dashboard", component: LazyDashboard, lazy: true, requireAuth: true }, // Use the REAL dashboard from October 10th!
+  { path: "/dashboard", component: LazyDeploymentTest, lazy: true, requireAuth: true }, // NUCLEAR TEST - BYPASS ALL CACHING
+  { path: "/real-dashboard", component: LazyDashboard, lazy: true, requireAuth: true }, // Real dashboard moved here
   { path: "/modern-discover", component: Discover, requireAuth: true },
   { path: "/search", component: SearchResultsPage, requireAuth: true },
   { path: "/test-personalized", component: LazyTestPersonalized, lazy: true, requireAuth: true },
