@@ -14,6 +14,7 @@ import { MultiSelect } from "@/components/ui/multi-select";
 import { UniversalMediaCard } from '@/components/universal';
 import useMediaActions from '@/hooks/useMediaActions';
 import { apiFetch } from '@/utils/api-config';
+import '@/deployment-test'; // Force new build hash
 
 // --- Section Wrapper ---
 const Section: React.FC<{ title: string; children: React.ReactNode; action?: React.ReactNode }> = ({ title, children, action }) => (
@@ -174,60 +175,62 @@ const DashboardPage: React.FC = () => {
   const clearAllFilters = () => setFilters({ genre: [], network: [], year: [] });
   const hasActiveFilters = filters.genre.length > 0 || filters.network.length > 0 || filters.year.length > 0;
 
-    console.log('🎯 OCTOBER 10TH DASHBOARD LOADED - Latest version with all features - BUILD TIME:', new Date().toISOString());
+    console.log('🎯 OCTOBER 10TH DASHBOARD LOADED - VERSION 2.0 MOBILE OPTIMIZED - BUILD TIME:', new Date().toISOString());
   
   return (
     <div className="min-h-screen bg-slate-900 w-full overflow-x-hidden">
       <NavigationHeader />
 
-      <main className="w-full max-w-none px-4 md:px-8 lg:px-16 py-8 space-y-12">
-        {/* Spotlight Section - New Poster + Backdrop Variant */}
+      <main className="w-full max-w-none px-2 sm:px-4 md:px-8 lg:px-16 py-4 sm:py-8 space-y-8 sm:space-y-12">
+        {/* Spotlight Section - Mobile Optimized */}
         {spotlightItem ? (
-          <UniversalMediaCard
-            media={spotlightItem}
-            variant="spotlight-poster-backdrop"
-            size="xl"
-            showRating
-            showGenres
-            showReleaseDate
-            showDescription
-            actions={{ watchNow: true, trailer: true, addToList: true }}
-            showStreamingLogoInButton={true} // Logo inside Watch Now button
-            onAddToWatchlist={handleAddToWatchlist}
-            onWatchTrailer={handleWatchTrailer}
-            onCardClick={media => console.log('Show details:', media)}
-            onWatchNow={handleWatchNow}
-            className="w-full"
-          />
+          <div className="w-full">
+            <UniversalMediaCard
+              media={spotlightItem}
+              variant="spotlight-poster-backdrop"
+              size="xl"
+              showRating
+              showGenres
+              showReleaseDate
+              showDescription
+              actions={{ watchNow: true, trailer: true, addToList: true }}
+              showStreamingLogoInButton={true} // Logo inside Watch Now button
+              onAddToWatchlist={handleAddToWatchlist}
+              onWatchTrailer={handleWatchTrailer}
+              onCardClick={media => console.log('Show details:', media)}
+              onWatchNow={handleWatchNow}
+              className="w-full rounded-lg sm:rounded-2xl overflow-hidden"
+            />
+          </div>
         ) : (
           <div className="text-center py-12 text-gray-400">
             <p className="text-lg">No spotlight content available</p>
           </div>
         )}
 
-        {/* For You Section */}
+        {/* For You Section - Mobile Optimized */}
         <Section title="For You" action={hasActiveFilters ? (
-          <Button variant="outline" size="sm" onClick={clearAllFilters}>
+          <Button variant="outline" size="sm" onClick={clearAllFilters} className="text-xs sm:text-sm">
             Clear Filters
           </Button>
         ) : undefined}>
-          {/* Filters */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          {/* Filters - Mobile Responsive */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 mb-4 sm:mb-6">
             <MultiSelectFilter label="Genre" options={FILTERS.genre} selected={filters.genre} onChange={vals => updateFilter("genre", vals)} />
             <MultiSelectFilter label="Network" options={FILTERS.network} selected={filters.network} onChange={vals => updateFilter("network", vals)} />
             <MultiSelectFilter label="Year" options={FILTERS.year} selected={filters.year} onChange={vals => updateFilter("year", vals)} />
           </div>
 
-          {/* Recommendations Grid */}
+          {/* Recommendations Grid - Mobile Optimized */}
           {personalizedLoading ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 sm:gap-3 md:gap-4">
               {Array.from({ length: 10 }).map((_, i) => (
-                <div key={i} className="aspect-[2/3] bg-slate-800 rounded-lg animate-pulse" />
+                <div key={i} className="aspect-[2/3] bg-slate-800 rounded-md sm:rounded-lg animate-pulse" />
               ))}
             </div>
           ) : filteredRecommendations.length === 0 ? (
-            <div className="text-center py-12">
-              <p className="text-gray-400 text-lg mb-4">
+            <div className="text-center py-8 sm:py-12">
+              <p className="text-gray-400 text-base sm:text-lg mb-4">
                 {hasActiveFilters ? 'No shows match your selected filters' : 'No recommendations available'}
               </p>
               {hasActiveFilters && (
@@ -237,7 +240,7 @@ const DashboardPage: React.FC = () => {
               )}
             </div>
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 sm:gap-3 md:gap-4">
               {filteredRecommendations.map(media => (
                 <UniversalMediaCard
                   key={media.id}
@@ -254,7 +257,7 @@ const DashboardPage: React.FC = () => {
                   onWatchTrailer={handleWatchTrailer}
                   onCardClick={m => console.log('Show details:', m)}
                   onWatchNow={handleWatchNow}
-                  className="rounded-lg overflow-hidden"
+                  className="rounded-md sm:rounded-lg overflow-hidden"
                 />
               ))}
             </div>
