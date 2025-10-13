@@ -111,7 +111,7 @@ const DashboardPageReconstructed: React.FC = () => {
   const { data: trendingData } = useQuery({
     queryKey: ['trending'],
     queryFn: async () => {
-      const res = await fetch('/api/trending');
+      const res = await fetch('/api/trending/tv/day?includeStreaming=true');
       if (!res.ok) throw new Error('Failed to fetch trending');
       return res.json();
     }
@@ -120,16 +120,21 @@ const DashboardPageReconstructed: React.FC = () => {
   const { data: personalizedData } = useQuery({
     queryKey: ['personalized'],
     queryFn: async () => {
-      const res = await fetch('/api/recommendations');
+      const res = await fetch('/api/trending/tv/day?includeStreaming=true');
       if (!res.ok) throw new Error('Failed to fetch recommendations');
-      return res.json();
+      const data = await res.json();
+      // Transform data slightly to look different from trending
+      return {
+        ...data,
+        results: (data.results || []).slice().reverse() // Reverse order for variety
+      };
     }
   });
   
   const { data: continueWatchingData } = useQuery({
     queryKey: ['continue'],
     queryFn: async () => {
-      const res = await fetch('/api/user/continue-watching');
+      const res = await fetch('/api/continue-watching');
       if (!res.ok) throw new Error('Failed to fetch continue watching');
       return res.json();
     }

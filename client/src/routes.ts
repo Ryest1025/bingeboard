@@ -8,14 +8,14 @@ import Discover from "@/pages/discover";
 import Activity from "@/pages/activity";
 import Friends from "@/pages/social";
 import UpcomingEnhanced from "@/pages/upcoming-enhanced";
-import Dashboard from "@/pages/dashboard";
 import SearchResultsPage from "@/pages/SearchResultsPage";
 import NotFound from "@/pages/not-found";
 import CardDemo from "@/pages/card-demo";
 
-// Lazy imports
+// Lazy imports - using the better dashboard as main
 const LazyTestPersonalized = React.lazy(() => import("@/pages/test-personalized"));
 const LazyDashboardReconstructed = React.lazy(() => import("@/pages/dashboard-reconstructed"));
+const LazySimpleDashboard = React.lazy(() => import("@/pages/dashboard")); // Keep simple as fallback
 
 export const publicRoutes = [
   { path: "/landing", component: Landing },
@@ -29,11 +29,11 @@ export const protectedRoutes = [
   { path: "/discover", component: Discover, requireAuth: true },
   { path: "/lists", component: Activity, requireAuth: true }, // Rename activity to lists
   { path: "/friends", component: Friends, requireAuth: true },
-  { path: "/dashboard", component: Dashboard, requireAuth: true },
+  { path: "/dashboard", component: LazyDashboardReconstructed, lazy: true, requireAuth: true }, // Use the better dashboard!
   { path: "/modern-discover", component: Discover, requireAuth: true },
   { path: "/search", component: SearchResultsPage, requireAuth: true },
   { path: "/test-personalized", component: LazyTestPersonalized, lazy: true, requireAuth: true },
-  { path: "/test-dashboard", component: LazyDashboardReconstructed, lazy: true, requireAuth: true },
+  { path: "/simple-dashboard", component: LazySimpleDashboard, lazy: true, requireAuth: true }, // Move simple to test route
 ];
 
 export const notFoundRoute = { component: NotFound };
