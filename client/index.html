@@ -170,20 +170,28 @@
     })();
   </script>
 
-  <!-- Service Worker Registration -->
-  <script type="module">
-    if (import.meta.env.PROD && 'serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js')
-          .then(reg => console.log('Service Worker registered:', reg))
-          .catch(err => console.error('Service Worker registration failed:', err));
-      });
-    } else if ('serviceWorker' in navigator) {
-      // Dev environment: make sure no old SW caches interfere with HMR/updates
+  <!-- AGGRESSIVE CACHE CLEAR - October 13, 2025 8:00pm -->
+  <script>
+    // NUCLEAR: Unregister ALL service workers and clear ALL caches
+    if ('serviceWorker' in navigator) {
       navigator.serviceWorker.getRegistrations().then(regs => {
-        if (regs.length) console.log('Unregistering service workers in dev to avoid stale caches');
+        console.log('🧹 Clearing all service workers and caches...');
         regs.forEach(r => r.unregister());
       });
+    }
+    
+    if ('caches' in window) {
+      caches.keys().then(names => {
+        names.forEach(name => caches.delete(name));
+        console.log('🧹 Cleared all cache storage');
+      });
+    }
+    
+    // Force reload without cache after clearing
+    if (performance.navigation.type !== 1 && !sessionStorage.getItem('cache_cleared_oct_13')) {
+      sessionStorage.setItem('cache_cleared_oct_13', 'true');
+      console.log('🔄 Forcing hard reload...');
+      window.location.reload(true);
     }
   </script>
 </body>
