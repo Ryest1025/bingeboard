@@ -1,10 +1,13 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Play, X, Clock, ChevronLeft, ChevronRight, Info } from 'lucide-react';
+import { Play, X, Clock, ChevronLeft, ChevronRight, Info, Check, Calendar } from 'lucide-react';
 import { useContinueWatching } from '@/hooks/useViewingHistory';
+import { useWatchStatus } from '@/hooks/useWatchStatus';
 import { useTrailer } from '@/hooks/useTrailer';
 import { getPlatformLogo } from '@/utils/platformLogos';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
 import StreamingLogos from '@/components/streaming-logos';
 
 interface ContinueWatchingItemProps {
@@ -49,6 +52,9 @@ const ContinueWatchingCard: React.FC<ContinueWatchingItemProps> = ({
   
   // Fetch trailer data from multiAPI system
   const { data: trailerData } = useTrailer(id, mediaType, title);
+  
+  // Watch status management
+  const { markAsCompleted, removeFromContinueWatching, isLoading: statusLoading } = useWatchStatus();
   
   const percent = Math.min((progress / duration) * 100, 100);
   
@@ -199,34 +205,76 @@ const ContinueWatchingCard: React.FC<ContinueWatchingItemProps> = ({
               isHovered ? 'opacity-100' : 'opacity-0'
             }`}
           >
-            {/* Action buttons - Netflix style */}
+            {/* Action buttons - Enhanced with new features */}
             <div className="absolute bottom-4 left-4 flex gap-3">
               <button
                 onClick={handlePlay}
                 className="w-10 h-10 rounded-full bg-white text-black hover:bg-gray-200 transition-all duration-300 flex items-center justify-center shadow-lg hover:scale-110"
+                title={`Continue watching on ${typeof platform === 'string' ? platform : platform?.provider_name || 'Platform'}`}
               >
                 <Play size={18} fill="currentColor" />
               </button>
+              
+              {/* Simplified action buttons - working version */}
               <button
                 onClick={(e) => {
                   e.stopPropagation();
+                  markAsCompleted(parseInt(id));
+                }}
+                className="w-10 h-10 rounded-full bg-green-600/90 backdrop-blur-sm text-white hover:bg-green-500 transition-all duration-300 flex items-center justify-center shadow-lg hover:scale-110 border border-white/20"
+                title="Mark as completed"
+                disabled={statusLoading}
+              >
+                <Check size={16} />
+              </button>
+              
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  removeFromContinueWatching(parseInt(id));
                   onRemove(id);
                 }}
                 className="w-10 h-10 rounded-full bg-slate-800/90 backdrop-blur-sm text-white hover:bg-red-600 transition-all duration-300 flex items-center justify-center shadow-lg hover:scale-110 border border-white/20"
+                title="Remove from continue watching"
+                disabled={statusLoading}
               >
                 <X size={16} />
               </button>
+              
               <button
                 className="w-10 h-10 rounded-full bg-slate-800/90 backdrop-blur-sm text-white hover:bg-slate-700 transition-all duration-300 flex items-center justify-center shadow-lg hover:scale-110 border border-white/20"
+                title="Show info"
               >
                 <Info size={16} />
               </button>
             </div>
 
-            {/* Time remaining - elegant indicator */}
-            <div className="absolute top-4 left-4 bg-black/80 backdrop-blur-sm px-3 py-1.5 rounded-full text-xs text-white/90 flex items-center gap-2 border border-white/10">
-              <Clock size={12} />
-              <span className="font-medium">{timeLeft}</span>
+            {/* Enhanced time indicators */}
+            <div className="absolute top-4 left-4 flex gap-2">
+              {/* Time remaining indicator */}
+              <div className="bg-black/80 backdrop-blur-sm px-3 py-1.5 rounded-full text-xs text-white/90 flex items-center gap-2 border border-white/10">
+                <Clock size={12} />
+                <span className="font-medium">{timeLeft}</span>
+              </div>
+              
+              {/* Days since last watched */}
+              {(() => {
+                const lastWatchedDate = new Date('2025-08-04T15:30:00Z'); // TODO: Use real lastWatched date
+                const daysSince = Math.floor((Date.now() - lastWatchedDate.getTime()) / (1000 * 60 * 60 * 24));
+                
+                if (daysSince > 0) {
+                  return (
+                    <Badge 
+                      variant={daysSince > 7 ? "destructive" : daysSince > 3 ? "secondary" : "default"}
+                      className="text-xs px-2 py-1 bg-black/60 backdrop-blur-sm border border-white/10"
+                    >
+                      <Calendar size={10} className="mr-1" />
+                      {daysSince}d ago
+                    </Badge>
+                  );
+                }
+                return null;
+              })()}
             </div>
 
             {/* Trailer indicator */}
@@ -260,23 +308,53 @@ const ContinueWatchingCard: React.FC<ContinueWatchingItemProps> = ({
               )}
             </div>
 
-            {/* Enhanced progress section */}
+            {/* Enhanced progress section with more details */}
             <div className="space-y-2">
               <div className="flex justify-between items-center text-xs">
-                <span className="text-slate-400 font-medium">{Math.round(percent)}% watched</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-slate-400 font-medium">{Math.round(percent)}% watched</span>
+                  <span className="text-slate-500">•</span>
+                  <span className="text-slate-500 font-medium">{timeLeft}</span>
+                </div>
                 {totalEpisodes && (
-                  <span className="text-slate-500 font-medium">{episodeNumber}/{totalEpisodes} episodes</span>
+                  <span className="text-slate-500 font-medium">
+                    Episode {episodeNumber}/{totalEpisodes}
+                  </span>
                 )}
               </div>
               
-              {/* Premium progress bar */}
+              {/* Enhanced progress bar with better visual feedback */}
               <div className="relative w-full bg-slate-700/50 rounded-full h-2 overflow-hidden shadow-inner">
                 <div 
                   className="h-full bg-gradient-to-r from-red-600 via-red-500 to-red-400 transition-all duration-1000 ease-out rounded-full shadow-lg" 
                   style={{ width: `${percent}%` }} 
                 />
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent to-white/10 rounded-full" />
+                
+                {/* Progress milestone indicators */}
+                <div className="absolute inset-0 flex justify-between items-center px-1">
+                  {[25, 50, 75].map((milestone) => (
+                    <div 
+                      key={milestone}
+                      className={`w-0.5 h-1 rounded-full transition-colors duration-300 ${
+                        percent >= milestone ? 'bg-white/40' : 'bg-white/10'
+                      }`}
+                    />
+                  ))}
+                </div>
               </div>
+              
+              {/* Additional episode info for TV shows */}
+              {mediaType === 'tv' && seasonNumber && (
+                <div className="flex justify-between items-center text-xs text-slate-500">
+                  <span>Season {seasonNumber}</span>
+                  {totalEpisodes && (
+                    <span>
+                      {Math.round((episodeNumber || 1) / totalEpisodes * 100)}% of season
+                    </span>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </div>
