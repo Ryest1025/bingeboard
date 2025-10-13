@@ -198,6 +198,15 @@ const DashboardPage: React.FC = () => {
           <h2 className="text-xl font-bold">✅ DASHBOARD IS RENDERING!</h2>
           <p className="text-sm">October 13, 2025 - New deployment active</p>
           <p className="text-xs mt-2">Trending: {processedTrending.length} | Recommendations: {filteredRecommendations.length}</p>
+          <p className="text-xs mt-1">Has Spotlight: {spotlightItem ? 'YES' : 'NO'} | Loading: {personalizedLoading ? 'YES' : 'NO'}</p>
+          <p className="text-xs mt-1">Errors: Trending={trendingError ? 'YES' : 'NO'} Personalized={personalizedError ? 'YES' : 'NO'}</p>
+        </div>
+        
+        {/* TEMP: Show raw data for debugging */}
+        <div className="bg-yellow-600 text-black p-4 rounded-lg text-xs">
+          <h3 className="font-bold mb-2">DEBUG DATA:</h3>
+          <p>processedTrending[0]: {processedTrending[0] ? JSON.stringify(processedTrending[0]).substring(0, 100) : 'NONE'}</p>
+          <p>filteredRecommendations[0]: {filteredRecommendations[0] ? JSON.stringify(filteredRecommendations[0]).substring(0, 100) : 'NONE'}</p>
         </div>
         {/* Spotlight Section - Mobile Optimized */}
         {spotlightItem ? (
