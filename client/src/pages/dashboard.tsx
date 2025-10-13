@@ -174,7 +174,7 @@ const DashboardPage: React.FC = () => {
   const clearAllFilters = () => setFilters({ genre: [], network: [], year: [] });
   const hasActiveFilters = filters.genre.length > 0 || filters.network.length > 0 || filters.year.length > 0;
 
-    console.log('🎯 OCTOBER 10TH DASHBOARD LOADED - Latest version with all features');
+    console.log('🎯 OCTOBER 10TH DASHBOARD LOADED - Latest version with all features - BUILD TIME:', new Date().toISOString());
   
   return (
     <div className="min-h-screen bg-slate-900 w-full overflow-x-hidden">
