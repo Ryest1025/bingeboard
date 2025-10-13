@@ -131,8 +131,8 @@ const UniversalMediaCard: React.FC<UniversalMediaCardProps> = ({
   // Get variant configuration
   const config = CARD_VARIANTS[variant] || CARD_VARIANTS.vertical;
   
-  // Get first streaming logo for corner badges (for listings) and Watch Now button (for spotlight)
-  const firstStreamingLogo = normalizedPlatforms.length > 0 && normalizedPlatforms[0].logo_path
+  // Get first streaming logo - only if showStreamingLogoInButton is true
+  const firstStreamingLogo = showStreamingLogoInButton && normalizedPlatforms.length > 0 && normalizedPlatforms[0].logo_path
     ? normalizedPlatforms[0].logo_path.startsWith('http')
       ? normalizedPlatforms[0].logo_path
       : `https://image.tmdb.org/t/p/w200${normalizedPlatforms[0].logo_path}`
