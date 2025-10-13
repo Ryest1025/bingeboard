@@ -15,8 +15,8 @@ import CardDemo from "@/pages/card-demo";
 // Lazy imports - using the comprehensive dashboard as main
 const LazyTestPersonalized = React.lazy(() => import("@/pages/test-personalized"));
 const LazyDashboardReconstructed = React.lazy(() => import("@/pages/dashboard-reconstructed"));
-const LazySimpleDashboard = React.lazy(() => import("@/pages/dashboard"));
-const LazyComprehensiveDashboard = React.lazy(() => import("@/pages/dashboard-comprehensive")); // The REAL dashboard!
+const LazyDashboard = React.lazy(() => import("@/pages/dashboard")); // The REAL dashboard from October 10th!
+const LazyComprehensiveDashboard = React.lazy(() => import("@/pages/dashboard-comprehensive")); // Old comprehensive version
 
 export const publicRoutes = [
   { path: "/landing", component: Landing },
@@ -30,11 +30,11 @@ export const protectedRoutes = [
   { path: "/discover", component: Discover, requireAuth: true },
   { path: "/lists", component: Activity, requireAuth: true }, // Rename activity to lists
   { path: "/friends", component: Friends, requireAuth: true },
-  { path: "/dashboard", component: LazyComprehensiveDashboard, lazy: true, requireAuth: true }, // Use the REAL comprehensive dashboard!
+  { path: "/dashboard", component: LazyDashboard, lazy: true, requireAuth: true }, // Use the REAL dashboard from October 10th!
   { path: "/modern-discover", component: Discover, requireAuth: true },
   { path: "/search", component: SearchResultsPage, requireAuth: true },
   { path: "/test-personalized", component: LazyTestPersonalized, lazy: true, requireAuth: true },
-  { path: "/simple-dashboard", component: LazySimpleDashboard, lazy: true, requireAuth: true }, // Move simple to test route
+  { path: "/comprehensive-dashboard", component: LazyComprehensiveDashboard, lazy: true, requireAuth: true }, // Move comprehensive to test route
   { path: "/test-dashboard", component: LazyDashboardReconstructed, lazy: true, requireAuth: true }, // Keep reconstructed as test
 ];
 

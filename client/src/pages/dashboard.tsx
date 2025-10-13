@@ -71,15 +71,9 @@ const DashboardPage: React.FC = () => {
   const { data: personalizedData, isError: personalizedError, isLoading: personalizedLoading } = useQuery({
     queryKey: ['personalized-with-streaming', 'v2'],
     queryFn: async () => {
-      // Use trending data as personalized recommendations since discover endpoint doesn't exist
-      const res = await apiFetch('/api/trending/tv/day?includeStreaming=true');
+      const res = await apiFetch('/api/tmdb/discover/tv?sort_by=popularity.desc&includeStreaming=true');
       if (!res.ok) throw new Error('Failed to fetch recommendations');
-      const data = await res.json();
-      // Transform data slightly to look different from trending
-      return {
-        ...data,
-        results: (data.results || []).slice().reverse() // Reverse order to differentiate from trending
-      };
+      return res.json();
     }
   });
 
@@ -96,7 +90,7 @@ const DashboardPage: React.FC = () => {
   const filteredRecommendations = useMemo(() => {
     if (personalizedError || !personalizedData) return [];
     let items = normalizeMedia((personalizedData as any)?.results || []);
-
+    
     // Apply filters
     if (filters.genre.length > 0) {
       items = items.filter(item =>
@@ -173,7 +167,6 @@ const DashboardPage: React.FC = () => {
   };
 
   const clearAllFilters = () => setFilters({ genre: [], network: [], year: [] });
-
   const hasActiveFilters = filters.genre.length > 0 || filters.network.length > 0 || filters.year.length > 0;
 
   return (
