@@ -176,8 +176,8 @@ const DashboardPage: React.FC = () => {
   const clearAllFilters = () => setFilters({ genre: [], network: [], year: [] });
   const hasActiveFilters = filters.genre.length > 0 || filters.network.length > 0 || filters.year.length > 0;
 
-    console.log('🚨🚨🚨 FORCE UPDATE - OCTOBER 10TH DASHBOARD v3.0 - October 13, 2025 6:25pm 🚨🚨🚨');
-  console.log('🎯 DASHBOARD VERSION: MOBILE OPTIMIZED - BUILD TIME:', new Date().toISOString());
+    console.log('🚨🚨🚨 DIRECT NUCLEAR TEST - DASHBOARD LOADED - October 13, 2025 6:45pm 🚨🚨🚨');
+  console.log('🎯 DASHBOARD VERSION: CACHE-BUSTED BUILD:', new Date().toISOString());
   
   return (
     <div className="min-h-screen bg-slate-900 w-full overflow-x-hidden">

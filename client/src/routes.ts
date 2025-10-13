@@ -17,12 +17,14 @@ import SearchResultsPage from "@/pages/SearchResultsPage";
 import NotFound from "@/pages/not-found";
 import CardDemo from "@/pages/card-demo";
 
-// Lazy imports - using the comprehensive dashboard as main
+// FORCE STATIC IMPORT TO PREVENT TREE-SHAKING - October 13, 2025 6:50pm
+import Dashboard from "@/pages/dashboard"; // STATIC IMPORT - NO LAZY LOADING TO FIX BUILD ISSUE
+import DeploymentTestPage from "@/pages/deployment-test-page"; // STATIC IMPORT FOR NUCLEAR TEST
+
+// Lazy imports - other routes
 const LazyTestPersonalized = React.lazy(() => import("@/pages/test-personalized"));
 const LazyDashboardReconstructed = React.lazy(() => import("@/pages/dashboard-reconstructed"));
-const LazyDashboard = React.lazy(() => import("@/pages/dashboard")); // The REAL dashboard from October 10th!
-const LazyComprehensiveDashboard = React.lazy(() => import("@/pages/dashboard-comprehensive")); // Old comprehensive version
-const LazyDeploymentTest = React.lazy(() => import("@/pages/deployment-test-page")); // NUCLEAR TEST
+const LazyComprehensiveDashboard = React.lazy(() => import("@/pages/dashboard-comprehensive"));
 
 export const publicRoutes = [
   { path: "/landing", component: Landing },
@@ -36,13 +38,13 @@ export const protectedRoutes = [
   { path: "/discover", component: Discover, requireAuth: true },
   { path: "/lists", component: Activity, requireAuth: true }, // Rename activity to lists
   { path: "/friends", component: Friends, requireAuth: true },
-  { path: "/dashboard", component: LazyDeploymentTest, lazy: true, requireAuth: true }, // NUCLEAR TEST - BYPASS ALL CACHING
-  { path: "/real-dashboard", component: LazyDashboard, lazy: true, requireAuth: true }, // Real dashboard moved here
+  { path: "/dashboard", component: Dashboard, requireAuth: true }, // STATIC IMPORT - FIXES TREE-SHAKING!
   { path: "/modern-discover", component: Discover, requireAuth: true },
   { path: "/search", component: SearchResultsPage, requireAuth: true },
   { path: "/test-personalized", component: LazyTestPersonalized, lazy: true, requireAuth: true },
-  { path: "/comprehensive-dashboard", component: LazyComprehensiveDashboard, lazy: true, requireAuth: true }, // Move comprehensive to test route
-  { path: "/test-dashboard", component: LazyDashboardReconstructed, lazy: true, requireAuth: true }, // Keep reconstructed as test
+  { path: "/comprehensive-dashboard", component: LazyComprehensiveDashboard, lazy: true, requireAuth: true },
+  { path: "/test-dashboard", component: LazyDashboardReconstructed, lazy: true, requireAuth: true },
+  { path: "/deployment-test", component: DeploymentTestPage, requireAuth: true }, // STATIC IMPORT FOR TEST
 ];
 
 export const notFoundRoute = { component: NotFound };

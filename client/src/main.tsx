@@ -7,6 +7,10 @@ import "./index.css";
 import { auth } from "@/firebase/config";
 import { apiFetch } from "@/utils/api-config";
 
+// 🚨 FORCE INCLUSION - Prevent tree-shaking of dashboard
+import "@/pages/dashboard";
+import "@/deployment-test";
+
 console.log("🚀 MAIN.TSX LOADED - Starting React app");
 
 // Handle GitHub Pages SPA routing
