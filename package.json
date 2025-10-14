@@ -94,13 +94,11 @@
     "@types/nodemailer": "^6.4.17",
     "@types/pg": "^8.15.5",
     "bcryptjs": "^3.0.2",
-    "better-sqlite3": "^8.2.0",
     "caniuse-lite": "^1.0.30001727",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
     "connect-pg-simple": "^10.0.0",
-    "connect-sqlite3": "^0.9.16",
     "cookie": "^1.0.2",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
@@ -135,7 +133,6 @@
     "react-player": "^3.3.1",
     "react-resizable-panels": "^2.1.7",
     "recharts": "^2.15.2",
-    "sqlite3": "^5.1.7",
     "stripe": "^18.2.1",
     "tailwind-merge": "^2.6.0",
     "tailwindcss-animate": "^1.0.7",
@@ -186,6 +183,9 @@
     "msw": "^2.4.2"
   },
   "optionalDependencies": {
-    "bufferutil": "^4.0.8"
+    "bufferutil": "^4.0.8",
+    "better-sqlite3": "^8.2.0",
+    "connect-sqlite3": "^0.9.16",
+    "sqlite3": "^5.1.7"
   }
 }

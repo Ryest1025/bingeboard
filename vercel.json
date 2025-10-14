@@ -1,17 +1,19 @@
 {
   "version": 2,
+  "buildCommand": "npm run build",
   "functions": {
-    "api/index.js": {
+    "dist/index.js": {
       "maxDuration": 30
     }
   },
   "rewrites": [
     {
       "source": "/api/(.*)",
-      "destination": "/api/index.js"
+      "destination": "/dist/index.js"
     }
   ],
   "env": {
     "NODE_ENV": "production"
-  }
+  },
+  "installCommand": "npm install --legacy-peer-deps || npm install"
 }
