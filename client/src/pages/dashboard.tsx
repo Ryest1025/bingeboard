@@ -29,7 +29,9 @@ import type { NormalizedMedia } from "@/types/media";
 import type { MediaItem as ActionMediaItem } from "@/services/userActions";
 import { apiFetch } from "@/utils/api-config";
 import BuildInfoBadge from "@/components/BuildInfoBadge";
-import { Sparkles } from "lucide-react";
+import { Sparkles, Play, Plus } from "lucide-react";
+import { ActionButton } from "@/components/cards/ActionButton";
+import TrailerButton from "@/components/trailer-button";
 
 // TMDB base image sizes (choose balanced quality for hero & posters)
 const TMDB_BACKDROP_SIZE = 'w1280';
@@ -475,32 +477,45 @@ const DashboardPage: React.FC = () => {
                   transition={{ duration: 1, delay: 0.7 }}
                   className="flex flex-wrap gap-3 pt-2"
                 >
-                  <Button
+                  <ActionButton
                     onClick={() => handleWatchNow(spotlightItem as NormalizedMedia)}
-                    className="bg-red-600 hover:bg-red-700 text-white px-6 py-2 text-base"
+                    variant="primary"
                     size="lg"
+                    className="bg-red-600 hover:bg-red-700 border-red-500/30"
                     aria-label="Watch now"
                   >
-                    ▶ Watch Now
-                  </Button>
-                  <Button
-                    onClick={() => handleWatchTrailer(spotlightItem as NormalizedMedia)}
+                    <div className="flex items-center gap-2">
+                      {spotlightItem.streaming && spotlightItem.streaming.length > 0 && spotlightItem.streaming[0].logo_path && (
+                        <img
+                          src={buildTmdbUrl(spotlightItem.streaming[0].logo_path, 'w45')}
+                          alt={spotlightItem.streaming[0].provider_name || spotlightItem.streaming[0].name}
+                          className="w-5 h-5 object-contain rounded-sm bg-white p-0.5"
+                        />
+                      )}
+                      <Play className="w-5 h-5" />
+                      <span>Watch Now</span>
+                    </div>
+                  </ActionButton>
+                  <TrailerButton
+                    show={{
+                      id: spotlightItem.id,
+                      tmdbId: spotlightItem.id,
+                      title: spotlightItem.title || spotlightItem.name || 'Unknown'
+                    }}
                     variant="outline"
-                    className="text-white border-white hover:bg-white/10 px-6 py-2 text-base"
                     size="lg"
-                    aria-label="Watch trailer"
-                  >
-                    🎬 Trailer
-                  </Button>
-                  <Button
+                    showLabel={true}
+                    className="text-white border-white hover:bg-white/10"
+                  />
+                  <ActionButton
                     onClick={() => handleAddToWatchlist(spotlightItem as NormalizedMedia)}
-                    variant="ghost"
-                    className="text-white border border-white hover:bg-white/10 px-6 py-2 text-base"
+                    variant="secondary"
                     size="lg"
                     aria-label="Add to watchlist"
                   >
-                    + My List
-                  </Button>
+                    <Plus className="w-5 h-5" />
+                    <span>My List</span>
+                  </ActionButton>
                 </motion.div>
               </div>
             </div>
