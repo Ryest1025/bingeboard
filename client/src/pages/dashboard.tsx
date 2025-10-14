@@ -70,21 +70,19 @@ const DashboardPage: React.FC = () => {
 
   // --- Process Data ---
   const processedTrending = useMemo(() => {
+    if (!trendingData) return [];
     const raw = (trendingData as any)?.results || [];
-    return normalizeMedia(raw.length ? raw : [
-      {
-        id: 999001,
-        name: "Sample Spotlight Show",
-        overview: "Fallback sample because trending data returned empty.",
-        poster_path: "/49WJfeN0moxb9IPfGn8AIqMGskD.jpg",
-        vote_average: 8.2,
-        first_air_date: "2024-09-18",
-        genres: [{ id: 18, name: "Drama" }],
-      },
-    ] as any);
+    if (raw.length === 0) {
+      console.warn('⚠️ Trending data is empty');
+      return [];
+    }
+    return normalizeMedia(raw);
   }, [trendingData]);
 
-  const spotlightItem = useMemo(() => processedTrending.find((item) => item.streaming?.length > 0) || processedTrending[0], [processedTrending]);
+  const spotlightItem = useMemo(() => {
+    if (processedTrending.length === 0) return null;
+    return processedTrending.find((item) => item.streaming?.length > 0) || processedTrending[0];
+  }, [processedTrending]);
 
   const filteredRecommendations = useMemo(() => {
     const raw = (personalizedData as any)?.results || [];
@@ -149,7 +147,18 @@ const DashboardPage: React.FC = () => {
 
       <main className="w-full max-w-none px-6 py-6 space-y-12" aria-live="polite">
         {/* Spotlight */}
-        {spotlightItem && (
+        {trendingLoading ? (
+          <div className="relative w-full rounded-xl overflow-hidden shadow-xl min-h-[400px] bg-slate-800 animate-pulse flex items-end p-6">
+            <div className="flex gap-6 items-end w-full">
+              <div className="w-44 aspect-[2/3] bg-slate-700 rounded-lg" />
+              <div className="flex-1 space-y-4">
+                <div className="h-10 bg-slate-700/70 rounded w-3/4" />
+                <div className="h-4 bg-slate-700/60 rounded w-full" />
+                <div className="h-4 bg-slate-700/60 rounded w-5/6" />
+              </div>
+            </div>
+          </div>
+        ) : spotlightItem ? (
           <motion.div
             initial={{ opacity: 0, y: 25 }}
             animate={{ opacity: 1, y: 0 }}
@@ -209,6 +218,13 @@ const DashboardPage: React.FC = () => {
               </div>
             </div>
           </motion.div>
+        ) : (
+          <div className="w-full min-h-[300px] rounded-xl flex items-center justify-center bg-slate-800/40 border border-slate-700 text-slate-300">
+            <div className="text-center space-y-2">
+              <p className="text-lg font-semibold">No trending shows available</p>
+              <p className="text-sm opacity-80">Check back soon for new content</p>
+            </div>
+          </div>
         )}
 
         {/* For You */}
@@ -230,9 +246,9 @@ const DashboardPage: React.FC = () => {
                   showRating
                   actions={{ watchNow: true, trailer: true, addToList: true }}
                   moveButtonsToBottom
-                  onAddToWatchlist={handleAddToWatchlist}
-                  onWatchNow={handleWatchNow}
-                  onWatchTrailer={handleWatchTrailer}
+                  onAddToWatchlist={(m) => { void handleAddToWatchlist(m as NormalizedMedia); }}
+                  onWatchNow={(m) => { void handleWatchNow(m as NormalizedMedia); }}
+                  onWatchTrailer={(m) => { void handleWatchTrailer(m as NormalizedMedia); }}
                 />
               ))}
             </div>
