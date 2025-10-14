@@ -207,7 +207,7 @@ const DashboardPage: React.FC = () => {
                     variant="outline"
                     className="text-white border-white hover:bg-white/10 px-4 py-2.5"
                   >
-                    🎬 Trailer
+                    Trailer
                   </Button>
                   <Button
                     onClick={() => handleAddToWatchlist(spotlightItem as NormalizedMedia)}
