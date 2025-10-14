@@ -1,12 +1,17 @@
 /**
  * Dashboard Page — FINAL OCTOBER PRODUCTION BUILD
- * Version: October 14, 2025
- * Includes:
- *  - Animated Spotlight hero (fade-up / cinematic motion)
- *  - Refined "For You" section with filters + recommendations
+ * @version 1.0.0
+ * @lastModified 2025-10-14T18:35:00Z
+ * @author BingeBoard Team
+ * 
+ * Features:
+ *  - Animated Spotlight hero with backdrop + poster overlay + gradient
+ *  - Responsive layout (poster left / text right on desktop, stacked on mobile)
+ *  - "For You" section with filters + working recommendations
  *  - Continue Watching section
  *  - Unified media actions (watch, trailer, add to list)
- *  - No Friend Activity (moved to Friends page)
+ *  - Mobile & app optimized
+ *  - No Friend Activity
  */
 
 import React, { useState, useMemo } from "react";
@@ -21,6 +26,8 @@ import { UniversalMediaCard } from "@/components/universal";
 import useMediaActions from "@/hooks/useMediaActions";
 import type { NormalizedMedia } from "@/types/media";
 import { apiFetch } from "@/utils/api-config";
+
+console.log('🎬 Dashboard loaded at:', new Date().toISOString());
 
 // --- Section Wrapper ---
 const Section: React.FC<{
@@ -175,6 +182,15 @@ const DashboardPage: React.FC = () => {
     filters.genre.length > 0 ||
     filters.network.length > 0 ||
     filters.year.length > 0;
+
+  // Debug logging
+  console.log('📊 Dashboard Data:', {
+    trendingCount: processedTrending.length,
+    recommendationsCount: filteredRecommendations.length,
+    hasSpotlight: !!spotlightItem,
+    spotlightTitle: spotlightItem?.title || spotlightItem?.name,
+    isLoading: personalizedLoading
+  });
   return (
     <div className="min-h-screen bg-slate-950 w-full overflow-x-hidden">
       <NavigationHeader />
@@ -186,23 +202,105 @@ const DashboardPage: React.FC = () => {
             initial={{ opacity: 0, y: 25 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 1.1, ease: "easeOut" }}
-            className="relative w-full"
+            className="relative w-full overflow-hidden rounded-xl shadow-xl min-h-[400px] md:min-h-[500px]"
           >
-            <UniversalMediaCard
-              media={spotlightItem}
-              variant="spotlight-poster-backdrop"
-              size="xl"
-              showRating
-              showGenres
-              showReleaseDate
-              showDescription
-              actions={{ watchNow: true, trailer: true, addToList: true }}
-              showStreamingLogoInButton
-              onAddToWatchlist={addToWatchlist}
-              onWatchTrailer={watchTrailer}
-              onWatchNow={watchNow}
-              className="w-full rounded-xl overflow-hidden shadow-xl"
+            {/* Backdrop Background */}
+            <div
+              className="absolute inset-0 bg-cover bg-center filter brightness-75"
+              style={{
+                backgroundImage: `url(${spotlightItem.backdrop_path || spotlightItem.poster_path})`,
+              }}
             />
+
+            {/* Gradient overlay for text readability */}
+            <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/60 to-transparent" />
+
+            {/* Content */}
+            <div className="relative z-10 flex flex-col md:flex-row items-center md:items-end gap-6 px-4 sm:px-8 py-6 md:py-12">
+              {/* Poster */}
+              <div className="flex-shrink-0 w-32 sm:w-44 md:w-56 rounded-lg overflow-hidden shadow-lg">
+                <img
+                  src={spotlightItem.poster_path || spotlightItem.backdrop_path}
+                  alt={spotlightItem.title || spotlightItem.name}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+
+              {/* Text & Actions */}
+              <div className="flex-1 text-white space-y-3">
+                <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight">
+                  {spotlightItem.title || spotlightItem.name}
+                </h2>
+                
+                {/* Genres & Year */}
+                <div className="flex flex-wrap gap-2 text-sm sm:text-base text-gray-300">
+                  {spotlightItem.vote_average && (
+                    <span className="px-3 py-1 bg-yellow-600 text-white rounded-full font-semibold">
+                      ⭐ {spotlightItem.vote_average.toFixed(1)}
+                    </span>
+                  )}
+                  {spotlightItem.genres?.slice(0, 3).map((g) => (
+                    <span key={g.id} className="px-3 py-1 bg-slate-800/80 rounded-full">
+                      {g.name}
+                    </span>
+                  ))}
+                  {(spotlightItem.release_date || spotlightItem.first_air_date) && (
+                    <span className="px-3 py-1 bg-slate-800/80 rounded-full">
+                      {new Date(spotlightItem.release_date || spotlightItem.first_air_date || '').getFullYear()}
+                    </span>
+                  )}
+                </div>
+
+                {/* Overview */}
+                {spotlightItem.overview && (
+                  <p className="text-gray-200 text-sm sm:text-base md:text-lg line-clamp-3 md:line-clamp-4 max-w-3xl">
+                    {spotlightItem.overview}
+                  </p>
+                )}
+
+                {/* Streaming Platforms */}
+                {spotlightItem.streaming && spotlightItem.streaming.length > 0 && (
+                  <div className="flex flex-wrap gap-2 items-center">
+                    <span className="text-sm text-gray-400">Available on:</span>
+                    {spotlightItem.streaming.slice(0, 4).map((platform, idx) => (
+                      <span
+                        key={idx}
+                        className="px-3 py-1 bg-blue-600/80 text-white rounded-full text-xs sm:text-sm"
+                      >
+                        {platform.provider_name || platform.name}
+                      </span>
+                    ))}
+                  </div>
+                )}
+
+                {/* Action Buttons */}
+                <div className="flex flex-wrap gap-3 pt-2">
+                  <Button
+                    onClick={() => watchNow(spotlightItem as any)}
+                    className="bg-red-600 hover:bg-red-700 text-white px-6 py-2 text-base"
+                    size="lg"
+                  >
+                    ▶ Watch Now
+                  </Button>
+                  <Button
+                    onClick={() => watchTrailer(spotlightItem as any)}
+                    variant="outline"
+                    className="text-white border-white hover:bg-white/10 px-6 py-2 text-base"
+                    size="lg"
+                  >
+                    🎬 Trailer
+                  </Button>
+                  <Button
+                    onClick={() => addToWatchlist(spotlightItem as any)}
+                    variant="ghost"
+                    className="text-white border border-white hover:bg-white/10 px-6 py-2 text-base"
+                    size="lg"
+                  >
+                    + My List
+                  </Button>
+                </div>
+              </div>
+            </div>
           </motion.div>
         )}
 
