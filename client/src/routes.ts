@@ -17,9 +17,8 @@ import SearchResultsPage from "@/pages/SearchResultsPage";
 import NotFound from "@/pages/not-found";
 import CardDemo from "@/pages/card-demo";
 
-// FORCE STATIC IMPORT TO PREVENT TREE-SHAKING - Restored to First Week October Dashboard
-import DashboardAdvanced from "@/pages/dashboard-advanced"; // STATIC IMPORT - ADVANCED DASHBOARD
-import Dashboard from "@/pages/dashboard"; // BACKUP SIMPLE DASHBOARD
+// Dashboard imports - Clean polished version
+import Dashboard from "@/pages/dashboard"; // POLISHED DASHBOARD - October 14, 2025
 import DeploymentTestPage from "@/pages/deployment-test-page"; // STATIC IMPORT FOR NUCLEAR TEST
 
 // Lazy imports - other routes
@@ -39,8 +38,7 @@ export const protectedRoutes = [
   { path: "/discover", component: Discover, requireAuth: true },
   { path: "/lists", component: Activity, requireAuth: true }, // Rename activity to lists
   { path: "/friends", component: Friends, requireAuth: true },
-  { path: "/dashboard", component: DashboardAdvanced, requireAuth: true }, // ADVANCED DASHBOARD - FIRST WEEK OCTOBER
-  { path: "/dashboard-simple", component: Dashboard, requireAuth: true }, // BACKUP SIMPLE VERSION
+  { path: "/dashboard", component: Dashboard, requireAuth: true }, // POLISHED DASHBOARD - October 14, 2025
   { path: "/modern-discover", component: Discover, requireAuth: true },
   { path: "/search", component: SearchResultsPage, requireAuth: true },
   { path: "/test-personalized", component: LazyTestPersonalized, lazy: true, requireAuth: true },
