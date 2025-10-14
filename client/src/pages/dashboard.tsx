@@ -1,13 +1,14 @@
 /**
- * Dashboard Page — MERGED PRODUCTION + EXPERIMENTAL
- * @version 1.1.0
- * @lastModified 2025-10-14T20:30:00Z
+ * Dashboard Page — CINEMATIC UPGRADE
+ * @version 1.2.0
+ * @lastModified 2025-10-14T21:15:00Z
  * @author BingeBoard Team
  * 
  * Features:
- *  - Animated Spotlight hero with backdrop + poster overlay + gradient
- *  - "For You" recommendations with filters & staggered animation
- *  - Continue Watching section
+ *  - Animated Spotlight with backdrop parallax & gradient overlay
+ *  - "For You" recommendations with hover scale + staggered motion
+ *  - Continue Watching as horizontal scroll with fade-up animation
+ *  - Compact pill-style filters with hover/active states
  *  - Multi-API personalized endpoint (/api/personalized/tv)
  *  - Media actions: Watch Now, Trailer, Add to Watchlist
  *  - Toast notifications for success/error
@@ -20,7 +21,6 @@ import { motion } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
 import NavigationHeader from "@/components/navigation-header";
 import ContinueWatching from "@/components/ContinueWatching";
-import { MultiSelect } from "@/components/ui/multi-select";
 import { Button } from "@/components/ui/button";
 import { normalizeMedia } from "@/utils/normalizeMedia";
 import { UniversalMediaCard } from "@/components/universal";
@@ -29,7 +29,7 @@ import type { NormalizedMedia } from "@/types/media";
 import type { MediaItem as ActionMediaItem } from "@/services/userActions";
 import { apiFetch } from "@/utils/api-config";
 import BuildInfoBadge from "@/components/BuildInfoBadge";
-import { TrendingUp, Sparkles, Filter } from "lucide-react";
+import { Sparkles } from "lucide-react";
 
 // TMDB base image sizes (choose balanced quality for hero & posters)
 const TMDB_BACKDROP_SIZE = 'w1280';
@@ -68,25 +68,35 @@ const Section: React.FC<{
   </section>
 );
 
-// --- Multi-Select Filter ---
-const MultiSelectFilter: React.FC<{
+// --- Pill-Style Filter ---
+const PillFilter: React.FC<{
   label: string;
   options: string[];
   selected: string[];
   onChange: (selected: string[]) => void;
-}> = ({ label, options, selected, onChange }) => (
-  <div className="flex flex-col">
-    <span className="text-white font-semibold mb-2">{label}</span>
-    <MultiSelect
-      options={options}
-      value={selected}
-      onValueChange={onChange}
-      placeholder={`Select ${label}`}
-      label={label}
-      showClearAll
-      searchable={options.length > 10}
-      className="bg-slate-800 border-slate-700 text-white hover:bg-slate-700"
-    />
+}> = ({ options, selected, onChange, label }) => (
+  <div className="flex flex-col gap-2">
+    <span className="text-white font-semibold text-sm">{label}</span>
+    <div className="flex flex-wrap gap-2">
+      {options.map((opt) => {
+        const active = selected.includes(opt);
+        return (
+          <button
+            key={opt}
+            onClick={() =>
+              onChange(active ? selected.filter((s) => s !== opt) : [...selected, opt])
+            }
+            className={`px-3 py-1 rounded-full text-sm font-medium transition-all duration-200 ${
+              active 
+                ? 'bg-red-600 text-white shadow-lg shadow-red-600/30 scale-105' 
+                : 'bg-slate-700 text-gray-300 hover:bg-slate-600 hover:scale-105'
+            }`}
+          >
+            {opt}
+          </button>
+        );
+      })}
+    </div>
   </div>
 );
 
@@ -160,7 +170,7 @@ const DashboardPage: React.FC = () => {
   });
 
   const { data: personalizedData, isLoading: personalizedLoading } = useQuery({
-    queryKey: ["personalized-multiapi", "v1"],
+    queryKey: ["personalized-multiapi", "v2"],
     queryFn: async () => {
       const res = await apiFetch(
         "/api/personalized/tv?sort_by=popularity.desc&includeStreaming=true"
@@ -353,14 +363,17 @@ const DashboardPage: React.FC = () => {
         )}
         {!trendingLoading && spotlightItem ? (
           <motion.div
-            initial={{ opacity: 0, y: 25 }}
+            initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1.1, ease: "easeOut" }}
-            className="relative w-full overflow-hidden rounded-xl shadow-xl min-h-[400px] md:min-h-[500px]"
+            transition={{ duration: 1.2, ease: "easeOut" }}
+            className="relative w-full overflow-hidden rounded-xl shadow-2xl min-h-[400px] md:min-h-[500px]"
             aria-label="Spotlight show"
           >
-            {/* Backdrop Background */}
-            <div
+            {/* Backdrop Background with Parallax */}
+            <motion.div
+              initial={{ scale: 1.1 }}
+              animate={{ scale: 1 }}
+              transition={{ duration: 1.5, ease: "easeOut" }}
               className="absolute inset-0 bg-cover bg-center filter brightness-75"
               style={{
                 backgroundImage: `url(${buildTmdbUrl(spotlightItem.backdrop_path, TMDB_BACKDROP_SIZE) || buildTmdbUrl(spotlightItem.poster_path, TMDB_BACKDROP_SIZE)})`,
@@ -374,23 +387,38 @@ const DashboardPage: React.FC = () => {
             {/* Content */}
             <div className="relative z-10 flex flex-col md:flex-row items-center md:items-end gap-6 px-4 sm:px-8 py-6 md:py-12">
               {/* Poster */}
-              <div className="flex-shrink-0 w-32 sm:w-44 md:w-56 rounded-lg overflow-hidden shadow-2xl ring-1 ring-slate-900/60">
+              <motion.div
+                initial={{ opacity: 0, x: -30 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 1, delay: 0.2 }}
+                className="flex-shrink-0 w-32 sm:w-44 md:w-56 rounded-lg overflow-hidden shadow-2xl ring-1 ring-slate-900/60"
+              >
                 <img
                   src={buildTmdbUrl(spotlightItem.poster_path, TMDB_POSTER_SIZE) || buildTmdbUrl(spotlightItem.backdrop_path, TMDB_POSTER_SIZE)}
                   alt={spotlightItem.title || spotlightItem.name}
                   className="w-full h-full object-cover"
                   loading="lazy"
                 />
-              </div>
+              </motion.div>
 
               {/* Text & Actions */}
               <div className="flex-1 min-w-0 text-white space-y-3">
-                <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight">
+                <motion.h2
+                  initial={{ y: 20, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ duration: 1, delay: 0.3 }}
+                  className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight"
+                >
                   {spotlightItem.title || spotlightItem.name}
-                </h2>
+                </motion.h2>
                 
                 {/* Genres & Year */}
-                <div className="flex flex-wrap gap-2 text-sm sm:text-base text-gray-300">
+                <motion.div
+                  initial={{ y: 20, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ duration: 1, delay: 0.4 }}
+                  className="flex flex-wrap gap-2 text-sm sm:text-base text-gray-300"
+                >
                   {spotlightItem.vote_average && (
                     <span className="px-3 py-1 bg-yellow-600 text-white rounded-full font-semibold">
                       ⭐ {spotlightItem.vote_average.toFixed(1)}
@@ -406,11 +434,16 @@ const DashboardPage: React.FC = () => {
                       {new Date(spotlightItem.release_date || spotlightItem.first_air_date || '').getFullYear()}
                     </span>
                   )}
-                </div>
+                </motion.div>
 
                 {/* Streaming Platforms */}
                 {spotlightItem.streaming && spotlightItem.streaming.length > 0 && (
-                  <div className="flex flex-wrap gap-2 items-center">
+                  <motion.div
+                    initial={{ y: 20, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ duration: 1, delay: 0.5 }}
+                    className="flex flex-wrap gap-2 items-center"
+                  >
                     <span className="text-sm text-gray-400">Available on:</span>
                     {spotlightItem.streaming.slice(0, 4).map((platform, idx) => (
                       <span
@@ -420,18 +453,28 @@ const DashboardPage: React.FC = () => {
                         {platform.provider_name || platform.name}
                       </span>
                     ))}
-                  </div>
+                  </motion.div>
                 )}
 
                 {/* Overview */}
                 {spotlightItem.overview && (
-                  <p className="text-gray-200 text-sm sm:text-base md:text-lg line-clamp-3 md:line-clamp-4 max-w-3xl">
+                  <motion.p
+                    initial={{ y: 20, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ duration: 1, delay: 0.6 }}
+                    className="text-gray-200 text-sm sm:text-base md:text-lg line-clamp-3 md:line-clamp-4 max-w-3xl"
+                  >
                     {spotlightItem.overview}
-                  </p>
+                  </motion.p>
                 )}
 
                 {/* Action Buttons */}
-                <div className="flex flex-wrap gap-3 pt-2">
+                <motion.div
+                  initial={{ y: 20, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ duration: 1, delay: 0.7 }}
+                  className="flex flex-wrap gap-3 pt-2"
+                >
                   <Button
                     onClick={() => handleWatchNow(spotlightItem as NormalizedMedia)}
                     className="bg-red-600 hover:bg-red-700 text-white px-6 py-2 text-base"
@@ -458,7 +501,7 @@ const DashboardPage: React.FC = () => {
                   >
                     + My List
                   </Button>
-                </div>
+                </motion.div>
               </div>
             </div>
           </motion.div>
@@ -482,25 +525,25 @@ const DashboardPage: React.FC = () => {
             ) : undefined
           }
         >
-          {/* Filters */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-6 overflow-x-auto pb-1 -mx-1 px-1" role="group" aria-label="Recommendation filters">
-            <MultiSelectFilter
+          {/* Pill-Style Filters */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-6" role="group" aria-label="Recommendation filters">
+            <PillFilter
               label="Genre"
               options={FILTERS.genre}
               selected={filters.genre}
-              onChange={(vals) => updateFilter("genre", vals)}
+              onChange={(vals: string[]) => updateFilter("genre", vals)}
             />
-            <MultiSelectFilter
+            <PillFilter
               label="Network"
               options={FILTERS.network}
               selected={filters.network}
-              onChange={(vals) => updateFilter("network", vals)}
+              onChange={(vals: string[]) => updateFilter("network", vals)}
             />
-            <MultiSelectFilter
+            <PillFilter
               label="Year"
               options={FILTERS.year}
               selected={filters.year}
-              onChange={(vals) => updateFilter("year", vals)}
+              onChange={(vals: string[]) => updateFilter("year", vals)}
             />
           </div>
 
@@ -545,7 +588,7 @@ const DashboardPage: React.FC = () => {
                     moveButtonsToBottom
                     onAddToWatchlist={(m) => { void handleAddToWatchlist(m as unknown as NormalizedMedia); }}
                     onWatchNow={(m) => { void handleWatchNow(m as unknown as NormalizedMedia); }}
-                    className="rounded-lg overflow-hidden hover:scale-[1.02] transition-transform"
+                    className="rounded-lg overflow-hidden hover:scale-[1.03] transition-all duration-300 shadow-lg hover:shadow-xl"
                   />
                 </motion.div>
               ))}
@@ -569,7 +612,15 @@ const DashboardPage: React.FC = () => {
 
         {/* --- Continue Watching --- */}
         <Section title="Continue Watching">
-          <ContinueWatching limit={10} />
+          <motion.div
+            className="flex gap-3 overflow-x-auto pb-4 -mx-2 px-2 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+          >
+            <ContinueWatching limit={10} />
+          </motion.div>
         </Section>
       </main>
       
