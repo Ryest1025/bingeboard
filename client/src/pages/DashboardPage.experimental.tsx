@@ -36,6 +36,7 @@ import {
   createBackdropUrl,
   type Show,
 } from '@/lib/utils';
+import type { MediaItem } from '@/services/userActions';
 
 // --- Section Wrapper Component ---
 const Section: React.FC<{ 
@@ -148,7 +149,7 @@ const DashboardPage: React.FC = () => {
     queryKey: ['personalized-with-streaming', 'v2'],
     queryFn: async () => {
       console.log('🤖 Fetching personalized recommendations...');
-      const res = await fetch('/api/tmdb/discover/tv?sort_by=popularity.desc&includeStreaming=true');
+      const res = await fetch('/api/personalized/tv?sort_by=popularity.desc&includeStreaming=true');
       if (!res.ok) throw new Error('Failed to fetch recommendations');
       const data = await res.json();
       console.log('✅ Personalized data:', data?.results?.length || 0, 'items');
@@ -251,41 +252,41 @@ const DashboardPage: React.FC = () => {
     error: actionsError,
   } = useMediaActions();
 
+  // Helper: map normalized media -> action media shape
+  const toActionMedia = (m: NormalizedMedia): MediaItem => ({
+    id: m.id.toString(),
+    title: m.title,
+    name: m.name,
+    type: (m as any).type === 'movie' ? 'movie' : 'tv',
+    poster_path: m.poster_path,
+    backdrop_path: m.backdrop_path,
+    release_date: m.release_date,
+    first_air_date: m.first_air_date,
+    vote_average: m.vote_average,
+    overview: m.overview,
+    genre_ids: m.genre_ids
+  });
+
   const handleAddToWatchlist = async (media: NormalizedMedia) => {
-    try {
-      const success = await addToWatchlist(media);
-      if (success) {
-        showToast(`Added "${media.displayTitle}" to watchlist!`);
-      } else {
-        showToast('Failed to add to watchlist', 'error');
-      }
-    } catch (error) {
-      console.error('❌ Watchlist error:', error);
+    const success = await addToWatchlist(toActionMedia(media));
+    if (success) {
+      showToast(`Added "${media.displayTitle}" to watchlist!`);
+    } else {
       showToast('Failed to add to watchlist', 'error');
     }
   };
 
   const handleWatchNow = async (media: NormalizedMedia) => {
-    try {
-      const success = await watchNow(media);
-      if (!success) {
-        showToast('No streaming option available', 'error');
-      }
-    } catch (error) {
-      console.error('❌ Watch now error:', error);
-      showToast('Failed to launch watch', 'error');
+    const success = await watchNow(toActionMedia(media));
+    if (!success) {
+      showToast('No streaming option available', 'error');
     }
   };
 
   const handleWatchTrailer = async (media: NormalizedMedia) => {
-    try {
-      const success = await watchTrailer(media, true);
-      if (!success) {
-        showToast('No trailer available', 'error');
-      }
-    } catch (error) {
-      console.error('❌ Trailer error:', error);
-      showToast('Failed to load trailer', 'error');
+    const success = await watchTrailer(toActionMedia(media), true);
+    if (!success) {
+      showToast('No trailer available', 'error');
     }
   };
 
@@ -428,10 +429,9 @@ const DashboardPage: React.FC = () => {
                     actions={{ watchNow: true, trailer: false, addToList: true }}
                     moveButtonsToBottom
                     showStreamingLogoInButton={false}
-                    onAddToWatchlist={handleAddToWatchlist}
-                    onWatchTrailer={handleWatchTrailer}
-                    onCardClick={(m) => console.log('Show details:', m)}
-                    onWatchNow={handleWatchNow}
+                    onAddToWatchlist={(media) => handleAddToWatchlist(media as unknown as NormalizedMedia)}
+                    onWatchTrailer={(media) => handleWatchTrailer(media as unknown as NormalizedMedia)}
+                    onWatchNow={(media) => handleWatchNow(media as unknown as NormalizedMedia)}
                     className="rounded-lg overflow-hidden"
                   />
                 </motion.div>

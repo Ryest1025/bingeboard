@@ -100,6 +100,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const multiapiRoutes = await import('./routes/multiapi');
   app.use('/api/multiapi', multiapiRoutes.default);
 
+  // Personalized multi-API enriched content routes
+  const personalizedRoutes = await import('./routes/personalized.js');
+  app.use('/api/personalized', personalizedRoutes.default);
+
   // Viewing History & Progress Tracking Routes
   registerViewingHistoryRoutes(app);
 

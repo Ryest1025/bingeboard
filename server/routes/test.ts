@@ -1,5 +1,7 @@
 import { Router } from 'express';
-import { MultiAPIStreamingService, UserPreferences } from '../services/MultiAPIStreamingService.js';
+// Corrected import path casing to match actual filename (multiAPIStreamingService.ts -> .js after build)
+import { MultiAPIStreamingService, type UserPreferences } from '../services/multiAPIStreamingService.js';
+import { parseUserPreferences } from '../validation/userPreferences.js';
 
 const router = Router();
 
@@ -10,6 +12,14 @@ const router = Router();
 router.post('/preference-streaming', async (req, res) => {
   try {
     const { tmdbId, title, mediaType = 'tv', userPrefs, imdbId } = req.body;
+
+    let safePrefs: UserPreferences | undefined;
+    if (userPrefs) {
+      try { safePrefs = parseUserPreferences(userPrefs); } catch (e) {
+        const status = (e as any).status || 400;
+        return res.status(status).json({ error: 'Invalid preferences', message: (e as Error).message });
+      }
+    }
 
     if (!tmdbId || !title) {
       return res.status(400).json({
@@ -30,7 +40,7 @@ router.post('/preference-streaming', async (req, res) => {
       tmdbId,
       title,
       mediaType,
-      userPrefs as UserPreferences,
+      safePrefs,
       imdbId
     );
 
@@ -74,6 +84,14 @@ router.post('/batch-preference-streaming', async (req, res) => {
   try {
     const { titles, userPrefs } = req.body;
 
+    let safePrefs: UserPreferences | undefined;
+    if (userPrefs) {
+      try { safePrefs = parseUserPreferences(userPrefs); } catch (e) {
+        const status = (e as any).status || 400;
+        return res.status(status).json({ error: 'Invalid preferences', message: (e as Error).message });
+      }
+    }
+
     if (!titles || !Array.isArray(titles)) {
       return res.status(400).json({
         error: 'Missing required field: titles (array)'
@@ -90,7 +108,7 @@ router.post('/batch-preference-streaming', async (req, res) => {
     // Test the new batch preference-aware method
     const results = await MultiAPIStreamingService.getBatchAvailabilityWithPreferences(
       titles,
-      userPrefs as UserPreferences
+      safePrefs
     );
 
     const endTime = Date.now();

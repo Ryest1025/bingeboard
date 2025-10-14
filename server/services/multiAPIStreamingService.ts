@@ -493,4 +493,97 @@ export class MultiAPIStreamingService {
       return {};
     }
   }
+
+  // =============================
+  // Preference-Aware Enhancements
+  // =============================
+  /** User preference shape for filtering streaming availability */
+  /* ignore-unused-export (used by routes & test scripts) */
+  static UserPreferencesExample: UserPreferences | undefined; // no-op sentinel to keep type exported in emitted JS
+}
+
+// Exported outside the class so it can be imported as a type without side-effects
+/* ignore-unused-export (consumed by test route & scripts) */
+export interface UserPreferences {
+  /** Only include these platform names (after normalization). If empty/undefined, no inclusion filter. */
+  preferredPlatforms?: string[];
+  /** Exclude these platform names (after normalization). */
+  excludedPlatforms?: string[];
+  /** Restrict to these subscription types (sub|buy|rent|free). */
+  subscriptionTypes?: Array<'sub' | 'buy' | 'rent' | 'free'>;
+  /** When true, only keep platforms with affiliate_supported=true. */
+  onlyAffiliateSupported?: boolean;
+}
+
+// Extend the service with preference-aware methods (appended after declaration to avoid cluttering core logic region)
+// eslint-disable-next-line @typescript-eslint/no-namespace
+export namespace MultiAPIStreamingService {
+  /** Apply user preference filters to an availability response */
+  function applyPreferences(
+    base: Awaited<ReturnType<typeof MultiAPIStreamingService.getComprehensiveAvailability>>,
+    prefs?: UserPreferences
+  ) {
+    if (!prefs) return base; // no filtering
+    const {
+      preferredPlatforms,
+      excludedPlatforms,
+      subscriptionTypes,
+      onlyAffiliateSupported
+    } = prefs;
+
+    const includeSet = preferredPlatforms?.length ? new Set(preferredPlatforms.map(p => p.toLowerCase())) : null;
+    const excludeSet = excludedPlatforms?.length ? new Set(excludedPlatforms.map(p => p.toLowerCase())) : null;
+    const typeSet = subscriptionTypes?.length ? new Set(subscriptionTypes) : null;
+
+    const filtered = base.platforms.filter(p => {
+      if (onlyAffiliateSupported && !p.affiliate_supported) return false;
+      if (includeSet && !includeSet.has(p.provider_name.toLowerCase())) return false;
+      if (excludeSet && excludeSet.has(p.provider_name.toLowerCase())) return false;
+      if (typeSet && !typeSet.has(p.type)) return false;
+      return true;
+    });
+
+    // Recompute stats with filtered list (sources remain original to show coverage provenance)
+    const affiliatePlatforms = filtered.filter(p => p.affiliate_supported).length;
+    const premiumPlatforms = filtered.filter(p => p.type === 'sub' || (p.price !== undefined && p.price > 0)).length;
+    const freePlatforms = filtered.filter(p => p.type === 'free' || (p.price !== undefined && p.price === 0)).length;
+
+    return Object.assign({}, base, {
+      platforms: filtered,
+      totalPlatforms: filtered.length,
+      affiliatePlatforms,
+      premiumPlatforms,
+      freePlatforms,
+      preferenceMeta: {
+        originalTotal: base.totalPlatforms,
+        filteredOut: base.totalPlatforms - filtered.length
+      }
+    }) as (typeof base & { preferenceMeta: { originalTotal: number; filteredOut: number } });
+  }
+
+  /** Get availability filtered by user preferences */
+  export async function getPreferenceAwareAvailability(
+    tmdbId: number,
+    title: string,
+    mediaType: 'movie' | 'tv' = 'tv',
+    prefs?: UserPreferences,
+    imdbId?: string
+  ) {
+    const base = await MultiAPIStreamingService.getComprehensiveAvailability(tmdbId, title, mediaType, imdbId);
+    return applyPreferences(base, prefs);
+  }
+
+  /** Batch availability with preferences applied per title */
+  export async function getBatchAvailabilityWithPreferences(
+    titles: Array<{ tmdbId: number; title: string; mediaType: 'movie' | 'tv'; imdbId?: string }>,
+    prefs?: UserPreferences
+  ) {
+    const map = await MultiAPIStreamingService.getBatchAvailability(titles);
+    // Transform each entry with preferences
+    const transformed = new Map<number, ReturnType<typeof applyPreferences>>();
+    map.forEach((val, key) => {
+      transformed.set(key, applyPreferences(val, prefs));
+    });
+    return transformed;
+  }
 }
