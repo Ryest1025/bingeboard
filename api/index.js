@@ -147,6 +147,42 @@ export default async function handler(req, res) {
       return res.status(200).json({ user: null });
     }
 
+    // Firebase session endpoint (POST)
+    if (url === '/api/auth/firebase-session' || url.startsWith('/api/auth/firebase-session?')) {
+      if (method === 'POST') {
+        return res.status(200).json({
+          success: true,
+          message: 'Session created (stub)'
+        });
+      }
+    }
+
+    // Forgot password endpoint (POST)
+    if (url === '/api/auth/forgot-password' || url.startsWith('/api/auth/forgot-password?')) {
+      if (method === 'POST') {
+        return res.status(200).json({
+          success: true,
+          message: 'Password reset email sent (stub)'
+        });
+      }
+    }
+
+    // Login endpoint (POST)
+    if (url === '/api/auth/login' || url.startsWith('/api/auth/login?')) {
+      if (method === 'POST') {
+        return res.status(200).json({
+          success: true,
+          user: null,
+          message: 'Login successful (stub)'
+        });
+      }
+    }
+
+    // Notifications history endpoint
+    if (url === '/api/notifications/history' || url.startsWith('/api/notifications/history?')) {
+      return res.status(200).json([]);
+    }
+
     // 404 for unmatched routes
     return res.status(404).json({
       error: 'Not Found',
