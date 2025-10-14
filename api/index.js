@@ -1,110 +1,164 @@
 // Vercel Serverless Function Handler
-// Simplified handler that works with Vercel's serverless environment
+// Minimal working backend for production deployment
 
-import express from "express";
-import cors from "cors";
-import dotenv from 'dotenv';
+import fetch from 'node-fetch';
 
-// Load environment variables
-dotenv.config();
+// TMDB API configuration
+const TMDB_API_KEY = process.env.TMDB_API_KEY || 'b7cbf0200107ac0e023c8b37e4d0f611';
+const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
 
-const app = express();
-
-// CORS configuration for production
-app.use(cors({
-  origin: function (origin, callback) {
-    if (!origin) return callback(null, true);
-    
-    const allowedOrigins = [
-      'https://bingeboardapp.com',
-      'http://bingeboardapp.com',
-      'https://www.bingeboardapp.com',
-      'http://www.bingeboardapp.com',
-      'https://ryest1025.github.io',
-      /\.vercel\.app$/  // Allow Vercel preview URLs
-    ];
-    
-    const isAllowed = allowedOrigins.some(allowed => {
-      if (allowed instanceof RegExp) {
-        return allowed.test(origin);
-      }
-      return allowed === origin;
-    });
-    
-    callback(null, isAllowed);
-  },
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
-}));
-
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-
-// Health check
-app.get('/api/health', (req, res) => {
-  res.json({ 
-    status: 'ok', 
-    message: 'Backend is running on Vercel',
-    timestamp: new Date().toISOString(),
-    env: process.env.NODE_ENV || 'production'
+// Helper to make TMDB requests
+async function tmdbFetch(endpoint, params = {}) {
+  const url = new URL(`${TMDB_BASE_URL}${endpoint}`);
+  url.searchParams.append('api_key', TMDB_API_KEY);
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined && value !== null) {
+      url.searchParams.append(key, value.toString());
+    }
   });
-});
-
-// Import and register routes dynamically
-// This allows the full backend to work in serverless environment
-let routesRegistered = false;
-
-async function ensureRoutes() {
-  if (routesRegistered) return;
   
-  try {
-    // Import the route registration function
-    const { registerRoutes } = await import('../server/routes.js');
-    
-    // Register all routes (this sets up all API endpoints)
-    await registerRoutes(app);
-    
-    routesRegistered = true;
-    console.log('✅ All routes registered successfully');
-  } catch (error) {
-    console.error('❌ Error registering routes:', error);
-    throw error;
+  const response = await fetch(url.toString());
+  if (!response.ok) {
+    throw new Error(`TMDB API error: ${response.statusText}`);
   }
+  return response.json();
 }
 
-// Middleware to ensure routes are loaded
-app.use(async (req, res, next) => {
-  if (!routesRegistered && req.path.startsWith('/api/')) {
-    try {
-      await ensureRoutes();
-    } catch (error) {
-      return res.status(500).json({ 
-        error: 'Failed to initialize server',
-        message: error.message 
+// Main handler function
+export default async function handler(req, res) {
+  // Set CORS headers
+  const origin = req.headers.origin;
+  const allowedOrigins = [
+    'https://bingeboardapp.com',
+    'http://bingeboardapp.com',
+    'https://www.bingeboardapp.com',
+    'http://www.bingeboardapp.com',
+    'https://ryest1025.github.io'
+  ];
+  
+  if (origin && (allowedOrigins.includes(origin) || origin.endsWith('.vercel.app'))) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  }
+  
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+  
+  // Handle preflight
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
+  const { url, method } = req;
+  
+  try {
+    // Health check
+    if (url === '/api/health') {
+      return res.status(200).json({
+        status: 'ok',
+        message: 'Backend is running on Vercel',
+        timestamp: new Date().toISOString(),
+        env: process.env.NODE_ENV || 'production'
       });
     }
+
+    // Trending endpoint
+    if (url.startsWith('/api/trending/')) {
+      const match = url.match(/\/api\/trending\/(\w+)\/(\w+)/);
+      if (match) {
+        const [, mediaType, timeWindow] = match;
+        const data = await tmdbFetch(`/trending/${mediaType}/${timeWindow}`);
+        return res.status(200).json(data);
+      }
+    }
+
+    // Personalized endpoint (uses TMDB discover)
+    if (url.startsWith('/api/personalized/')) {
+      const match = url.match(/\/api\/personalized\/(\w+)/);
+      if (match) {
+        const [, mediaType] = match;
+        const urlParams = new URL(url, `http://${req.headers.host}`).searchParams;
+        
+        const data = await tmdbFetch(`/discover/${mediaType}`, {
+          sort_by: urlParams.get('sort_by') || 'popularity.desc',
+          page: urlParams.get('page') || '1'
+        });
+        return res.status(200).json(data);
+      }
+    }
+
+    // TMDB discover endpoint
+    if (url.startsWith('/api/tmdb/discover/')) {
+      const match = url.match(/\/api\/tmdb\/discover\/(\w+)/);
+      if (match) {
+        const [, mediaType] = match;
+        const urlParams = new URL(url, `http://${req.headers.host}`).searchParams;
+        
+        const data = await tmdbFetch(`/discover/${mediaType}`, {
+          sort_by: urlParams.get('sort_by') || 'popularity.desc',
+          page: urlParams.get('page') || '1'
+        });
+        return res.status(200).json(data);
+      }
+    }
+
+    // Multi-API trailer endpoint
+    if (url.startsWith('/api/multi-api/trailer/')) {
+      const match = url.match(/\/api\/multi-api\/trailer\/(\w+)\/(\d+)/);
+      if (match) {
+        const [, mediaType, id] = match;
+        const data = await tmdbFetch(`/${mediaType}/${id}/videos`);
+        return res.status(200).json({ trailers: data.results || [] });
+      }
+    }
+
+    // Multiapi trailer endpoint (alias)
+    if (url.startsWith('/api/multiapi/trailer/')) {
+      const match = url.match(/\/api\/multiapi\/trailer\/(\w+)\/(\d+)/);
+      if (match) {
+        const [, mediaType, id] = match;
+        const data = await tmdbFetch(`/${mediaType}/${id}/videos`);
+        return res.status(200).json({ trailers: data.results || [] });
+      }
+    }
+
+    // User endpoints (return empty arrays for now)
+    if (url === '/api/user/watchlist' || url.startsWith('/api/user/watchlist?')) {
+      return res.status(200).json([]);
+    }
+
+    if (url === '/api/user/reminders' || url.startsWith('/api/user/reminders?')) {
+      return res.status(200).json([]);
+    }
+
+    if (url === '/api/continue-watching' || url.startsWith('/api/continue-watching?')) {
+      return res.status(200).json([]);
+    }
+
+    // Auth endpoints (stub responses)
+    if (url === '/api/auth/status') {
+      return res.status(200).json({
+        isAuthenticated: false,
+        user: null
+      });
+    }
+
+    if (url === '/api/auth/user') {
+      return res.status(200).json({ user: null });
+    }
+
+    // 404 for unmatched routes
+    return res.status(404).json({
+      error: 'Not Found',
+      path: url,
+      message: 'The requested endpoint does not exist'
+    });
+
+  } catch (error) {
+    console.error('API Error:', error);
+    return res.status(500).json({
+      error: 'Internal Server Error',
+      message: error.message || 'An unexpected error occurred'
+    });
   }
-  next();
-});
-
-// 404 handler for unmatched routes
-app.use((req, res) => {
-  res.status(404).json({ 
-    error: 'Not Found',
-    path: req.path,
-    message: 'The requested endpoint does not exist'
-  });
-});
-
-// Error handler
-app.use((err, req, res, next) => {
-  console.error('Server error:', err);
-  res.status(500).json({ 
-    error: 'Internal Server Error',
-    message: err.message || 'An unexpected error occurred'
-  });
-});
-
-// Export for Vercel
-export default app;
+}
