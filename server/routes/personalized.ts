@@ -132,4 +132,3 @@ router.get('/:type', async (req, res) => {
 });
 
 export default router;
-# Backend deployment trigger Tue Oct 14 21:31:48 UTC 2025
