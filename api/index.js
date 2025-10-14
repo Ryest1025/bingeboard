@@ -67,7 +67,47 @@ export default async function handler(req, res) {
       const match = url.match(/\/api\/trending\/(\w+)\/(\w+)/);
       if (match) {
         const [, mediaType, timeWindow] = match;
+        const urlParams = new URL(url, `http://${req.headers.host}`).searchParams;
+        const includeStreaming = urlParams.get('includeStreaming') === 'true';
+        
         const data = await tmdbFetch(`/trending/${mediaType}/${timeWindow}`);
+        
+        // Add streaming data if requested
+        if (includeStreaming && data.results) {
+          const enrichedResults = await Promise.all(
+            data.results.slice(0, 10).map(async (item) => {
+              try {
+                const providers = await tmdbFetch(`/${mediaType}/${item.id}/watch/providers`);
+                const usProviders = providers.results?.US;
+                
+                if (usProviders) {
+                  const allProviders = [
+                    ...(usProviders.flatrate || []),
+                    ...(usProviders.buy || []),
+                    ...(usProviders.rent || [])
+                  ];
+                  
+                  // Deduplicate by provider_id
+                  const uniqueProviders = Array.from(
+                    new Map(allProviders.map(p => [p.provider_id, p])).values()
+                  );
+                  
+                  item.streaming = uniqueProviders.slice(0, 5);
+                }
+              } catch (err) {
+                // Skip streaming data if fetch fails
+              }
+              return item;
+            })
+          );
+          
+          // Merge enriched results back
+          data.results = [
+            ...enrichedResults,
+            ...data.results.slice(10)
+          ];
+        }
+        
         return res.status(200).json(data);
       }
     }
@@ -78,11 +118,49 @@ export default async function handler(req, res) {
       if (match) {
         const [, mediaType] = match;
         const urlParams = new URL(url, `http://${req.headers.host}`).searchParams;
+        const includeStreaming = urlParams.get('includeStreaming') === 'true';
         
         const data = await tmdbFetch(`/discover/${mediaType}`, {
           sort_by: urlParams.get('sort_by') || 'popularity.desc',
           page: urlParams.get('page') || '1'
         });
+        
+        // Add streaming data if requested
+        if (includeStreaming && data.results) {
+          const enrichedResults = await Promise.all(
+            data.results.slice(0, 10).map(async (item) => {
+              try {
+                const providers = await tmdbFetch(`/${mediaType}/${item.id}/watch/providers`);
+                const usProviders = providers.results?.US;
+                
+                if (usProviders) {
+                  const allProviders = [
+                    ...(usProviders.flatrate || []),
+                    ...(usProviders.buy || []),
+                    ...(usProviders.rent || [])
+                  ];
+                  
+                  // Deduplicate by provider_id
+                  const uniqueProviders = Array.from(
+                    new Map(allProviders.map(p => [p.provider_id, p])).values()
+                  );
+                  
+                  item.streaming = uniqueProviders.slice(0, 5);
+                }
+              } catch (err) {
+                // Skip streaming data if fetch fails
+              }
+              return item;
+            })
+          );
+          
+          // Merge enriched results back
+          data.results = [
+            ...enrichedResults,
+            ...data.results.slice(10)
+          ];
+        }
+        
         return res.status(200).json(data);
       }
     }

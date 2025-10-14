@@ -259,9 +259,7 @@ const DashboardPage: React.FC = () => {
         </Section>
 
         {/* Continue Watching */}
-        <Section title="Continue Watching">
-          <ContinueWatching limit={10} />
-        </Section>
+        <ContinueWatching limit={10} />
       </main>
 
       {/* Toast */}
