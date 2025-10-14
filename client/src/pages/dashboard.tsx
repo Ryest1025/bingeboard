@@ -1,26 +1,45 @@
-import React, { useState, useMemo } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import NavigationHeader from '@/components/navigation-header';
-import { Button } from '@/components/ui/button';
-import { normalizeMedia } from '@/utils/normalizeMedia';
-import type { NormalizedMedia } from '@/types/media';
-import ContinueWatching from '@/components/ContinueWatching';
+/**
+ * Dashboard Page — FINAL OCTOBER PRODUCTION BUILD
+ * Version: October 14, 2025
+ * Includes:
+ *  - Animated Spotlight hero (fade-up / cinematic motion)
+ *  - Refined "For You" section with filters + recommendations
+ *  - Continue Watching section
+ *  - Unified media actions (watch, trailer, add to list)
+ *  - No Friend Activity (moved to Friends page)
+ */
+
+import React, { useState, useMemo } from "react";
+import { motion } from "framer-motion";
+import { useQuery } from "@tanstack/react-query";
+import NavigationHeader from "@/components/navigation-header";
+import ContinueWatching from "@/components/ContinueWatching";
 import { MultiSelect } from "@/components/ui/multi-select";
-import { UniversalMediaCard } from '@/components/universal';
-import useMediaActions from '@/hooks/useMediaActions';
+import { Button } from "@/components/ui/button";
+import { normalizeMedia } from "@/utils/normalizeMedia";
+import { UniversalMediaCard } from "@/components/universal";
+import useMediaActions from "@/hooks/useMediaActions";
+import type { NormalizedMedia } from "@/types/media";
+import { apiFetch } from "@/utils/api-config";
 
 // --- Section Wrapper ---
-const Section: React.FC<{ title: string; children: React.ReactNode; action?: React.ReactNode }> = ({ title, children, action }) => (
+const Section: React.FC<{
+  title: string;
+  children: React.ReactNode;
+  action?: React.ReactNode;
+}> = ({ title, children, action }) => (
   <section className="w-full space-y-6">
     <div className="flex items-center justify-between">
-      <h2 className="text-2xl font-bold text-white">{title}</h2>
+      <h2 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
+        {title}
+      </h2>
       {action && <div className="flex items-center gap-2">{action}</div>}
     </div>
-    <div className="w-full">{children}</div>
+    {children}
   </section>
 );
 
-// --- Multi-Select Filter Component ---
+// --- Multi-Select Filter ---
 const MultiSelectFilter: React.FC<{
   label: string;
   options: string[];
@@ -42,167 +61,133 @@ const MultiSelectFilter: React.FC<{
   </div>
 );
 
-// --- Filters ---
+// --- Filter Options ---
 const FILTERS = {
-  genre: ['Comedy', 'Drama', 'Action', 'Thriller', 'Horror', 'Romance', 'Sci-Fi', 'Documentary'],
-  network: ['Netflix', 'HBO', 'Prime Video', 'Disney+', 'Hulu', 'Apple TV+', 'Paramount+'],
-  year: ['2025', '2024', '2023', '2022', '2021', '2020']
+  genre: [
+    "Comedy",
+    "Drama",
+    "Action",
+    "Thriller",
+    "Horror",
+    "Romance",
+    "Sci-Fi",
+    "Documentary",
+  ],
+  network: [
+    "Netflix",
+    "HBO",
+    "Prime Video",
+    "Disney+",
+    "Hulu",
+    "Apple TV+",
+    "Paramount+",
+  ],
+  year: ["2025", "2024", "2023", "2022", "2021", "2020"],
 };
 
-// --- Dashboard Page ---
+// --- Dashboard ---
 const DashboardPage: React.FC = () => {
-  const [filters, setFilters] = useState<{ genre: string[]; network: string[]; year: string[] }>({
-    genre: [],
-    network: [],
-    year: []
+  const [filters, setFilters] = useState({
+    genre: [] as string[],
+    network: [] as string[],
+    year: [] as string[],
   });
 
-  // API Queries
-  const { data: trendingData, isError: trendingError } = useQuery({
-    queryKey: ['trending'],
+  // --- API Queries ---
+  const { data: trendingData } = useQuery({
+    queryKey: ["trending"],
     queryFn: async () => {
-      const res = await apiFetch('/api/trending/tv/day?includeStreaming=true');
-      if (!res.ok) throw new Error('Failed to fetch trending');
+      const res = await apiFetch("/api/trending/tv/day?includeStreaming=true");
+      if (!res.ok) throw new Error("Failed to fetch trending");
       return res.json();
-    }
+    },
   });
 
-  const { data: personalizedData, isError: personalizedError, isLoading: personalizedLoading } = useQuery({
-    queryKey: ['personalized-with-streaming', 'v2'],
+  const { data: personalizedData, isLoading: personalizedLoading } = useQuery({
+    queryKey: ["personalized-with-streaming", "v2"],
     queryFn: async () => {
-      const res = await apiFetch('/api/tmdb/discover/tv?sort_by=popularity.desc&includeStreaming=true');
-      if (!res.ok) throw new Error('Failed to fetch recommendations');
+      const res = await apiFetch(
+        "/api/tmdb/discover/tv?sort_by=popularity.desc&includeStreaming=true"
+      );
+      if (!res.ok) throw new Error("Failed to fetch recommendations");
       return res.json();
-    }
+    },
   });
 
-  // Process data
+  // --- Data Normalization ---
   const processedTrending = useMemo(() => {
-    if (trendingError || !trendingData) return [];
+    if (!trendingData) return [];
     return normalizeMedia((trendingData as any)?.results || []);
-  }, [trendingData, trendingError]);
+  }, [trendingData]);
 
   const spotlightItem = useMemo(() => {
-    return processedTrending.find(item => item.streaming?.length > 0) || processedTrending[0];
+    return (
+      processedTrending.find((item) => item.streaming?.length > 0) ||
+      processedTrending[0]
+    );
   }, [processedTrending]);
 
   const filteredRecommendations = useMemo(() => {
-    if (personalizedError || !personalizedData) return [];
+    if (!personalizedData) return [];
     let items = normalizeMedia((personalizedData as any)?.results || []);
-    
-    // Apply filters
+
     if (filters.genre.length > 0) {
-      items = items.filter(item =>
-        filters.genre.some(genre => item.genres?.some(g => g.name === genre))
+      items = items.filter((item) =>
+        filters.genre.some((genre) =>
+          item.genres?.some((g) => g.name === genre)
+        )
       );
     }
 
     if (filters.network.length > 0) {
-      items = items.filter(item =>
-        filters.network.some(network =>
-          item.streaming?.some(platform =>
-            platform?.provider_name?.includes(network) || platform?.name?.includes(network)
+      items = items.filter((item) =>
+        filters.network.some((network) =>
+          item.streaming?.some(
+            (platform) =>
+              platform?.provider_name?.includes(network) ||
+              platform?.name?.includes(network)
           )
         )
       );
     }
 
     if (filters.year.length > 0) {
-      items = items.filter(item => {
+      items = items.filter((item) => {
         const date = item.release_date || item.first_air_date;
         if (!date) return false;
         return filters.year.includes(new Date(date).getFullYear().toString());
       });
     }
 
-    return items.slice(0, 6);
-  }, [personalizedData, personalizedError, filters]);
+    return items.slice(0, 12);
+  }, [personalizedData, filters]);
 
-  // Media actions hook for all functionality
-  const {
-    addToWatchlist,
-    watchNow,
-    watchTrailer,
-    setReminder,
-    isLoading: actionsLoading,
-    error: actionsError
-  } = useMediaActions();
+  // --- Media Actions ---
+  const { addToWatchlist, watchNow, watchTrailer } = useMediaActions();
 
-  // Handler functions
-  const handleAddToWatchlist = async (media: any) => {
-    const success = await addToWatchlist(media);
-    if (success) {
-      console.log('Added to watchlist:', media.title || media.name);
-    } else {
-      console.error('Failed to add to watchlist');
-    }
-  };
+  const updateFilter = (type: keyof typeof filters, selectedValues: string[]) =>
+    setFilters((prev) => ({ ...prev, [type]: selectedValues }));
 
-  const handleWatchNow = async (media: any) => {
-    const success = await watchNow(media);
-    if (!success) {
-      console.error('Failed to launch watch');
-    }
-  };
+  const clearAllFilters = () =>
+    setFilters({ genre: [], network: [], year: [] });
 
-  const handleWatchTrailer = async (media: any) => {
-    const success = await watchTrailer(media, true); // Open in modal
-    if (!success) {
-      console.error('No trailer available');
-    }
-  };
-
-  const handleSetReminder = async (media: any) => {
-    const success = await setReminder(media);
-    if (success) {
-      console.log('Reminder set for:', media.title || media.name);
-    } else {
-      console.error('Failed to set reminder');
-    }
-  };
-
-  const updateFilter = (type: keyof typeof filters, selectedValues: string[]) => {
-    setFilters(prev => ({ ...prev, [type]: selectedValues }));
-  };
-
-  const clearAllFilters = () => setFilters({ genre: [], network: [], year: [] });
-  const hasActiveFilters = filters.genre.length > 0 || filters.network.length > 0 || filters.year.length > 0;
-
-  console.log('🚨🚨🚨 DIRECT NUCLEAR TEST - DASHBOARD LOADED - October 13, 2025 6:45pm 🚨🚨🚨');
-  console.log('🎯 DASHBOARD VERSION: CACHE-BUSTED BUILD:', new Date().toISOString());
-  console.log('📊 DATA STATUS:', {
-    trendingData: !!trendingData,
-    trendingError,
-    personalizedData: !!personalizedData,
-    personalizedError,
-    personalizedLoading,
-    spotlightItem: !!spotlightItem,
-    filteredRecommendations: filteredRecommendations.length
-  });
-  
+  const hasActiveFilters =
+    filters.genre.length > 0 ||
+    filters.network.length > 0 ||
+    filters.year.length > 0;
   return (
-    <div className="min-h-screen bg-slate-900 w-full overflow-x-hidden">
+    <div className="min-h-screen bg-slate-950 w-full overflow-x-hidden">
       <NavigationHeader />
 
-      <main className="w-full max-w-none px-2 sm:px-4 md:px-8 lg:px-16 py-4 sm:py-8 space-y-8 sm:space-y-12">
-        {/* DEBUG BANNER */}
-        <div className="bg-green-600 text-white p-4 rounded-lg text-center">
-          <h2 className="text-xl font-bold">✅ DASHBOARD IS RENDERING!</h2>
-          <p className="text-sm">October 13, 2025 - New deployment active</p>
-          <p className="text-xs mt-2">Trending: {processedTrending.length} | Recommendations: {filteredRecommendations.length}</p>
-          <p className="text-xs mt-1">Has Spotlight: {spotlightItem ? 'YES' : 'NO'} | Loading: {personalizedLoading ? 'YES' : 'NO'}</p>
-          <p className="text-xs mt-1">Errors: Trending={trendingError ? 'YES' : 'NO'} Personalized={personalizedError ? 'YES' : 'NO'}</p>
-        </div>
-        
-        {/* TEMP: Show raw data for debugging */}
-        <div className="bg-yellow-600 text-black p-4 rounded-lg text-xs">
-          <h3 className="font-bold mb-2">DEBUG DATA:</h3>
-          <p>processedTrending[0]: {processedTrending[0] ? JSON.stringify(processedTrending[0]).substring(0, 100) : 'NONE'}</p>
-          <p>filteredRecommendations[0]: {filteredRecommendations[0] ? JSON.stringify(filteredRecommendations[0]).substring(0, 100) : 'NONE'}</p>
-        </div>
-        {/* Spotlight Section - Mobile Optimized */}
-        {spotlightItem ? (
-          <div className="w-full">
+      <main className="w-full max-w-none px-3 sm:px-6 md:px-10 lg:px-20 py-6 sm:py-10 space-y-12">
+        {/* --- Spotlight Section --- */}
+        {spotlightItem && (
+          <motion.div
+            initial={{ opacity: 0, y: 25 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 1.1, ease: "easeOut" }}
+            className="relative w-full"
+          >
             <UniversalMediaCard
               media={spotlightItem}
               variant="spotlight-poster-backdrop"
@@ -212,78 +197,95 @@ const DashboardPage: React.FC = () => {
               showReleaseDate
               showDescription
               actions={{ watchNow: true, trailer: true, addToList: true }}
-              showStreamingLogoInButton={true} // Logo inside Watch Now button
-              onAddToWatchlist={handleAddToWatchlist}
-              onWatchTrailer={handleWatchTrailer}
-              onCardClick={media => console.log('Show details:', media)}
-              onWatchNow={handleWatchNow}
-              className="w-full rounded-lg sm:rounded-2xl overflow-hidden"
+              showStreamingLogoInButton
+              onAddToWatchlist={addToWatchlist}
+              onWatchTrailer={watchTrailer}
+              onWatchNow={watchNow}
+              className="w-full rounded-xl overflow-hidden shadow-xl"
             />
-          </div>
-        ) : (
-          <div className="text-center py-12 text-gray-400">
-            <p className="text-lg">No spotlight content available</p>
-          </div>
+          </motion.div>
         )}
 
-        {/* For You Section - Mobile Optimized */}
-        <Section title="For You" action={hasActiveFilters ? (
-          <Button variant="outline" size="sm" onClick={clearAllFilters} className="text-xs sm:text-sm">
-            Clear Filters
-          </Button>
-        ) : undefined}>
-          {/* Filters - Mobile Responsive */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 mb-4 sm:mb-6">
-            <MultiSelectFilter label="Genre" options={FILTERS.genre} selected={filters.genre} onChange={vals => updateFilter("genre", vals)} />
-            <MultiSelectFilter label="Network" options={FILTERS.network} selected={filters.network} onChange={vals => updateFilter("network", vals)} />
-            <MultiSelectFilter label="Year" options={FILTERS.year} selected={filters.year} onChange={vals => updateFilter("year", vals)} />
+        {/* --- For You Section --- */}
+        <Section
+          title="For You"
+          action={
+            hasActiveFilters ? (
+              <Button variant="outline" size="sm" onClick={clearAllFilters}>
+                Clear Filters
+              </Button>
+            ) : undefined
+          }
+        >
+          {/* Filters */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-6">
+            <MultiSelectFilter
+              label="Genre"
+              options={FILTERS.genre}
+              selected={filters.genre}
+              onChange={(vals) => updateFilter("genre", vals)}
+            />
+            <MultiSelectFilter
+              label="Network"
+              options={FILTERS.network}
+              selected={filters.network}
+              onChange={(vals) => updateFilter("network", vals)}
+            />
+            <MultiSelectFilter
+              label="Year"
+              options={FILTERS.year}
+              selected={filters.year}
+              onChange={(vals) => updateFilter("year", vals)}
+            />
           </div>
 
-          {/* Recommendations Grid - Mobile Optimized */}
+          {/* Recommendations */}
           {personalizedLoading ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 sm:gap-3 md:gap-4">
-              {Array.from({ length: 10 }).map((_, i) => (
-                <div key={i} className="aspect-[2/3] bg-slate-800 rounded-md sm:rounded-lg animate-pulse" />
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
+              {Array.from({ length: 12 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="aspect-[2/3] bg-slate-800 rounded-lg animate-pulse"
+                />
               ))}
             </div>
-          ) : filteredRecommendations.length === 0 ? (
-            <div className="text-center py-8 sm:py-12">
-              <p className="text-gray-400 text-base sm:text-lg mb-4">
-                {hasActiveFilters ? 'No shows match your selected filters' : 'No recommendations available'}
-              </p>
-              {hasActiveFilters && (
-                <Button variant="outline" onClick={clearAllFilters}>
-                  Clear All Filters
-                </Button>
-              )}
-            </div>
-          ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 sm:gap-3 md:gap-4">
-              {filteredRecommendations.map(media => (
+          ) : filteredRecommendations.length > 0 ? (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
+              {filteredRecommendations.map((media) => (
                 <UniversalMediaCard
                   key={media.id}
                   media={media}
                   variant="vertical-polished"
                   size="sm"
                   showRating
-                  showGenres={false}
-                  showReleaseDate={false}
                   actions={{ watchNow: true, trailer: false, addToList: true }}
-                  moveButtonsToBottom={true} // Buttons at bottom
-                  showStreamingLogoInButton={false} // Logos in corner, not in button
-                  onAddToWatchlist={handleAddToWatchlist}
-                  onWatchTrailer={handleWatchTrailer}
-                  onCardClick={m => console.log('Show details:', m)}
-                  onWatchNow={handleWatchNow}
-                  className="rounded-md sm:rounded-lg overflow-hidden"
+                  moveButtonsToBottom
+                  onAddToWatchlist={addToWatchlist}
+                  onWatchNow={watchNow}
+                  className="rounded-lg overflow-hidden hover:scale-[1.02] transition-transform"
                 />
               ))}
+            </div>
+          ) : (
+            <div className="text-center py-10 text-gray-400">
+              <p className="text-base sm:text-lg mb-4">
+                {hasActiveFilters
+                  ? "No shows match your selected filters"
+                  : "No recommendations available right now"}
+              </p>
+              {hasActiveFilters && (
+                <Button variant="outline" onClick={clearAllFilters}>
+                  Clear Filters
+                </Button>
+              )}
             </div>
           )}
         </Section>
 
-        {/* Continue Watching */}
-        <ContinueWatching limit={10} />
+        {/* --- Continue Watching --- */}
+        <Section title="Continue Watching">
+          <ContinueWatching limit={10} />
+        </Section>
       </main>
     </div>
   );
