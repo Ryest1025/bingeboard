@@ -1,11 +1,12 @@
 // API configuration for proper backend communication
 export const API_CONFIG = {
-  // Use environment variable for Codespaces or fall back to window.location.origin
-  baseURL: typeof window !== 'undefined' ? window.location.origin : 'https://fuzzy-xylophone-5g97jqp4vq9wf4jjr-5000.app.github.dev',
+  // Use environment variable for backend URL, fallback to window.location.origin for local dev
+  baseURL: import.meta.env.VITE_API_BASE_URL || 
+           (typeof window !== 'undefined' ? window.location.origin : 'https://fuzzy-xylophone-5g97jqp4vq9wf4jjr-5000.app.github.dev'),
   
   // Helper function to create full API URLs
   getApiUrl: (path: string) => {
-    // Get base URL from environment or default to Codespaces URL
+    // Get base URL from environment or default
     const baseUrl = import.meta.env.VITE_API_BASE_URL || 
                    (typeof window !== 'undefined' ? window.location.origin : 'https://fuzzy-xylophone-5g97jqp4vq9wf4jjr-5000.app.github.dev');
     
