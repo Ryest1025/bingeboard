@@ -16,6 +16,7 @@ import {
 import { Bell, Search, User, Settings, LogOut, Crown } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
+import { apiFetch } from "@/utils/api-config";
 
 function TopNavComponent() {
   const { user, isAuthenticated } = useAuth();
@@ -46,9 +47,7 @@ function TopNavComponent() {
     queryKey: ['/api/notifications/history'],
     queryFn: async () => {
       try {
-        const response = await fetch('/api/notifications/history', {
-          credentials: 'include'
-        });
+        const response = await apiFetch('/api/notifications/history');
         if (!response.ok) {
           throw new Error('Failed to fetch notifications');
         }

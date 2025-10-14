@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { apiFetch } from '@/utils/api-config';
 
 /**
  * 📺 VIEWING HISTORY & PROGRESS TRACKING HOOKS
@@ -105,9 +106,7 @@ export function useContinueWatching(limit = 10) {
       console.log('▶️ Fetching continue watching list...');
 
       try {
-        const response = await fetch(`/api/continue-watching?limit=${limit}`, {
-          credentials: 'include',
-        });
+        const response = await apiFetch(`/api/continue-watching?limit=${limit}`);
 
         if (!response.ok) {
           console.warn('Continue watching endpoint failed, using fallback data');
