@@ -249,7 +249,7 @@ const DashboardPage: React.FC = () => {
       });
     }
 
-    return items.slice(0, 12);
+    return items.slice(0, 6);
   }, [personalizedData, filters]);
 
   // --- Media Actions ---
@@ -550,7 +550,7 @@ const DashboardPage: React.FC = () => {
           {/* Recommendations */}
           {personalizedLoading ? (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
-              {Array.from({ length: 12 }).map((_, i) => (
+              {Array.from({ length: 6 }).map((_, i) => (
                 <div
                   key={i}
                   className="aspect-[2/3] bg-slate-800 rounded-lg animate-pulse"
