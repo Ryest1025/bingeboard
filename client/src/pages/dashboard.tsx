@@ -1,9 +1,3 @@
-/**
- * Dashboard Page - FORCE UPDATE October 13, 2025 6:25pm
- * THIS IS THE OCTOBER 10TH RESTORED VERSION - MOBILE OPTIMIZED
- * Last updated: October 13, 2025 6:25pm
- * Features: Spotlight section, filtering system, "For You" recommendations, Continue Watching
- */
 import React, { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import NavigationHeader from '@/components/navigation-header';
@@ -14,8 +8,6 @@ import ContinueWatching from '@/components/ContinueWatching';
 import { MultiSelect } from "@/components/ui/multi-select";
 import { UniversalMediaCard } from '@/components/universal';
 import useMediaActions from '@/hooks/useMediaActions';
-import { apiFetch } from '@/utils/api-config';
-import '@/deployment-test'; // Force new build hash
 
 // --- Section Wrapper ---
 const Section: React.FC<{ title: string; children: React.ReactNode; action?: React.ReactNode }> = ({ title, children, action }) => (

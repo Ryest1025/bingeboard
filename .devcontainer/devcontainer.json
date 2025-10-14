@@ -1,23 +1,31 @@
 {
-  "name": "BingeBoard Dev",
-  "dockerFile": "Dockerfile",
-  "platform": "linux/arm64",
-  "customizations": {
-    "vscode": {
-      "extensions": [
-        "dbaeumer.vscode-eslint",
-        "esbenp.prettier-vscode",
-        "github.copilot",
-        "github.copilot-chat"
-      ]
-    }
-  },
-  "mounts": [
-    "source=bingeboard-node-modules,target=${containerWorkspaceFolder}/node_modules,type=volume",
-    "source=/mnt/c/Users/rache/.config/gh,target=/home/node/.config/gh,type=bind,consistency=cached"
-  ],
-  "postCreateCommand": ".devcontainer/setup.sh",
-  "containerEnv": {
-    "GITHUB_TOKEN": "${localEnv:GITHUB_TOKEN}"
-  }
+    "name": "BingeBoard Dev",
+    "dockerFile": "Dockerfile",
+    "platform": "linux/arm64",
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "dbaeumer.vscode-eslint",
+                "esbenp.prettier-vscode",
+                "github.copilot",
+                "github.copilot-chat",
+                "GitHub.vscode-pull-request-github"
+            ]
+        }
+    },
+    "mounts": [
+        "source=bingeboard-node-modules,target=${containerWorkspaceFolder}/node_modules,type=volume",
+       
+    ],
+    "postCreateCommand": "/workspaces/bingeboard-local/.devcontainer/setup.sh",
+    "containerEnv": {
+        "GITHUB_TOKEN": "${localEnv:GITHUB_TOKEN}"
+    },
+    "remoteUser": "node",
+    "remote.extensionKind": {
+        "github.copilot-chat": [
+            "workspace"
+        ]
+    },
+    "remote.nodePath": "/home/node/.nvm/versions/node/v18.20.8/bin/node"
 }

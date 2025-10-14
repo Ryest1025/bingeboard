@@ -1,29 +1,42 @@
-# Base image with Node 20 and ARM support
-FROM mcr.microsoft.com/vscode/devcontainers/javascript-node:0-20-bullseye
+ARG BASE_IMAGE=ubuntu:22.04
+FROM ${BASE_IMAGE}
+SHELL ["/bin/bash", "-c"]
 
-# Avoid root permissions issues
-ARG USERNAME=node
-ARG USER_UID=1000
-ARG USER_GID=$USER_UID
+LABEL maintainer="Rachel Gubin <you@example.com>"
 
-# Install dependencies including GitHub CLI
-RUN apt-get update && apt-get install -y \
-    git \
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    sudo \
     curl \
     wget \
+    git \
     build-essential \
     python3 \
-    gnupg \
-    software-properties-common \
-    && curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg \
-    && chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg \
-    && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" \
-       | tee /etc/apt/sources.list.d/github-cli.list > /dev/null \
-    && apt-get update && apt-get install -y gh \
+    python3-pip \
+    unzip \
+    libssl-dev \
+    zlib1g-dev \
+    ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-# Verify GitHub CLI installation
-RUN gh --version
+ARG USERNAME=node
+ARG USER_UID=1000
+ARG USER_GID=1000
 
-# Set working directory
-WORKDIR /workspace
+RUN id -u $USERNAME &>/dev/null || \
+    (groupadd --gid $USER_GID $USERNAME \
+     && useradd --uid $USER_UID --gid $USER_GID -m $USERNAME \
+     && echo "$USERNAME ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers)
+
+ENV HOME=/home/$USERNAME
+WORKDIR /workspaces/bingeboard-local
+
+USER $USERNAME
+
+ENV NVM_DIR="$HOME/.nvm"
+RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash && \
+    source $NVM_DIR/nvm.sh && nvm install 20 && nvm install 18
+
+RUN echo 'export NVM_DIR="$HOME/.nvm"' >> $HOME/.bashrc && \
+    echo '[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"' >> $HOME/.bashrc
+
+RUN source $NVM_DIR/nvm.sh && nvm use 20 && node -v && npm -v && nvm use 18 && node -v && npm -v

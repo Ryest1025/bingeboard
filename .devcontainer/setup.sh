@@ -1,63 +1,40 @@
 #!/bin/bash
+set -e
 
 echo "🚀 Setting up BingeBoard DevContainer..."
 
-# Ensure we're running as the correct user
-if [ "$(whoami)" != "node" ]; then
-    echo "Switching to node user..."
-    exec sudo -u node "$0" "$@"
-fi
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && source "$NVM_DIR/nvm.sh"
 
-# Install npm dependencies
+# Use Node 20 for the app
+echo "🔄 Switching to Node.js 20 for app code..."
+nvm use 20
+
+# Install dependencies
 echo "📦 Installing npm dependencies..."
 npm install
 
-# Verify GitHub CLI installation
-echo "🔍 Checking GitHub CLI installation..."
-if ! command -v gh &> /dev/null; then
-    echo "❌ GitHub CLI not found. Installing..."
-    sudo apt-get update
-    sudo apt-get install -y gh
-else
-    echo "✅ GitHub CLI is installed: $(gh --version | head -n 1)"
+# Rebuild better-sqlite3 for ARM64
+if [ -d "node_modules/better-sqlite3" ]; then
+    echo "🔧 Rebuilding better-sqlite3 for ARM64..."
+    npm rebuild better-sqlite3 --build-from-source
 fi
 
-# Check GitHub authentication
-echo "🔑 Checking GitHub authentication..."
-if gh auth status &>/dev/null; then
-    echo "✅ GitHub CLI is authenticated"
-    gh auth status
+# Install GitHub CLI if missing (recommended: install in Dockerfile)
+if ! command -v gh &>/dev/null; then
+    echo "❌ Installing GitHub CLI..."
+    sudo apt-get update && sudo apt-get install -y gh
 else
-    echo "⚠️ GitHub CLI not authenticated"
+    echo "✅ GitHub CLI is installed"
+fi
+
+# Authenticate GitHub CLI
+if ! gh auth status &>/dev/null; then
     if [ -n "$GITHUB_TOKEN" ]; then
-        echo "🔐 Using GITHUB_TOKEN environment variable..."
         echo "$GITHUB_TOKEN" | gh auth login --with-token
-        if gh auth status &>/dev/null; then
-            echo "✅ Successfully authenticated with GITHUB_TOKEN"
-        else
-            echo "❌ Failed to authenticate with GITHUB_TOKEN"
-        fi
     else
-        echo "💡 To authenticate GitHub CLI, run: gh auth login"
-        echo "   Or set GITHUB_TOKEN environment variable on your host"
-    fi
-fi
-
-# Verify Copilot access
-echo "🤖 Checking GitHub Copilot access..."
-if gh auth status &>/dev/null; then
-    if gh copilot status &>/dev/null; then
-        echo "✅ GitHub Copilot is accessible"
-    else
-        echo "⚠️ GitHub Copilot may not be accessible. Check your subscription."
+        echo "💡 Run 'gh auth login' to authenticate GitHub CLI"
     fi
 fi
 
 echo "🎉 DevContainer setup complete!"
-echo ""
-echo "Available commands:"
-echo "  gh auth login    - Authenticate with GitHub"
-echo "  gh auth status   - Check authentication status"
-echo "  npm run dev      - Start development server"
-echo "  npm test         - Run tests"
-echo ""

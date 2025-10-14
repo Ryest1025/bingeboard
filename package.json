@@ -93,7 +93,7 @@
     "@types/nodemailer": "^6.4.17",
     "@types/pg": "^8.15.5",
     "bcryptjs": "^3.0.2",
-    "better-sqlite3": "^12.2.0",
+    "better-sqlite3": "^8.2.0",
     "caniuse-lite": "^1.0.30001727",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
