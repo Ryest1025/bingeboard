@@ -626,17 +626,14 @@ const DashboardPage: React.FC = () => {
         </Section>
 
         {/* --- Continue Watching --- */}
-        <Section title="Continue Watching">
-          <motion.div
-            className="flex gap-3 overflow-x-auto pb-4 -mx-2 px-2 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent"
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-          >
-            <ContinueWatching limit={10} />
-          </motion.div>
-        </Section>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+        >
+          <ContinueWatching limit={10} />
+        </motion.div>
       </main>
       
       {/* Toast Notifications */}
