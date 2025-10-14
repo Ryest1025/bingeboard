@@ -238,6 +238,16 @@ export default async function handler(req, res) {
       return res.status(200).json([]);
     }
 
+    // Logout endpoint
+    if (url === '/api/auth/logout' || url.startsWith('/api/auth/logout?')) {
+      if (method === 'POST') {
+        return res.status(200).json({
+          success: true,
+          message: 'Logged out successfully'
+        });
+      }
+    }
+
     // Firebase session endpoint (POST)
     if (url === '/api/auth/firebase-session' || url.startsWith('/api/auth/firebase-session?')) {
       if (method === 'POST') {
