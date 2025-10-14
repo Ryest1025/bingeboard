@@ -46,9 +46,9 @@ export const BottomActionButtons: React.FC<BottomActionButtonsProps> = ({
   // For 3 buttons, use a stacked layout to prevent crowding
   if (activeButtons === 3) {
     return (
-      <div className={`mt-4 pt-4 border-t border-slate-700/50 ${className}`}>
+      <div className={`mt-3 pt-3 border-t border-slate-700/50 px-2 ${className}`}>
         <div className="space-y-2">
-          {/* Primary Watch Now button - full width */}
+          {/* Primary Watch Now button - full width with streaming logo */}
           {actions.watchNow && (
             <ActionButton
               size="sm"
@@ -57,10 +57,17 @@ export const BottomActionButtons: React.FC<BottomActionButtonsProps> = ({
                 e?.stopPropagation();
                 onWatchNow?.();
               }}
-              className="w-full flex items-center justify-center gap-2 px-3 py-2.5"
+              className="w-full flex items-center justify-center gap-2 px-3 py-2 text-xs font-semibold"
             >
               <Play className="w-3.5 h-3.5 flex-shrink-0" />
-              <span className="text-xs font-medium">Watch Now</span>
+              <span>Watch</span>
+              {firstStreamingLogo && showStreamingLogoInButton && (
+                <img 
+                  src={firstStreamingLogo} 
+                  alt="Streaming" 
+                  className="w-4 h-4 rounded-sm bg-white/90 p-0.5 flex-shrink-0" 
+                />
+              )}
             </ActionButton>
           )}
           
@@ -76,7 +83,7 @@ export const BottomActionButtons: React.FC<BottomActionButtonsProps> = ({
                 variant="secondary"
                 size="sm"
                 showLabel={true}
-                className="flex-1 text-xs"
+                className="flex-1 text-xs min-w-0"
               />
             )}
             
@@ -88,10 +95,10 @@ export const BottomActionButtons: React.FC<BottomActionButtonsProps> = ({
                   e?.stopPropagation();
                   onAddToWatchlist?.();
                 }}
-                className="flex-1 flex items-center justify-center gap-1.5 px-2 py-2 bg-slate-700 hover:bg-slate-600 border-slate-600 text-white"
+                className="flex-1 flex items-center justify-center gap-1.5 px-2 py-2 bg-slate-700 hover:bg-slate-600 border-slate-600 text-white min-w-0"
               >
                 <Plus className="w-3 h-3 flex-shrink-0" />
-                <span className="text-xs font-medium">Add</span>
+                <span className="text-xs font-medium truncate">Add</span>
               </ActionButton>
             )}
           </div>

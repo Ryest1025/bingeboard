@@ -384,7 +384,18 @@ const UniversalMediaCard: React.FC<UniversalMediaCardProps> = ({
           />
         )}
         
-        {/* Streaming Logos - only show if not in button */}
+        {/* Streaming Logos - show at bottom when buttons are moved */}
+        {!hideStreamingLogos && showStreamingLogos && normalizedPlatforms.length > 0 && shouldMoveButtonsToBottom && (
+          <div className="mt-2 px-2 pb-2">
+            <StreamingLogos 
+              providers={normalizedPlatforms}
+              maxDisplayed={4}
+              size="sm"
+            />
+          </div>
+        )}
+        
+        {/* Streaming Logos - show in middle when buttons are not moved */}
         {!hideStreamingLogos && showStreamingLogos && !showStreamingLogoInButton && !shouldMoveButtonsToBottom && normalizedPlatforms.length > 0 && (
           <div className="mt-3 pt-3 border-t border-slate-700/50 px-3">
             <StreamingLogos 

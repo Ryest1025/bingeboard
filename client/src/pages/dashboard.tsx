@@ -189,28 +189,30 @@ const DashboardPage: React.FC = () => {
                   {/* Watch Now with first streaming logo */}
                   <Button
                     onClick={() => handleWatchNow(spotlightItem as NormalizedMedia)}
-                    className="bg-red-600 hover:bg-red-700 text-white flex items-center gap-2"
+                    className="bg-red-600 hover:bg-red-700 text-white flex items-center gap-2 px-4 py-2.5"
                   >
-                    ▶ Watch Now
-                    {spotlightItem.streaming?.[0]?.logo_path && (
-                      <img
-                        src={`https://image.tmdb.org/t/p/w45${spotlightItem.streaming[0].logo_path}`}
-                        alt={spotlightItem.streaming[0].provider_name}
-                        className="w-5 h-5 object-contain rounded-sm bg-white p-0.5"
-                      />
-                    )}
+                    <span className="flex items-center gap-2">
+                      ▶ Watch Now
+                      {spotlightItem.streaming?.[0]?.logo_path && (
+                        <img
+                          src={`https://image.tmdb.org/t/p/w92${spotlightItem.streaming[0].logo_path}`}
+                          alt={spotlightItem.streaming[0].provider_name}
+                          className="w-6 h-6 object-contain rounded-sm bg-white/90 p-0.5"
+                        />
+                      )}
+                    </span>
                   </Button>
                   <Button
                     onClick={() => handleWatchTrailer(spotlightItem as NormalizedMedia)}
                     variant="outline"
-                    className="text-white border-white hover:bg-white/10"
+                    className="text-white border-white hover:bg-white/10 px-4 py-2.5"
                   >
                     🎬 Trailer
                   </Button>
                   <Button
                     onClick={() => handleAddToWatchlist(spotlightItem as NormalizedMedia)}
                     variant="ghost"
-                    className="text-white border border-white hover:bg-white/10"
+                    className="text-white border border-white hover:bg-white/10 px-4 py-2.5"
                   >
                     + My List
                   </Button>
@@ -244,6 +246,7 @@ const DashboardPage: React.FC = () => {
                   variant="vertical-polished"
                   size="sm"
                   showRating
+                  showStreamingLogos
                   actions={{ watchNow: true, trailer: true, addToList: true }}
                   moveButtonsToBottom
                   onAddToWatchlist={(m) => { void handleAddToWatchlist(m as NormalizedMedia); }}
