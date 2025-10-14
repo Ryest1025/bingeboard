@@ -1,10 +1,16 @@
-// Vercel-compatible API handler
+// Vercel Serverless Function Handler
+// Simplified handler that works with Vercel's serverless environment
+
 import express from "express";
 import cors from "cors";
+import dotenv from 'dotenv';
+
+// Load environment variables
+dotenv.config();
 
 const app = express();
 
-// CORS configuration
+// CORS configuration for production
 app.use(cors({
   origin: function (origin, callback) {
     if (!origin) return callback(null, true);
@@ -14,145 +20,89 @@ app.use(cors({
       'http://bingeboardapp.com',
       'https://www.bingeboardapp.com',
       'http://www.bingeboardapp.com',
-      'https://ryest1025.github.io'
+      'https://ryest1025.github.io',
+      /\.vercel\.app$/  // Allow Vercel preview URLs
     ];
     
-    const isAllowed = allowedOrigins.includes(origin);
+    const isAllowed = allowedOrigins.some(allowed => {
+      if (allowed instanceof RegExp) {
+        return allowed.test(origin);
+      }
+      return allowed === origin;
+    });
+    
     callback(null, isAllowed);
   },
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
 }));
 
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-// Simple health check
+// Health check
 app.get('/api/health', (req, res) => {
   res.json({ 
     status: 'ok', 
-    message: 'Backend is working',
+    message: 'Backend is running on Vercel',
     timestamp: new Date().toISOString(),
-    env: process.env.NODE_ENV || 'development'
+    env: process.env.NODE_ENV || 'production'
   });
 });
 
-// Auth status endpoint
-app.get('/api/auth/status', (req, res) => {
-  res.json({
-    isAuthenticated: false,
-    user: null,
-    message: 'Firebase auth not configured yet'
-  });
-});
+// Import and register routes dynamically
+// This allows the full backend to work in serverless environment
+let routesRegistered = false;
 
-// Firebase session creation endpoint
-app.post('/api/auth/firebase-session', (req, res) => {
-  res.json({
-    success: true,
-    message: 'Session creation endpoint - Firebase integration needed'
-  });
-});
-
-// User info endpoint
-app.get('/api/auth/user', (req, res) => {
-  res.json({
-    user: null,
-    message: 'User endpoint - Firebase integration needed'
-  });
-});
-
-// User watchlist endpoint
-app.get('/api/user/watchlist', (req, res) => {
-  res.json([]);
-});
-
-// User reminders endpoint
-app.get('/api/user/reminders', (req, res) => {
-  res.json([]);
-});
-
-// Continue watching endpoint
-app.get('/api/continue-watching', (req, res) => {
-  res.json([]);
-});
-
-// Notifications history endpoint
-app.get('/api/notifications/history', (req, res) => {
-  res.json([]);
-});
-
-// Discover TV endpoint
-app.get('/api/tmdb/discover/tv', (req, res) => {
-  res.json({
-    results: []
-  });
-});
-
-// Forgot password endpoint
-app.post('/api/auth/forgot-password', (req, res) => {
-  res.json({
-    success: true,
-    message: 'Password reset email sent (Firebase integration needed)'
-  });
-});
-
-// Login endpoint
-app.post('/api/auth/login', (req, res) => {
-  res.json({
-    success: true,
-    message: 'Login endpoint (Firebase integration needed)'
-  });
-});
-
-// Basic trending endpoint (mock data for now)
-app.get('/api/trending/tv/day', (req, res) => {
-  res.json({
-    results: [
-      {
-        id: 1,
-        name: "Stranger Things",
-        overview: "A group of young friends witness supernatural forces and secret government exploits.",
-        poster_path: "/49WJfeN0moxb9IPfGn8AIqMGskD.jpg",
-        vote_average: 8.7,
-        first_air_date: "2016-07-15"
-      },
-      {
-        id: 2,
-        name: "The Bear",
-        overview: "A young chef from the fine dining world returns to Chicago to run his family's sandwich shop.",
-        poster_path: null, 
-        vote_average: 8.5,
-        first_air_date: "2022-06-23"
-      },
-      {
-        id: 3,
-        name: "Wednesday",
-        overview: "A coming-of-age supernatural mystery comedy horror series that follows Wednesday Addams.",
-        poster_path: "/9PFonBhy4cQy7Jz20NpMygczOkv.jpg",
-        vote_average: 8.8,
-        first_air_date: "2022-11-23"
-      }
-    ]
-  });
-});
-
-// Multi-API trailer endpoint (mock for now)
-app.get('/api/multi-api/trailer/tv/:id', (req, res) => {
-  const { id } = req.params;
-  const { title } = req.query;
+async function ensureRoutes() {
+  if (routesRegistered) return;
   
-  res.json({
-    trailers: [
-      {
-        key: "sBjh3OBkval",
-        name: `${title || 'Show'} Official Trailer`,
-        site: "YouTube",
-        size: 1080,
-        type: "Trailer"
-      }
-    ],
-    message: `Trailer for ${title || 'show'} (ID: ${id})`
+  try {
+    // Import the route registration function
+    const { registerRoutes } = await import('../server/routes.js');
+    
+    // Register all routes (this sets up all API endpoints)
+    await registerRoutes(app);
+    
+    routesRegistered = true;
+    console.log('✅ All routes registered successfully');
+  } catch (error) {
+    console.error('❌ Error registering routes:', error);
+    throw error;
+  }
+}
+
+// Middleware to ensure routes are loaded
+app.use(async (req, res, next) => {
+  if (!routesRegistered && req.path.startsWith('/api/')) {
+    try {
+      await ensureRoutes();
+    } catch (error) {
+      return res.status(500).json({ 
+        error: 'Failed to initialize server',
+        message: error.message 
+      });
+    }
+  }
+  next();
+});
+
+// 404 handler for unmatched routes
+app.use((req, res) => {
+  res.status(404).json({ 
+    error: 'Not Found',
+    path: req.path,
+    message: 'The requested endpoint does not exist'
+  });
+});
+
+// Error handler
+app.use((err, req, res, next) => {
+  console.error('Server error:', err);
+  res.status(500).json({ 
+    error: 'Internal Server Error',
+    message: err.message || 'An unexpected error occurred'
   });
 });
 
