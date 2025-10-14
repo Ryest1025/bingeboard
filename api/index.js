@@ -147,6 +147,19 @@ export default async function handler(req, res) {
       return res.status(200).json({ user: null });
     }
 
+    // Firebase session endpoint
+    if (url === '/api/auth/firebase-session' && method === 'POST') {
+      return res.status(200).json({
+        success: true,
+        message: 'Session created (stub)'
+      });
+    }
+
+    // Notifications history endpoint
+    if (url === '/api/notifications/history' || url.startsWith('/api/notifications/history?')) {
+      return res.status(200).json([]);
+    }
+
     // Firebase session endpoint (POST)
     if (url === '/api/auth/firebase-session' || url.startsWith('/api/auth/firebase-session?')) {
       if (method === 'POST') {
