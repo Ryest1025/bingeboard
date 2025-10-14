@@ -1,7 +1,7 @@
 /**
  * Routes Configuration
- * Last updated: October 13, 2025
- * Changed: Dashboard route now points to October 10th restored dashboard.tsx
+ * Last updated: October 14, 2025
+ * Clean production routes - archived unused dashboard variants
  */
 import React from "react";
 import Landing from "@/pages/landing";
@@ -17,14 +17,12 @@ import SearchResultsPage from "@/pages/SearchResultsPage";
 import NotFound from "@/pages/not-found";
 import CardDemo from "@/pages/card-demo";
 
-// Dashboard imports - Clean polished version
-import Dashboard from "@/pages/dashboard"; // POLISHED DASHBOARD - October 14, 2025
-import DeploymentTestPage from "@/pages/deployment-test-page"; // STATIC IMPORT FOR NUCLEAR TEST
+// Dashboard - Clean streamlined version
+import Dashboard from "@/pages/dashboard";
+import DeploymentTestPage from "@/pages/deployment-test-page";
 
-// Lazy imports - other routes
+// Lazy imports
 const LazyTestPersonalized = React.lazy(() => import("@/pages/test-personalized"));
-const LazyDashboardReconstructed = React.lazy(() => import("@/pages/dashboard-reconstructed"));
-const LazyComprehensiveDashboard = React.lazy(() => import("@/pages/dashboard-comprehensive"));
 
 export const publicRoutes = [
   { path: "/landing", component: Landing },
@@ -36,15 +34,13 @@ export const publicRoutes = [
 
 export const protectedRoutes = [
   { path: "/discover", component: Discover, requireAuth: true },
-  { path: "/lists", component: Activity, requireAuth: true }, // Rename activity to lists
+  { path: "/lists", component: Activity, requireAuth: true },
   { path: "/friends", component: Friends, requireAuth: true },
-  { path: "/dashboard", component: Dashboard, requireAuth: true }, // POLISHED DASHBOARD - October 14, 2025
+  { path: "/dashboard", component: Dashboard, requireAuth: true },
   { path: "/modern-discover", component: Discover, requireAuth: true },
   { path: "/search", component: SearchResultsPage, requireAuth: true },
   { path: "/test-personalized", component: LazyTestPersonalized, lazy: true, requireAuth: true },
-  { path: "/comprehensive-dashboard", component: LazyComprehensiveDashboard, lazy: true, requireAuth: true },
-  { path: "/test-dashboard", component: LazyDashboardReconstructed, lazy: true, requireAuth: true },
-  { path: "/deployment-test", component: DeploymentTestPage, requireAuth: true }, // STATIC IMPORT FOR TEST
+  { path: "/deployment-test", component: DeploymentTestPage, requireAuth: true },
 ];
 
 export const notFoundRoute = { component: NotFound };
@@ -56,6 +52,5 @@ export const navHiddenRoutes = [
   "/discover",
   "/lists",
   "/friends",
-  "/dashboard",
-  "/test-dashboard"
+  "/dashboard"
 ];

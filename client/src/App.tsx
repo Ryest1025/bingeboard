@@ -16,7 +16,6 @@ import { TrailerModalProvider } from "@/components/TrailerModal";
 import { publicRoutes, protectedRoutes, notFoundRoute, navHiddenRoutes } from "@/routes";
 import Home from "@/pages/home";
 import Landing from "@/pages/landing";
-import AuthDebug from "@/pages/auth-debug";
 
 
 function Router() {
@@ -83,11 +82,6 @@ function Router() {
             </Route>
           ))}
 
-          {/* Debug route for testing auth */}
-          <Route path="/auth-debug">
-            <AuthDebug />
-          </Route>
-
           {/* Redirect upcoming to discover */}
           <Route path="/upcoming">
             <Redirect to="/discover" />
@@ -99,8 +93,7 @@ function Router() {
           </Route>
 
           {/* Root route - dynamic behavior based on auth */}
-          <Route path="/">
-            {(() => {
+          <Route path="/">{(() => {
               console.log(`🛣️ Root route: isAuthenticated=${isAuthenticated}, isLoading=${isLoading}, user=${user?.email || 'null'}, redirecting to ${isAuthenticated ? 'dashboard' : 'landing'}`);
               
               if (isAuthenticated) {
