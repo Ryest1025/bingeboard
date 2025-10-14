@@ -765,19 +765,6 @@ export default function LoginSimple() {
                   {isLoading ? "Please wait..." : (isLogin ? "Log In" : "Create Account")}
                 </Button>
 
-                {/* Demo Login Button */}
-                <Button
-                  type="button"
-                  onClick={() => {
-                    console.log("🎭 Demo login activated");
-                    // Redirect to dashboard with demo mode
-                    window.location.href = "/dashboard?demo=true";
-                  }}
-                  className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold"
-                >
-                  🎭 Demo Login (Skip Firebase)
-                </Button>
-
                 {/* Toggle Login/Register */}
                 <div className="text-center">
                   <Button
