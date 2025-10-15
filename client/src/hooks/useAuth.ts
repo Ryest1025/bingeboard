@@ -95,14 +95,14 @@ const initAuth = () => {
 };
 
 export function useAuth(): AuthState {
-  const [state, setState] = useState(globalState);
+  const [state, setState] = useState(() => ({ ...globalState }));
   
   useEffect(() => { initAuth(); }, []);
   
   useEffect(() => {
     const update = () => setState({ ...globalState });
     listeners.add(update);
-    update();
+    update(); // Immediately sync with global state
     return () => {
       listeners.delete(update);
     };
