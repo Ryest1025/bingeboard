@@ -109,15 +109,6 @@ export const InteractiveDiscoveryTools: React.FC<InteractiveDiscoveryToolsProps>
 
   return (
     <div className={`space-y-8 ${className}`}>
-      {/* Header */}
-      <div className="text-center space-y-2">
-        <h2 className="text-2xl font-bold text-white flex items-center justify-center gap-2">
-          <Sparkles className="w-6 h-6 text-blue-400" />
-          Discover Your Perfect Watch
-        </h2>
-        <p className="text-slate-400">Filter by platform and genre to find exactly what you want</p>
-      </div>
-
       {/* Streaming Platform Filter */}
       <div className="space-y-4">
         <h3 className="text-lg font-semibold text-white flex items-center gap-2">
@@ -200,44 +191,6 @@ export const InteractiveDiscoveryTools: React.FC<InteractiveDiscoveryToolsProps>
             );
           })}
         </div>
-      </div>
-
-      {/* Quick Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <motion.div
-          whileHover={{ scale: 1.02 }}
-          className="bg-gradient-to-br from-purple-600/20 to-pink-600/20 border border-purple-500/30 rounded-2xl p-6 text-center space-y-3 cursor-pointer"
-          onClick={handleRandomDiscover}
-        >
-          <motion.div
-            animate={isRandomizing ? { rotate: 360 } : { rotate: 0 }}
-            transition={{ duration: 1.5, ease: "easeInOut", repeat: isRandomizing ? Infinity : 0 }}
-          >
-            <Shuffle className="w-8 h-8 text-purple-400 mx-auto" />
-          </motion.div>
-          <h4 className="text-white font-semibold">I'm Feeling Lucky</h4>
-          <p className="text-slate-400 text-sm">Surprise me with something amazing</p>
-        </motion.div>
-
-        <motion.div
-          whileHover={{ scale: 1.02 }}
-          className="bg-gradient-to-br from-blue-600/20 to-cyan-600/20 border border-blue-500/30 rounded-2xl p-6 text-center space-y-3 cursor-pointer"
-          onClick={() => onTimeFilter?.('quick')}
-        >
-          <Clock className="w-8 h-8 text-blue-400 mx-auto" />
-          <h4 className="text-white font-semibold">Quick Watch</h4>
-          <p className="text-slate-400 text-sm">30-90 minutes of great content</p>
-        </motion.div>
-
-        <motion.div
-          whileHover={{ scale: 1.02 }}
-          className="bg-gradient-to-br from-green-600/20 to-emerald-600/20 border border-green-500/30 rounded-2xl p-6 text-center space-y-3 cursor-pointer"
-          onClick={() => onPersonalityMatch?.('quiz')}
-        >
-          <Brain className="w-8 h-8 text-green-400 mx-auto" />
-          <h4 className="text-white font-semibold">Personality Match</h4>
-          <p className="text-slate-400 text-sm">Find shows that match your vibe</p>
-        </motion.div>
       </div>
 
       {/* Active Filters Display */}

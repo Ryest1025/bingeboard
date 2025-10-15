@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import NavigationHeader from "@/components/navigation-header";
-import { IntelligentHero } from '@/components/discover/IntelligentHero';
 import { SmartCategoriesComponent } from '@/components/discover/SmartCategoriesComponent';
 import { InteractiveDiscoveryTools } from '@/components/discover/InteractiveDiscoveryTools';
 import { Button } from "@/components/ui/button";
@@ -336,17 +335,8 @@ const DiscoverPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-slate-950 text-white">
       <NavigationHeader />
-      
-      {/* Intelligent Hero Section */}
-      <div className="mb-12">
-        <IntelligentHero 
-          onWatchNow={handleHeroWatchNow}
-          onAddToWatchlist={handleHeroAddToWatchlist}
-          onShowInfo={handleHeroShowInfo}
-        />
-      </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 space-y-16">
         {/* Interactive Discovery Tools */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
