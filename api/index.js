@@ -75,7 +75,7 @@ export default async function handler(req, res) {
         // Add streaming data if requested
         if (includeStreaming && data.results) {
           const enrichedResults = await Promise.all(
-            data.results.slice(0, 10).map(async (item) => {
+            data.results.slice(0, 20).map(async (item) => {
               try {
                 const providers = await tmdbFetch(`/${mediaType}/${item.id}/watch/providers`);
                 const usProviders = providers.results?.US;
@@ -95,7 +95,7 @@ export default async function handler(req, res) {
                   item.streaming = uniqueProviders.slice(0, 5);
                 }
               } catch (err) {
-                // Skip streaming data if fetch fails
+                console.error(`Failed to fetch streaming for ${mediaType} ${item.id}:`, err.message);
               }
               return item;
             })
@@ -104,7 +104,7 @@ export default async function handler(req, res) {
           // Merge enriched results back
           data.results = [
             ...enrichedResults,
-            ...data.results.slice(10)
+            ...data.results.slice(20)
           ];
         }
         
@@ -128,7 +128,7 @@ export default async function handler(req, res) {
         // Add streaming data if requested
         if (includeStreaming && data.results) {
           const enrichedResults = await Promise.all(
-            data.results.slice(0, 10).map(async (item) => {
+            data.results.slice(0, 20).map(async (item) => {
               try {
                 const providers = await tmdbFetch(`/${mediaType}/${item.id}/watch/providers`);
                 const usProviders = providers.results?.US;
@@ -148,7 +148,7 @@ export default async function handler(req, res) {
                   item.streaming = uniqueProviders.slice(0, 5);
                 }
               } catch (err) {
-                // Skip streaming data if fetch fails
+                console.error(`Failed to fetch streaming for ${mediaType} ${item.id}:`, err.message);
               }
               return item;
             })
@@ -157,7 +157,7 @@ export default async function handler(req, res) {
           // Merge enriched results back
           data.results = [
             ...enrichedResults,
-            ...data.results.slice(10)
+            ...data.results.slice(20)
           ];
         }
         
