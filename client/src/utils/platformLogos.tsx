@@ -155,21 +155,14 @@ export const getPlatformLogo = (platform: string | { name?: string; provider_nam
   const platformName: string | undefined = typeof platform === 'string' ? platform : (platform?.name || platform?.provider_name);
   const normalizedName = platformName ? normalizePlatformName(platformName) : 'Unknown';
 
-  // 1) If TMDB or external logo is provided, use it.
+  // 1) If TMDB logo is provided, use it
   if (platform && typeof platform === 'object' && platform.logo_path) {
     const path: string = platform.logo_path;
     if (path.startsWith('http')) return path;
     if (path.startsWith('/')) return `https://image.tmdb.org/t/p/w92${path}`;
-    // If unexpected format, fall back to local mapping before badge
-    const local = PLATFORM_LOGOS[normalizedName] || PLATFORM_LOGOS[normalizedName.toLowerCase()];
-    return local || generatePlatformBadge(normalizedName);
   }
 
-  // 2) If a plain string or object without logo_path, try local known logos first
-  const local = PLATFORM_LOGOS[normalizedName] || PLATFORM_LOGOS[normalizedName.toLowerCase()];
-  if (local) return local;
-
-  // 3) As last resort, generate a badge
+  // 2) Generate a colored badge (no local file fallback)
   return generatePlatformBadge(normalizedName);
 }
 
