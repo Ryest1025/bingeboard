@@ -153,18 +153,12 @@ export default function StreamingLogos({ providers = [], size = 'md', maxDisplay
               alt={provider.provider_name}
               className={`${sizeClasses[size]} object-contain`}
               onError={(e) => {
-                // More robust fallback to colored badge if TMDB/local image fails
+                // Fallback to colored badge if TMDB logo fails to load
                 const target = e.target as HTMLImageElement;
                 const parent = target.parentElement;
                 
-                // Try local fallback first if we were using TMDB
-                if (provider.logo_path && !target.src.includes('/logos/')) {
-                  target.src = getPlatformLogo(provider);
-                } else if (parent && target.src !== '/logos/default.svg') {
-                  // Try default logo
-                  target.src = '/logos/default.svg';
-                } else if (parent) {
-                  // If all fails, show colored badge
+                if (parent && !target.src.includes('data:image/svg')) {
+                  // Generate colored badge as fallback (only once)
                   parent.innerHTML = `
                     <div class="${sizeClasses[size]} ${FALLBACK_COLORS[provider.provider_name] || 'bg-gray-600'} rounded-md flex items-center justify-center">
                       <span class="${textSizeClasses[size]} font-bold text-white">${provider.provider_name.charAt(0)}</span>
