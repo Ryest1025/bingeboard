@@ -21,14 +21,16 @@ export default function RouteWrapper({
   requireAuth = false,
   fallback = <div className="p-6 text-gray-400">Loading…</div>,
 }: RouteWrapperProps) {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, user } = useAuth();
 
   // Always respect loading state before making auth decisions
   if (isLoading) {
     return <div className="p-6 text-gray-400">🔄 Loading...</div>;
   }
 
-  if (requireAuth && !isAuthenticated) {
+  // Additional safety check: if requireAuth is true but we have user data,
+  // treat as authenticated (prevents race condition during state sync)
+  if (requireAuth && !isAuthenticated && !user) {
     console.log("🔒 Redirecting unauthenticated user to /login");
     return <Redirect to="/login" />;
   }
