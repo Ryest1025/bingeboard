@@ -81,7 +81,34 @@ const DashboardPage: React.FC = () => {
 
   const spotlightItem = useMemo(() => {
     if (processedTrending.length === 0) return null;
-    return processedTrending.find((item) => item.streaming?.length > 0) || processedTrending[0];
+    
+    // Try to get cached spotlight from localStorage
+    const cachedSpotlight = localStorage.getItem('dashboard-spotlight');
+    const cachedTime = localStorage.getItem('dashboard-spotlight-time');
+    const now = Date.now();
+    const ONE_HOUR = 60 * 60 * 1000;
+    
+    // If we have a cached spotlight less than 1 hour old, try to use it
+    if (cachedSpotlight && cachedTime && (now - parseInt(cachedTime)) < ONE_HOUR) {
+      try {
+        const cached = JSON.parse(cachedSpotlight);
+        const found = processedTrending.find(item => item.id === cached.id);
+        if (found) return found;
+      } catch (e) {
+        // Invalid cache, continue to select new one
+      }
+    }
+    
+    // Select new spotlight (prefer items with streaming)
+    const selected = processedTrending.find((item) => item.streaming?.length > 0) || processedTrending[0];
+    
+    // Cache the selection
+    if (selected) {
+      localStorage.setItem('dashboard-spotlight', JSON.stringify({ id: selected.id }));
+      localStorage.setItem('dashboard-spotlight-time', now.toString());
+    }
+    
+    return selected;
   }, [processedTrending]);
 
   const filteredRecommendations = useMemo(() => {
