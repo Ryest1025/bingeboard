@@ -6,7 +6,7 @@ import { SmartCategoriesComponent } from '@/components/discover/SmartCategoriesC
 import { InteractiveDiscoveryTools } from '@/components/discover/InteractiveDiscoveryTools';
 import { Button } from "@/components/ui/button";
 import { RefreshCw, Loader2 } from "lucide-react";
-import { apiFetch, buildQuery } from "@/lib/api/fetcher";
+import { apiFetch } from "@/utils/api-config";
 import useMediaActions from '@/hooks/useMediaActions';
 
 // Use the same MediaItem interface as UniversalMediaCard
@@ -93,14 +93,14 @@ const DiscoverPage: React.FC = () => {
   const fetchAllContent = useCallback(async (): Promise<MediaItem[]> => {
     try {
       const promises = [
-        // Trending content - use working endpoint
-        apiFetch(`/api/trending/tv/day?includeStreaming=true&limit=20`),
+        // Trending content
+        apiFetch(`/api/trending/tv/day?includeStreaming=true&limit=20`).then(r => r.json()),
         // Popular content - use trending as fallback
-        apiFetch(`/api/trending/tv/day?includeStreaming=true&limit=20`),
+        apiFetch(`/api/trending/tv/day?includeStreaming=true&limit=20`).then(r => r.json()),
         // Top rated content - use trending as fallback  
-        apiFetch(`/api/trending/tv/day?includeStreaming=true&limit=20`),
+        apiFetch(`/api/trending/tv/day?includeStreaming=true&limit=20`).then(r => r.json()),
         // Award winners - use trending as fallback
-        apiFetch(`/api/trending/tv/day?includeStreaming=true&limit=15`),
+        apiFetch(`/api/trending/tv/day?includeStreaming=true&limit=15`).then(r => r.json()),
       ];
 
       const results = await Promise.all(promises);
