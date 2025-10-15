@@ -62,13 +62,17 @@ const DiscoverPage: React.FC = () => {
   const spotlightItem = useMemo(() => {
     if (allMedia.length === 0) return null;
     
+    // Cache version - increment this to force refresh spotlight
+    const CACHE_VERSION = 'v2'; // Updated to force new selection with streaming data
+    
     // Try to get cached spotlight
     try {
       const cached = localStorage.getItem('discover-spotlight');
       const cachedTime = localStorage.getItem('discover-spotlight-time');
+      const cachedVersion = localStorage.getItem('discover-spotlight-version');
       const ONE_HOUR = 60 * 60 * 1000;
       
-      if (cached && cachedTime && (Date.now() - parseInt(cachedTime)) < ONE_HOUR) {
+      if (cached && cachedTime && cachedVersion === CACHE_VERSION && (Date.now() - parseInt(cachedTime)) < ONE_HOUR) {
         const cachedData = JSON.parse(cached);
         const found = allMedia.find(item => item.id === cachedData.id);
         if (found) return found;
@@ -76,15 +80,17 @@ const DiscoverPage: React.FC = () => {
     } catch (e) {
       localStorage.removeItem('discover-spotlight');
       localStorage.removeItem('discover-spotlight-time');
+      localStorage.removeItem('discover-spotlight-version');
     }
     
     // Select spotlight (prefer items with streaming)
-    const selected = allMedia.find(item => (item.streaming_platforms?.length || 0) > 0) || allMedia[0];
+    const selected = allMedia.find(item => (item.streaming?.length || item.streaming_platforms?.length || item.streamingPlatforms?.length || 0) > 0) || allMedia[0];
     
     if (selected) {
       try {
         localStorage.setItem('discover-spotlight', JSON.stringify({ id: selected.id }));
         localStorage.setItem('discover-spotlight-time', Date.now().toString());
+        localStorage.setItem('discover-spotlight-version', CACHE_VERSION);
       } catch (e) {}
     }
     
