@@ -196,7 +196,7 @@ const UniversalMediaCard: React.FC<UniversalMediaCardProps> = ({
               )}
 
               {/* Action Buttons */}
-              <div className="flex gap-3 mt-4">
+              <div className="flex gap-3 mt-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                 {actions.watchNow && (
                   <ActionButton
                     variant="primary"
@@ -285,7 +285,7 @@ const UniversalMediaCard: React.FC<UniversalMediaCardProps> = ({
             )}
             
             {/* Action Buttons */}
-            <div className="flex flex-wrap justify-center md:justify-start gap-3 mt-4">
+            <div className="flex flex-wrap justify-center md:justify-start gap-3 mt-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
               {actions.watchNow && (
                 <ActionButton
                   variant="primary"

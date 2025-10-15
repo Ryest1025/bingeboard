@@ -46,7 +46,7 @@ export const BottomActionButtons: React.FC<BottomActionButtonsProps> = ({
   // For 3 buttons, use a stacked layout to prevent crowding
   if (activeButtons === 3) {
     return (
-      <div className={`mt-3 pt-3 border-t border-slate-700/50 px-2 ${className}`}>
+      <div className={`mt-3 pt-3 border-t border-slate-700/50 px-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 ${className}`}>
         <div className="space-y-2">
           {/* Primary Watch Now button - full width with streaming logo */}
           {actions.watchNow && (
@@ -109,7 +109,7 @@ export const BottomActionButtons: React.FC<BottomActionButtonsProps> = ({
 
   // For 1-2 buttons, use the horizontal layout
   return (
-    <div className={`mt-4 pt-4 border-t border-slate-700/50 ${className}`}>
+    <div className={`mt-4 pt-4 border-t border-slate-700/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 ${className}`}>
       <div className="flex gap-2 justify-center">
         {actions.watchNow && (
           <ActionButton
