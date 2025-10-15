@@ -80,7 +80,10 @@ const DashboardPage: React.FC = () => {
   }, [trendingData]);
 
   const spotlightItem = useMemo(() => {
-    if (processedTrending.length === 0) return null;
+    if (processedTrending.length === 0) {
+      console.log('⚠️ No spotlight: processedTrending is empty');
+      return null;
+    }
     
     // Try to get cached spotlight from localStorage
     try {
@@ -93,7 +96,10 @@ const DashboardPage: React.FC = () => {
       if (cachedSpotlight && cachedTime && (now - parseInt(cachedTime)) < ONE_HOUR) {
         const cached = JSON.parse(cachedSpotlight);
         const found = processedTrending.find(item => item.id === cached.id);
-        if (found) return found;
+        if (found) {
+          console.log('✅ Using cached spotlight:', found.title || found.name);
+          return found;
+        }
       }
     } catch (e) {
       // Clear invalid cache
@@ -106,6 +112,7 @@ const DashboardPage: React.FC = () => {
     
     // Cache the selection
     if (selected) {
+      console.log('✨ Selected new spotlight:', selected.title || selected.name, 'streaming:', selected.streaming?.length || 0);
       try {
         localStorage.setItem('dashboard-spotlight', JSON.stringify({ id: selected.id }));
         localStorage.setItem('dashboard-spotlight-time', Date.now().toString());
