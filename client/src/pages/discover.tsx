@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { RefreshCw, Loader2 } from "lucide-react";
 import { apiFetch } from "@/utils/api-config";
 import useMediaActions from '@/hooks/useMediaActions';
+import StreamingLogos from '@/components/streaming-logos';
 
 // Use the same MediaItem interface as UniversalMediaCard
 interface MediaItem {
@@ -404,6 +405,14 @@ const DiscoverPage: React.FC = () => {
                   <p className="text-gray-200 text-sm md:text-base line-clamp-2 max-w-2xl">
                     {spotlightItem.overview}
                   </p>
+                  {spotlightItem.streaming && spotlightItem.streaming.length > 0 && (
+                    <div className="flex items-center gap-2">
+                      <span className="text-gray-300 text-sm">Watch on:</span>
+                      <StreamingLogos 
+                        providers={spotlightItem.streaming.filter(p => p.provider_id && p.provider_name) as Array<{provider_id: number; provider_name: string; logo_path?: string}>} 
+                      />
+                    </div>
+                  )}
                   <div className="flex gap-3">
                     <Button
                       onClick={() => handleWatchNow(spotlightItem)}
