@@ -83,20 +83,22 @@ const DashboardPage: React.FC = () => {
     if (processedTrending.length === 0) return null;
     
     // Try to get cached spotlight from localStorage
-    const cachedSpotlight = localStorage.getItem('dashboard-spotlight');
-    const cachedTime = localStorage.getItem('dashboard-spotlight-time');
-    const now = Date.now();
-    const ONE_HOUR = 60 * 60 * 1000;
-    
-    // If we have a cached spotlight less than 1 hour old, try to use it
-    if (cachedSpotlight && cachedTime && (now - parseInt(cachedTime)) < ONE_HOUR) {
-      try {
+    try {
+      const cachedSpotlight = localStorage.getItem('dashboard-spotlight');
+      const cachedTime = localStorage.getItem('dashboard-spotlight-time');
+      const now = Date.now();
+      const ONE_HOUR = 60 * 60 * 1000;
+      
+      // If we have a cached spotlight less than 1 hour old, try to use it
+      if (cachedSpotlight && cachedTime && (now - parseInt(cachedTime)) < ONE_HOUR) {
         const cached = JSON.parse(cachedSpotlight);
         const found = processedTrending.find(item => item.id === cached.id);
         if (found) return found;
-      } catch (e) {
-        // Invalid cache, continue to select new one
       }
+    } catch (e) {
+      // Clear invalid cache
+      localStorage.removeItem('dashboard-spotlight');
+      localStorage.removeItem('dashboard-spotlight-time');
     }
     
     // Select new spotlight (prefer items with streaming)
@@ -104,8 +106,12 @@ const DashboardPage: React.FC = () => {
     
     // Cache the selection
     if (selected) {
-      localStorage.setItem('dashboard-spotlight', JSON.stringify({ id: selected.id }));
-      localStorage.setItem('dashboard-spotlight-time', now.toString());
+      try {
+        localStorage.setItem('dashboard-spotlight', JSON.stringify({ id: selected.id }));
+        localStorage.setItem('dashboard-spotlight-time', Date.now().toString());
+      } catch (e) {
+        // Ignore localStorage errors
+      }
     }
     
     return selected;
@@ -267,19 +273,20 @@ const DashboardPage: React.FC = () => {
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
               {filteredRecommendations.map((media) => (
-                <UniversalMediaCard
-                  key={media.id}
-                  media={media}
-                  variant="vertical-polished"
-                  size="sm"
-                  showRating
-                  showStreamingLogos
-                  actions={{ watchNow: true, trailer: true, addToList: true }}
-                  moveButtonsToBottom
-                  onAddToWatchlist={(m) => { void handleAddToWatchlist(m as NormalizedMedia); }}
-                  onWatchNow={(m) => { void handleWatchNow(m as NormalizedMedia); }}
-                  onWatchTrailer={(m) => { void handleWatchTrailer(m as NormalizedMedia); }}
-                />
+                <div key={media.id} className="w-full">
+                  <UniversalMediaCard
+                    media={media}
+                    variant="vertical-polished"
+                    size="sm"
+                    showRating
+                    showStreamingLogos
+                    actions={{ watchNow: true, trailer: true, addToList: true }}
+                    moveButtonsToBottom
+                    onAddToWatchlist={(m) => { void handleAddToWatchlist(m as NormalizedMedia); }}
+                    onWatchNow={(m) => { void handleWatchNow(m as NormalizedMedia); }}
+                    onWatchTrailer={(m) => { void handleWatchTrailer(m as NormalizedMedia); }}
+                  />
+                </div>
               ))}
             </div>
           )}
