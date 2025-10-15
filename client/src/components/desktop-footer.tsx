@@ -1,13 +1,5 @@
 import { useLocation } from "wouter";
-import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
 import {
-  Tv,
-  Search,
-  Calendar,
-  Heart,
-  UserCircle,
-  Settings,
   Shield,
   FileText,
   Smartphone
@@ -15,15 +7,6 @@ import {
 
 export default function DesktopFooter() {
   const [location, setLocation] = useLocation();
-
-  const navItems = [
-    { path: "/", icon: Tv, label: "Home" },
-    { path: "/discover", icon: Search, label: "Discover" },
-    { path: "/upcoming", icon: Calendar, label: "Upcoming" },
-    { path: "/activity", icon: Heart, label: "Activity" },
-    { path: "/profile", icon: UserCircle, label: "Profile" },
-    { path: "/settings", icon: Settings, label: "Settings" },
-  ];
 
   const legalLinks = [
     { path: "/privacy-policy", icon: Shield, label: "Privacy Policy" },
@@ -33,32 +16,6 @@ export default function DesktopFooter() {
 
   return (
     <>
-      {/* Static Navigation Bar - Fixed at bottom */}
-      <nav className="hidden md:block fixed bottom-0 left-0 right-0 bg-gray-900/95 backdrop-blur-sm border-t border-gray-800 z-40">
-        <div className="flex justify-center space-x-8 py-4">
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = location === item.path ||
-              (item.path === "/" && location === "/") ||
-              (item.path === "/search" && location === "/discover");
-
-            return (
-              <button
-                key={item.path}
-                onClick={() => setLocation(item.path === "/search" ? "/discover" : item.path)}
-                className={`flex flex-col items-center p-3 rounded-lg transition-all ${isActive
-                    ? "text-teal-400 bg-teal-400/10"
-                    : "text-gray-400 hover:text-white hover:bg-gray-800"
-                  }`}
-              >
-                <Icon className="w-5 h-5 mb-1" />
-                <span className="text-sm font-medium">{item.label}</span>
-              </button>
-            );
-          })}
-        </div>
-      </nav>
-
       {/* Footer Content - At bottom of page content */}
       <footer className="hidden md:block bg-gray-900/95 border-t border-gray-800 mt-auto">
         <div className="max-w-7xl mx-auto px-6 py-8">
