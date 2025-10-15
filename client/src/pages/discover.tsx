@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { motion } from "framer-motion";
 import NavigationHeader from "@/components/navigation-header";
 import { SmartCategoriesComponent } from '@/components/discover/SmartCategoriesComponent';
@@ -56,6 +56,39 @@ const DiscoverPage: React.FC = () => {
     genres: [] as string[],
     timeFilter: null as string | null
   });
+
+  // Spotlight item with caching (doesn't reload every visit)
+  const spotlightItem = useMemo(() => {
+    if (allMedia.length === 0) return null;
+    
+    // Try to get cached spotlight
+    try {
+      const cached = localStorage.getItem('discover-spotlight');
+      const cachedTime = localStorage.getItem('discover-spotlight-time');
+      const ONE_HOUR = 60 * 60 * 1000;
+      
+      if (cached && cachedTime && (Date.now() - parseInt(cachedTime)) < ONE_HOUR) {
+        const cachedData = JSON.parse(cached);
+        const found = allMedia.find(item => item.id === cachedData.id);
+        if (found) return found;
+      }
+    } catch (e) {
+      localStorage.removeItem('discover-spotlight');
+      localStorage.removeItem('discover-spotlight-time');
+    }
+    
+    // Select spotlight (prefer items with streaming)
+    const selected = allMedia.find(item => (item.streaming_platforms?.length || 0) > 0) || allMedia[0];
+    
+    if (selected) {
+      try {
+        localStorage.setItem('discover-spotlight', JSON.stringify({ id: selected.id }));
+        localStorage.setItem('discover-spotlight-time', Date.now().toString());
+      } catch (e) {}
+    }
+    
+    return selected;
+  }, [allMedia]);
 
   // Media actions hook for all functionality
   const {
@@ -335,6 +368,63 @@ const DiscoverPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-slate-950 text-white">
       <NavigationHeader />
+
+      {/* Compact Spotlight */}
+      {!loading && spotlightItem && (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="relative h-64 md:h-80 rounded-2xl overflow-hidden shadow-2xl mb-8"
+          >
+            {/* Background */}
+            <div 
+              className="absolute inset-0 bg-cover bg-center"
+              style={{ 
+                backgroundImage: `url(https://image.tmdb.org/t/p/w1280${spotlightItem.backdrop_path})`,
+              }}
+            />
+            <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/60 to-transparent" />
+            
+            {/* Content */}
+            <div className="relative h-full flex items-end p-6 md:p-8">
+              <div className="flex gap-4 md:gap-6 items-end max-w-4xl">
+                {/* Poster */}
+                <img
+                  src={`https://image.tmdb.org/t/p/w342${spotlightItem.poster_path}`}
+                  alt={spotlightItem.title || spotlightItem.name}
+                  className="w-28 md:w-36 rounded-lg shadow-xl hidden sm:block"
+                />
+                
+                {/* Info */}
+                <div className="flex-1 space-y-3">
+                  <h2 className="text-2xl md:text-3xl font-bold text-white">
+                    {spotlightItem.title || spotlightItem.name}
+                  </h2>
+                  <p className="text-gray-200 text-sm md:text-base line-clamp-2 max-w-2xl">
+                    {spotlightItem.overview}
+                  </p>
+                  <div className="flex gap-3">
+                    <Button
+                      onClick={() => handleWatchNow(spotlightItem)}
+                      className="bg-white text-black hover:bg-gray-200 px-6 py-2"
+                    >
+                      ▶ Watch Now
+                    </Button>
+                    <Button
+                      onClick={() => handleAddToWatchlist(spotlightItem)}
+                      variant="outline"
+                      className="text-white border-white hover:bg-white/10 px-6 py-2"
+                    >
+                      + My List
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      )}
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 space-y-16">
         {/* Interactive Discovery Tools */}
