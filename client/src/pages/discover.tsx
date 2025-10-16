@@ -3,11 +3,10 @@ import { motion } from "framer-motion";
 import NavigationHeader from "@/components/navigation-header";
 import { SmartCategoriesComponent } from '@/components/discover/SmartCategoriesComponent';
 import { InteractiveDiscoveryTools } from '@/components/discover/InteractiveDiscoveryTools';
-import { Button } from "@/components/ui/button";
+import { DiscoverSpotlight } from '@/components/discover/DiscoverSpotlight';
 import { RefreshCw, Loader2 } from "lucide-react";
 import { apiFetch } from "@/utils/api-config";
 import useMediaActions from '@/hooks/useMediaActions';
-import StreamingLogos from '@/components/streaming-logos';
 
 // Use the same MediaItem interface as UniversalMediaCard
 interface MediaItem {
@@ -49,6 +48,10 @@ interface APIError {
 
 const DiscoverPage: React.FC = () => {
   const [allMedia, setAllMedia] = useState<MediaItem[]>([]);
+  const [trendingNow, setTrendingNow] = useState<MediaItem[]>([]);
+  const [comingSoon, setComingSoon] = useState<MediaItem[]>([]);
+  const [topRated, setTopRated] = useState<MediaItem[]>([]);
+  const [userLists, setUserLists] = useState<number[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
@@ -58,17 +61,29 @@ const DiscoverPage: React.FC = () => {
     timeFilter: null as string | null
   });
 
-  // Spotlight item - Always show #1 trending with streaming (no caching)
-  const spotlightItem = useMemo(() => {
-    if (allMedia.length === 0) return null;
-    
-    // Find the first item with streaming data (this will be the #1 trending)
-    // Since we fetch trending first, the first item with streaming is the top trending item
-    const topTrending = allMedia.find(item => (item.streaming?.length || item.streaming_platforms?.length || item.streamingPlatforms?.length || 0) > 0);
-    
-    // If no item has streaming, just use the first one (top trending)
-    return topTrending || allMedia[0];
-  }, [allMedia]);
+  // Helper: Exclude shows already in user's lists
+  const excludeUserShows = useCallback((shows: MediaItem[]) => {
+    return shows.filter(show => !userLists.includes(show.id));
+  }, [userLists]);
+
+  // Three distinct spotlights with intelligent exclusions
+  const spotlight1 = useMemo(() => {
+    // 🔥 Just Released & Trending
+    const filtered = excludeUserShows(trendingNow);
+    return filtered.find(item => item.streaming?.length) || filtered[0] || null;
+  }, [trendingNow, excludeUserShows]);
+
+  const spotlight2 = useMemo(() => {
+    // 🌟 Coming Soon / Highly Anticipated
+    const filtered = excludeUserShows(comingSoon);
+    return filtered.find(item => item.streaming?.length) || filtered[0] || null;
+  }, [comingSoon, excludeUserShows]);
+
+  const spotlight3 = useMemo(() => {
+    // 🏆 #1 Show You Haven't Added Yet
+    const filtered = excludeUserShows(topRated);
+    return filtered.find(item => item.streaming?.length) || filtered[0] || null;
+  }, [topRated, excludeUserShows]);
 
   // Media actions hook for all functionality
   const {
@@ -105,20 +120,42 @@ const DiscoverPage: React.FC = () => {
   const fetchAllContent = useCallback(async (): Promise<MediaItem[]> => {
     try {
       const promises = [
-        // Trending content
-        apiFetch(`/api/trending/tv/day?includeStreaming=true&limit=20`).then(r => r.json()),
-        // Popular content - use trending as fallback
-        apiFetch(`/api/trending/tv/day?includeStreaming=true&limit=20`).then(r => r.json()),
-        // Top rated content - use trending as fallback  
-        apiFetch(`/api/trending/tv/day?includeStreaming=true&limit=20`).then(r => r.json()),
-        // Award winners - use trending as fallback
-        apiFetch(`/api/trending/tv/day?includeStreaming=true&limit=15`).then(r => r.json()),
+        // 🔥 Trending Now (released this week)
+        apiFetch(`/api/trending/tv/week?includeStreaming=true&limit=20`).then(r => r.json()),
+        // 🌟 Coming Soon (upcoming with high popularity)
+        apiFetch(`/api/tmdb/discover/tv?sort_by=popularity.desc&includeStreaming=true&first_air_date.gte=2025-10-16&limit=20`).then(r => r.json()),
+        // 🏆 Top Rated (high quality shows)
+        apiFetch(`/api/tmdb/tv/top_rated?includeStreaming=true&limit=20`).then(r => r.json()),
+        // For Smart Categories
+        apiFetch(`/api/trending/tv/day?includeStreaming=true&limit=30`).then(r => r.json()),
       ];
 
-      const results = await Promise.all(promises);
-      const allItems: MediaItem[] = [];
+      const [trendingRes, upcomingRes, topRatedRes, categoriesRes] = await Promise.all(promises);
+      
+      // Set separate spotlight datasets
+      setTrendingNow(trendingRes?.results?.map(formatApiItem) || []);
+      setComingSoon(upcomingRes?.results?.map(formatApiItem) || []);
+      setTopRated(topRatedRes?.results?.map(formatApiItem) || []);
 
-      results.forEach((result) => {
+      // Fetch user's watchlist/completed shows to exclude
+      try {
+        const [watchlistRes, remindersRes] = await Promise.all([
+          apiFetch('/api/user/watchlist').then(r => r.json()).catch(() => ({ items: [] })),
+          apiFetch('/api/user/reminders').then(r => r.json()).catch(() => ({ items: [] }))
+        ]);
+        
+        const userShowIds = [
+          ...(watchlistRes?.items || []).map((item: any) => item.showId || item.id),
+          ...(remindersRes?.items || []).map((item: any) => item.showId || item.id)
+        ];
+        setUserLists(userShowIds);
+      } catch (err) {
+        console.log('Could not fetch user lists for exclusion:', err);
+      }
+
+      // Combine all for Smart Categories
+      const allItems: MediaItem[] = [];
+      [trendingRes, upcomingRes, topRatedRes, categoriesRes].forEach((result) => {
         if (result?.results) {
           allItems.push(...result.results.map((item: any) => formatApiItem(item)));
         }
@@ -349,74 +386,44 @@ const DiscoverPage: React.FC = () => {
     <div className="min-h-screen bg-slate-950 text-white">
       <NavigationHeader />
 
-      {/* Compact Spotlight */}
-      {!loading && spotlightItem && (
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="relative h-64 md:h-80 rounded-2xl overflow-hidden shadow-2xl mb-8"
-          >
-            {/* Background */}
-            <div 
-              className="absolute inset-0 bg-cover bg-center"
-              style={{ 
-                backgroundImage: `url(https://image.tmdb.org/t/p/w1280${spotlightItem.backdrop_path})`,
-              }}
-            />
-            <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/60 to-transparent" />
-            
-            {/* Content */}
-            <div className="relative h-full flex items-end p-6 md:p-8">
-              <div className="flex gap-4 md:gap-6 items-end max-w-4xl">
-                {/* Poster */}
-                <img
-                  src={`https://image.tmdb.org/t/p/w342${spotlightItem.poster_path}`}
-                  alt={spotlightItem.title || spotlightItem.name}
-                  className="w-28 md:w-36 rounded-lg shadow-xl hidden sm:block"
-                />
-                
-                {/* Info */}
-                <div className="flex-1 space-y-3">
-                  <div className="flex items-center gap-3 mb-2">
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-red-600 text-white text-xs font-bold rounded-full">
-                      <span className="text-lg">#1</span>
-                      <span>TRENDING NOW</span>
-                    </span>
-                  </div>
-                  <h2 className="text-2xl md:text-3xl font-bold text-white">
-                    {spotlightItem.title || spotlightItem.name}
-                  </h2>
-                  <p className="text-gray-200 text-sm md:text-base line-clamp-2 max-w-2xl">
-                    {spotlightItem.overview}
-                  </p>
-                  {spotlightItem.streaming && spotlightItem.streaming.length > 0 && (
-                    <div className="flex items-center gap-2">
-                      <span className="text-gray-300 text-sm">Watch on:</span>
-                      <StreamingLogos 
-                        providers={spotlightItem.streaming.filter(p => p.provider_id && p.provider_name) as Array<{provider_id: number; provider_name: string; logo_path?: string}>} 
-                      />
-                    </div>
-                  )}
-                  <div className="flex gap-3">
-                    <Button
-                      onClick={() => handleWatchNow(spotlightItem)}
-                      className="bg-white text-black hover:bg-gray-200 px-6 py-2"
-                    >
-                      ▶ Watch Now
-                    </Button>
-                    <Button
-                      onClick={() => handleAddToWatchlist(spotlightItem)}
-                      variant="outline"
-                      className="text-white border-white hover:bg-white/10 px-6 py-2"
-                    >
-                      + My List
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </motion.div>
+      {/* Three Editorial Spotlights */}
+      {!loading && (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 space-y-6 mb-8">
+          {/* 🔥 Just Released & Trending */}
+          <DiscoverSpotlight
+            title="Just Released & Trending"
+            badge="🔥 TRENDING NOW"
+            badgeColor="bg-gradient-to-r from-red-600 to-orange-600"
+            feature={spotlight1}
+            onWatchNow={handleWatchNow}
+            onAddToList={handleAddToWatchlist}
+            ctaText="Watch Now"
+            delay={0}
+          />
+
+          {/* 🌟 Coming Soon */}
+          <DiscoverSpotlight
+            title="Coming Soon – Highly Anticipated"
+            badge="🌟 UPCOMING"
+            badgeColor="bg-gradient-to-r from-purple-600 to-pink-600"
+            feature={spotlight2}
+            onWatchNow={(media) => handleSetReminder(media)}
+            onAddToList={handleAddToWatchlist}
+            ctaText="Set Reminder"
+            delay={0.1}
+          />
+
+          {/* 🏆 Top Pick Not Added */}
+          <DiscoverSpotlight
+            title="#1 Show You Haven't Added Yet"
+            badge="🏆 EDITOR'S PICK"
+            badgeColor="bg-gradient-to-r from-teal-600 to-cyan-600"
+            feature={spotlight3}
+            onWatchNow={handleWatchNow}
+            onAddToList={handleAddToWatchlist}
+            ctaText="Watch Now"
+            delay={0.2}
+          />
         </div>
       )}
 
