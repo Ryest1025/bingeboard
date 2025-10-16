@@ -58,43 +58,16 @@ const DiscoverPage: React.FC = () => {
     timeFilter: null as string | null
   });
 
-  // Spotlight item with caching (doesn't reload every visit)
+  // Spotlight item - Always show #1 trending with streaming (no caching)
   const spotlightItem = useMemo(() => {
     if (allMedia.length === 0) return null;
     
-    // Cache version - increment this to force refresh spotlight
-    const CACHE_VERSION = 'v2'; // Updated to force new selection with streaming data
+    // Find the first item with streaming data (this will be the #1 trending)
+    // Since we fetch trending first, the first item with streaming is the top trending item
+    const topTrending = allMedia.find(item => (item.streaming?.length || item.streaming_platforms?.length || item.streamingPlatforms?.length || 0) > 0);
     
-    // Try to get cached spotlight
-    try {
-      const cached = localStorage.getItem('discover-spotlight');
-      const cachedTime = localStorage.getItem('discover-spotlight-time');
-      const cachedVersion = localStorage.getItem('discover-spotlight-version');
-      const ONE_HOUR = 60 * 60 * 1000;
-      
-      if (cached && cachedTime && cachedVersion === CACHE_VERSION && (Date.now() - parseInt(cachedTime)) < ONE_HOUR) {
-        const cachedData = JSON.parse(cached);
-        const found = allMedia.find(item => item.id === cachedData.id);
-        if (found) return found;
-      }
-    } catch (e) {
-      localStorage.removeItem('discover-spotlight');
-      localStorage.removeItem('discover-spotlight-time');
-      localStorage.removeItem('discover-spotlight-version');
-    }
-    
-    // Select spotlight (prefer items with streaming)
-    const selected = allMedia.find(item => (item.streaming?.length || item.streaming_platforms?.length || item.streamingPlatforms?.length || 0) > 0) || allMedia[0];
-    
-    if (selected) {
-      try {
-        localStorage.setItem('discover-spotlight', JSON.stringify({ id: selected.id }));
-        localStorage.setItem('discover-spotlight-time', Date.now().toString());
-        localStorage.setItem('discover-spotlight-version', CACHE_VERSION);
-      } catch (e) {}
-    }
-    
-    return selected;
+    // If no item has streaming, just use the first one (top trending)
+    return topTrending || allMedia[0];
   }, [allMedia]);
 
   // Media actions hook for all functionality
@@ -405,6 +378,12 @@ const DiscoverPage: React.FC = () => {
                 
                 {/* Info */}
                 <div className="flex-1 space-y-3">
+                  <div className="flex items-center gap-3 mb-2">
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-red-600 text-white text-xs font-bold rounded-full">
+                      <span className="text-lg">#1</span>
+                      <span>TRENDING NOW</span>
+                    </span>
+                  </div>
                   <h2 className="text-2xl md:text-3xl font-bold text-white">
                     {spotlightItem.title || spotlightItem.name}
                   </h2>
