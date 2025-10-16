@@ -90,6 +90,26 @@ const DiscoverPage: React.FC = () => {
     return excludeUserShows(allMedia);
   }, [allMedia, excludeUserShows]);
 
+  // Combine spotlights into array for rotation
+  const spotlights = useMemo(() => [
+    { item: spotlight1, title: "Just Released & Trending", badge: "🔥 TRENDING NOW", color: "bg-gradient-to-r from-red-600 to-orange-600", cta: "Watch Now", action: "watch" },
+    { item: spotlight2, title: "Coming Soon – Highly Anticipated", badge: "🌟 UPCOMING", color: "bg-gradient-to-r from-purple-600 to-pink-600", cta: "Set Reminder", action: "reminder" },
+    { item: spotlight3, title: "#1 Show You Haven't Added Yet", badge: "🏆 EDITOR'S PICK", color: "bg-gradient-to-r from-teal-600 to-cyan-600", cta: "Watch Now", action: "watch" },
+  ].filter(s => s.item !== null), [spotlight1, spotlight2, spotlight3]);
+
+  // Auto-rotate spotlight every 8 seconds
+  useEffect(() => {
+    if (spotlights.length <= 1) return;
+    
+    const interval = setInterval(() => {
+      setCurrentSpotlightIndex(prev => (prev + 1) % spotlights.length);
+    }, 8000);
+
+    return () => clearInterval(interval);
+  }, [spotlights.length]);
+
+  const currentSpotlight = spotlights[currentSpotlightIndex];
+
   // Media actions hook for all functionality
   const {
     addToWatchlist,
@@ -375,44 +395,39 @@ const DiscoverPage: React.FC = () => {
     <div className="min-h-screen bg-slate-950 text-white">
       <NavigationHeader />
 
-      {/* Three Editorial Spotlights */}
-      {!loading && (
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 space-y-6 mb-8">
-          {/* 🔥 Just Released & Trending */}
-          <DiscoverSpotlight
-            title="Just Released & Trending"
-            badge="🔥 TRENDING NOW"
-            badgeColor="bg-gradient-to-r from-red-600 to-orange-600"
-            feature={spotlight1}
-            onWatchNow={handleWatchNow}
-            onAddToList={handleAddToWatchlist}
-            ctaText="Watch Now"
-            delay={0}
-          />
-
-          {/* 🌟 Coming Soon */}
-          <DiscoverSpotlight
-            title="Coming Soon – Highly Anticipated"
-            badge="🌟 UPCOMING"
-            badgeColor="bg-gradient-to-r from-purple-600 to-pink-600"
-            feature={spotlight2}
-            onWatchNow={(media) => handleSetReminder(media)}
-            onAddToList={handleAddToWatchlist}
-            ctaText="Set Reminder"
-            delay={0.1}
-          />
-
-          {/* 🏆 Top Pick Not Added */}
-          <DiscoverSpotlight
-            title="#1 Show You Haven't Added Yet"
-            badge="🏆 EDITOR'S PICK"
-            badgeColor="bg-gradient-to-r from-teal-600 to-cyan-600"
-            feature={spotlight3}
-            onWatchNow={handleWatchNow}
-            onAddToList={handleAddToWatchlist}
-            ctaText="Watch Now"
-            delay={0.2}
-          />
+      {/* Single Rotating Spotlight */}
+      {!loading && currentSpotlight && currentSpotlight.item && (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 mb-8">
+          <div className="relative">
+            {/* Progress indicators */}
+            {spotlights.length > 1 && (
+              <div className="absolute -top-2 right-4 flex gap-2 z-10">
+                {spotlights.map((_, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => setCurrentSpotlightIndex(idx)}
+                    className={`h-1 rounded-full transition-all duration-300 ${
+                      idx === currentSpotlightIndex 
+                        ? 'w-8 bg-white' 
+                        : 'w-4 bg-white/30 hover:bg-white/50'
+                    }`}
+                    aria-label={`Go to spotlight ${idx + 1}`}
+                  />
+                ))}
+              </div>
+            )}
+            
+            <DiscoverSpotlight
+              title={currentSpotlight.title}
+              badge={currentSpotlight.badge}
+              badgeColor={currentSpotlight.color}
+              feature={currentSpotlight.item}
+              onWatchNow={currentSpotlight.action === "reminder" ? handleSetReminder : handleWatchNow}
+              onAddToList={handleAddToWatchlist}
+              ctaText={currentSpotlight.cta}
+              delay={0}
+            />
+          </div>
         </div>
       )}
 
