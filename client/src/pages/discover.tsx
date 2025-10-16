@@ -4,9 +4,11 @@ import NavigationHeader from "@/components/navigation-header";
 import { SmartCategoriesComponent } from '@/components/discover/SmartCategoriesComponent';
 import { InteractiveDiscoveryTools } from '@/components/discover/InteractiveDiscoveryTools';
 import { DiscoverSpotlight } from '@/components/discover/DiscoverSpotlight';
+import { Button } from "@/components/ui/button";
 import { RefreshCw, Loader2 } from "lucide-react";
 import { apiFetch } from "@/utils/api-config";
 import useMediaActions from '@/hooks/useMediaActions';
+import { useIntelligentExclusions } from '@/hooks/useIntelligentExclusions';
 
 // Use the same MediaItem interface as UniversalMediaCard
 interface MediaItem {
@@ -51,7 +53,6 @@ const DiscoverPage: React.FC = () => {
   const [trendingNow, setTrendingNow] = useState<MediaItem[]>([]);
   const [comingSoon, setComingSoon] = useState<MediaItem[]>([]);
   const [topRated, setTopRated] = useState<MediaItem[]>([]);
-  const [userLists, setUserLists] = useState<number[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
@@ -61,10 +62,8 @@ const DiscoverPage: React.FC = () => {
     timeFilter: null as string | null
   });
 
-  // Helper: Exclude shows already in user's lists
-  const excludeUserShows = useCallback((shows: MediaItem[]) => {
-    return shows.filter(show => !userLists.includes(show.id));
-  }, [userLists]);
+  // Universal intelligent exclusions hook
+  const { excludeUserShows } = useIntelligentExclusions();
 
   // Three distinct spotlights with intelligent exclusions
   const spotlight1 = useMemo(() => {
@@ -136,22 +135,6 @@ const DiscoverPage: React.FC = () => {
       setTrendingNow(trendingRes?.results?.map(formatApiItem) || []);
       setComingSoon(upcomingRes?.results?.map(formatApiItem) || []);
       setTopRated(topRatedRes?.results?.map(formatApiItem) || []);
-
-      // Fetch user's watchlist/completed shows to exclude
-      try {
-        const [watchlistRes, remindersRes] = await Promise.all([
-          apiFetch('/api/user/watchlist').then(r => r.json()).catch(() => ({ items: [] })),
-          apiFetch('/api/user/reminders').then(r => r.json()).catch(() => ({ items: [] }))
-        ]);
-        
-        const userShowIds = [
-          ...(watchlistRes?.items || []).map((item: any) => item.showId || item.id),
-          ...(remindersRes?.items || []).map((item: any) => item.showId || item.id)
-        ];
-        setUserLists(userShowIds);
-      } catch (err) {
-        console.log('Could not fetch user lists for exclusion:', err);
-      }
 
       // Combine all for Smart Categories
       const allItems: MediaItem[] = [];
