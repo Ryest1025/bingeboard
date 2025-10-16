@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Clear BingeBoard Cache</title>
+    <style>
+        body {
+            font-family: system-ui;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #0f172a;
+            color: white;
+        }
+        button {
+            background: #14b8a6;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 0;
+        }
+        button:hover { background: #0d9488; }
+        .success { color: #14b8a6; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <h1>🧹 Clear BingeBoard Cache</h1>
+    <p>If you're seeing errors or old content, click below to clear your cache:</p>
+    <button onclick="clearAllCache()">Clear Cache & Reload</button>
+    <div id="status"></div>
+    
+    <script>
+        async function clearAllCache() {
+            const status = document.getElementById('status');
+            status.innerHTML = 'Clearing cache...';
+            
+            // Clear service worker caches
+            if ('caches' in window) {
+                const cacheNames = await caches.keys();
+                await Promise.all(cacheNames.map(name => caches.delete(name)));
+            }
+            
+            // Unregister service workers
+            if ('serviceWorker' in navigator) {
+                const registrations = await navigator.serviceWorker.getRegistrations();
+                await Promise.all(registrations.map(reg => reg.unregister()));
+            }
+            
+            // Clear localStorage
+            localStorage.clear();
+            sessionStorage.clear();
+            
+            status.innerHTML = '<div class="success">✅ Cache cleared! Reloading...</div>';
+            setTimeout(() => {
+                window.location.href = '/';
+            }, 1000);
+        }
+    </script>
+</body>
+</html>
