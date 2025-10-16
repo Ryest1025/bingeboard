@@ -56,6 +56,7 @@ const DiscoverPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [currentSpotlightIndex, setCurrentSpotlightIndex] = useState(0);
   const [discoveryFilters, setDiscoveryFilters] = useState({
     platforms: [] as string[],
     genres: [] as string[],
@@ -83,6 +84,11 @@ const DiscoverPage: React.FC = () => {
     const filtered = excludeUserShows(topRated);
     return filtered.find(item => item.streaming?.length) || filtered[0] || null;
   }, [topRated, excludeUserShows]);
+
+  // Apply exclusions to all media for Smart Categories
+  const filteredAllMedia = useMemo(() => {
+    return excludeUserShows(allMedia);
+  }, [allMedia, excludeUserShows]);
 
   // Media actions hook for all functionality
   const {
@@ -434,7 +440,7 @@ const DiscoverPage: React.FC = () => {
           transition={{ duration: 0.6, delay: 0.4 }}
         >
           <SmartCategoriesComponent
-            mediaData={allMedia}
+            mediaData={filteredAllMedia}
             onMediaClick={handleMediaClick}
             onWatchNow={handleWatchNow}
             onAddToWatchlist={handleAddToWatchlist}

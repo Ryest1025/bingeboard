@@ -155,14 +155,29 @@ export const getPlatformLogo = (platform: string | { name?: string; provider_nam
   const platformName: string | undefined = typeof platform === 'string' ? platform : (platform?.name || platform?.provider_name);
   const normalizedName = platformName ? normalizePlatformName(platformName) : 'Unknown';
 
+  // Debug logging
+  if (process.env.NODE_ENV === 'development' && platform && typeof platform === 'object') {
+    console.log('🎨 getPlatformLogo:', { 
+      platformName, 
+      hasLogoPath: !!platform.logo_path,
+      logo_path: platform.logo_path,
+      fullObject: platform 
+    });
+  }
+
   // 1) If TMDB logo is provided, use it
   if (platform && typeof platform === 'object' && platform.logo_path) {
     const path: string = platform.logo_path;
     if (path.startsWith('http')) return path;
-    if (path.startsWith('/')) return `https://image.tmdb.org/t/p/w92${path}`;
+    if (path.startsWith('/')) {
+      const tmdbUrl = `https://image.tmdb.org/t/p/w92${path}`;
+      console.log('✅ Using TMDB logo:', tmdbUrl);
+      return tmdbUrl;
+    }
   }
 
   // 2) Generate a colored badge (no local file fallback)
+  console.log('⚠️ Falling back to badge for:', normalizedName);
   return generatePlatformBadge(normalizedName);
 }
 
