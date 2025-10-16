@@ -94,10 +94,10 @@ const DiscoverPage: React.FC = () => {
       overview: item.overview,
       genre_ids: item.genre_ids || [],
       media_type: item.media_type as 'movie' | 'tv',
-      streaming_platforms: item.streaming_platforms || [],
-      ...(item.streaming_available && {
-        streaming: item.streaming_platforms?.slice(0, 3) || []
-      })
+      // Include all streaming data formats for compatibility
+      streaming: item.streaming || [],
+      streaming_platforms: item.streaming_platforms || item.streaming || [],
+      streamingPlatforms: item.streamingPlatforms || item.streaming || []
     };
   }, []);
 
