@@ -23,6 +23,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
+  <meta name="build-time" content="20251017-195000">
 
   <!-- Preload Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -156,17 +157,6 @@
   <!-- React Entry -->
   <script type="module" src="/src/main.tsx"></script>
 
-  <!-- Register service worker for cache control -->
-  <script>
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js').then(reg => {
-        console.log('✅ Service worker registered for cache control');
-        // Force update check
-        reg.update();
-      }).catch(err => console.log('Service worker registration failed:', err));
-    }
-  </script>
-
   <!-- GitHub Pages SPA redirect handling -->
   <script>
     // Handle GitHub Pages SPA redirects from 404.html
@@ -182,29 +172,35 @@
     })();
   </script>
 
-  <!-- AGGRESSIVE CACHE CLEAR - October 17, 2025 v3 -->
+  <!-- AGGRESSIVE CACHE CLEAR - October 17, 2025 v4 -->
   <script>
-    // Clear caches but DON'T unregister service workers (we need the SW for cache control)
-    if ('caches' in window) {
-      caches.keys().then(names => {
-        // Only delete old cache versions
-        names.forEach(name => {
-          if (!name.includes('v4-oct17')) {
-            caches.delete(name);
-            console.log('🧹 Cleared old cache:', name);
-          }
+    // COMPLETELY DISABLE ALL CACHING - Clear everything and force fresh load
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(regs => {
+        regs.forEach(r => {
+          console.log('Unregistering service worker:', r.scope);
+          r.unregister();
         });
-        console.log('🧹 Cleared all old cache storage');
       });
     }
     
-    // Force reload without cache after clearing - UPDATED KEY
-    const cacheKey = 'cache_cleared_oct_17_v4';
-    if (performance.navigation.type !== 1 && !sessionStorage.getItem(cacheKey)) {
+    if ('caches' in window) {
+      caches.keys().then(names => {
+        names.forEach(name => {
+          caches.delete(name);
+          console.log('🧹 Deleted cache:', name);
+        });
+        console.log('🧹 All caches cleared');
+      });
+    }
+    
+    // Force complete page reload from server
+    const cacheKey = 'force_reload_oct_17_v5';
+    if (!sessionStorage.getItem(cacheKey)) {
       sessionStorage.setItem(cacheKey, 'true');
-      console.log('🔄 Forcing hard reload...');
-      // Use location.reload(true) for force refresh
-      window.location.href = window.location.href.split('?')[0] + '?_=' + Date.now();
+      console.log('🔄 Forcing complete reload from server...');
+      // Force reload bypassing all caches
+      location.reload(true);
     }
   </script>
 </body>
