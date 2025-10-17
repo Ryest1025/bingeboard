@@ -8,29 +8,7 @@
   "theme_color": "#ef4444",
   "orientation": "portrait-primary",
   "categories": ["entertainment", "lifestyle", "social"],
-  "screenshots": [
-    {
-      "src": "/screenshots/mobile-home.png",
-      "sizes": "390x844",
-      "type": "image/png",
-      "form_factor": "narrow",
-      "label": "Home screen showing trending movies and shows"
-    },
-    {
-      "src": "/screenshots/mobile-watchlist.png", 
-      "sizes": "390x844",
-      "type": "image/png",
-      "form_factor": "narrow",
-      "label": "Personal watchlist with tracking status"
-    },
-    {
-      "src": "/screenshots/desktop-dashboard.png",
-      "sizes": "1920x1080", 
-      "type": "image/png",
-      "form_factor": "wide",
-      "label": "Desktop dashboard with comprehensive tracking"
-    }
-  ],
+  "screenshots": [],
   "icons": [
     {
       "src": "/icons/icon-72x72.png",
