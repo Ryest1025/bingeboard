@@ -163,11 +163,17 @@ const DiscoverPage: React.FC = () => {
   // Fetch comprehensive data for intelligent recommendations
   const fetchAllContent = useCallback(async (): Promise<MediaItem[]> => {
     try {
+      // Get today's date and 90 days from now for upcoming content
+      const today = new Date().toISOString().split('T')[0];
+      const futureDate = new Date();
+      futureDate.setDate(futureDate.getDate() + 90);
+      const future = futureDate.toISOString().split('T')[0];
+
       const promises = [
         // 🔥 Trending Now (released this week)
         apiFetch(`/api/trending/tv/week?includeStreaming=true&limit=20`).then(r => r.json()),
-        // 🌟 Coming Soon (upcoming with high popularity)
-        apiFetch(`/api/tmdb/discover/tv?sort_by=popularity.desc&includeStreaming=true&first_air_date.gte=2025-10-16&limit=20`).then(r => r.json()),
+        // 🌟 Coming Soon (upcoming in next 90 days, sorted by popularity)
+        apiFetch(`/api/tmdb/discover/tv?sort_by=popularity.desc&includeStreaming=true&first_air_date.gte=${today}&first_air_date.lte=${future}&limit=20`).then(r => r.json()),
         // 🏆 Top Rated (high quality shows)
         apiFetch(`/api/tmdb/tv/top_rated?includeStreaming=true&limit=20`).then(r => r.json()),
         // For Smart Categories

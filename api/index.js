@@ -171,11 +171,60 @@ export default async function handler(req, res) {
       if (match) {
         const [, mediaType] = match;
         const urlParams = new URL(url, `http://${req.headers.host}`).searchParams;
+        const includeStreaming = urlParams.get('includeStreaming') === 'true';
         
-        const data = await tmdbFetch(`/discover/${mediaType}`, {
+        // Build TMDB query params
+        const tmdbParams = {
           sort_by: urlParams.get('sort_by') || 'popularity.desc',
           page: urlParams.get('page') || '1'
-        });
+        };
+        
+        // Pass through date filters for upcoming content
+        if (urlParams.get('first_air_date.gte')) {
+          tmdbParams['first_air_date.gte'] = urlParams.get('first_air_date.gte');
+        }
+        if (urlParams.get('first_air_date.lte')) {
+          tmdbParams['first_air_date.lte'] = urlParams.get('first_air_date.lte');
+        }
+        
+        const data = await tmdbFetch(`/discover/${mediaType}`, tmdbParams);
+        
+        // Add streaming data if requested
+        if (includeStreaming && data.results) {
+          const enrichedResults = await Promise.all(
+            data.results.slice(0, 20).map(async (item) => {
+              try {
+                const providers = await tmdbFetch(`/${mediaType}/${item.id}/watch/providers`);
+                const usProviders = providers.results?.US;
+                
+                if (usProviders) {
+                  const allProviders = [
+                    ...(usProviders.flatrate || []),
+                    ...(usProviders.buy || []),
+                    ...(usProviders.rent || [])
+                  ];
+                  
+                  // Deduplicate by provider_id
+                  const uniqueProviders = Array.from(
+                    new Map(allProviders.map(p => [p.provider_id, p])).values()
+                  );
+                  
+                  item.streaming = uniqueProviders.slice(0, 5);
+                }
+              } catch (err) {
+                console.error(`Failed to fetch streaming for ${mediaType} ${item.id}:`, err.message);
+              }
+              return item;
+            })
+          );
+          
+          // Merge enriched results back
+          data.results = [
+            ...enrichedResults,
+            ...data.results.slice(20)
+          ];
+        }
+        
         return res.status(200).json(data);
       }
     }
