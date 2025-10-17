@@ -184,23 +184,22 @@
 
   <!-- AGGRESSIVE CACHE CLEAR - October 17, 2025 v3 -->
   <script>
-    // NUCLEAR: Unregister ALL service workers and clear ALL caches
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.getRegistrations().then(regs => {
-        console.log('🧹 Clearing all service workers and caches...');
-        regs.forEach(r => r.unregister());
-      });
-    }
-    
+    // Clear caches but DON'T unregister service workers (we need the SW for cache control)
     if ('caches' in window) {
       caches.keys().then(names => {
-        names.forEach(name => caches.delete(name));
-        console.log('🧹 Cleared all cache storage');
+        // Only delete old cache versions
+        names.forEach(name => {
+          if (!name.includes('v4-oct17')) {
+            caches.delete(name);
+            console.log('🧹 Cleared old cache:', name);
+          }
+        });
+        console.log('🧹 Cleared all old cache storage');
       });
     }
     
     // Force reload without cache after clearing - UPDATED KEY
-    const cacheKey = 'cache_cleared_oct_17_v3';
+    const cacheKey = 'cache_cleared_oct_17_v4';
     if (performance.navigation.type !== 1 && !sessionStorage.getItem(cacheKey)) {
       sessionStorage.setItem(cacheKey, 'true');
       console.log('🔄 Forcing hard reload...');
