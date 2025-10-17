@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import NavigationHeader from "@/components/navigation-header";
 import { SmartCategoriesComponent } from '@/components/discover/SmartCategoriesComponent';
 import { InteractiveDiscoveryTools } from '@/components/discover/InteractiveDiscoveryTools';
@@ -60,7 +60,8 @@ const DiscoverPage: React.FC = () => {
   const [discoveryFilters, setDiscoveryFilters] = useState({
     platforms: [] as string[],
     genres: [] as string[],
-    timeFilter: null as string | null
+    timeFilter: null as string | null,
+    mood: null as string | null
   });
 
   // Universal intelligent exclusions hook
@@ -253,6 +254,11 @@ const DiscoverPage: React.FC = () => {
     // Implement personality-based recommendations
   };
 
+  const handleMoodFilter = (mood: string) => {
+    setDiscoveryFilters(prev => ({ ...prev, mood: mood || null }));
+    console.log('Mood selected:', mood);
+  };
+
   // Media action handlers using the hook
   const handleMediaClick = (media: MediaItem) => {
     console.log('Media clicked:', media.title || media.name);
@@ -420,7 +426,7 @@ const DiscoverPage: React.FC = () => {
     <div className="min-h-screen bg-slate-950 text-white">
       <NavigationHeader />
 
-      {/* Single Rotating Spotlight */}
+      {/* Single Rotating Spotlight with Smooth Transitions */}
       {!loading && currentSpotlight && currentSpotlight.item && (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 mb-8">
           <div className="relative">
@@ -428,12 +434,14 @@ const DiscoverPage: React.FC = () => {
             {spotlights.length > 1 && (
               <div className="absolute -top-2 right-4 flex gap-2 z-10">
                 {spotlights.map((_, idx) => (
-                  <button
+                  <motion.button
                     key={idx}
                     onClick={() => setCurrentSpotlightIndex(idx)}
+                    whileHover={{ scale: 1.2 }}
+                    whileTap={{ scale: 0.9 }}
                     className={`h-1 rounded-full transition-all duration-300 ${
                       idx === currentSpotlightIndex 
-                        ? 'w-8 bg-white' 
+                        ? 'w-8 bg-white shadow-lg shadow-white/50' 
                         : 'w-4 bg-white/30 hover:bg-white/50'
                     }`}
                     aria-label={`Go to spotlight ${idx + 1}`}
@@ -442,16 +450,30 @@ const DiscoverPage: React.FC = () => {
               </div>
             )}
             
-            <DiscoverSpotlight
-              title={currentSpotlight.title}
-              badge={currentSpotlight.badge}
-              badgeColor={currentSpotlight.color}
-              feature={currentSpotlight.item}
-              onWatchNow={currentSpotlight.action === "reminder" ? handleSetReminder : handleWatchNow}
-              onAddToList={handleAddToWatchlist}
-              ctaText={currentSpotlight.cta}
-              delay={0}
-            />
+            {/* Animated Spotlight Container */}
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={currentSpotlightIndex}
+                initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: -20 }}
+                transition={{ 
+                  duration: 0.5,
+                  ease: [0.4, 0, 0.2, 1] // Custom easing for smooth feel
+                }}
+              >
+                <DiscoverSpotlight
+                  title={currentSpotlight.title}
+                  badge={currentSpotlight.badge}
+                  badgeColor={currentSpotlight.color}
+                  feature={currentSpotlight.item}
+                  onWatchNow={currentSpotlight.action === "reminder" ? handleSetReminder : handleWatchNow}
+                  onAddToList={handleAddToWatchlist}
+                  ctaText={currentSpotlight.cta}
+                  delay={0}
+                />
+              </motion.div>
+            </AnimatePresence>
           </div>
         </div>
       )}
@@ -469,6 +491,7 @@ const DiscoverPage: React.FC = () => {
             onTimeFilter={handleTimeFilter}
             onPersonalityMatch={handlePersonalityMatch}
             onStreamingFilter={handleStreamingFilter}
+            onMoodFilter={handleMoodFilter}
             className="mb-16"
           />
         </motion.div>

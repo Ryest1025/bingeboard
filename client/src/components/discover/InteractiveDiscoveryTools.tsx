@@ -20,7 +20,13 @@ import {
   Shield,
   Zap,
   Globe,
-  Brain
+  Brain,
+  Smile,
+  Flame,
+  CloudRain,
+  Sun,
+  Moon,
+  Sparkle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -31,6 +37,7 @@ interface InteractiveDiscoveryToolsProps {
   onTimeFilter?: (duration: string) => void;
   onPersonalityMatch?: (type: string) => void;
   onStreamingFilter?: (platforms: string[]) => void;
+  onMoodFilter?: (mood: string) => void;
   className?: string;
 }
 
@@ -70,16 +77,35 @@ const streamingPlatforms: StreamingPlatform[] = [
   { id: 'paramount', name: 'Paramount+', icon: '/logos/paramount-plus.png', color: 'bg-blue-700' }
 ];
 
+type MoodOption = {
+  id: string;
+  name: string;
+  icon: any;
+  color: string;
+  description: string;
+};
+
+const moods: MoodOption[] = [
+  { id: 'chill', name: 'Chill', icon: CloudRain, color: 'bg-gradient-to-r from-blue-400 to-cyan-400', description: 'Relaxing & easy-going' },
+  { id: 'intense', name: 'Intense', icon: Flame, color: 'bg-gradient-to-r from-red-500 to-orange-500', description: 'Edge of your seat' },
+  { id: 'funny', name: 'Funny', icon: Smile, color: 'bg-gradient-to-r from-yellow-400 to-orange-400', description: 'Laugh therapy' },
+  { id: 'romantic', name: 'Romantic', icon: Heart, color: 'bg-gradient-to-r from-pink-500 to-rose-500', description: 'Feel the love' },
+  { id: 'inspiring', name: 'Inspiring', icon: Sun, color: 'bg-gradient-to-r from-amber-400 to-yellow-500', description: 'Uplifting stories' },
+  { id: 'mysterious', name: 'Mysterious', icon: Moon, color: 'bg-gradient-to-r from-purple-500 to-indigo-600', description: 'Keep you guessing' },
+];
+
 export const InteractiveDiscoveryTools: React.FC<InteractiveDiscoveryToolsProps> = ({
   onGenreMix,
   onRandomDiscover,
   onTimeFilter,
   onPersonalityMatch,
   onStreamingFilter,
+  onMoodFilter,
   className = ''
 }) => {
   const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
   const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>([]);
+  const [selectedMood, setSelectedMood] = useState<string | null>(null);
   const [isRandomizing, setIsRandomizing] = useState(false);
 
   const handleGenreToggle = (genreId: string) => {
@@ -100,6 +126,12 @@ export const InteractiveDiscoveryTools: React.FC<InteractiveDiscoveryToolsProps>
     onStreamingFilter?.(newSelection);
   };
 
+  const handleMoodSelect = (moodId: string) => {
+    const newMood = selectedMood === moodId ? null : moodId;
+    setSelectedMood(newMood);
+    onMoodFilter?.(newMood || '');
+  };
+
   const handleRandomDiscover = async () => {
     setIsRandomizing(true);
     await new Promise(resolve => setTimeout(resolve, 1500));
@@ -109,6 +141,62 @@ export const InteractiveDiscoveryTools: React.FC<InteractiveDiscoveryToolsProps>
 
   return (
     <div className={`space-y-8 ${className}`}>
+      {/* Mood Selector - New Feature! */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="space-y-4"
+      >
+        <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+          <Sparkles className="w-5 h-5 text-yellow-400" />
+          What's your mood?
+          {selectedMood && (
+            <Badge variant="secondary" className="ml-2 bg-yellow-500/20 text-yellow-300">
+              {moods.find(m => m.id === selectedMood)?.name}
+            </Badge>
+          )}
+        </h3>
+        
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+          {moods.map((mood) => {
+            const isSelected = selectedMood === mood.id;
+            const Icon = mood.icon;
+            
+            return (
+              <motion.button
+                key={mood.id}
+                whileHover={{ scale: 1.05, y: -2 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => handleMoodSelect(mood.id)}
+                className={`p-4 rounded-2xl border-2 transition-all duration-300 relative overflow-hidden ${
+                  isSelected
+                    ? 'border-white shadow-xl'
+                    : 'border-slate-700 hover:border-slate-600 bg-slate-800/50 hover:bg-slate-800/70'
+                }`}
+              >
+                {isSelected && (
+                  <motion.div
+                    layoutId="mood-selected-bg"
+                    className={`absolute inset-0 ${mood.color} opacity-20`}
+                    transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                  />
+                )}
+                <div className="relative z-10 flex flex-col items-center gap-2">
+                  <div className={`w-12 h-12 rounded-xl ${mood.color} flex items-center justify-center shadow-lg`}>
+                    <Icon className="w-6 h-6 text-white" />
+                  </div>
+                  <div className="text-center">
+                    <span className={`block text-sm font-semibold ${isSelected ? 'text-white' : 'text-slate-300'}`}>
+                      {mood.name}
+                    </span>
+                    <span className="text-xs text-slate-400">{mood.description}</span>
+                  </div>
+                </div>
+              </motion.button>
+            );
+          })}
+        </div>
+      </motion.div>
       {/* Streaming Platform Filter */}
       <div className="space-y-4">
         <h3 className="text-lg font-semibold text-white flex items-center gap-2">
@@ -210,6 +298,7 @@ export const InteractiveDiscoveryTools: React.FC<InteractiveDiscoveryToolsProps>
                 onClick={() => {
                   setSelectedGenres([]);
                   setSelectedPlatforms([]);
+                  setSelectedMood(null);
                 }}
                 className="text-slate-400 hover:text-white"
               >
@@ -219,6 +308,11 @@ export const InteractiveDiscoveryTools: React.FC<InteractiveDiscoveryToolsProps>
             </div>
             
             <div className="flex flex-wrap gap-2 mt-3">
+              {selectedMood && (
+                <Badge variant="secondary" className="bg-yellow-500/20 text-yellow-300">
+                  Mood: {moods.find(m => m.id === selectedMood)?.name}
+                </Badge>
+              )}
               {selectedPlatforms.map(platformId => {
                 const platform = streamingPlatforms.find(p => p.id === platformId);
                 return (
