@@ -1,5 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import { Bell, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import StreamingLogos from '@/components/streaming-logos';
 
@@ -10,6 +11,8 @@ interface MediaItem {
   poster_path?: string;
   backdrop_path?: string;
   overview?: string;
+  release_date?: string;
+  first_air_date?: string;
   streaming?: Array<{
     provider_id?: number;
     provider_name?: string;
@@ -24,8 +27,10 @@ interface DiscoverSpotlightProps {
   feature: MediaItem | null;
   onWatchNow: (media: MediaItem) => void;
   onAddToList: (media: MediaItem) => void;
+  onSetReminder?: (media: MediaItem) => void;
   ctaText?: string;
   delay?: number;
+  isUpcoming?: boolean;
 }
 
 export const DiscoverSpotlight: React.FC<DiscoverSpotlightProps> = ({
@@ -35,8 +40,10 @@ export const DiscoverSpotlight: React.FC<DiscoverSpotlightProps> = ({
   feature,
   onWatchNow,
   onAddToList,
+  onSetReminder,
   ctaText = 'Watch Now',
-  delay = 0
+  delay = 0,
+  isUpcoming = false
 }) => {
   if (!feature) return null;
 
@@ -91,16 +98,55 @@ export const DiscoverSpotlight: React.FC<DiscoverSpotlightProps> = ({
               </div>
             )}
             <div className="flex gap-2 pt-1">
-              <Button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onWatchNow(feature);
-                }}
-                size="sm"
-                className="bg-white text-black hover:bg-gray-200 px-4 py-1.5 text-sm font-semibold"
-              >
-                ▶ {ctaText}
-              </Button>
+              {!isUpcoming && (
+                <Button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onWatchNow(feature);
+                  }}
+                  size="sm"
+                  className="bg-white text-black hover:bg-gray-200 px-4 py-1.5 text-sm font-semibold"
+                >
+                  ▶ {ctaText}
+                </Button>
+              )}
+              
+              {isUpcoming && onSetReminder && (
+                <>
+                  <Button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onSetReminder(feature);
+                    }}
+                    size="sm"
+                    className="bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-700 hover:to-pink-700 px-4 py-1.5 text-sm font-semibold shadow-lg"
+                  >
+                    <Bell className="w-4 h-4 mr-1.5" />
+                    Remind Me
+                  </Button>
+                  <Button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      // Add to calendar
+                      const releaseDate = feature.release_date || feature.first_air_date;
+                      if (releaseDate) {
+                        const date = new Date(releaseDate);
+                        const dateStr = date.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+                        const title = feature.title || feature.name;
+                        const url = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(title + ' Release')}&dates=${dateStr}/${dateStr}&details=${encodeURIComponent('New release on streaming platforms')}`;
+                        window.open(url, '_blank');
+                      }
+                    }}
+                    size="sm"
+                    variant="outline"
+                    className="text-white border-white/50 hover:bg-white/10 px-4 py-1.5 text-sm"
+                  >
+                    <Calendar className="w-4 h-4 mr-1.5" />
+                    Add to Calendar
+                  </Button>
+                </>
+              )}
+              
               <Button
                 onClick={(e) => {
                   e.stopPropagation();

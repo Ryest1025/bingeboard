@@ -23,6 +23,7 @@ interface InteractiveDiscoveryToolsProps {
   onTimeFilter: (duration: string) => void;
   onRandomDiscover: () => void;
   onPersonalityMatch: (type: string) => void;
+  className?: string;
 }
 
 type GenreType = {

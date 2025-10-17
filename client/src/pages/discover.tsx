@@ -92,9 +92,9 @@ const DiscoverPage: React.FC = () => {
 
   // Combine spotlights into array for rotation
   const spotlights = useMemo(() => [
-    { item: spotlight1, title: "Just Released & Trending", badge: "🔥 TRENDING NOW", color: "bg-gradient-to-r from-red-600 to-orange-600", cta: "Watch Now", action: "watch" },
-    { item: spotlight2, title: "Coming Soon – Highly Anticipated", badge: "🌟 UPCOMING", color: "bg-gradient-to-r from-purple-600 to-pink-600", cta: "Set Reminder", action: "reminder" },
-    { item: spotlight3, title: "#1 Show You Haven't Added Yet", badge: "🏆 EDITOR'S PICK", color: "bg-gradient-to-r from-teal-600 to-cyan-600", cta: "Watch Now", action: "watch" },
+    { item: spotlight1, title: "Just Released & Trending", badge: "🔥 TRENDING NOW", color: "bg-gradient-to-r from-red-600 to-orange-600", cta: "Watch Now", action: "watch", isUpcoming: false },
+    { item: spotlight2, title: "Coming Soon – Highly Anticipated", badge: "🌟 UPCOMING", color: "bg-gradient-to-r from-purple-600 to-pink-600", cta: "Remind Me", action: "reminder", isUpcoming: true },
+    { item: spotlight3, title: "#1 Show You Haven't Added Yet", badge: "🏆 EDITOR'S PICK", color: "bg-gradient-to-r from-teal-600 to-cyan-600", cta: "Watch Now", action: "watch", isUpcoming: false },
   ].filter(s => s.item !== null), [spotlight1, spotlight2, spotlight3]);
 
   // Auto-rotate spotlight every 8 seconds
@@ -462,10 +462,12 @@ const DiscoverPage: React.FC = () => {
                   badge={currentSpotlight.badge}
                   badgeColor={currentSpotlight.color}
                   feature={currentSpotlight.item}
-                  onWatchNow={currentSpotlight.action === "reminder" ? handleSetReminder : handleWatchNow}
+                  onWatchNow={handleWatchNow}
                   onAddToList={handleAddToWatchlist}
+                  onSetReminder={handleSetReminder}
                   ctaText={currentSpotlight.cta}
                   delay={0}
+                  isUpcoming={currentSpotlight.isUpcoming}
                 />
               </motion.div>
             </AnimatePresence>
