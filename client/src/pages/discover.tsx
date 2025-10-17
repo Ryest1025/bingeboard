@@ -250,8 +250,95 @@ const DiscoverPage: React.FC = () => {
 
   const handlePersonalityMatch = (type: string) => {
     console.log('Quick filter selected:', type);
-    // Quick filters like 'trending', 'highly-rated', 'award-winners', etc.
-    // This will be implemented to actually filter the smart categories
+    
+    // Filter media based on quick filter type
+    let filtered = [...allMedia];
+    
+    switch (type) {
+      case 'trending':
+        // Most popular (highest vote_count or popularity)
+        filtered = filtered.sort((a, b) => {
+          const popularityA = (a as any).popularity || (a as any).vote_count || 0;
+          const popularityB = (b as any).popularity || (b as any).vote_count || 0;
+          return popularityB - popularityA;
+        }).slice(0, 50);
+        break;
+        
+      case 'highly-rated':
+        // 8.0+ rating
+        filtered = filtered
+          .filter(m => (m.vote_average || 0) >= 8.0)
+          .sort((a, b) => (b.vote_average || 0) - (a.vote_average || 0))
+          .slice(0, 50);
+        break;
+        
+      case 'award-winners':
+        // 7.5+ rating (award-quality content)
+        filtered = filtered
+          .filter(m => (m.vote_average || 0) >= 7.5)
+          .sort((a, b) => (b.vote_average || 0) - (a.vote_average || 0))
+          .slice(0, 50);
+        break;
+        
+      case 'new-seasons':
+        // TV shows with recent or upcoming air dates
+        filtered = filtered
+          .filter(m => {
+            const mediaType = m.media_type || (m.name ? 'tv' : 'movie');
+            if (mediaType !== 'tv') return false;
+            
+            const date = m.first_air_date || m.release_date;
+            if (!date) return false;
+            
+            const airDate = new Date(date);
+            const threeMonthsAgo = new Date();
+            threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+            const threeMonthsFromNow = new Date();
+            threeMonthsFromNow.setMonth(threeMonthsFromNow.getMonth() + 3);
+            
+            return airDate >= threeMonthsAgo && airDate <= threeMonthsFromNow;
+          })
+          .sort((a, b) => {
+            const dateA = new Date(a.first_air_date || a.release_date || '');
+            const dateB = new Date(b.first_air_date || b.release_date || '');
+            return dateB.getTime() - dateA.getTime();
+          })
+          .slice(0, 50);
+        break;
+        
+      case 'binge-worthy':
+        // TV shows with high ratings
+        filtered = filtered
+          .filter(m => {
+            const mediaType = m.media_type || (m.name ? 'tv' : 'movie');
+            return mediaType === 'tv' && (m.vote_average || 0) >= 7.0;
+          })
+          .sort((a, b) => (b.vote_average || 0) - (a.vote_average || 0))
+          .slice(0, 50);
+        break;
+        
+      case 'hidden-gems':
+        // High rating (7.0+) but less known
+        filtered = filtered
+          .filter(m => {
+            const rating = m.vote_average || 0;
+            const popularity = (m as any).popularity || (m as any).vote_count || 0;
+            return rating >= 7.0 && popularity < 500; // Less popular but high quality
+          })
+          .sort((a, b) => (b.vote_average || 0) - (a.vote_average || 0))
+          .slice(0, 50);
+        break;
+        
+      default:
+        // No filter - show all
+        filtered = filtered.slice(0, 50);
+    }
+    
+    // Apply the filter by updating filteredAllMedia
+    setDiscoveryFilters(prev => ({ ...prev, quickFilter: type }));
+    
+    // Force re-render with filtered content
+    setAllMedia([...filtered]);
   };
 
   // Media action handlers using the hook

@@ -50,14 +50,79 @@ export const SmartCategoriesComponent: React.FC<SmartCategoriesProps> = ({
   onSetReminder,
   className = ''
 }) => {
-  // Simulate personalized category assignment
+  // Intelligent category assignment based on actual media properties
   const getCategorizedMedia = () => {
     const categorized: Record<string, any[]> = {};
     
     SMART_CATEGORIES.forEach((category: SmartCategory) => {
-      // Randomly assign 4-6 items to each category for demo
-      const shuffled = [...mediaData].sort(() => 0.5 - Math.random());
-      categorized[category.key] = shuffled.slice(0, Math.floor(Math.random() * 3) + 4);
+      let filtered: any[] = [];
+      
+      switch (category.key) {
+        case 'because-you-loved':
+          // High rated shows (8.0+) - similar to what users love
+          filtered = mediaData
+            .filter(m => (m.vote_average || 0) >= 8.0)
+            .sort((a, b) => (b.vote_average || 0) - (a.vote_average || 0))
+            .slice(0, 8);
+          break;
+          
+        case 'weekend-bingers':
+          // TV shows with multiple seasons (binge-worthy)
+          filtered = mediaData
+            .filter(m => m.media_type === 'tv' || m.name)
+            .sort((a, b) => (b.vote_average || 0) - (a.vote_average || 0))
+            .slice(0, 8);
+          break;
+          
+        case 'award-season-winners':
+          // Highest rated content (award-quality)
+          filtered = mediaData
+            .filter(m => (m.vote_average || 0) >= 7.5)
+            .sort((a, b) => (b.vote_average || 0) - (a.vote_average || 0))
+            .slice(0, 8);
+          break;
+          
+        case 'quick-wins':
+          // Movies (typically under 2-3 hours)
+          filtered = mediaData
+            .filter(m => m.media_type === 'movie' || m.title)
+            .slice(0, 8);
+          break;
+          
+        case 'upcoming-with-reminders':
+          // Shows with upcoming air dates
+          filtered = mediaData
+            .filter(m => {
+              const date = m.first_air_date || m.release_date;
+              if (!date) return false;
+              const airDate = new Date(date);
+              const today = new Date();
+              return airDate > today;
+            })
+            .sort((a, b) => {
+              const dateA = new Date(a.first_air_date || a.release_date || '');
+              const dateB = new Date(b.first_air_date || b.release_date || '');
+              return dateA.getTime() - dateB.getTime();
+            })
+            .slice(0, 8);
+          break;
+          
+        case 'ai-curated-surprise':
+          // Mix of highly rated content from different sources
+          filtered = mediaData
+            .filter(m => (m.vote_average || 0) >= 7.0)
+            .sort(() => 0.5 - Math.random())
+            .slice(0, 8);
+          break;
+          
+        default:
+          // For other categories, show top rated content
+          filtered = mediaData
+            .sort((a, b) => (b.vote_average || 0) - (a.vote_average || 0))
+            .slice(0, 8);
+      }
+      
+      categorized[category.key] = filtered;
     });
     
     return categorized;
