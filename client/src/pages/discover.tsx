@@ -99,16 +99,35 @@ const DiscoverPage: React.FC = () => {
 
   // Auto-rotate spotlight every 8 seconds
   useEffect(() => {
-    if (spotlights.length <= 1) return;
+    if (spotlights.length <= 1) {
+      console.log('⏸️ Spotlight rotation disabled - only', spotlights.length, 'spotlight(s)');
+      return;
+    }
     
+    console.log('▶️ Starting spotlight auto-rotation with', spotlights.length, 'spotlights');
     const interval = setInterval(() => {
-      setCurrentSpotlightIndex(prev => (prev + 1) % spotlights.length);
+      setCurrentSpotlightIndex(prev => {
+        const next = (prev + 1) % spotlights.length;
+        console.log('🔄 Spotlight rotating:', prev, '→', next);
+        return next;
+      });
     }, 8000);
 
-    return () => clearInterval(interval);
+    return () => {
+      console.log('⏹️ Clearing spotlight rotation interval');
+      clearInterval(interval);
+    };
   }, [spotlights.length]);
 
-  const currentSpotlight = spotlights[currentSpotlightIndex];
+  // Reset index if out of bounds (when spotlights data loads)
+  useEffect(() => {
+    if (currentSpotlightIndex >= spotlights.length && spotlights.length > 0) {
+      console.log('🔧 Resetting spotlight index to 0');
+      setCurrentSpotlightIndex(0);
+    }
+  }, [spotlights.length, currentSpotlightIndex]);
+
+  const currentSpotlight = spotlights[currentSpotlightIndex] || spotlights[0];
 
   // Media actions hook for all functionality
   const {
