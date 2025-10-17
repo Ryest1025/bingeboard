@@ -60,8 +60,7 @@ const DiscoverPage: React.FC = () => {
   const [discoveryFilters, setDiscoveryFilters] = useState({
     platforms: [] as string[],
     genres: [] as string[],
-    timeFilter: null as string | null,
-    mood: null as string | null
+    timeFilter: null as string | null
   });
 
   // Universal intelligent exclusions hook
@@ -250,13 +249,9 @@ const DiscoverPage: React.FC = () => {
   };
 
   const handlePersonalityMatch = (type: string) => {
-    console.log('Personality match:', type);
-    // Implement personality-based recommendations
-  };
-
-  const handleMoodFilter = (mood: string) => {
-    setDiscoveryFilters(prev => ({ ...prev, mood: mood || null }));
-    console.log('Mood selected:', mood);
+    console.log('Quick filter selected:', type);
+    // Quick filters like 'trending', 'highly-rated', 'award-winners', etc.
+    // This will be implemented to actually filter the smart categories
   };
 
   // Media action handlers using the hook
@@ -491,7 +486,6 @@ const DiscoverPage: React.FC = () => {
             onTimeFilter={handleTimeFilter}
             onPersonalityMatch={handlePersonalityMatch}
             onStreamingFilter={handleStreamingFilter}
-            onMoodFilter={handleMoodFilter}
             className="mb-16"
           />
         </motion.div>

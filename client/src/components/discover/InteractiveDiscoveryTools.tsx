@@ -1,44 +1,28 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Shuffle, 
-  Sliders, 
-  Clock,
-  Users,
+  TrendingUp,
   Star,
-  Filter,
-  RefreshCw,
+  Award,
+  Clock,
+  Bell,
   Sparkles,
   Tv,
-  Film,
-  Music,
-  Gamepad2,
-  Book,
-  Camera,
-  Mountain,
-  Heart,
-  Shield,
-  Zap,
-  Globe,
-  Brain,
-  Smile,
+  Filter,
+  RefreshCw,
   Flame,
-  CloudRain,
-  Sun,
-  Moon,
-  Sparkle
+  Trophy,
+  Calendar
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 
 interface InteractiveDiscoveryToolsProps {
-  onGenreMix?: (genres: string[]) => void;
-  onRandomDiscover?: () => void;
-  onTimeFilter?: (duration: string) => void;
-  onPersonalityMatch?: (type: string) => void;
-  onStreamingFilter?: (platforms: string[]) => void;
-  onMoodFilter?: (mood: string) => void;
-  className?: string;
+  onStreamingFilter: (platforms: string[]) => void;
+  onGenreMix: (genres: string[]) => void;
+  onTimeFilter: (duration: string) => void;
+  onRandomDiscover: () => void;
+  onPersonalityMatch: (type: string) => void;
 }
 
 type GenreType = {
@@ -77,7 +61,7 @@ const streamingPlatforms: StreamingPlatform[] = [
   { id: 'paramount', name: 'Paramount+', icon: '/logos/paramount-plus.png', color: 'bg-blue-700' }
 ];
 
-type MoodOption = {
+type QuickFilterOption = {
   id: string;
   name: string;
   icon: any;
@@ -85,13 +69,13 @@ type MoodOption = {
   description: string;
 };
 
-const moods: MoodOption[] = [
-  { id: 'chill', name: 'Chill', icon: CloudRain, color: 'bg-gradient-to-r from-blue-400 to-cyan-400', description: 'Relaxing & easy-going' },
-  { id: 'intense', name: 'Intense', icon: Flame, color: 'bg-gradient-to-r from-red-500 to-orange-500', description: 'Edge of your seat' },
-  { id: 'funny', name: 'Funny', icon: Smile, color: 'bg-gradient-to-r from-yellow-400 to-orange-400', description: 'Laugh therapy' },
-  { id: 'romantic', name: 'Romantic', icon: Heart, color: 'bg-gradient-to-r from-pink-500 to-rose-500', description: 'Feel the love' },
-  { id: 'inspiring', name: 'Inspiring', icon: Sun, color: 'bg-gradient-to-r from-amber-400 to-yellow-500', description: 'Uplifting stories' },
-  { id: 'mysterious', name: 'Mysterious', icon: Moon, color: 'bg-gradient-to-r from-purple-500 to-indigo-600', description: 'Keep you guessing' },
+const quickFilters: QuickFilterOption[] = [
+  { id: 'trending', name: 'Most Popular', icon: TrendingUp, color: 'bg-gradient-to-r from-red-500 to-orange-500', description: 'Everyone\'s watching' },
+  { id: 'highly-rated', name: 'Highly Rated', icon: Star, color: 'bg-gradient-to-r from-yellow-400 to-amber-500', description: '8.0+ IMDb rating' },
+  { id: 'award-winners', name: 'Award Winners', icon: Trophy, color: 'bg-gradient-to-r from-purple-500 to-pink-500', description: 'Emmy & Golden Globe' },
+  { id: 'new-seasons', name: 'New Seasons', icon: Bell, color: 'bg-gradient-to-r from-blue-500 to-cyan-500', description: 'Fresh episodes' },
+  { id: 'binge-worthy', name: 'Binge-Worthy', icon: Flame, color: 'bg-gradient-to-r from-orange-500 to-red-600', description: 'Full seasons ready' },
+  { id: 'hidden-gems', name: 'Hidden Gems', icon: Sparkles, color: 'bg-gradient-to-r from-teal-500 to-emerald-500', description: 'Underrated classics' },
 ];
 
 export const InteractiveDiscoveryTools: React.FC<InteractiveDiscoveryToolsProps> = ({
@@ -100,12 +84,11 @@ export const InteractiveDiscoveryTools: React.FC<InteractiveDiscoveryToolsProps>
   onTimeFilter,
   onPersonalityMatch,
   onStreamingFilter,
-  onMoodFilter,
   className = ''
 }) => {
   const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
   const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>([]);
-  const [selectedMood, setSelectedMood] = useState<string | null>(null);
+  const [selectedFilter, setSelectedFilter] = useState<string | null>(null);
   const [isRandomizing, setIsRandomizing] = useState(false);
 
   const handleGenreToggle = (genreId: string) => {
@@ -126,10 +109,11 @@ export const InteractiveDiscoveryTools: React.FC<InteractiveDiscoveryToolsProps>
     onStreamingFilter?.(newSelection);
   };
 
-  const handleMoodSelect = (moodId: string) => {
-    const newMood = selectedMood === moodId ? null : moodId;
-    setSelectedMood(newMood);
-    onMoodFilter?.(newMood || '');
+  const handleQuickFilter = (filterId: string) => {
+    const newFilter = selectedFilter === filterId ? null : filterId;
+    setSelectedFilter(newFilter);
+    // This will trigger the onPersonalityMatch callback with the filter type
+    onPersonalityMatch?.(newFilter || '');
   };
 
   const handleRandomDiscover = async () => {
@@ -141,33 +125,33 @@ export const InteractiveDiscoveryTools: React.FC<InteractiveDiscoveryToolsProps>
 
   return (
     <div className={`space-y-8 ${className}`}>
-      {/* Mood Selector - New Feature! */}
+      {/* Quick Filters - What Users Actually Care About */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className="space-y-4"
       >
         <h3 className="text-lg font-semibold text-white flex items-center gap-2">
-          <Sparkles className="w-5 h-5 text-yellow-400" />
-          What's your mood?
-          {selectedMood && (
-            <Badge variant="secondary" className="ml-2 bg-yellow-500/20 text-yellow-300">
-              {moods.find(m => m.id === selectedMood)?.name}
+          <Filter className="w-5 h-5 text-cyan-400" />
+          Quick Filters
+          {selectedFilter && (
+            <Badge variant="secondary" className="ml-2 bg-cyan-500/20 text-cyan-300">
+              {quickFilters.find(f => f.id === selectedFilter)?.name}
             </Badge>
           )}
         </h3>
         
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-          {moods.map((mood) => {
-            const isSelected = selectedMood === mood.id;
-            const Icon = mood.icon;
+          {quickFilters.map((filter) => {
+            const isSelected = selectedFilter === filter.id;
+            const Icon = filter.icon;
             
             return (
               <motion.button
-                key={mood.id}
+                key={filter.id}
                 whileHover={{ scale: 1.05, y: -2 }}
                 whileTap={{ scale: 0.95 }}
-                onClick={() => handleMoodSelect(mood.id)}
+                onClick={() => handleQuickFilter(filter.id)}
                 className={`p-4 rounded-2xl border-2 transition-all duration-300 relative overflow-hidden ${
                   isSelected
                     ? 'border-white shadow-xl'
@@ -176,20 +160,20 @@ export const InteractiveDiscoveryTools: React.FC<InteractiveDiscoveryToolsProps>
               >
                 {isSelected && (
                   <motion.div
-                    layoutId="mood-selected-bg"
-                    className={`absolute inset-0 ${mood.color} opacity-20`}
+                    layoutId="filter-selected-bg"
+                    className={`absolute inset-0 ${filter.color} opacity-20`}
                     transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
                   />
                 )}
                 <div className="relative z-10 flex flex-col items-center gap-2">
-                  <div className={`w-12 h-12 rounded-xl ${mood.color} flex items-center justify-center shadow-lg`}>
+                  <div className={`w-12 h-12 rounded-xl ${filter.color} flex items-center justify-center shadow-lg`}>
                     <Icon className="w-6 h-6 text-white" />
                   </div>
                   <div className="text-center">
                     <span className={`block text-sm font-semibold ${isSelected ? 'text-white' : 'text-slate-300'}`}>
-                      {mood.name}
+                      {filter.name}
                     </span>
-                    <span className="text-xs text-slate-400">{mood.description}</span>
+                    <span className="text-xs text-slate-400">{filter.description}</span>
                   </div>
                 </div>
               </motion.button>
@@ -280,7 +264,7 @@ export const InteractiveDiscoveryTools: React.FC<InteractiveDiscoveryToolsProps>
 
       {/* Active Filters Display */}
       <AnimatePresence>
-        {(selectedGenres.length > 0 || selectedPlatforms.length > 0) && (
+        {(selectedGenres.length > 0 || selectedPlatforms.length > 0 || selectedFilter) && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -298,7 +282,7 @@ export const InteractiveDiscoveryTools: React.FC<InteractiveDiscoveryToolsProps>
                 onClick={() => {
                   setSelectedGenres([]);
                   setSelectedPlatforms([]);
-                  setSelectedMood(null);
+                  setSelectedFilter(null);
                 }}
                 className="text-slate-400 hover:text-white"
               >
@@ -308,9 +292,9 @@ export const InteractiveDiscoveryTools: React.FC<InteractiveDiscoveryToolsProps>
             </div>
             
             <div className="flex flex-wrap gap-2 mt-3">
-              {selectedMood && (
-                <Badge variant="secondary" className="bg-yellow-500/20 text-yellow-300">
-                  Mood: {moods.find(m => m.id === selectedMood)?.name}
+              {selectedFilter && (
+                <Badge variant="secondary" className="bg-cyan-500/20 text-cyan-300">
+                  {quickFilters.find(f => f.id === selectedFilter)?.name}
                 </Badge>
               )}
               {selectedPlatforms.map(platformId => {
