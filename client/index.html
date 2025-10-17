@@ -171,7 +171,7 @@
     })();
   </script>
 
-  <!-- AGGRESSIVE CACHE CLEAR - October 17, 2025 -->
+  <!-- AGGRESSIVE CACHE CLEAR - October 17, 2025 v3 -->
   <script>
     // NUCLEAR: Unregister ALL service workers and clear ALL caches
     if ('serviceWorker' in navigator) {
@@ -188,11 +188,13 @@
       });
     }
     
-    // Force reload without cache after clearing
-    if (performance.navigation.type !== 1 && !sessionStorage.getItem('cache_cleared_oct_17')) {
-      sessionStorage.setItem('cache_cleared_oct_17', 'true');
+    // Force reload without cache after clearing - UPDATED KEY
+    const cacheKey = 'cache_cleared_oct_17_v3';
+    if (performance.navigation.type !== 1 && !sessionStorage.getItem(cacheKey)) {
+      sessionStorage.setItem(cacheKey, 'true');
       console.log('🔄 Forcing hard reload...');
-      window.location.reload(true);
+      // Use location.reload(true) for force refresh
+      window.location.href = window.location.href.split('?')[0] + '?_=' + Date.now();
     }
   </script>
 </body>
