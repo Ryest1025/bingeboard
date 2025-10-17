@@ -19,7 +19,7 @@
   <meta http-equiv="X-Content-Type-Options" content="nosniff">
   <meta http-equiv="X-XSS-Protection" content="1; mode=block">
   
-  <!-- NUCLEAR CACHE BUSTING - October 13, 2025 7:10pm -->
+  <!-- NUCLEAR CACHE BUSTING - October 17, 2025 -->
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
@@ -171,7 +171,7 @@
     })();
   </script>
 
-  <!-- AGGRESSIVE CACHE CLEAR - October 13, 2025 8:00pm -->
+  <!-- AGGRESSIVE CACHE CLEAR - October 17, 2025 -->
   <script>
     // NUCLEAR: Unregister ALL service workers and clear ALL caches
     if ('serviceWorker' in navigator) {
@@ -189,8 +189,8 @@
     }
     
     // Force reload without cache after clearing
-    if (performance.navigation.type !== 1 && !sessionStorage.getItem('cache_cleared_oct_13')) {
-      sessionStorage.setItem('cache_cleared_oct_13', 'true');
+    if (performance.navigation.type !== 1 && !sessionStorage.getItem('cache_cleared_oct_17')) {
+      sessionStorage.setItem('cache_cleared_oct_17', 'true');
       console.log('🔄 Forcing hard reload...');
       window.location.reload(true);
     }
