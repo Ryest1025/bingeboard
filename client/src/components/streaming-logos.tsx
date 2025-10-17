@@ -139,13 +139,13 @@ export default function StreamingLogos({ providers = [], size = 'md', maxDisplay
   return (
     <div className="flex items-center gap-2">
       {displayedProviders.map((provider: any, index: number) => {
-        // Use the entire provider object so getPlatformLogo can access logo_path
-        const logoUrl = getPlatformLogo(provider);
+        // Use local logos directly (same as landing page) - pass just the name
+        const logoUrl = getPlatformLogo(provider.provider_name);
         
         return (
           <div
             key={`${provider.provider_id || index}-${provider.provider_name}`}
-            className={`${sizeClasses[size]} rounded-md overflow-hidden flex items-center justify-center bg-white/10 p-1`}
+            className={`${sizeClasses[size]} rounded-md overflow-hidden flex items-center justify-center bg-white p-1`}
             title={provider.provider_name}
           >
             <img
@@ -153,7 +153,7 @@ export default function StreamingLogos({ providers = [], size = 'md', maxDisplay
               alt={provider.provider_name}
               className={`${sizeClasses[size]} object-contain`}
               onError={(e) => {
-                // Fallback to colored badge if TMDB logo fails to load
+                // Fallback to colored badge if local logo fails to load
                 const target = e.target as HTMLImageElement;
                 const parent = target.parentElement;
                 

@@ -147,37 +147,34 @@ export function normalizePlatformName(platformName: string): string {
 }
 
 /**
- * Get platform logo URL - prioritizes API-provided logos over local files
- * @param platform - Platform name or object with logo_path
- * @param logoPath - Optional logo path (could be TMDB path or external URL)
+ * Get platform logo URL - uses local SVG files (same as landing page)
+ * @param platform - Platform name or object with provider_name
  */
 export const getPlatformLogo = (platform: string | { name?: string; provider_name?: string; logo_path?: string } | any): string => {
   const platformName: string | undefined = typeof platform === 'string' ? platform : (platform?.name || platform?.provider_name);
   const normalizedName = platformName ? normalizePlatformName(platformName) : 'Unknown';
 
-  // Debug logging
-  if (process.env.NODE_ENV === 'development' && platform && typeof platform === 'object') {
-    console.log('🎨 getPlatformLogo:', { 
-      platformName, 
-      hasLogoPath: !!platform.logo_path,
-      logo_path: platform.logo_path,
-      fullObject: platform 
-    });
+  // 1) Check for local logo files first (same as landing page)
+  const localLogo = PLATFORM_LOGOS[normalizedName] || PLATFORM_LOGOS[normalizedName.toLowerCase()];
+  if (localLogo) {
+    return localLogo;
   }
 
-  // 1) If TMDB logo is provided, use it
-  if (platform && typeof platform === 'object' && platform.logo_path) {
-    const path: string = platform.logo_path;
-    if (path.startsWith('http')) return path;
-    if (path.startsWith('/')) {
-      const tmdbUrl = `https://image.tmdb.org/t/p/w92${path}`;
-      console.log('✅ Using TMDB logo:', tmdbUrl);
-      return tmdbUrl;
+  // 2) Try common variations
+  const variations = [
+    platformName,
+    platformName?.toLowerCase(),
+    platformName?.replace(/\s+/g, ''),
+    platformName?.replace(/\+/g, ' Plus'),
+  ];
+
+  for (const variation of variations) {
+    if (variation && PLATFORM_LOGOS[variation]) {
+      return PLATFORM_LOGOS[variation];
     }
   }
 
-  // 2) Generate a colored badge (no local file fallback)
-  console.log('⚠️ Falling back to badge for:', normalizedName);
+  // 3) Fallback to colored badge if no local logo found
   return generatePlatformBadge(normalizedName);
 }
 
