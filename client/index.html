@@ -156,6 +156,17 @@
   <!-- React Entry -->
   <script type="module" src="/src/main.tsx"></script>
 
+  <!-- Register service worker for cache control -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js').then(reg => {
+        console.log('✅ Service worker registered for cache control');
+        // Force update check
+        reg.update();
+      }).catch(err => console.log('Service worker registration failed:', err));
+    }
+  </script>
+
   <!-- GitHub Pages SPA redirect handling -->
   <script>
     // Handle GitHub Pages SPA redirects from 404.html

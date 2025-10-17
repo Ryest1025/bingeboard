@@ -1,7 +1,7 @@
-// Service Worker for BingeBoard PWA
-const CACHE_NAME = 'bingeboard-v3';
-const STATIC_CACHE_NAME = 'bingeboard-static-v3';
-const DYNAMIC_CACHE_NAME = 'bingeboard-dynamic-v3';
+// Service Worker for BingeBoard PWA - FORCE CACHE CLEAR Oct 17 2025
+const CACHE_NAME = 'bingeboard-v4-oct17';
+const STATIC_CACHE_NAME = 'bingeboard-static-v4-oct17';
+const DYNAMIC_CACHE_NAME = 'bingeboard-dynamic-v4-oct17';
 
 // Static assets to cache immediately
 const STATIC_ASSETS = [
@@ -204,8 +204,11 @@ async function navigationStrategy(request) {
 
 // Helper functions
 function isStaticAsset(pathname) {
-  return pathname.includes('.js') || 
-         pathname.includes('.css') || 
+  // NEVER cache JS files - always fetch fresh to avoid stale bundle issues
+  if (pathname.includes('.js')) {
+    return false;
+  }
+  return pathname.includes('.css') || 
          pathname.includes('.png') || 
          pathname.includes('.jpg') || 
          pathname.includes('.svg') || 
