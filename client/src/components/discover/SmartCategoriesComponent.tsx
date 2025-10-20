@@ -27,7 +27,7 @@ interface SmartCategoriesProps {
   className?: string;
 }
 
-// Icon mapping for category display
+// Icon mapping for category display - Oct 17 2025 fix
 const iconMap = {
   'heart': Heart,
   'calendar': Calendar,
