@@ -13,7 +13,12 @@ import {
   Flame,
   Trophy,
   Calendar,
-  Zap
+  Zap,
+  Heart,
+  Users,
+  Shield,
+  Globe,
+  Mountain
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
