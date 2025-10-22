@@ -222,7 +222,7 @@ export const SmartCategoriesComponent: React.FC<SmartCategoriesProps> = ({
                     initial={{ opacity: 0, x: 50 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: (categoryIndex * 0.1) + (index * 0.05), duration: 0.4 }}
-                    className="flex-shrink-0 w-56"
+                    className="flex-shrink-0 w-56 h-full flex"
                   >
                     <IntelligentCard
                       media={media}
@@ -232,7 +232,7 @@ export const SmartCategoriesComponent: React.FC<SmartCategoriesProps> = ({
                       onAddToWatchlist={(m) => handleCardAction(m, 'watchlist', category.key)}
                       onWatchTrailer={(m) => handleCardAction(m, 'trailer', category.key)}
                       onShowInfo={(m) => handleCardAction(m, 'info', category.key)}
-                      className="h-full"
+                      className="h-full w-full"
                     />
                   </motion.div>
                 ))}
