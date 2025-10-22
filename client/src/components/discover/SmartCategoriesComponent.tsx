@@ -27,8 +27,8 @@ interface SmartCategoriesProps {
   className?: string;
 }
 
-// Icon mapping for category display - Oct 17 2025 fix
-const iconMap = {
+// Icon mapping for category display
+const iconMap: Record<string, any> = {
   'heart': Heart,
   'calendar': Calendar,
   'award': Award,
@@ -39,6 +39,11 @@ const iconMap = {
   'coffee': Coffee,
   'star': Star
 };
+
+// Verify all icons are loaded
+if (typeof Heart === 'undefined' || typeof Zap === 'undefined') {
+  console.error('Icon imports missing!', { Heart: typeof Heart, Zap: typeof Zap });
+}
 
 export const SmartCategoriesComponent: React.FC<SmartCategoriesProps> = ({
   mediaData,
