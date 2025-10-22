@@ -56,7 +56,7 @@ const genres: GenreType[] = [
 const streamingPlatforms: StreamingPlatform[] = [
   { id: 'netflix', name: 'Netflix', icon: '/logos/icons8-netflix (1).svg', color: 'bg-red-600' },
   { id: 'disney', name: 'Disney+', icon: '/logos/icons8-disney-plus.svg', color: 'bg-blue-600' },
-  { id: 'hbo', name: 'HBO Max', icon: '/logos/icons8-hbo-max.svg', color: 'bg-purple-600' },
+  { id: 'hbo', name: 'HBO Max', icon: '/logos/hbo-max-white.svg', color: 'bg-purple-600' },
   { id: 'prime', name: 'Prime Video', icon: '/logos/icons8-amazon-prime-video (1).svg', color: 'bg-blue-500' },
   { id: 'hulu', name: 'Hulu', icon: '/logos/hulu.svg', color: 'bg-green-600' },
   { id: 'paramount', name: 'Paramount+', icon: '/logos/paramount-plus.svg', color: 'bg-blue-700' }
