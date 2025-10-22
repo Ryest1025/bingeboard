@@ -14,7 +14,7 @@
 
 import React, { useState, useMemo } from "react";
 import { motion } from "framer-motion";
-import { useQuery } from "@tantml:react-query";
+import { useQuery } from "@tanstack/react-query";
 import NavigationHeader from "@/components/navigation-header";
 import ContinueWatching from "@/components/ContinueWatching";
 import { Button } from "@/components/ui/button";

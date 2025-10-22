@@ -8,7 +8,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 // import authRoutes from './routes/auth';
 import analyticsRoutes from './routes/analytics.js';
-import { getDashboardContent, getDiscoverContent, getSearchContent } from './routes/content.js';
+import { getDashboardContent, getDiscoverContent, getSearchContent } from './routes/content';
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated, verifyPassword } from "./auth";
 import { db, sqlite } from "./db";
