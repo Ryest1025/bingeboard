@@ -94,6 +94,8 @@ export const DiscoverSpotlight: React.FC<DiscoverSpotlightProps> = ({
                   providers={feature.streaming.filter((p): p is {provider_id: number; provider_name: string; logo_path?: string} => 
                     Boolean(p.provider_id && p.provider_name)
                   )} 
+                  maxDisplayed={1}
+                  size="sm"
                 />
               </div>
             )}
