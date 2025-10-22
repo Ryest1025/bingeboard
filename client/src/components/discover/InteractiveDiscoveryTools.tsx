@@ -59,7 +59,7 @@ const streamingPlatforms: StreamingPlatform[] = [
   { id: 'hbo', name: 'HBO Max', icon: '/logos/icons8-hbo-max.svg', color: 'bg-purple-600' },
   { id: 'prime', name: 'Prime Video', icon: '/logos/icons8-amazon-prime-video (1).svg', color: 'bg-blue-500' },
   { id: 'hulu', name: 'Hulu', icon: '/logos/hulu.svg', color: 'bg-green-600' },
-  { id: 'paramount', name: 'Paramount+', icon: '/logos/icons8-paramount-plus.svg', color: 'bg-blue-700' }
+  { id: 'paramount', name: 'Paramount+', icon: '/logos/paramount-plus.svg', color: 'bg-blue-700' }
 ];
 
 type QuickFilterOption = {
@@ -211,7 +211,7 @@ export const InteractiveDiscoveryTools: React.FC<InteractiveDiscoveryToolsProps>
                 }`}
               >
                 <div className="relative z-10 flex flex-col items-center gap-2">
-                  <div className="w-12 h-12 rounded-lg bg-white/90 flex items-center justify-center p-1">
+                  <div className="w-12 h-12 rounded-lg flex items-center justify-center p-1">
                     <img
                       src={platform.icon}
                       alt={platform.name}
