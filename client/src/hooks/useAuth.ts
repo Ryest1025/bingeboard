@@ -56,23 +56,40 @@ const initAuth = () => {
     if (firebaseUser) {
       try {
         console.log("🔑 FirebaseUser detected:", firebaseUser?.email);
-        // Get Firebase ID token
-      try {
-        // TEMPORARY BYPASS - Skip backend authentication for UI testing
-        console.log('🔄 TEMPORARY BYPASS: Skipping backend for UI demo');
         
-        const user: User = {
-          id: firebaseUser.uid,
-          email: firebaseUser.email || '',
-          displayName: firebaseUser.displayName || undefined,
-        };
+        // Get Firebase ID token and sync with backend
+        const idToken = await firebaseUser.getIdToken();
+        
+        // Create/refresh backend session
+        const sessionRes = await apiFetch("/api/auth/firebase-session", {
+          method: "POST",
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${idToken}`
+          },
+          body: JSON.stringify({ 
+            firebaseToken: idToken,
+            user: {
+              uid: firebaseUser.uid,
+              email: firebaseUser.email,
+              displayName: firebaseUser.displayName,
+              photoURL: firebaseUser.photoURL
+            }
+          })
+        });
 
-        updateState({ user, isAuthenticated: true, isLoading: false });
-        console.log('✅ Frontend-only authentication successful for UI demo:', user);
-      } catch (error) {
-        console.error('Auth sync error:', error);
-        updateState({ user: null, isAuthenticated: false, isLoading: false });
-      }
+        if (sessionRes.ok) {
+          const user: User = {
+            id: firebaseUser.uid,
+            email: firebaseUser.email || '',
+            displayName: firebaseUser.displayName || undefined,
+          };
+
+          updateState({ user, isAuthenticated: true, isLoading: false });
+          console.log('✅ Firebase authentication and backend session synced:', user);
+        } else {
+          throw new Error('Failed to create backend session');
+        }
       } catch (err) {
         console.error("Auth sync error:", err);
         updateState({ user: null, isAuthenticated: false, isLoading: false });
