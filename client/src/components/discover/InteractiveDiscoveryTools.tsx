@@ -7,18 +7,9 @@ import {
   Clock,
   Bell,
   Sparkles,
-  Tv,
-  Filter,
-  RefreshCw,
   Flame,
   Trophy,
-  Calendar,
-  Zap,
-  Heart,
-  Users,
-  Shield,
-  Globe,
-  Mountain
+  Calendar
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -35,7 +26,6 @@ interface InteractiveDiscoveryToolsProps {
 type GenreType = {
   id: string;
   name: string;
-  icon: any;
   color: string;
 };
 
@@ -47,16 +37,16 @@ type StreamingPlatform = {
 };
 
 const genres: GenreType[] = [
-  { id: 'action', name: 'Action', icon: Zap, color: 'bg-red-500' },
-  { id: 'comedy', name: 'Comedy', icon: Heart, color: 'bg-yellow-500' },
-  { id: 'drama', name: 'Drama', icon: Users, color: 'bg-blue-500' },
-  { id: 'horror', name: 'Horror', icon: Shield, color: 'bg-purple-500' },
-  { id: 'romance', name: 'Romance', icon: Heart, color: 'bg-pink-500' },
-  { id: 'sci-fi', name: 'Sci-Fi', icon: Globe, color: 'bg-cyan-500' },
-  { id: 'fantasy', name: 'Fantasy', icon: Mountain, color: 'bg-indigo-500' },
-  { id: 'documentary', name: 'Documentary', icon: Book, color: 'bg-green-500' },
-  { id: 'thriller', name: 'Thriller', icon: Brain, color: 'bg-gray-500' },
-  { id: 'music', name: 'Music', icon: Music, color: 'bg-emerald-500' }
+  { id: 'action', name: 'Action', color: 'bg-red-500' },
+  { id: 'comedy', name: 'Comedy', color: 'bg-yellow-500' },
+  { id: 'drama', name: 'Drama', color: 'bg-blue-500' },
+  { id: 'horror', name: 'Horror', color: 'bg-purple-500' },
+  { id: 'romance', name: 'Romance', color: 'bg-pink-500' },
+  { id: 'sci-fi', name: 'Sci-Fi', color: 'bg-cyan-500' },
+  { id: 'fantasy', name: 'Fantasy', color: 'bg-indigo-500' },
+  { id: 'documentary', name: 'Documentary', color: 'bg-green-500' },
+  { id: 'thriller', name: 'Thriller', color: 'bg-gray-500' },
+  { id: 'music', name: 'Music', color: 'bg-emerald-500' }
 ];
 
 const streamingPlatforms: StreamingPlatform[] = [
@@ -247,7 +237,6 @@ export const InteractiveDiscoveryTools: React.FC<InteractiveDiscoveryToolsProps>
         <div className="flex flex-wrap gap-2">
           {genres.map((genre) => {
             const isSelected = selectedGenres.includes(genre.id);
-            const Icon = genre.icon;
             
             return (
               <motion.button
@@ -255,13 +244,12 @@ export const InteractiveDiscoveryTools: React.FC<InteractiveDiscoveryToolsProps>
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => handleGenreToggle(genre.id)}
-                className={`px-4 py-2 rounded-full border-2 transition-all duration-300 flex items-center gap-2 ${
+                className={`px-4 py-2 rounded-full border-2 transition-all duration-300 ${
                   isSelected
                     ? `border-white ${genre.color} text-white shadow-lg`
                     : 'border-slate-600 bg-slate-800/50 text-slate-300 hover:border-slate-500 hover:bg-slate-800/70'
                 }`}
               >
-                <Icon className="w-4 h-4" />
                 <span className="text-sm font-medium">{genre.name}</span>
               </motion.button>
             );
