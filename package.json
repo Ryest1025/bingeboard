@@ -45,6 +45,7 @@
     "components:check": "npm run components:audit && echo '✅ Component audit passed'"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.67.0",
     "@capacitor/android": "^7.4.0",
     "@capacitor/cli": "^7.4.0",
     "@capacitor/core": "^7.4.0",
