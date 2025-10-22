@@ -338,48 +338,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log('User created/updated in database:', dbUser.id, dbUser.email);
 
-      // Create session structure
-      const sessionUser = {
-        claims: {
-          sub: dbUser.id,
-          email: dbUser.email,
-          first_name: dbUser.firstName,
-          last_name: dbUser.lastName,
-          profile_image_url: dbUser.profileImageUrl,
-          exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60) // 24 hours from now
-        },
+      // Create JWT token with user data
+      const { createAuthToken } = await import('./auth.js');
+      const authUser = {
         id: dbUser.id,
-        email: dbUser.email
+        email: dbUser.email || '',
+        displayName: `${dbUser.firstName} ${dbUser.lastName}`.trim() || dbUser.email || '',
+        firstName: dbUser.firstName,
+        lastName: dbUser.lastName,
+        profileImageUrl: dbUser.profileImageUrl || undefined,
       };
 
-      console.log('Session created with structure:', sessionUser);
+      const token = createAuthToken(authUser);
+      console.log('✅ JWT token created for user:', authUser.email);
 
-      // Save session
-      (req as any).session.user = sessionUser;
+      // Set HTTP-only cookie with JWT token
+      const isProduction = process.env.NODE_ENV === 'production';
+      res.cookie('bingeboard_auth', token, {
+        httpOnly: true,
+        secure: isProduction, // Only secure in production
+        sameSite: 'lax',
+        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+        path: '/',
+      });
 
-      console.log('Session ID:', (req as any).sessionID);
-      (req as any).session.save((err: any) => {
-        if (err) {
-          console.error('Session save error:', err);
-          return res.status(500).json({ message: 'Session creation failed' });
+      console.log('🍪 JWT cookie set:', {
+        name: 'bingeboard_auth',
+        httpOnly: true,
+        secure: isProduction,
+        sameSite: 'lax',
+        maxAge: '7 days',
+      });
+
+      res.json({
+        success: true,
+        user: {
+          id: dbUser.id,
+          email: dbUser.email,
+          firstName: dbUser.firstName,
+          lastName: dbUser.lastName,
+          profileImageUrl: dbUser.profileImageUrl
         }
-
-        console.log('✅ Session saved successfully');
-        console.log('📋 Session data after save:', JSON.stringify((req as any).session, null, 2));
-        console.log('🍪 Session cookie should be set with name: bingeboard.session');
-        console.log('🍪 Cookie settings: secure=false, httpOnly=true, sameSite=lax (development mode)');
-        console.log('🌐 Response will include Set-Cookie header for domain:', req.get('host'));
-
-        res.json({
-          success: true,
-          user: {
-            id: dbUser.id,
-            email: dbUser.email,
-            firstName: dbUser.firstName,
-            lastName: dbUser.lastName,
-            profileImageUrl: dbUser.profileImageUrl
-          }
-        });
       });
 
     } catch (error: any) {
@@ -1310,31 +1309,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // This endpoint checks if user is authenticated without requiring authentication
   app.get('/api/auth/status', async (req: any, res) => {
     try {
-      const session = req.session;
-      const sessionUser = session?.user;
-
-      if (sessionUser) {
-        // Check if session is expired
-        const isExpired = sessionUser.claims?.exp && sessionUser.claims.exp < Math.floor(Date.now() / 1000);
-        if (isExpired) {
-          console.log('🔐 Session expired for user:', sessionUser.email);
-          req.session.user = null; // Clear expired session
-          return res.json({ user: null, isAuthenticated: false });
-        }
-
-        // Return authenticated status
-        return res.json({
-          user: {
-            id: sessionUser.id || sessionUser.claims?.sub,
-            email: sessionUser.email,
-            displayName: sessionUser.displayName
-          },
-          isAuthenticated: true
-        });
+      // Check for JWT token in cookie
+      const token = req.cookies['bingeboard_auth'];
+      
+      if (!token) {
+        return res.json({ user: null, isAuthenticated: false });
       }
 
-      // Not authenticated
-      return res.json({ user: null, isAuthenticated: false });
+      // Verify and decode JWT token
+      const { verifyAuthToken } = await import('./auth.js');
+      const user = verifyAuthToken(token);
+
+      if (!user) {
+        // Clear invalid cookie
+        res.clearCookie('bingeboard_auth');
+        return res.json({ user: null, isAuthenticated: false });
+      }
+
+      // Return authenticated status
+      return res.json({
+        user: {
+          id: user.id,
+          email: user.email,
+          displayName: user.displayName || `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email
+        },
+        isAuthenticated: true
+      });
     } catch (error) {
       console.error('Auth status check error:', error);
       return res.json({ user: null, isAuthenticated: false });
@@ -1346,22 +1346,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       console.log('🔐 Development login endpoint called');
       
-      // Create development user session
+      // Create development user
       const devUser = {
         id: "manual_dev_user_123",
         email: "rachel.gubin@gmail.com",
         displayName: "Rachel Gubin",
-        claims: {
-          sub: "manual_dev_user_123",
-          email: "rachel.gubin@gmail.com",
-          exp: Math.floor(Date.now() / 1000) + (7 * 24 * 60 * 60) // 7 days
-        }
+        firstName: "Rachel",
+        lastName: "Gubin"
       };
 
-      // Store in session
-      req.session.user = devUser;
+      // Create JWT token
+      const { createAuthToken } = await import('./auth.js');
+      const token = createAuthToken(devUser);
       
-      console.log('🔐 Development user session created:', devUser.email);
+      // Set HTTP-only cookie
+      const isProduction = process.env.NODE_ENV === 'production';
+      res.cookie('bingeboard_auth', token, {
+        httpOnly: true,
+        secure: isProduction,
+        sameSite: 'lax',
+        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+        path: '/',
+      });
+      
+      console.log('🔐 Development user JWT created:', devUser.email);
       
       return res.json({
         user: {
@@ -1373,7 +1381,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     } catch (error) {
       console.error('❌ Dev login error:', error);
-      res.status(500).json({ message: 'Failed to create dev session' });
+      res.status(500).json({ message: 'Failed to create dev token' });
     }
   });
 

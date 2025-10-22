@@ -1,72 +1,80 @@
-import session from "express-session";
 import type { Express, RequestHandler } from "express";
 import bcrypt from "bcryptjs";
-import { storage } from "./storage";
-import path from "path";
-import { createRequire } from 'module';
-
-// Use createRequire for CommonJS modules in ES modules
-const require = createRequire(import.meta.url);
+import jwt from "jsonwebtoken";
+import cookieParser from "cookie-parser";
 
 /**
- * 🔒 SERVER AUTHENTICATION - ENHANCED WITH PERSISTENCE
+ * 🔒 SERVER AUTHENTICATION - STATELESS JWT TOKENS
  * 
- * ⚠️  CRITICAL: Core authentication middleware and session config
- * ✅ UPDATED: Now includes SQLite session persistence
+ * ⚠️  CRITICAL: Core authentication middleware using JWT tokens
+ * ✅ UPDATED: Now uses stateless JWT tokens in HTTP-only cookies (Vercel-compatible)
  * 
- * Update Date: August 7, 2025
- * Status: ✅ WORKING WITH PERSISTENCE
+ * Update Date: October 22, 2025
+ * Status: ✅ WORKING WITH STATELESS JWT
  * 
- * ENHANCED CONFIGURATION:
- * - ✅ 7-day session expiration
- * - ✅ SQLite store (sessions persist across restarts)
- * - ✅ httpOnly, secure: false for local dev
+ * CONFIGURATION:
+ * - ✅ 7-day JWT expiration
+ * - ✅ HTTP-only cookies (secure in production)
  * - ✅ sameSite: 'lax' for cross-origin compatibility
- * - ✅ rolling: true for session refresh
+ * - ✅ No server-side storage (serverless-friendly)
  * 
  * CRITICAL MIDDLEWARE:
- * - isAuthenticated: Validates session and attaches user to request
- * - Session expiration checking with JWT claims
+ * - isAuthenticated: Validates JWT and attaches user to request
+ * - JWT expiration checking
  * 
- * Last Updated: August 7, 2025
+ * Last Updated: October 22, 2025
  */
 
-export function getSession() {
-  const sessionTtl = 7 * 24 * 60 * 60 * 1000; // 1 week
+const JWT_SECRET = process.env.JWT_SECRET || process.env.SESSION_SECRET || 'fallback-jwt-secret';
+const JWT_EXPIRY = '7d'; // 7 days
+const COOKIE_NAME = 'bingeboard_auth';
 
-  // Use SQLite session store for persistence across restarts
-  console.log('✅ Using SQLite session store (sessions will persist across restarts)');
+export interface AuthUser {
+  id: string;
+  email: string;
+  displayName?: string;
+  firstName?: string;
+  lastName?: string;
+  profileImageUrl?: string;
+  claims?: any;
+}
 
-  // Dynamically load SQLite session store
-  const SQLiteStore = require('connect-sqlite3')(session);
-
-  const store = new SQLiteStore({
-    db: 'sessions.db',
-    table: 'sessions',
-    dir: './',  // Store in project root
-    concurrentDB: true,  // Better performance
-  });
-
-  // Handle store errors gracefully
-  store.on('error', (error: any) => {
-    console.error('❌ Session store error:', error);
-  });
-
-  return session({
-    store: store,  // Use SQLite store instead of memory
-    secret: process.env.SESSION_SECRET || 'fallback-secret-key',
-    resave: true,  // Changed to true to force session save
-    saveUninitialized: true,  // Changed to true to ensure session creation
-    cookie: {
-      httpOnly: true,
-      secure: false, // Always false in development
-      sameSite: 'lax', // More permissive in dev
-      maxAge: sessionTtl,
-      path: '/', // Ensure cookie is available for all paths
+/**
+ * Create a signed JWT token for a user
+ */
+export function createAuthToken(user: AuthUser): string {
+  return jwt.sign(
+    {
+      id: user.id,
+      email: user.email,
+      displayName: user.displayName,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      profileImageUrl: user.profileImageUrl,
     },
-    name: 'bingeboard.session', // Custom session name
-    rolling: true, // Reset expiration on each request
-  });
+    JWT_SECRET,
+    { expiresIn: JWT_EXPIRY }
+  );
+}
+
+/**
+ * Verify and decode a JWT token
+ */
+export function verifyAuthToken(token: string): AuthUser | null {
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET) as any;
+    return {
+      id: decoded.id,
+      email: decoded.email,
+      displayName: decoded.displayName,
+      firstName: decoded.firstName,
+      lastName: decoded.lastName,
+      profileImageUrl: decoded.profileImageUrl,
+    };
+  } catch (error) {
+    console.error('❌ JWT verification failed:', error);
+    return null;
+  }
 }
 
 async function hashPassword(password: string): Promise<string> {
@@ -80,93 +88,46 @@ async function verifyPassword(password: string, hashedPassword: string): Promise
 export async function setupAuth(app: Express) {
   app.set("trust proxy", 1);
 
-  // Add middleware to log all incoming requests and their paths
+  // Add cookie parser middleware to read JWT cookies
+  app.use(cookieParser());
+
+  // Add middleware to log all incoming requests and their authentication status
   app.use((req, res, next) => {
     if (req.path.startsWith('/api/user') || req.path.startsWith('/api/auth')) {
-      console.log(`🔧 PRE-SESSION: ${req.method} ${req.path} - Session available: ${!!(req as any).session}`);
+      const token = req.cookies[COOKIE_NAME];
+      console.log(`🔧 AUTH: ${req.method} ${req.path} - Cookie present: ${!!token}`);
     }
     next();
   });
 
-  app.use(getSession());
-
-  // Add middleware to verify session is working after session middleware
-  app.use((req, res, next) => {
-    if (req.path.startsWith('/api/user') || req.path.startsWith('/api/auth')) {
-      console.log(`🔧 POST-SESSION: ${req.method} ${req.path} - Session available: ${!!(req as any).session}, SessionID: ${(req as any).sessionID}`);
-    }
-    next();
-  });
-
-  console.log('✅ Firebase authentication system initialized');
-  console.log('✅ All OAuth authentication handled by Firebase client-side');
+  console.log('✅ JWT authentication system initialized');
+  console.log('✅ Using stateless JWT tokens (Vercel-compatible)');
 }
 
 export const isAuthenticated: RequestHandler = async (req, res, next) => {
   const endpoint = req.originalUrl || req.url;
 
-  // First check session availability 
-  console.log(`🔐 [${endpoint}] Session availability:`, {
-    hasSession: !!(req as any).session,
-    sessionID: (req as any).sessionID,
-    sessionKeys: (req as any).session ? Object.keys((req as any).session) : 'no session'
-  });
-
-  // Extract session user with detailed debugging
-  const session = (req as any).session;
-  const sessionUser = session?.user;
+  // Try to get JWT token from cookie
+  const token = req.cookies[COOKIE_NAME];
   const authHeader = req.headers.authorization;
 
-  // Detailed session debugging
-  console.log(`🔐 [${endpoint}] Session debug:`, {
-    sessionExists: !!session,
-    sessionUser: sessionUser ? sessionUser.email : 'undefined',
-    sessionUserType: typeof sessionUser,
-    sessionHasUser: session && 'user' in session,
-    fullSession: session ? JSON.stringify(session, null, 2) : 'no session'
+  console.log(`🔐 [${endpoint}] Auth check:`, {
+    hasCookie: !!token,
+    hasAuthHeader: !!authHeader,
   });
 
-  console.log(`🔐 Authentication middleware [${endpoint}] - Session user:`, sessionUser ? 'Present' : 'undefined');
-  console.log(`🔐 Authentication middleware [${endpoint}] - Auth header:`, authHeader ? 'Bearer token present' : 'No auth header');
-
-  // Apply session recovery logic to all endpoints, not just user-preferences
-  if (!sessionUser && !authHeader && session) {
-    console.log('🔐 No user found but session exists - attempting session recovery');
-
-    // Try to regenerate session if it exists but user is missing
-    if (session && !session.user) {
-      console.log('🔐 Session exists but user is undefined - potential race condition');
-
-      // Small delay to allow session to stabilize
-      await new Promise(resolve => setTimeout(resolve, 50));
-
-      // Re-check session after delay
-      const recoveredUser = (req as any).session?.user;
-      if (recoveredUser) {
-        console.log('🔐 Session recovered successfully after delay');
-        (req as any).user = recoveredUser;
-        return next();
-      }
+  // Try cookie-based JWT authentication first (web browsers)
+  if (token) {
+    const user = verifyAuthToken(token);
+    if (user) {
+      (req as any).user = user;
+      console.log(`🔐 JWT user authenticated from cookie [${endpoint}]:`, user.email);
+      return next();
+    } else {
+      console.log(`🔐 Invalid JWT token in cookie [${endpoint}]`);
+      // Clear invalid cookie
+      res.clearCookie(COOKIE_NAME);
     }
-  }
-
-  // Try session-based authentication first (existing users)
-  if (sessionUser) {
-    // Check if session is expired
-    const isExpired = sessionUser.claims?.exp && sessionUser.claims.exp < Math.floor(Date.now() / 1000);
-    if (isExpired) {
-      console.log('🔐 Session expired for user:', sessionUser.email);
-      (req as any).session.user = null; // Clear expired session
-      return res.status(401).json({ message: 'Session expired' });
-    }
-
-    // Ensure session is refreshed
-    (req as any).session.touch();
-
-    // Attach user to request
-    (req as any).user = sessionUser;
-    console.log(`🔐 Session user attached to request [${endpoint}]:`, sessionUser.email);
-    return next();
   }
 
   // Try Firebase Bearer token authentication (direct API calls)
@@ -184,11 +145,10 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
           console.log('🔐 Basic token validation passed (dev mode)');
 
           // Create a mock user for development
-          const mockUser = {
+          const mockUser: AuthUser = {
             id: 'dev-user-' + Date.now(),
             email: 'dev@bingeboard.com',
             displayName: 'Development User',
-            claims: { sub: 'dev-user', email: 'dev@bingeboard.com' }
           };
 
           (req as any).user = mockUser;
@@ -200,7 +160,7 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
       }
 
       // Import Firebase Admin dynamically to avoid conflicts
-      const { getFirebaseAdminForAuth } = await import('./services/firebaseAdmin');
+      const { getFirebaseAdminForAuth } = await import('./services/firebaseAdmin.js');
       const admin = getFirebaseAdminForAuth();
 
       if (!admin) {
@@ -211,11 +171,10 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
           console.log('🔐 Basic token validation passed (dev mode)');
 
           // Create a mock user for development
-          const mockUser = {
+          const mockUser: AuthUser = {
             id: 'dev-user-' + Date.now(),
             email: 'dev@bingeboard.com',
             displayName: 'Development User',
-            claims: { sub: 'dev-user', email: 'dev@bingeboard.com' }
           };
 
           (req as any).user = mockUser;
@@ -229,12 +188,12 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
       const decodedToken = await admin.auth().verifyIdToken(idToken);
       console.log(`🔐 Firebase token verified for user [${endpoint}]:`, decodedToken.email);
 
-      // Create a user object similar to session format
-      const firebaseUser = {
+      // Create a user object
+      const firebaseUser: AuthUser = {
         id: decodedToken.uid,
-        email: decodedToken.email,
+        email: decodedToken.email || '',
         displayName: decodedToken.name || decodedToken.email,
-        claims: decodedToken
+        claims: decodedToken,
       };
 
       (req as any).user = firebaseUser;
@@ -248,6 +207,7 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
   }
 
   // No valid authentication found
+  console.log(`🔐 No valid authentication found [${endpoint}]`);
   return res.status(401).json({ message: 'Authentication required' });
 };
 
