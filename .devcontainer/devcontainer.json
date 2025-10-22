@@ -17,7 +17,7 @@
         "source=bingeboard-node-modules,target=${containerWorkspaceFolder}/node_modules,type=volume",
        
     ],
-    "postCreateCommand": "/workspaces/bingeboard-local/.devcontainer/setup.sh",
+    "postCreateCommand": "bash /workspaces/bingeboard-local/.devcontainer/setup.sh",
     "containerEnv": {
         "GITHUB_TOKEN": "${localEnv:GITHUB_TOKEN}"
     },
