@@ -211,10 +211,21 @@ export const InteractiveDiscoveryTools: React.FC<InteractiveDiscoveryToolsProps>
                 }`}
               >
                 <div className="relative z-10 flex flex-col items-center gap-2">
-                  <div className={`w-10 h-10 rounded-lg ${platform.color} flex items-center justify-center`}>
-                    <span className="text-white font-bold text-lg">
-                      {platform.name.charAt(0)}
-                    </span>
+                  <div className="w-12 h-12 rounded-lg bg-white/90 flex items-center justify-center p-1">
+                    <img
+                      src={platform.icon}
+                      alt={platform.name}
+                      className="w-full h-full object-contain"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.style.display = 'none';
+                        const parent = target.parentElement;
+                        if (parent) {
+                          parent.className = `w-12 h-12 rounded-lg ${platform.color} flex items-center justify-center`;
+                          parent.innerHTML = `<span class="text-white font-bold text-lg">${platform.name.charAt(0)}</span>`;
+                        }
+                      }}
+                    />
                   </div>
                   <span className={`text-sm font-medium ${isSelected ? 'text-white' : 'text-slate-300'}`}>
                     {platform.name}

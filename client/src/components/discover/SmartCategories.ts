@@ -115,45 +115,7 @@ export const SMART_CATEGORIES: SmartCategory[] = [
     priority: 7,
     personalizedFor: 'Social viewers'
   },
-  {
-    key: 'educational-entertaining',
-    title: 'Learn Something New',
-    subtitle: 'Educational content that doesn\'t feel like school',
-    description: 'Documentaries and docuseries that entertain while they educate',
-    iconName: 'eye',
-    gradient: 'from-emerald-500 to-teal-600',
-    textColor: 'text-emerald-300',
-    borderColor: 'border-emerald-500/30',
-    reasoning: 'Expands your interests',
-    priority: 8,
-    moodContext: 'When you want to learn'
-  },
-  {
-    key: 'ai-curated-surprise',
-    title: 'Hidden Gems (7.0+ Rating)',
-    subtitle: 'Quality content you might have missed',
-    description: 'High-quality shows and movies that deserve more attention - great ratings, lower popularity',
-    iconName: 'star',
-    gradient: 'from-pink-500 to-rose-600',
-    textColor: 'text-pink-300',
-    borderColor: 'border-pink-500/30',
-    reasoning: 'Advanced matching algorithm',
-    priority: 9,
-    personalizedFor: 'Adventurous viewers'
-  },
-  {
-    key: 'leaving-soon',
-    title: 'Leaving Soon',
-    subtitle: 'Watch before they\'re gone',
-    description: 'Quality content that\'s about to expire from streaming platforms',
-    iconName: 'clock',
-    gradient: 'from-red-500 to-pink-600',
-    textColor: 'text-red-300',
-    borderColor: 'border-red-500/30',
-    reasoning: 'Expiring in the next 30 days',
-    priority: 10,
-    timeContext: 'Time-sensitive'
-  }
+
 ];
 
 // Smart award season context based on current date

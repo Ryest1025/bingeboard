@@ -14,7 +14,7 @@
 
 import React, { useState, useMemo } from "react";
 import { motion } from "framer-motion";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery } from "@tantml:react-query";
 import NavigationHeader from "@/components/navigation-header";
 import ContinueWatching from "@/components/ContinueWatching";
 import { Button } from "@/components/ui/button";
@@ -25,6 +25,7 @@ import type { NormalizedMedia } from "@/types/media";
 import type { MediaItem as ActionMediaItem } from "@/services/userActions";
 import { apiFetch } from "@/utils/api-config";
 import BuildInfoBadge from "@/components/BuildInfoBadge";
+import TrailerButton from "@/components/trailer-button";
 
 // TMDB base image sizes
 const TMDB_BACKDROP_SIZE = "w1280";
@@ -226,29 +227,41 @@ const DashboardPage: React.FC = () => {
                 <h2 className="text-3xl md:text-4xl font-bold">{spotlightItem.title || spotlightItem.name}</h2>
                 <p className="text-gray-200 line-clamp-3">{spotlightItem.overview}</p>
                 <div className="flex flex-wrap gap-3 pt-2">
-                  {/* Watch Now with first streaming logo */}
-                  <Button
-                    onClick={() => handleWatchNow(spotlightItem as NormalizedMedia)}
-                    className="bg-red-600 hover:bg-red-700 text-white flex items-center gap-2 px-4 py-2.5"
-                  >
-                    <span className="flex items-center gap-2">
+                  {/* Watch Now with first streaming logo only */}
+                  {spotlightItem.streaming && spotlightItem.streaming.length > 0 ? (
+                    <Button
+                      onClick={() => handleWatchNow(spotlightItem as NormalizedMedia)}
+                      className="bg-red-600 hover:bg-red-700 text-white flex items-center gap-2 px-4 py-2.5"
+                    >
+                      <span className="flex items-center gap-2">
+                        ▶ Watch Now
+                        {spotlightItem.streaming[0].logo_path && (
+                          <img
+                            src={`https://image.tmdb.org/t/p/w92${spotlightItem.streaming[0].logo_path}`}
+                            alt={spotlightItem.streaming[0].provider_name}
+                            className="w-6 h-6 object-contain rounded-sm bg-white/90 p-0.5"
+                          />
+                        )}
+                      </span>
+                    </Button>
+                  ) : (
+                    <Button
+                      onClick={() => handleWatchNow(spotlightItem as NormalizedMedia)}
+                      className="bg-red-600 hover:bg-red-700 text-white flex items-center gap-2 px-4 py-2.5"
+                    >
                       ▶ Watch Now
-                      {spotlightItem.streaming?.[0]?.logo_path && (
-                        <img
-                          src={`https://image.tmdb.org/t/p/w92${spotlightItem.streaming[0].logo_path}`}
-                          alt={spotlightItem.streaming[0].provider_name}
-                          className="w-6 h-6 object-contain rounded-sm bg-white/90 p-0.5"
-                        />
-                      )}
-                    </span>
-                  </Button>
-                  <Button
-                    onClick={() => handleWatchTrailer(spotlightItem as NormalizedMedia)}
+                    </Button>
+                  )}
+                  <TrailerButton
+                    show={{
+                      id: spotlightItem.id,
+                      tmdbId: spotlightItem.id,
+                      title: spotlightItem.title || spotlightItem.name || 'Unknown'
+                    }}
                     variant="outline"
                     className="text-white border-white hover:bg-white/10 px-4 py-2.5"
-                  >
-                    Trailer
-                  </Button>
+                    showLabel={true}
+                  />
                   <Button
                     onClick={() => handleAddToWatchlist(spotlightItem as NormalizedMedia)}
                     variant="ghost"
@@ -278,9 +291,9 @@ const DashboardPage: React.FC = () => {
               ))}
             </div>
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3 auto-rows-fr">
               {filteredRecommendations.map((media) => (
-                <div key={media.id} className="w-full">
+                <div key={media.id} className="w-full h-full flex">
                   <UniversalMediaCard
                     media={media}
                     variant="vertical-polished"
