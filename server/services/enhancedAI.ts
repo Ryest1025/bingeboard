@@ -403,7 +403,7 @@ Return JSON with data-driven matches scored 0-1.`;
 
 VIEWING PERSONALITY:
 ${patterns.bingeVsEpisodic > 0.3 ? '• Binge-watcher - loves deep dives into series' : '• Measured viewer - appreciates episodic content'}
-${patterns.completionRate > 0.7 ? '• High completion rate - commits to shows they start' : '• Selective - drops shows that don't hook them'}
+${patterns.completionRate > 0.7 ? '• High completion rate - commits to shows they start' : '• Selective - drops shows that do not hook them'}
 ${patterns.newVsClassic > 0 ? '• Prefers current/recent content' : '• Appreciates timeless classics'}
 
 CURRENTLY WATCHING:
