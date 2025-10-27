@@ -169,7 +169,7 @@
     "@vitejs/plugin-react": "^4.3.2",
     "autoprefixer": "^10.4.20",
     "depcheck": "^1.4.7",
-    "drizzle-kit": "^0.31.4",
+    "drizzle-kit": "^0.31.5",
     "esbuild": "^0.25.0",
     "jsdom": "^26.1.0",
     "knip": "^5.40.3",
@@ -190,5 +190,15 @@
     "bufferutil": "^4.0.8",
     "connect-sqlite3": "^0.9.16",
     "sqlite3": "^5.1.7"
+  },
+  "resolutions": {
+    "esbuild": "^0.25.0"
+  },
+  "overrides": {
+    "drizzle-kit": {
+      "@esbuild-kit/core-utils": {
+        "esbuild": "^0.25.0"
+      }
+    }
   }
 }
