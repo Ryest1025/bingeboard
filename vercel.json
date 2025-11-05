@@ -1,5 +1,7 @@
 {
   "version": 2,
+  "buildCommand": "npm install --include=optional && npm run build",
+  "installCommand": "npm install --include=optional",
   "rewrites": [
     {
       "source": "/api/(.*)",
@@ -7,6 +9,7 @@
     }
   ],
   "env": {
-    "NODE_ENV": "production"
+    "NODE_ENV": "production",
+    "NPM_CONFIG_OPTIONAL": "true"
   }
 }
