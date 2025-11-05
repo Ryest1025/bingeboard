@@ -2,24 +2,33 @@ name: Deploy Frontend to GitHub Pages
 
 on:
   push:
-    branches: [ main ]
+    branches:
+      - main
+    paths:
+      - 'client/**'
+      - '.github/workflows/pages.yml'
+      - 'package.json'
+      - 'package-lock.json'
+      
+  # Allow manual trigger
   workflow_dispatch:
+
+# Cancel in-progress deployments for the same branch
+concurrency:
+  group: pages-${{ github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
   pages: write
   id-token: write
 
-concurrency:
-  group: pages
-  cancel-in-progress: true
-
 jobs:
   build:
-    name: Build static frontend
     runs-on: ubuntu-latest
+    
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
 
       - name: Setup Node.js
@@ -29,83 +38,34 @@ jobs:
           cache: 'npm'
 
       - name: Install dependencies
-        run: |
-          echo "Node version: $(node -v)"
-          echo "NPM version: $(npm -v)"
-          npm install --include=optional
-          echo "✅ Dependencies installed"
+        run: npm install --include=optional
 
-      - name: Create .env (Firebase config injected as Vite vars)
-        run: |
-          set -e
-          echo "VITE_FIREBASE_API_KEY=${{ secrets.VITE_FIREBASE_API_KEY }}" >> .env
-          echo "VITE_FIREBASE_AUTH_DOMAIN=${{ secrets.VITE_FIREBASE_AUTH_DOMAIN }}" >> .env
-          echo "VITE_FIREBASE_PROJECT_ID=${{ secrets.VITE_FIREBASE_PROJECT_ID }}" >> .env
-          echo "VITE_FIREBASE_STORAGE_BUCKET=${{ secrets.VITE_FIREBASE_STORAGE_BUCKET }}" >> .env
-          echo "VITE_FIREBASE_MESSAGING_SENDER_ID=${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID }}" >> .env
-          echo "VITE_FIREBASE_APP_ID=${{ secrets.VITE_FIREBASE_APP_ID }}" >> .env
-          echo "VITE_FIREBASE_MEASUREMENT_ID=${{ secrets.VITE_FIREBASE_MEASUREMENT_ID }}" >> .env
-          echo "VITE_API_BASE_URL=https://bingeboard-two.vercel.app" >> .env
-          # Do not print values (avoid leaking secrets)
-          echo "Created .env with $(grep -c '^VITE_' .env) Vite vars (Firebase + API)"
+      - name: Build for GitHub Pages
+        run: npm run build:pages
+        env:
+          NODE_ENV: production
 
-      - name: Build project (frontend only via vite)
+      - name: Verify build output
         run: |
-          set -e
-          npm run build:pages
-          echo "✅ Build completed successfully"
-          
-          # Verify build output
-          if [ ! -f client/dist/index.html ]; then
-            echo "❌ index.html not found in build output!"
-            exit 1
-          fi
-          echo "✅ Verified index.html exists"
+          echo "📦 Build output:"
+          ls -lah client/dist/
+          echo "✅ Build verification complete"
 
-      - name: Ensure required files for GitHub Pages
-        run: |
-          # Ensure build output directory exists
-          if [ ! -d client/dist ]; then
-            echo "❌ Build output directory client/dist not found!"
-            ls -la client/ || echo "client directory doesn't exist"
-            exit 1
-          fi
-          
-          # Create CNAME file for custom domain
-          echo "bingeboardapp.com" > client/dist/CNAME
-          echo "✅ Created CNAME file for custom domain"
-          
-          # Add .nojekyll file to disable Jekyll processing
-          touch client/dist/.nojekyll
-          echo "✅ Created .nojekyll file"
-          
-          # Verify all files are in place
-          echo "📁 Build output contents:"
-          ls -la client/dist/ | head -20
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: client/dist
-
-      - name: Debug build failure (if any)
-        if: failure()
-        run: |
-          echo "Build failed; listing dist directory (if created)" || true
-          ls -Ral dist || true
-          echo '--- Recent npm debug logs (if any) ---'
-          ls -1 /home/runner/.npm/_logs || true
+          path: 'client/dist'
 
   deploy:
-    name: Deploy to GitHub Pages
-    needs: build
-    runs-on: ubuntu-latest
     environment:
       name: github-pages
-      url: ${{ steps.deploy.outputs.page_url }}
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
     steps:
-      - name: Deploy
-        id: deploy
+      - name: Deploy to GitHub Pages
+        id: deployment
         uses: actions/deploy-pages@v4
-        with:
-          timeout: 600000
