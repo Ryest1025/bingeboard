@@ -1283,34 +1283,80 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // This endpoint checks if user is authenticated without requiring authentication
   app.get('/api/auth/status', async (req: any, res) => {
     try {
-      // Check for JWT token in cookie
-      const token = req.cookies['bingeboard_auth'];
+      // Check for Firebase session cookie first
+      const sessionCookie = req.cookies['bb_session'];
+      const legacyToken = req.cookies['bingeboard_auth'];
       
-      if (!token) {
-        return res.json({ user: null, isAuthenticated: false });
-      }
-
-      // Verify and decode JWT token
-      const { verifyAuthToken } = await import('./auth.js');
-      const user = verifyAuthToken(token);
-
-      if (!user) {
-        // Clear invalid cookie
-        res.clearCookie('bingeboard_auth');
-        return res.json({ user: null, isAuthenticated: false });
-      }
-
-      // Return authenticated status
-      return res.json({
-        user: {
-          id: user.id,
-          email: user.email,
-          displayName: user.displayName || `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email
-        },
-        isAuthenticated: true
+      console.log('🔍 Auth status check:', {
+        hasSessionCookie: !!sessionCookie,
+        hasLegacyToken: !!legacyToken,
       });
+
+      // Try Firebase Session Cookie first (most secure)
+      if (sessionCookie) {
+        try {
+          const { getFirebaseAdminForAuth } = await import('./services/firebaseAdmin.js');
+          const admin = getFirebaseAdminForAuth();
+
+          if (admin) {
+            // Verify the session cookie
+            const decodedClaims = await admin.auth().verifySessionCookie(sessionCookie, true);
+            console.log('✅ Session cookie verified:', decodedClaims.email);
+
+            return res.json({
+              isAuthenticated: true,
+              user: {
+                id: decodedClaims.uid,
+                uid: decodedClaims.uid,
+                email: decodedClaims.email,
+                displayName: decodedClaims.name || decodedClaims.email,
+                name: decodedClaims.name || null,
+                picture: decodedClaims.picture || null,
+              }
+            });
+          } else {
+            console.warn('⚠️ Firebase Admin not available, falling back to legacy token');
+          }
+        } catch (error) {
+          console.error('❌ Session cookie verification failed:', error);
+          // Clear invalid session cookie
+          res.clearCookie('bb_session', {
+            httpOnly: true,
+            secure: true,
+            sameSite: 'none',
+            path: '/',
+          });
+          // Fall through to check legacy token
+        }
+      }
+
+      // Fallback to legacy JWT token
+      if (legacyToken) {
+        const { verifyAuthToken } = await import('./auth.js');
+        const user = verifyAuthToken(legacyToken);
+
+        if (user) {
+          console.log('✅ Legacy token verified:', user.email);
+          return res.json({
+            user: {
+              id: user.id,
+              email: user.email,
+              displayName: user.displayName || `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email
+            },
+            isAuthenticated: true
+          });
+        } else {
+          // Clear invalid legacy cookie
+          res.clearCookie('bingeboard_auth');
+        }
+      }
+
+      // No valid authentication found
+      console.log('❌ No valid authentication found');
+      return res.json({ user: null, isAuthenticated: false });
+
     } catch (error) {
-      console.error('Auth status check error:', error);
+      console.error('❌ Auth status check error:', error);
       return res.json({ user: null, isAuthenticated: false });
     }
   });
@@ -1416,30 +1462,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Firebase-only logout endpoint
   app.post('/api/auth/logout', (req: any, res) => {
     try {
-      console.log('🔐 Firebase logout endpoint called');
-      console.log('📋 Session ID before logout:', req.sessionID);
-      console.log('📋 Session data:', JSON.stringify(req.session, null, 2));
+      console.log('🔐 Logout endpoint called');
 
-      // Clear the session
-      req.session.destroy((err: any) => {
-        if (err) {
-          console.error('❌ Session destroy error:', err);
-          return res.status(500).json({ message: 'Failed to logout' });
-        }
-
-        console.log('✅ Session destroyed successfully');
-        // Clear the custom session cookie (bingeboard.session) - development settings
-        res.clearCookie('bingeboard.session', {
-          path: '/',
-          domain: undefined,
-          secure: false, // false in development
-          httpOnly: true,
-          sameSite: 'lax' // lax in development
-        });
-
-        console.log('✅ Session cookie cleared');
-        res.json({ success: true, message: 'Logged out successfully' });
+      // Clear Firebase session cookie
+      res.clearCookie('bb_session', {
+        httpOnly: true,
+        secure: true,
+        sameSite: 'none',
+        path: '/',
       });
+
+      // Clear legacy JWT cookie
+      res.clearCookie('bingeboard_auth', {
+        httpOnly: true,
+        secure: true,
+        sameSite: 'none',
+        path: '/',
+      });
+
+      // Clear old session cookie if exists
+      res.clearCookie('bingeboard.session', {
+        path: '/',
+        httpOnly: true,
+        sameSite: 'lax'
+      });
+
+      console.log('✅ All auth cookies cleared');
+      res.json({ success: true, message: 'Logged out successfully' });
+
     } catch (error) {
       console.error('❌ Logout error:', error);
       res.status(500).json({ message: 'Failed to logout' });
