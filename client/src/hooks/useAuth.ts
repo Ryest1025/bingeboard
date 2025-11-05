@@ -50,25 +50,64 @@ const initAuth = () => {
     return;
   }
   
-  // Listen to Firebase auth state changes
+  // CRITICAL: Check backend session FIRST before waiting for Firebase
+  // This prevents the flickering isAuthenticated=false issue
+  const checkBackendSession = async () => {
+    try {
+      console.log('🔍 Checking backend session on app load...');
+      const res = await apiFetch("/api/auth/status", { credentials: 'include' });
+      const data = res.ok ? await res.json() : null;
+      
+      if (data?.isAuthenticated && data?.user) {
+        console.log('✅ Backend session found:', data.user.email);
+        updateState({
+          user: {
+            id: data.user.id || data.user.uid,
+            email: data.user.email,
+            displayName: data.user.displayName || data.user.name || undefined,
+          },
+          isAuthenticated: true,
+          isLoading: false,
+        });
+        return true; // Session exists
+      } else {
+        console.log('ℹ️ No backend session found');
+        return false; // No session
+      }
+    } catch (err) {
+      console.error('❌ Backend session check failed:', err);
+      return false;
+    }
+  };
+  
+  // Check backend session immediately
+  checkBackendSession().then((hasSession) => {
+    // If no backend session, set loading to false after Firebase check
+    if (!hasSession) {
+      updateState({ isLoading: false });
+    }
+  });
+  
+  // Listen to Firebase auth state changes (for new logins)
   onAuthStateChanged(auth, async (firebaseUser: FirebaseUser | null) => {
-    updateState({ isLoading: true }); // mark loading at start
     if (firebaseUser) {
       try {
-        console.log("🔑 FirebaseUser detected:", firebaseUser?.email);
+        console.log("🔑 Firebase user detected:", firebaseUser?.email);
         
         // Get Firebase ID token and sync with backend
         const idToken = await firebaseUser.getIdToken();
         
-        // Create/refresh backend session
+        // Create/refresh backend session with idToken field
         const sessionRes = await apiFetch("/api/auth/firebase-session", {
           method: "POST",
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${idToken}`
           },
+          credentials: 'include', // Critical for cookies
           body: JSON.stringify({ 
-            firebaseToken: idToken,
+            idToken, // Primary field
+            firebaseToken: idToken, // Fallback
             user: {
               uid: firebaseUser.uid,
               email: firebaseUser.email,
@@ -79,6 +118,7 @@ const initAuth = () => {
         });
 
         if (sessionRes.ok) {
+          const sessionData = await sessionRes.json();
           const user: User = {
             id: firebaseUser.uid,
             email: firebaseUser.email || '',
@@ -88,23 +128,19 @@ const initAuth = () => {
           updateState({ user, isAuthenticated: true, isLoading: false });
           console.log('✅ Firebase authentication and backend session synced:', user);
         } else {
-          throw new Error('Failed to create backend session');
+          const errorText = await sessionRes.text();
+          console.error('❌ Backend session creation failed:', errorText);
+          updateState({ user: null, isAuthenticated: false, isLoading: false });
         }
       } catch (err) {
-        console.error("Auth sync error:", err);
+        console.error("❌ Auth sync error:", err);
         updateState({ user: null, isAuthenticated: false, isLoading: false });
       }
     } else {
-      // No Firebase user - check backend session
-      try {
-        const res = await apiFetch("/api/auth/status");
-        const data = res.ok ? await res.json() : null;
-        updateState({
-          user: data?.user || null,
-          isAuthenticated: !!data?.user,
-          isLoading: false,
-        });
-      } catch (err) {
+      // Firebase signed out - check if backend session still exists
+      console.log('ℹ️ Firebase user signed out, checking backend session...');
+      const hasBackendSession = await checkBackendSession();
+      if (!hasBackendSession) {
         updateState({ user: null, isAuthenticated: false, isLoading: false });
       }
     }
@@ -129,29 +165,46 @@ export function useAuth(): AuthState {
     try {
       updateState({ isLoading: true });
       
-      // Sign out from Firebase
+      // Clear backend session first
+      await apiFetch("/api/auth/logout", { 
+        method: "POST",
+        credentials: 'include' // Critical for cookies
+      });
+      
+      // Then sign out from Firebase
       await auth.signOut();
       
-      // Clear backend session
-      await apiFetch("/api/auth/logout", { method: "POST" });
-      
       updateState({ user: null, isAuthenticated: false, isLoading: false });
+      console.log('✅ Logged out successfully');
     } catch (err) {
-      console.error("Logout error:", err);
-      updateState({ isLoading: false });
+      console.error("❌ Logout error:", err);
+      updateState({ user: null, isAuthenticated: false, isLoading: false });
     }
   }, []);
   
   const refreshSession = useCallback(async () => {
     try {
-      const res = await apiFetch("/api/auth/status");
+      console.log('🔄 Refreshing session...');
+      const res = await apiFetch("/api/auth/status", { credentials: 'include' });
       const data = res.ok ? await res.json() : null;
-      updateState({
-        user: data?.user || null,
-        isAuthenticated: !!data?.user,
-        isLoading: false,
-      });
+      
+      if (data?.isAuthenticated && data?.user) {
+        updateState({
+          user: {
+            id: data.user.id || data.user.uid,
+            email: data.user.email,
+            displayName: data.user.displayName || data.user.name || undefined,
+          },
+          isAuthenticated: true,
+          isLoading: false,
+        });
+        console.log('✅ Session refreshed:', data.user.email);
+      } else {
+        updateState({ user: null, isAuthenticated: false, isLoading: false });
+        console.log('ℹ️ No session found');
+      }
     } catch (err) {
+      console.error('❌ Session refresh failed:', err);
       updateState({ user: null, isAuthenticated: false, isLoading: false });
     }
   }, []);
