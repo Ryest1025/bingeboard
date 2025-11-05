@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { onAuthStateChanged, type User as FirebaseUser } from "firebase/auth";
+import { onAuthStateChanged, getRedirectResult, type User as FirebaseUser } from "firebase/auth";
 import { auth } from "../firebase/config";
 import { apiFetch } from "../utils/api-config";
 
@@ -35,8 +35,58 @@ const initAuth = () => {
   if (initialized) return;
   initialized = true;
   
-  // CRITICAL: Check backend session FIRST before waiting for Firebase
-  // This prevents the flickering isAuthenticated=false issue
+  // STEP 1: Check for OAuth redirect result FIRST (handles mobile OAuth)
+  const checkOAuthRedirect = async () => {
+    try {
+      console.log('🔍 Checking for OAuth redirect result...');
+      const result = await getRedirectResult(auth);
+      
+      if (result && result.user) {
+        console.log('✅ OAuth redirect successful:', result.user.email);
+        
+        // Get ID token and create backend session
+        const idToken = await result.user.getIdToken();
+        
+        const sessionRes = await apiFetch("/api/auth/firebase-session", {
+          method: "POST",
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${idToken}`
+          },
+          credentials: 'include',
+          body: JSON.stringify({ 
+            idToken,
+            firebaseToken: idToken,
+            user: {
+              uid: result.user.uid,
+              email: result.user.email,
+              displayName: result.user.displayName,
+              photoURL: result.user.photoURL
+            }
+          })
+        });
+
+        if (sessionRes.ok) {
+          const user: User = {
+            id: result.user.uid,
+            email: result.user.email || '',
+            displayName: result.user.displayName || undefined,
+          };
+          
+          updateState({ user, isAuthenticated: true, isLoading: false });
+          console.log('✅ OAuth redirect session created');
+          return true; // OAuth redirect handled
+        }
+      } else {
+        console.log('ℹ️ No OAuth redirect result');
+      }
+    } catch (err) {
+      console.error('❌ OAuth redirect check failed:', err);
+    }
+    return false; // No OAuth redirect
+  };
+  
+  // STEP 2: Check backend session (handles existing sessions)
   const checkBackendSession = async () => {
     try {
       console.log('🔍 Checking backend session on app load...');
@@ -65,11 +115,14 @@ const initAuth = () => {
     }
   };
   
-  // Check backend session immediately
-  checkBackendSession().then((hasSession) => {
-    // If no backend session, set loading to false after Firebase check
-    if (!hasSession) {
-      updateState({ isLoading: false });
+  // Check OAuth redirect FIRST, then backend session
+  checkOAuthRedirect().then(async (hadOAuthRedirect) => {
+    if (!hadOAuthRedirect) {
+      // No OAuth redirect, check backend session
+      const hasSession = await checkBackendSession();
+      if (!hasSession) {
+        updateState({ isLoading: false });
+      }
     }
   });
   
