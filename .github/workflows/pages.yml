@@ -35,9 +35,11 @@ jobs:
           # Clear npm cache and install fresh
           npm cache clean --force
           rm -rf node_modules package-lock.json
-          npm install
-          # Explicitly install rollup platform-specific binary
-          npm install --no-save @rollup/rollup-linux-x64-gnu
+          npm install --include=optional
+          # Verify and explicitly install rollup platform-specific binary
+          echo "Checking for rollup binary..."
+          npm list @rollup/rollup-linux-x64-gnu || npm install --no-save @rollup/rollup-linux-x64-gnu
+          echo "✅ Dependencies installed"
 
       - name: Create .env (Firebase config injected as Vite vars)
         run: |
