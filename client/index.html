@@ -19,11 +19,11 @@
   <meta http-equiv="X-Content-Type-Options" content="nosniff">
   <meta http-equiv="X-XSS-Protection" content="1; mode=block">
   
-  <!-- NUCLEAR CACHE BUSTING - October 17, 2025 (Manifest v2) -->
+  <!-- NUCLEAR CACHE BUSTING - November 5, 2025 (Phase 1 Friends + API Fix) -->
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
-  <meta name="build-time" content="20251017-195000">
+  <meta name="build-time" content="20251105-200000">
 
   <!-- Preload Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -172,7 +172,7 @@
     })();
   </script>
 
-  <!-- AGGRESSIVE CACHE CLEAR - October 17, 2025 v4 -->
+  <!-- AGGRESSIVE CACHE CLEAR - November 5, 2025 - Phase 1 -->
   <script>
     // COMPLETELY DISABLE ALL CACHING - Clear everything and force fresh load
     if ('serviceWorker' in navigator) {
@@ -195,7 +195,7 @@
     }
     
     // Force complete page reload from server
-    const cacheKey = 'force_reload_oct_17_v5';
+    const cacheKey = 'force_reload_nov_5_phase1';
     if (!sessionStorage.getItem(cacheKey)) {
       sessionStorage.setItem(cacheKey, 'true');
       console.log('🔄 Forcing complete reload from server...');
