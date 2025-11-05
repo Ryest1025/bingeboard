@@ -1,6 +1,5 @@
 {
   "version": 2,
-  "installCommand": "npm install --include=optional",
   "rewrites": [
     {
       "source": "/api/(.*)",
@@ -8,7 +7,6 @@
     }
   ],
   "env": {
-    "NODE_ENV": "production",
-    "NPM_CONFIG_OPTIONAL": "true"
+    "NODE_ENV": "production"
   }
 }
