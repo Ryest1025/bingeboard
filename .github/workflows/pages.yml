@@ -32,7 +32,12 @@ jobs:
         run: |
           echo "Node version: $(node -v)"
           echo "NPM version: $(npm -v)"
-          npm ci
+          echo "Checking package-lock.json integrity..."
+          cat package-lock.json | head -20
+          npm ci --loglevel=verbose || {
+            echo "npm ci failed, trying with legacy-peer-deps..."
+            npm ci --legacy-peer-deps
+          }
 
       - name: Create .env (Firebase config injected as Vite vars)
         run: |
