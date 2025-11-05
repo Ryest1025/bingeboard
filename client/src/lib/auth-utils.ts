@@ -75,9 +75,10 @@ export async function createBackendSession(user: FirebaseUser): Promise<{ succes
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${idToken}`
       },
-      credentials: 'include',
+      credentials: 'include', // Critical: include cookies in cross-origin requests
       body: JSON.stringify({ 
-        firebaseToken: idToken,
+        idToken, // Primary: use idToken field
+        firebaseToken: idToken, // Fallback compatibility
         user: {
           uid: user.uid,
           email: user.email,
@@ -92,9 +93,12 @@ export async function createBackendSession(user: FirebaseUser): Promise<{ succes
       throw new Error(`Backend session failed: ${errorText}`);
     }
     
+    const data = await response.json();
+    console.log('✅ Backend session created:', data);
+    
     return { success: true };
   } catch (error: any) {
-    console.error('Backend session creation failed:', error);
+    console.error('❌ Backend session creation failed:', error);
     return { success: false, error: error.message };
   }
 }

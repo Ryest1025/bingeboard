@@ -107,24 +107,68 @@ export async function setupAuth(app: Express) {
 export const isAuthenticated: RequestHandler = async (req, res, next) => {
   const endpoint = req.originalUrl || req.url;
 
-  // Try to get JWT token from cookie
-  const token = req.cookies[COOKIE_NAME];
+  // Try to get session cookie (Firebase Session Cookie)
+  const sessionCookie = req.cookies['bb_session'];
+  // Fallback to legacy JWT cookie
+  const legacyToken = req.cookies[COOKIE_NAME];
   const authHeader = req.headers.authorization;
 
   console.log(`🔐 [${endpoint}] Auth check:`, {
-    hasCookie: !!token,
+    hasSessionCookie: !!sessionCookie,
+    hasLegacyCookie: !!legacyToken,
     hasAuthHeader: !!authHeader,
   });
 
-  // Try cookie-based JWT authentication first (web browsers)
-  if (token) {
-    const user = verifyAuthToken(token);
+  // Try Firebase Session Cookie first (most secure)
+  if (sessionCookie) {
+    try {
+      // Check if Firebase Admin is configured
+      const { getFirebaseAdminForAuth } = await import('./services/firebaseAdmin.js');
+      const admin = getFirebaseAdminForAuth();
+
+      if (admin) {
+        // Verify the session cookie
+        const decodedClaims = await admin.auth().verifySessionCookie(sessionCookie, true);
+        console.log(`✅ Firebase session cookie verified [${endpoint}]:`, decodedClaims.email);
+
+        const user: AuthUser = {
+          id: decodedClaims.uid,
+          email: decodedClaims.email || '',
+          displayName: decodedClaims.name || decodedClaims.email,
+          firstName: decodedClaims.name?.split(' ')[0],
+          lastName: decodedClaims.name?.split(' ').slice(1).join(' '),
+          profileImageUrl: decodedClaims.picture,
+          claims: decodedClaims,
+        };
+
+        (req as any).user = user;
+        return next();
+      } else {
+        console.warn('⚠️ Firebase Admin not available, falling back to JWT verification');
+        // Fall through to try legacy JWT or Bearer token
+      }
+    } catch (error) {
+      console.error(`❌ Firebase session cookie verification failed [${endpoint}]:`, error);
+      // Clear invalid session cookie
+      res.clearCookie('bb_session', {
+        httpOnly: true,
+        secure: true,
+        sameSite: 'none',
+        path: '/',
+      });
+      // Fall through to try other auth methods
+    }
+  }
+
+  // Try legacy JWT cookie authentication (for backwards compatibility)
+  if (legacyToken) {
+    const user = verifyAuthToken(legacyToken);
     if (user) {
       (req as any).user = user;
-      console.log(`🔐 JWT user authenticated from cookie [${endpoint}]:`, user.email);
+      console.log(`🔐 Legacy JWT user authenticated from cookie [${endpoint}]:`, user.email);
       return next();
     } else {
-      console.log(`🔐 Invalid JWT token in cookie [${endpoint}]`);
+      console.log(`🔐 Invalid legacy JWT token in cookie [${endpoint}]`);
       // Clear invalid cookie
       res.clearCookie(COOKIE_NAME);
     }

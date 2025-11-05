@@ -217,33 +217,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log('📥 Request body:', JSON.stringify(req.body, null, 2));
 
       const authHeader = req.headers.authorization;
-      const { firebaseToken, user: userFromBody } = req.body;
+      const { firebaseToken, idToken, user: userFromBody } = req.body;
 
-      if (!authHeader?.startsWith('Bearer ') && !firebaseToken) {
-        return res.status(401).json({ message: 'Authorization token required' });
+      // Extract the ID token from various sources
+      const extractedIdToken = 
+        (authHeader?.startsWith('Bearer ') ? authHeader.substring(7) : null) ||
+        idToken ||
+        firebaseToken;
+
+      if (!extractedIdToken && !userFromBody) {
+        return res.status(401).json({ message: 'ID token required' });
       }
 
       let user;
+      let sessionCookie;
 
       // Check if Firebase Admin is available
       const firebaseAdmin = getFirebaseAdminForAuth();
 
-      if (authHeader?.startsWith('Bearer ') && firebaseAdmin) {
-        // Verify Firebase ID token using Admin SDK
-        const idToken = authHeader.substring(7);
-        console.log('🔐 Firebase token extracted, attempting verification...');
-
+      if (extractedIdToken && firebaseAdmin) {
         try {
           console.log('🔐 Attempting Firebase token verification with Admin SDK...');
-          const decodedToken = await firebaseAdmin.auth().verifyIdToken(idToken);
+          
+          // Verify the ID token first
+          const decodedToken = await firebaseAdmin.auth().verifyIdToken(extractedIdToken);
           console.log('🔍 Firebase token decoded successfully:', {
             uid: decodedToken.uid,
             email: decodedToken.email,
             email_verified: decodedToken.email_verified,
-            name: decodedToken.name,
-            picture: decodedToken.picture,
-            provider_id: decodedToken.firebase?.identities
           });
+
+          // Create a session cookie (expires in 5 days)
+          const expiresIn = 5 * 24 * 60 * 60 * 1000; // 5 days in milliseconds
+          sessionCookie = await firebaseAdmin.auth().createSessionCookie(extractedIdToken, { expiresIn });
+          console.log('✅ Firebase session cookie created');
 
           user = {
             id: decodedToken.uid,
@@ -252,37 +259,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
             lastName: decodedToken.name?.split(' ').slice(1).join(' ') || '',
             phoneNumber: decodedToken.phone_number || null,
             profileImageUrl: decodedToken.picture || '',
-            // Map unsupported provider to allowed union member
             authProvider: 'email'
           };
 
           console.log('✅ Firebase user object created:', {
             id: user.id,
             email: user.email,
-            hasEmail: !!user.email,
-            firstName: user.firstName
           });
         } catch (error) {
-          console.error('❌ Firebase token verification failed:', error);
+          console.error('❌ Firebase session creation failed:', error);
           return res.status(401).json({ message: 'Invalid Firebase token' });
         }
-      } else if (firebaseToken || userFromBody) {
-        // Decode the Firebase token to extract user data
+      } else if (extractedIdToken || userFromBody) {
+        // Fallback for development without Firebase Admin
         let decodedUser = null;
 
-        if (firebaseToken && typeof firebaseToken === 'string') {
+        if (extractedIdToken && typeof extractedIdToken === 'string') {
           try {
-            // Decode the JWT token (just parsing, not verifying for local dev)
-            const base64Payload = firebaseToken.split('.')[1];
+            const base64Payload = extractedIdToken.split('.')[1];
             const decodedPayload = JSON.parse(atob(base64Payload));
-
-            console.log('🔍 Decoded Firebase token payload:', {
-              uid: decodedPayload.user_id || decodedPayload.sub,
-              email: decodedPayload.email,
-              name: decodedPayload.name,
-              picture: decodedPayload.picture,
-              email_verified: decodedPayload.email_verified
-            });
 
             decodedUser = {
               uid: decodedPayload.user_id || decodedPayload.sub,
@@ -296,18 +291,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
         }
 
-        // Use decoded token data or provided user data
         const userData = userFromBody || decodedUser || {};
-
-        console.log('🔍 Using Firebase token data for local development:', {
-          uid: userData.uid,
-          email: userData.email,
-          displayName: userData.displayName,
-          photoURL: userData.photoURL
-        });
+        
+        // Create fallback session using JWT
+        const { createAuthToken } = await import('./auth.js');
+        const authUser = {
+          id: userData.uid || `firebase_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+          email: userData.email || '',
+          displayName: userData.displayName || '',
+        };
+        sessionCookie = createAuthToken(authUser);
+        console.log('⚠️ Using fallback JWT token (Firebase Admin not available)');
 
         user = {
-          id: userData.uid || `firebase_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+          id: authUser.id,
           email: userData.email || null,
           firstName: (userData.displayName)?.split(' ')[0] || '',
           lastName: (userData.displayName)?.split(' ').slice(1).join(' ') || '',
@@ -315,59 +312,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
           profileImageUrl: userData.photoURL || '',
           authProvider: 'email'
         };
-
-        console.log('✅ Local Firebase user object created:', {
-          id: user.id,
-          email: user.email,
-          hasEmail: !!user.email,
-          firstName: user.firstName
-        });
       } else {
-        console.warn('⚠️  Firebase Admin not configured and no token data provided');
+        console.warn('⚠️ Firebase Admin not configured and no token data provided');
         return res.status(401).json({ message: 'Firebase authentication not available' });
       }
 
-      if (!user) {
-        return res.status(401).json({ message: 'No valid user data found' });
+      if (!user || !sessionCookie) {
+        return res.status(401).json({ message: 'Session creation failed' });
       }
 
       // Store user in database
-      console.log('Storage: Upserting user with data:', user);
-  const dbUser = await storage.upsertUser(user as any);
-      console.log('Storage: User upserted successfully:', dbUser.id, dbUser.email);
+      console.log('💾 Storing user in database...');
+      const dbUser = await storage.upsertUser(user as any);
+      console.log('✅ User stored:', dbUser.email);
 
-      console.log('User created/updated in database:', dbUser.id, dbUser.email);
-
-      // Create JWT token with user data
-      const { createAuthToken } = await import('./auth.js');
-      const authUser = {
-        id: dbUser.id,
-        email: dbUser.email || '',
-        displayName: `${dbUser.firstName} ${dbUser.lastName}`.trim() || dbUser.email || '',
-        firstName: dbUser.firstName,
-        lastName: dbUser.lastName,
-        profileImageUrl: dbUser.profileImageUrl || undefined,
-      };
-
-      const token = createAuthToken(authUser);
-      console.log('✅ JWT token created for user:', authUser.email);
-
-      // Set HTTP-only cookie with JWT token
-      const isProduction = process.env.NODE_ENV === 'production';
-      res.cookie('bingeboard_auth', token, {
+      // Set the session cookie
+      // CRITICAL: For cross-origin requests, use sameSite: 'none' and secure: true
+      const cookieOptions = {
         httpOnly: true,
-        secure: isProduction, // Only secure in production
-        sameSite: 'lax',
-        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+        secure: true, // Required for sameSite: 'none'
+        sameSite: 'none' as const, // Required for cross-origin
+        maxAge: 5 * 24 * 60 * 60 * 1000, // 5 days
         path: '/',
-      });
+      };
+      
+      res.cookie('bb_session', sessionCookie, cookieOptions);
 
-      console.log('🍪 JWT cookie set:', {
-        name: 'bingeboard_auth',
-        httpOnly: true,
-        secure: isProduction,
-        sameSite: 'lax',
-        maxAge: '7 days',
+      console.log('🍪 Session cookie set:', {
+        name: 'bb_session',
+        ...cookieOptions,
+        maxAge: '5 days',
       });
 
       res.json({
@@ -382,7 +356,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
     } catch (error: any) {
-      console.error('Firebase session creation error:', error);
+      console.error('❌ Firebase session creation error:', error);
       res.status(500).json({ message: 'Session creation failed', error: error.message });
     }
   });
@@ -1359,15 +1333,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { createAuthToken } = await import('./auth.js');
       const token = createAuthToken(devUser);
       
-      // Set HTTP-only cookie
-      const isProduction = process.env.NODE_ENV === 'production';
-      res.cookie('bingeboard_auth', token, {
+      // Set HTTP-only cookie with cross-origin support
+      const cookieOptions = {
         httpOnly: true,
-        secure: isProduction,
-        sameSite: 'lax',
+        secure: true, // Always true for cross-origin (requires HTTPS)
+        sameSite: 'none' as const, // Required for cross-origin cookies
         maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
         path: '/',
-      });
+      };
+      
+      res.cookie('bingeboard_auth', token, cookieOptions);
       
       console.log('🔐 Development user JWT created:', devUser.email);
       
