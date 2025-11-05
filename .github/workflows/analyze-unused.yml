@@ -30,10 +30,8 @@ jobs:
         run: |
           echo "Node version: $(node -v)"
           echo "NPM version: $(npm -v)"
-          npm ci --loglevel=verbose || {
-            echo "npm ci failed, trying with legacy-peer-deps..."
-            npm ci --legacy-peer-deps
-          }
+          # Use npm install instead of npm ci to avoid optional dependency issues
+          npm install --prefer-offline --no-audit
 
       - name: Run unused code analysis
         id: analyze
