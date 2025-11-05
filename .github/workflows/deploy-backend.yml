@@ -9,6 +9,11 @@ on:
       - 'vercel.json'
   workflow_dispatch:
 
+# Cancel in-progress deployments for the same branch
+concurrency:
+  group: deploy-backend-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
