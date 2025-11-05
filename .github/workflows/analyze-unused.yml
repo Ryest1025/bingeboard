@@ -30,7 +30,7 @@ jobs:
         run: |
           echo "Node version: $(node -v)"
           echo "NPM version: $(npm -v)"
-          npm ci --include=optional
+          npm install --include=optional
 
       - name: Run unused code analysis
         id: analyze
