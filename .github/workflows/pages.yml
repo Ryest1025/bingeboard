@@ -25,20 +25,14 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: '22'
           cache: 'npm'
 
-      - name: Install dependencies (verbose with version info)
+      - name: Install dependencies
         run: |
           echo "Node version: $(node -v)"
           echo "NPM version: $(npm -v)"
-          # Clear npm cache and install fresh
-          npm cache clean --force
-          rm -rf node_modules package-lock.json
           npm install --include=optional
-          # Verify and explicitly install rollup platform-specific binary
-          echo "Checking for rollup binary..."
-          npm list @rollup/rollup-linux-x64-gnu || npm install --no-save @rollup/rollup-linux-x64-gnu
           echo "✅ Dependencies installed"
 
       - name: Create .env (Firebase config injected as Vite vars)

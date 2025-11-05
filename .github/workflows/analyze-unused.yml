@@ -20,18 +20,17 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      - name: Setup Node.js 20
+      - name: Setup Node.js 22
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: '22'
           cache: 'npm'
 
       - name: Install dependencies
         run: |
           echo "Node version: $(node -v)"
           echo "NPM version: $(npm -v)"
-          # Use npm install instead of npm ci to avoid optional dependency issues
-          npm install --prefer-offline --no-audit
+          npm install --include=optional
 
       - name: Run unused code analysis
         id: analyze
