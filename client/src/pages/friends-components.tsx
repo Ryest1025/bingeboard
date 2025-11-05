@@ -28,6 +28,31 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { MutualWatchStats } from "@/components/friends/MutualWatchStats";
+import { GenreCompatibility } from "@/components/friends/GenreCompatibility";
+import { SocialBadges } from "@/components/friends/SocialBadges";
+
+interface SocialBadge {
+  id: string;
+  name: string;
+  icon: string;
+  color: string;
+  description: string;
+  earnedAt?: string;
+}
+
+interface MutualWatchStatsData {
+  totalShared: number;
+  topShows: Array<{
+    title: string;
+    poster: string;
+    yourRating: number;
+    theirRating: number;
+  }>;
+  genreBreakdown: Record<string, number>;
+}
+
+type GenreCompatibilityData = Record<string, number>;
 
 interface Friend {
   id: string;
@@ -46,11 +71,13 @@ interface Friend {
   stats?: {
     totalWatched: number;
     streak: number;
-    badges: string[];
+    badges: SocialBadge[];
   };
   compatibility?: number;
   sharedPlatforms?: string[];
   favoriteGenres?: string[];
+  mutualWatchStats?: MutualWatchStatsData;
+  genreCompatibility?: GenreCompatibilityData;
 }
 
 interface FriendCardProps {
@@ -93,12 +120,14 @@ export function FriendCard({ friend, index, onClick }: FriendCardProps) {
                 <div className="flex-1 min-w-0">
                   <h3 className="text-lg font-semibold text-white truncate flex items-center gap-2">
                     {name}
-                    {friend.stats && friend.stats.badges.map((badge, i) => (
-                      <span key={i} className="text-base">{badge}</span>
-                    ))}
                   </h3>
                   {friend.username && (
                     <p className="text-slate-400 text-sm">@{friend.username}</p>
+                  )}
+                  {friend.stats?.badges && friend.stats.badges.length > 0 && (
+                    <div className="mt-1">
+                      <SocialBadges badges={friend.stats.badges} maxDisplay={3} size="sm" />
+                    </div>
                   )}
                 </div>
 
@@ -533,6 +562,39 @@ export function FriendProfileModal({ friend, onClose }: FriendProfileModalProps)
                   <p className="text-slate-400 text-sm">Compatible</p>
                 </div>
               )}
+            </div>
+          )}
+
+          {/* Social Badges */}
+          {friend.stats?.badges && friend.stats.badges.length > 0 && (
+            <div className="mb-6">
+              <h3 className="text-white font-semibold mb-3">Achievements</h3>
+              <SocialBadges badges={friend.stats.badges} maxDisplay={6} size="md" />
+            </div>
+          )}
+
+          {/* Mutual Watch Stats */}
+          {friend.mutualWatchStats && (
+            <div className="mb-6">
+              <MutualWatchStats 
+                stats={{
+                  ...friend.mutualWatchStats,
+                  genreBreakdown: Object.entries(friend.mutualWatchStats.genreBreakdown).map(
+                    ([genre, count]) => ({ genre, count })
+                  )
+                }}
+                friendName={name}
+              />
+            </div>
+          )}
+
+          {/* Genre Compatibility */}
+          {friend.genreCompatibility && (
+            <div className="mb-6">
+              <GenreCompatibility 
+                compatibility={friend.genreCompatibility} 
+                friendName={name}
+              />
             </div>
           )}
 

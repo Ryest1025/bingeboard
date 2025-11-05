@@ -40,7 +40,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import NavigationHeader from "@/components/navigation-header";
-import { FriendCard, ActivityFeed, DiscoverSection, FriendProfileModal } from "./friends-components";
+import { FriendCard, DiscoverSection, FriendProfileModal } from "./friends-components";
+import { EnhancedActivityFeed } from "@/components/friends/EnhancedActivityFeed";
 
 interface Friend {
   id: string;
@@ -56,16 +57,56 @@ interface Friend {
     title: string;
     poster: string;
     progress: number;
+    episodeNumber?: string;
   };
   stats?: {
     totalWatched: number;
     streak: number;
-    badges: string[];
+    badges: SocialBadge[];
   };
   compatibility?: number;
   sharedPlatforms?: string[];
   favoriteGenres?: string[];
   recentActivity?: Activity[];
+  // PHASE 1: New fields
+  mutualWatchStats?: {
+    totalShared: number;
+    topShows: Array<{
+      title: string;
+      yourRating: number;
+      theirRating: number;
+      poster: string;
+    }>;
+    genreBreakdown: {
+      genre: string;
+      count: number;
+    }[];
+  };
+  genreCompatibility?: {
+    [genre: string]: number; // percentage match per genre
+  };
+  lastActive?: string;
+  watchingNowLive?: {
+    show: string;
+    episode: string;
+    startedAt: string;
+  };
+}
+
+interface SocialBadge {
+  id: string;
+  name: string;
+  icon: string;
+  color: string;
+  description: string;
+  earnedAt?: string;
+}
+
+interface EmojiReaction {
+  emoji: string;
+  count: number;
+  users: string[];
+  youReacted: boolean;
 }
 
 interface Activity {
@@ -80,6 +121,22 @@ interface Activity {
   rating?: number;
   comment?: string;
   timestamp: string;
+  userId: string;
+  userName: string;
+  // PHASE 1: Emoji reactions
+  reactions?: EmojiReaction[];
+}
+
+// PHASE 1: Activity grouping
+interface GroupedActivity {
+  id: string;
+  type: 'group';
+  groupType: 'started' | 'completed' | 'rated';
+  count: number;
+  users: string[];
+  shows?: string[];
+  timestamp: string;
+  preview: Activity[];
 }
 
 interface SuggestedFriend extends Friend {
@@ -98,6 +155,22 @@ export default function Friends() {
     queryKey: ["/api/friends"],
   });
 
+  // PHASE 1: Social Badge System
+  const SOCIAL_BADGES: SocialBadge[] = [
+    { id: 'binge-lord', name: 'Binge Lord', icon: '👑', color: 'text-yellow-400', description: 'Watched 50+ shows' },
+    { id: 'critic', name: 'Critic', icon: '⭐', color: 'text-purple-400', description: 'Rated 100+ shows' },
+    { id: 'early-adopter', name: 'Early Adopter', icon: '🚀', color: 'text-blue-400', description: 'Watches new releases first' },
+    { id: 'sci-fi-specialist', name: 'Sci-Fi Specialist', icon: '🛸', color: 'text-cyan-400', description: 'Sci-fi expert' },
+    { id: 'comedy-king', name: 'Comedy King', icon: '😂', color: 'text-green-400', description: 'Comedy connoisseur' },
+    { id: 'documentary-devotee', name: 'Documentary Devotee', icon: '📚', color: 'text-orange-400', description: 'Documentary lover' },
+    { id: 'reality-tv-queen', name: 'Reality TV Queen', icon: '💎', color: 'text-pink-400', description: 'Reality TV expert' },
+    { id: 'anime-expert', name: 'Anime Expert', icon: '🎌', color: 'text-red-400', description: 'Anime specialist' },
+    { id: 'horror-fan', name: 'Horror Fan', icon: '👻', color: 'text-slate-400', description: 'Horror enthusiast' },
+    { id: 'streak-champion', name: 'Streak Champion', icon: '🔥', color: 'text-orange-500', description: '30+ day streak' },
+    { id: 'social-butterfly', name: 'Social Butterfly', icon: '🦋', color: 'text-purple-300', description: '50+ friends' },
+    { id: 'recommender-pro', name: 'Recommender Pro', icon: '🎯', color: 'text-cyan-500', description: 'Top recommendations' },
+  ];
+
   // Mock enhanced data (replace with real API)
   const mockEnhancedFriends: Friend[] = (Array.isArray(friends) ? friends : []).map((friend: any, idx) => ({
     ...friend,
@@ -107,16 +180,45 @@ export default function Friends() {
     currentlyWatching: Math.random() > 0.6 ? {
       title: ["Breaking Bad", "The Last of Us", "Succession", "The Bear"][idx % 4],
       poster: `/api/placeholder/120/180`,
-      progress: Math.floor(Math.random() * 100)
+      progress: Math.floor(Math.random() * 100),
+      episodeNumber: `S${Math.floor(Math.random() * 5) + 1}E${Math.floor(Math.random() * 10) + 1}`
     } : undefined,
     stats: {
       totalWatched: Math.floor(Math.random() * 200) + 50,
       streak: Math.floor(Math.random() * 30) + 1,
-      badges: ["🔥", "⭐", "🎬"].slice(0, Math.floor(Math.random() * 3) + 1)
+      badges: SOCIAL_BADGES.slice(idx % 3, idx % 3 + Math.floor(Math.random() * 3) + 1)
     },
     compatibility: Math.floor(Math.random() * 30) + 70,
     sharedPlatforms: ["Netflix", "HBO Max", "Disney+"].slice(0, Math.floor(Math.random() * 3) + 1),
     favoriteGenres: ["Drama", "Thriller", "Sci-Fi"].slice(0, Math.floor(Math.random() * 3) + 1),
+    // PHASE 1: Enhanced data
+    mutualWatchStats: {
+      totalShared: Math.floor(Math.random() * 30) + 10,
+      topShows: [
+        { title: "Breaking Bad", yourRating: 5, theirRating: 5, poster: "/api/placeholder/80/120" },
+        { title: "The Last of Us", yourRating: 4, theirRating: 5, poster: "/api/placeholder/80/120" },
+        { title: "Succession", yourRating: 5, theirRating: 4, poster: "/api/placeholder/80/120" },
+      ],
+      genreBreakdown: [
+        { genre: "Drama", count: 12 },
+        { genre: "Sci-Fi", count: 8 },
+        { genre: "Comedy", count: 5 },
+      ]
+    },
+    genreCompatibility: {
+      "Drama": Math.floor(Math.random() * 30) + 70,
+      "Comedy": Math.floor(Math.random() * 40) + 50,
+      "Sci-Fi": Math.floor(Math.random() * 35) + 65,
+      "Thriller": Math.floor(Math.random() * 30) + 70,
+      "Horror": Math.floor(Math.random() * 50) + 30,
+      "Documentary": Math.floor(Math.random() * 40) + 40,
+    },
+    lastActive: ["2h ago", "5h ago", "1d ago", "Just now"][Math.floor(Math.random() * 4)],
+    watchingNowLive: Math.random() > 0.7 ? {
+      show: ["Breaking Bad", "The Last of Us", "Succession"][Math.floor(Math.random() * 3)],
+      episode: `S${Math.floor(Math.random() * 5) + 1}E${Math.floor(Math.random() * 10) + 1}`,
+      startedAt: "15 min ago"
+    } : undefined,
     recentActivity: []
   }));
 
@@ -168,21 +270,54 @@ export default function Friends() {
       show: { id: 1, title: "Breaking Bad", poster: "/api/placeholder/80/120", type: "tv" },
       rating: 5,
       comment: "Best show ever! 🔥",
-      timestamp: "2h ago"
+      timestamp: "2h ago",
+      userId: "user1",
+      userName: "Sarah",
+      reactions: [
+        { emoji: "🔥", count: 5, users: ["user2", "user3", "user4", "user5", "you"], youReacted: true },
+        { emoji: "💯", count: 3, users: ["user6", "user7", "user8"], youReacted: false },
+        { emoji: "😍", count: 2, users: ["user9", "user10"], youReacted: false },
+      ]
     },
     {
       id: "a2",
       type: "watching",
       show: { id: 2, title: "The Last of Us", poster: "/api/placeholder/80/120", type: "tv" },
-      timestamp: "5h ago"
+      timestamp: "5h ago",
+      userId: "user2",
+      userName: "Mike",
+      reactions: [
+        { emoji: "😱", count: 4, users: ["user1", "user3", "user4", "you"], youReacted: true },
+        { emoji: "🤯", count: 2, users: ["user5", "user6"], youReacted: false },
+      ]
     },
     {
       id: "a3",
       type: "rated",
       show: { id: 3, title: "Oppenheimer", poster: "/api/placeholder/80/120", type: "movie" },
       rating: 4,
-      timestamp: "1d ago"
+      timestamp: "1d ago",
+      userId: "user3",
+      userName: "Alex",
+      reactions: [
+        { emoji: "💣", count: 6, users: ["user1", "user2", "user4", "user5", "user6", "you"], youReacted: true },
+      ]
     }
+  ];
+
+  // PHASE 1: Smart Activity Grouping
+  const mockGroupedActivity: (Activity | GroupedActivity)[] = [
+    {
+      id: "g1",
+      type: "group",
+      groupType: "started",
+      count: 4,
+      users: ["Sarah", "Mike", "Alex", "Jordan"],
+      shows: ["The Bear", "Shogun", "Baby Reindeer"],
+      timestamp: "Today",
+      preview: mockActivity.slice(0, 2)
+    },
+    ...mockActivity
   ];
 
   const filteredFriends = mockEnhancedFriends.filter(friend => {
@@ -384,7 +519,7 @@ export default function Friends() {
 
           {/* Activity Feed Tab */}
           <TabsContent value="activity" className="space-y-4">
-            <ActivityFeed activities={mockActivity} friends={mockEnhancedFriends} />
+            <EnhancedActivityFeed activities={mockGroupedActivity} friends={mockEnhancedFriends} />
           </TabsContent>
 
           {/* Discover Tab */}
