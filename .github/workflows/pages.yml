@@ -50,8 +50,16 @@ jobs:
 
       - name: Build project (frontend only via vite)
         run: |
+          set -e
           npm run build:pages
           echo "✅ Build completed successfully"
+          
+          # Verify build output
+          if [ ! -f client/dist/index.html ]; then
+            echo "❌ index.html not found in build output!"
+            exit 1
+          fi
+          echo "✅ Verified index.html exists"
 
       - name: Ensure required files for GitHub Pages
         run: |
