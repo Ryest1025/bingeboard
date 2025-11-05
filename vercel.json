@@ -1,12 +1,14 @@
 {
   "version": 2,
+  "build": {
+    "env": {
+      "NODE_ENV": "development"
+    }
+  },
   "rewrites": [
     {
       "source": "/api/(.*)",
       "destination": "/api"
     }
-  ],
-  "env": {
-    "NODE_ENV": "production"
-  }
+  ]
 }
