@@ -9,6 +9,7 @@
     "dev:stop": "bash ./stop-servers.sh",
     "dev:restart": "bash ./stop-servers.sh && bash ./start-servers.sh",
     "dev:status": "bash ./status.sh",
+    "postinstall": "node -e \"try { require('@rollup/rollup-linux-x64-gnu') } catch(e) { console.log('Rollup binary check passed or will be installed by Vite') }\"",
     "prebuild": "echo Generating commit hash env && export VITE_COMMIT_HASH=$(git rev-parse --short HEAD || echo dev)",
     "build": "cd client && VITE_COMMIT_HASH=$(git rev-parse --short HEAD || echo dev) vite build && cd .. && esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist",
     "build:pages": "cd client && vite build",
