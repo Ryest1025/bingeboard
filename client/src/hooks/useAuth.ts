@@ -35,21 +35,6 @@ const initAuth = () => {
   if (initialized) return;
   initialized = true;
   
-  // Check for demo mode in URL
-  const urlParams = new URLSearchParams(window.location.search);
-  const isDemoMode = urlParams.get('demo') === 'true';
-  
-  if (isDemoMode) {
-    console.log('🎭 Demo mode activated');
-    const demoUser: User = {
-      id: 'demo-user-123',
-      email: 'demo@bingeboardapp.com',
-      displayName: 'Demo User',
-    };
-    updateState({ user: demoUser, isAuthenticated: true, isLoading: false });
-    return;
-  }
-  
   // CRITICAL: Check backend session FIRST before waiting for Firebase
   // This prevents the flickering isAuthenticated=false issue
   const checkBackendSession = async () => {
