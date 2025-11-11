@@ -1,4 +1,5 @@
 // (Debug endpoints registered inside registerRoutes to avoid top-level app usage before definition)
+// Backend routes v3.1 - Content API routes included
 import type { Express } from "express";
 import { type Server } from "http";
 import path from "path";
