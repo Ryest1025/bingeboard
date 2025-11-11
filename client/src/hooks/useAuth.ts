@@ -24,6 +24,8 @@ let globalState = {
 };
 
 let initialized = false;
+let authCheckInProgress = false;
+let initialAuthComplete = false;
 const listeners = new Set<() => void>();
 
 const updateState = (newState: Partial<typeof globalState>) => {
@@ -34,6 +36,18 @@ const updateState = (newState: Partial<typeof globalState>) => {
 const initAuth = () => {
   if (initialized) return;
   initialized = true;
+  
+  // STEP 0: Ensure no service workers are interfering
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.getRegistrations().then(registrations => {
+      if (registrations.length > 0) {
+        console.log(`🧹 Unregistering ${registrations.length} service workers...`);
+        registrations.forEach(reg => reg.unregister());
+      } else {
+        console.log('✅ No service workers to clean up');
+      }
+    }).catch(err => console.error('❌ SW cleanup error:', err));
+  }
   
   // STEP 1: Check for OAuth redirect result FIRST (handles mobile OAuth)
   const checkOAuthRedirect = async () => {
@@ -86,32 +100,39 @@ const initAuth = () => {
     return false; // No OAuth redirect
   };
   
-  // STEP 2: Check backend session (handles existing sessions)
+    // STEP 2: Check existing backend session (only if no OAuth redirect)
   const checkBackendSession = async () => {
-    try {
-      console.log('🔍 Checking backend session on app load...');
-      const res = await apiFetch("/api/auth/status", { credentials: 'include' });
-      const data = res.ok ? await res.json() : null;
-      
-      if (data?.isAuthenticated && data?.user) {
-        console.log('✅ Backend session found:', data.user.email);
-        updateState({
-          user: {
-            id: data.user.id || data.user.uid,
-            email: data.user.email,
-            displayName: data.user.displayName || data.user.name || undefined,
-          },
-          isAuthenticated: true,
-          isLoading: false,
-        });
-        return true; // Session exists
-      } else {
-        console.log('ℹ️ No backend session found');
-        return false; // No session
-      }
-    } catch (err) {
-      console.error('❌ Backend session check failed:', err);
+    if (authCheckInProgress) {
+      console.log('⏸️ Auth check already in progress, skipping duplicate check');
       return false;
+    }
+    
+    authCheckInProgress = true;
+    try {
+      console.log('🔍 Checking backend session...');
+      const response = await apiFetch('/api/auth/status', {
+        credentials: 'include', // Send cookies
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        if (data.isAuthenticated && data.user) {
+          console.log('✅ Backend session found:', data.user);
+          updateState({
+            user: data.user,
+            isAuthenticated: true,
+            isLoading: false
+          });
+          return true;
+        }
+      }
+      console.log('ℹ️ No backend session found');
+      return false;
+    } catch (error) {
+      console.error('❌ Backend session check failed:', error);
+      return false;
+    } finally {
+      authCheckInProgress = false;
     }
   };
   
@@ -124,10 +145,19 @@ const initAuth = () => {
         updateState({ isLoading: false });
       }
     }
+    // Mark initial auth as complete to allow onAuthStateChanged to proceed
+    initialAuthComplete = true;
+    console.log('✅ Initial auth sequence complete');
   });
   
   // Listen to Firebase auth state changes (for new logins)
   onAuthStateChanged(auth, async (firebaseUser: FirebaseUser | null) => {
+    // Wait for initial auth to complete to avoid race conditions
+    if (!initialAuthComplete) {
+      console.log('⏸️ Skipping onAuthStateChanged during initial auth sequence');
+      return;
+    }
+    
     if (firebaseUser) {
       try {
         console.log("🔑 Firebase user detected:", firebaseUser?.email);
@@ -175,12 +205,12 @@ const initAuth = () => {
         updateState({ user: null, isAuthenticated: false, isLoading: false });
       }
     } else {
-      // Firebase signed out - check if backend session still exists
-      console.log('ℹ️ Firebase user signed out, checking backend session...');
-      const hasBackendSession = await checkBackendSession();
-      if (!hasBackendSession) {
-        updateState({ user: null, isAuthenticated: false, isLoading: false });
-      }
+      // Firebase signed out - DON'T immediately clear state
+      // The user might have a valid backend session cookie
+      console.log('ℹ️ Firebase signaled sign-out (this can happen on page load)');
+      console.log('ℹ️ Preserving backend session if it exists');
+      // Don't call checkBackendSession here - it can cause race conditions
+      // The backend session will be checked on next navigation if needed
     }
   });
 };

@@ -1288,8 +1288,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const legacyToken = req.cookies['bingeboard_auth'];
       
       console.log('🔍 Auth status check:', {
+        allCookies: Object.keys(req.cookies || {}),
         hasSessionCookie: !!sessionCookie,
         hasLegacyToken: !!legacyToken,
+        origin: req.headers.origin,
+        referer: req.headers.referer,
       });
 
       // Try Firebase Session Cookie first (most secure)
