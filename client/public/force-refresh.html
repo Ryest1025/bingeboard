@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Force Refresh - BingeBoard</title>
+  <meta charset="UTF-8">
+  <style>
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      max-width: 600px;
+      margin: 50px auto;
+      padding: 20px;
+      background: #0f172a;
+      color: #fff;
+    }
+    .container {
+      background: #1e293b;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+    }
+    h1 { color: #14b8a6; margin-top: 0; }
+    button {
+      background: #14b8a6;
+      color: #fff;
+      border: none;
+      padding: 12px 24px;
+      font-size: 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      margin: 10px 5px 10px 0;
+    }
+    button:hover { background: #0d9488; }
+    .status {
+      margin-top: 20px;
+      padding: 15px;
+      background: #334155;
+      border-radius: 8px;
+      font-family: monospace;
+      font-size: 14px;
+    }
+    .success { color: #10b981; }
+    .error { color: #ef4444; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔄 Force Refresh Cache</h1>
+    <p>Click the button below to clear all caches and force load the latest version:</p>
+    
+    <button onclick="forceClear()">Clear Cache & Reload</button>
+    <button onclick="checkVersion()">Check Current Version</button>
+    
+    <div id="status" class="status">
+      Ready to clear cache...
+    </div>
+  </div>
+
+  <script>
+    const log = (msg, type = 'info') => {
+      const status = document.getElementById('status');
+      const className = type === 'success' ? 'success' : type === 'error' ? 'error' : '';
+      status.innerHTML += `<div class="${className}">${msg}</div>`;
+    };
+
+    async function forceClear() {
+      document.getElementById('status').innerHTML = '';
+      log('🧹 Starting cache clear...');
+      
+      // 1. Clear all caches
+      if ('caches' in window) {
+        const keys = await caches.keys();
+        log(`Found ${keys.length} caches`);
+        for (const key of keys) {
+          await caches.delete(key);
+          log(`✓ Deleted cache: ${key}`, 'success');
+        }
+      }
+      
+      // 2. Unregister service workers
+      if ('serviceWorker' in navigator) {
+        const registrations = await navigator.serviceWorker.getRegistrations();
+        log(`Found ${registrations.length} service workers`);
+        for (const reg of registrations) {
+          await reg.unregister();
+          log(`✓ Unregistered service worker`, 'success');
+        }
+      }
+      
+      // 3. Clear local/session storage
+      localStorage.clear();
+      sessionStorage.clear();
+      log('✓ Cleared storage', 'success');
+      
+      // 4. Force reload with timestamp
+      log('🔄 Reloading in 2 seconds...', 'success');
+      setTimeout(() => {
+        window.location.href = '/?_=' + Date.now();
+      }, 2000);
+    }
+
+    async function checkVersion() {
+      document.getElementById('status').innerHTML = '';
+      log('🔍 Checking current bundle version...');
+      
+      const scripts = document.getElementsByTagName('script');
+      let foundBundle = false;
+      
+      for (let script of scripts) {
+        if (script.src && script.src.includes('index-')) {
+          const match = script.src.match(/index-([^.]+)\.js/);
+          if (match) {
+            const hash = match[1];
+            foundBundle = true;
+            
+            if (hash === 'BPk3_MNU') {
+              log(`❌ OLD BUNDLE: ${hash}`, 'error');
+              log('You need to clear cache!', 'error');
+            } else if (hash === 'CeXfyC8W') {
+              log(`✅ LATEST BUNDLE: ${hash}`, 'success');
+              log('You have the newest version!', 'success');
+            } else {
+              log(`Bundle: ${hash}`);
+            }
+          }
+        }
+      }
+      
+      if (!foundBundle) {
+        log('⚠️ No bundle found on this page');
+      }
+    }
+  </script>
+</body>
+</html>
