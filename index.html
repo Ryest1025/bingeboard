@@ -149,10 +149,32 @@
 
   <div id="root"></div>
 
-  <!-- React Entry -->
+  <!-- React Entry -->
+
 
   <!-- GitHub Pages SPA redirect handling -->
   <script>
+    // AGGRESSIVE CACHE BUSTING - Force fresh load on every page load
+    const CACHE_VERSION = 'v3.2.0-20251111-' + Date.now();
+    
+    // Clear all caches on load
+    if ('caches' in window) {
+      caches.keys().then(keys => {
+        keys.forEach(key => caches.delete(key));
+        console.log('🧹 All caches cleared');
+      });
+    }
+    
+    // Force reload if we detect old bundle
+    const scripts = document.getElementsByTagName('script');
+    for (let script of scripts) {
+      if (script.src && script.src.includes('index-BPk3_MNU.js')) {
+        console.warn('⚠️ OLD BUNDLE DETECTED! Force reloading...');
+        location.reload(true);
+        break;
+      }
+    }
+    
     // Handle GitHub Pages SPA redirects from 404.html
     (function() {
       const urlParams = new URLSearchParams(window.location.search);
@@ -166,7 +188,8 @@
     })();
   </script>
 
-  <!-- Service Worker Registration -->
+  <!-- Service Worker Registration -->
+
 </body>
 
 </html>
