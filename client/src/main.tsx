@@ -1,3 +1,4 @@
+// App Version 3.2.0 - Session Persistence Fixed (Nov 11, 2025)
 import * as React from "react";
 import { createRoot } from "react-dom/client";
 import App from "./App";
