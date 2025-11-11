@@ -180,8 +180,9 @@ export default function LoginSimple() {
             localStorage.removeItem('userEmail');
           }
 
-          // Refresh auth state and navigate
-          await refreshSession();
+          // Don't call refreshSession - let onAuthStateChanged handle it
+          // The session cookie is set, navigation will trigger auth check
+          console.log('🎯 Session created, navigating to dashboard');
           setLocation("/");
         } else {
           console.error('❌ Failed to create backend session');
@@ -223,8 +224,8 @@ export default function LoginSimple() {
         if (response.ok) {
           console.log('✅ Backend session created successfully');
 
-          // Navigate immediately without toast notification - seamless experience
-          await refreshSession();
+          // Navigate immediately - onAuthStateChanged will handle auth state
+          console.log('🎯 Session created, navigating to dashboard');
           setLocation("/");
         } else {
           console.error('❌ Failed to create backend session');
@@ -355,8 +356,8 @@ export default function LoginSimple() {
           if (sessionCreated) {
             console.log('✅ Backend session created successfully');
             
-            // Refresh auth state and navigate programmatically
-            await refreshSession();
+            // Navigate - onAuthStateChanged will handle auth state
+            console.log('🎯 Session created, navigating to dashboard');
             setLocation("/");
           } else {
             console.error('❌ Failed to create backend session');
@@ -447,8 +448,8 @@ export default function LoginSimple() {
             localStorage.setItem('userEmail', result.user.email);
           }
 
-          // Navigate immediately without toast notification
-          await refreshSession();
+          // Navigate - onAuthStateChanged will handle auth state
+          console.log('🎯 Session created, navigating to dashboard');
           setLocation("/");
         } else {
           console.error('❌ Failed to create backend session');
@@ -530,8 +531,8 @@ export default function LoginSimple() {
             localStorage.setItem('userEmail', result.user.email);
           }
 
-          // Navigate immediately without toast notification
-          await refreshSession();
+          // Navigate - onAuthStateChanged will handle auth state
+          console.log('🎯 Session created, navigating to dashboard');
           setLocation("/");
         } else {
           console.error('❌ Failed to create backend session');
