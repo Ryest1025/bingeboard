@@ -1,269 +1,58 @@
-// Service Worker for BingeBoard PWA
-const CACHE_NAME = 'bingeboard-v1';
-const STATIC_CACHE_NAME = 'bingeboard-static-v1';
-const DYNAMIC_CACHE_NAME = 'bingeboard-dynamic-v1';
+/* Inert service worker — safely unregisters itself and clears caches.
+   Purpose: stop stale/surprising cached bundles while we deploy a new site.
+   This file intentionally does NOT intercept fetch requests or cache responses.
+*/
 
-// Static assets to cache immediately
-const STATIC_ASSETS = [
-  '/',
-  '/manifest.json',
-  '/index.html',
-  // Assets will be cached on-demand rather than during install
-];
-
-// API endpoints to cache with network-first strategy
-const API_CACHE_PATTERNS = [
-  '/api/tmdb/trending',
-  '/api/tmdb/popular',
-  '/api/watchlist',
-];
-
-// Install event - cache static assets
 self.addEventListener('install', (event) => {
-  console.log('Service Worker: Installing...');
-  
-  event.waitUntil(
-    caches.open(STATIC_CACHE_NAME)
-      .then((cache) => {
-        console.log('Service Worker: Caching static assets');
-        return cache.addAll(STATIC_ASSETS);
-      })
-      .then(() => {
-        console.log('Service Worker: Installation complete');
-        return self.skipWaiting();
-      })
-      .catch((error) => {
-        console.error('Service Worker: Installation failed', error);
-      })
-  );
+  console.log('Inert SW: install — attempting to unregister');
+  event.waitUntil((async () => {
+    try {
+      // Immediately unregister this service worker so it won't control new clients
+      await self.registration.unregister();
+      // Ensure waiting workers skipWaiting if any
+      await self.skipWaiting();
+      console.log('Inert SW: unregistered during install');
+    } catch (e) {
+      console.warn('Inert SW: unregister during install failed', e);
+    }
+  })());
 });
 
-// Activate event - clean up old caches
 self.addEventListener('activate', (event) => {
-  console.log('Service Worker: Activating...');
-  
-  event.waitUntil(
-    caches.keys()
-      .then((cacheNames) => {
-        return Promise.all(
-          cacheNames.map((cacheName) => {
-            if (cacheName !== STATIC_CACHE_NAME && cacheName !== DYNAMIC_CACHE_NAME) {
-              console.log('Service Worker: Deleting old cache', cacheName);
-              return caches.delete(cacheName);
-            }
-          })
-        );
-      })
-      .then(() => {
-        console.log('Service Worker: Activation complete');
-        return self.clients.claim();
-      })
-  );
+  console.log('Inert SW: activate — clearing caches and unregistering');
+  event.waitUntil((async () => {
+    try {
+      // Clear all caches created by previous service workers
+      if (self.caches) {
+        const keys = await caches.keys();
+        await Promise.all(keys.map(k => caches.delete(k)));
+        console.log('Inert SW: cleared caches:', keys);
+      }
+
+      // Try to unregister again (best-effort)
+      try { await self.registration.unregister(); } catch (e) { /* ignore */ }
+
+      // Claim clients to allow pages to update their controlled worker state
+      try { await self.clients.claim(); } catch (e) { /* ignore */ }
+      console.log('Inert SW: activation complete');
+    } catch (e) {
+      console.warn('Inert SW: activation error', e);
+    }
+  })());
 });
 
-// Fetch event - handle network requests
+// Do not handle fetch events — let the browser perform normal network requests
+// This keeps the service worker inert and avoids serving stale responses.
 self.addEventListener('fetch', (event) => {
-  const { request } = event;
-  const url = new URL(request.url);
-  
-  // Skip non-GET requests
-  if (request.method !== 'GET') {
-    return;
-  }
-  
-  // Skip chrome-extension requests
-  if (url.protocol === 'chrome-extension:') {
-    return;
-  }
-  
-  // Handle API requests with network-first strategy
-  if (url.pathname.startsWith('/api/')) {
-    event.respondWith(networkFirstStrategy(request));
-    return;
-  }
-  
-  // Handle static assets with cache-first strategy
-  if (isStaticAsset(url.pathname)) {
-    event.respondWith(cacheFirstStrategy(request));
-    return;
-  }
-  
-  // Handle navigation requests with network-first, fallback to cache
-  if (request.mode === 'navigate') {
-    event.respondWith(navigationStrategy(request));
-    return;
-  }
-  
-  // Default: network-first for everything else
-  event.respondWith(networkFirstStrategy(request));
+  // Intentionally no-op
 });
 
-// Network-first strategy with cache fallback
-async function networkFirstStrategy(request) {
-  try {
-    const networkResponse = await fetch(request);
-    
-    // Cache successful responses for API endpoints
-    if (networkResponse.ok && shouldCache(request.url)) {
-      const cache = await caches.open(DYNAMIC_CACHE_NAME);
-      cache.put(request, networkResponse.clone());
-    }
-    
-    return networkResponse;
-  } catch (error) {
-    console.log('Service Worker: Network failed, trying cache', request.url);
-    
-    const cachedResponse = await caches.match(request);
-    if (cachedResponse) {
-      return cachedResponse;
-    }
-    
-    // If it's an API request that failed, return a custom offline response
-    if (request.url.includes('/api/')) {
-      return new Response(
-        JSON.stringify({ 
-          error: 'You are offline. Please check your internet connection.',
-          offline: true 
-        }),
-        {
-          status: 503,
-          statusText: 'Service Unavailable',
-          headers: { 'Content-Type': 'application/json' }
-        }
-      );
-    }
-    
-    throw error;
-  }
-}
-
-// Cache-first strategy for static assets
-async function cacheFirstStrategy(request) {
-  const cachedResponse = await caches.match(request);
-  if (cachedResponse) {
-    return cachedResponse;
-  }
-  
-  try {
-    const networkResponse = await fetch(request);
-    const cache = await caches.open(STATIC_CACHE_NAME);
-    cache.put(request, networkResponse.clone());
-    return networkResponse;
-  } catch (error) {
-    console.error('Service Worker: Failed to fetch static asset', request.url);
-    throw error;
-  }
-}
-
-// Navigation strategy - network-first with offline fallback
-async function navigationStrategy(request) {
-  try {
-    const networkResponse = await fetch(request);
-    return networkResponse;
-  } catch (error) {
-    console.log('Service Worker: Navigation failed, serving offline page');
-    
-    const offlineResponse = await caches.match('/offline.html');
-    if (offlineResponse) {
-      return offlineResponse;
-    }
-    
-    // Fallback offline page if none cached
-    return new Response(
-      `<!DOCTYPE html>
-      <html>
-        <head>
-          <title>BingeBoard - Offline</title>
-          <meta name="viewport" content="width=device-width, initial-scale=1">
-          <style>
-            body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; text-align: center; padding: 50px; }
-            .offline { color: #666; }
-          </style>
-        </head>
-        <body>
-          <div class="offline">
-            <h1>You're offline</h1>
-            <p>Please check your internet connection and try again.</p>
-            <button onclick="window.location.reload()">Retry</button>
-          </div>
-        </body>
-      </html>`,
-      {
-        headers: { 'Content-Type': 'text/html' }
-      }
-    );
-  }
-}
-
-// Helper functions
-function isStaticAsset(pathname) {
-  return pathname.includes('.js') || 
-         pathname.includes('.css') || 
-         pathname.includes('.png') || 
-         pathname.includes('.jpg') || 
-         pathname.includes('.svg') || 
-         pathname.includes('.ico') ||
-         pathname.includes('.woff');
-}
-
-function shouldCache(url) {
-  return API_CACHE_PATTERNS.some(pattern => url.includes(pattern));
-}
-
-// Background sync for offline actions
-self.addEventListener('sync', (event) => {
-  if (event.tag === 'background-watchlist-sync') {
-    event.waitUntil(syncWatchlistData());
-  }
-});
-
-async function syncWatchlistData() {
-  console.log('Service Worker: Syncing watchlist data...');
-  // Implement offline watchlist synchronization logic here
-  // This would sync any changes made while offline
-}
-
-// Push notifications
-self.addEventListener('push', (event) => {
-  console.log('Service Worker: Push message received');
-  
-  const options = {
-    body: event.data ? event.data.text() : 'New content available!',
-    icon: '/icons/icon-192x192.png',
-    badge: '/icons/badge-72x72.png',
-    vibrate: [200, 100, 200],
-    data: {
-      dateOfArrival: Date.now(),
-      primaryKey: '1'
-    },
-    actions: [
-      {
-        action: 'explore',
-        title: 'Open App',
-        icon: '/icons/checkmark.png'
-      },
-      {
-        action: 'close',
-        title: 'Close',
-        icon: '/icons/xmark.png'
-      }
-    ]
-  };
-  
-  event.waitUntil(
-    self.registration.showNotification('BingeBoard', options)
-  );
-});
-
-// Handle notification clicks
-self.addEventListener('notificationclick', (event) => {
-  console.log('Service Worker: Notification clicked');
-  
-  event.notification.close();
-  
-  if (event.action === 'explore') {
-    event.waitUntil(
-      clients.openWindow('/')
-    );
+// Support explicit remote unregistration via postMessage if needed
+self.addEventListener('message', (event) => {
+  if (event?.data === 'unregister') {
+    console.log('Inert SW: received unregister message — attempting to unregister');
+    self.registration.unregister().then(() => {
+      console.log('Inert SW: unregistered via message');
+    }).catch((e) => console.warn('Inert SW: message-driven unregister failed', e));
   }
 });
