@@ -45,12 +45,37 @@ export default async function handler(req, res) {
     });
   }
 
+  // Firebase session creation (POST)
+  if ((url === '/api/auth/firebase-session' || url.startsWith('/api/auth/firebase-session?')) && req.method === 'POST') {
+    return res.status(200).json({
+      success: true,
+      message: 'Session stub - returns success but does not persist'
+    });
+  }
+
+  // Logout endpoint (POST)
+  if ((url === '/api/auth/logout' || url.startsWith('/api/auth/logout?')) && req.method === 'POST') {
+    return res.status(200).json({
+      success: true,
+      message: 'Logout stub'
+    });
+  }
+
   // Content discover stub
   if (url.startsWith('/api/content/discover')) {
     return res.status(200).json({
       page: 1,
       results: [],
       message: 'Discover stub - will add TMDB integration next'
+    });
+  }
+
+  // Dashboard content stub
+  if (url.startsWith('/api/content/dashboard')) {
+    return res.status(200).json({
+      trending: { tv: [], movie: [] },
+      personalized: { tv: [], movie: [] },
+      message: 'Dashboard stub'
     });
   }
 
