@@ -98,6 +98,40 @@ export default async function handler(req, res) {
     }
   }
 
+  // Trending endpoint - /api/trending/{media_type}/{time_window}
+  if (url.startsWith('/api/trending/')) {
+    try {
+      const match = url.match(/\/api\/trending\/(\w+)\/(\w+)/);
+      if (match) {
+        const [, mediaType, timeWindow] = match;
+        const data = await fetchTMDB(`/trending/${mediaType}/${timeWindow}`);
+        return res.status(200).json(data);
+      }
+    } catch (error) {
+      console.error('Trending error:', error);
+      return res.status(500).json({ error: 'Failed to fetch trending content' });
+    }
+  }
+
+  // Personalized endpoint - /api/personalized/{media_type}
+  if (url.startsWith('/api/personalized/')) {
+    try {
+      const match = url.match(/\/api\/personalized\/(\w+)/);
+      if (match) {
+        const [, mediaType] = match;
+        const urlObj = new URL(url, `https://${req.headers.host}`);
+        const sortBy = urlObj.searchParams.get('sort_by') || 'popularity.desc';
+        const page = urlObj.searchParams.get('page') || '1';
+        
+        const data = await fetchTMDB(`/discover/${mediaType}`, { sort_by: sortBy, page });
+        return res.status(200).json(data);
+      }
+    } catch (error) {
+      console.error('Personalized error:', error);
+      return res.status(500).json({ error: 'Failed to fetch personalized content' });
+    }
+  }
+
   // Dashboard content - returns trending + popular content
   if (url.startsWith('/api/content/dashboard')) {
     try {
