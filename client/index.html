@@ -172,35 +172,19 @@
     })();
   </script>
 
-  <!-- AGGRESSIVE CACHE CLEAR - November 5, 2025 - Phase 1 -->
+  <!-- CACHE CLEAR - November 12, 2025 - Simplified -->
   <script>
-    // COMPLETELY DISABLE ALL CACHING - Clear everything and force fresh load
+    // Clear service workers and caches (NO RELOAD - let React handle the rest)
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.getRegistrations().then(regs => {
-        regs.forEach(r => {
-          console.log('Unregistering service worker:', r.scope);
-          r.unregister();
-        });
+        regs.forEach(r => r.unregister());
       });
     }
     
     if ('caches' in window) {
       caches.keys().then(names => {
-        names.forEach(name => {
-          caches.delete(name);
-          console.log('🧹 Deleted cache:', name);
-        });
-        console.log('🧹 All caches cleared');
+        names.forEach(name => caches.delete(name));
       });
-    }
-    
-    // Force complete page reload from server
-    const cacheKey = 'force_reload_nov_5_phase1_v2';
-    if (!sessionStorage.getItem(cacheKey)) {
-      sessionStorage.setItem(cacheKey, 'true');
-      console.log('🔄 Forcing complete reload from server...');
-      // Force reload bypassing all caches
-      location.reload(true);
     }
   </script>
 </body>
