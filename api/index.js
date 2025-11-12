@@ -203,6 +203,21 @@ export default async function handler(req, res) {
     }
   }
 
+  // Multi-API trailer endpoint - /api/multi-api/trailer/{media_type}/{id}
+  if (url.startsWith('/api/multi-api/trailer/')) {
+    try {
+      const match = url.match(/\/api\/multi-api\/trailer\/(\w+)\/(\d+)/);
+      if (match) {
+        const [, mediaType, id] = match;
+        const data = await fetchTMDB(`/${mediaType}/${id}/videos`);
+        return res.status(200).json({ trailers: data.results || [] });
+      }
+    } catch (error) {
+      console.error('Trailer error:', error);
+      return res.status(500).json({ error: 'Failed to fetch trailers' });
+    }
+  }
+
   // Dashboard content - returns trending + popular content
   if (url.startsWith('/api/content/dashboard')) {
     try {
