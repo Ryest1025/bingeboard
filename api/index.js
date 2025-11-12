@@ -1,7 +1,26 @@
 // Vercel Serverless Function Handler with TMDB Integration
+import admin from 'firebase-admin';
+import cookie from 'cookie';
 
 const TMDB_API_KEY = process.env.TMDB_API_KEY || 'b7cbf0200107ac0e023c8b37e4d0f611';
 const TMDB_BASE = 'https://api.themoviedb.org/3';
+
+// Initialize Firebase Admin (only once)
+if (!admin.apps.length) {
+  try {
+    const serviceAccount = JSON.parse(
+      process.env.FIREBASE_ADMIN_KEY || 
+      Buffer.from(process.env.FIREBASE_SERVICE_ACCOUNT_BASE64 || '', 'base64').toString()
+    );
+    
+    admin.initializeApp({
+      credential: admin.credential.cert(serviceAccount),
+      projectId: process.env.FIREBASE_PROJECT_ID || 'bingeboard-73c5f'
+    });
+  } catch (error) {
+    console.error('Firebase Admin init error:', error);
+  }
+}
 
 async function fetchTMDB(endpoint, params = {}) {
   const url = new URL(`${TMDB_BASE}${endpoint}`);
@@ -13,6 +32,15 @@ async function fetchTMDB(endpoint, params = {}) {
   const response = await fetch(url.toString());
   if (!response.ok) throw new Error(`TMDB error: ${response.status}`);
   return response.json();
+}
+
+async function getRawBody(req) {
+  return new Promise((resolve, reject) => {
+    let data = '';
+    req.on('data', chunk => { data += chunk; });
+    req.on('end', () => resolve(data));
+    req.on('error', reject);
+  });
 }
 
 export default async function handler(req, res) {
@@ -51,29 +79,72 @@ export default async function handler(req, res) {
     });
   }
 
-  // Auth status stub
+  // Auth status - check session cookie
   if (url === '/api/auth/status' || url.startsWith('/api/auth/status?')) {
-    return res.status(200).json({
-      isAuthenticated: false,
-      user: null,
-      message: 'Auth stub - full routes coming next'
-    });
+    try {
+      const cookies = cookie.parse(req.headers.cookie || '');
+      const sessionCookie = cookies.bb_session;
+      
+      if (!sessionCookie) {
+        return res.status(200).json({ isAuthenticated: false, user: null });
+      }
+      
+      // Verify session cookie with Firebase Admin
+      const decodedClaims = await admin.auth().verifySessionCookie(sessionCookie, true);
+      
+      return res.status(200).json({
+        isAuthenticated: true,
+        user: {
+          id: decodedClaims.uid,
+          email: decodedClaims.email,
+          displayName: decodedClaims.name || decodedClaims.email
+        }
+      });
+    } catch (error) {
+      console.error('Auth status error:', error);
+      return res.status(200).json({ isAuthenticated: false, user: null });
+    }
   }
 
   // Firebase session creation (POST)
   if ((url === '/api/auth/firebase-session' || url.startsWith('/api/auth/firebase-session?')) && req.method === 'POST') {
-    return res.status(200).json({
-      success: true,
-      message: 'Session stub - returns success but does not persist'
-    });
+    try {
+      const body = req.body || JSON.parse(await getRawBody(req));
+      const idToken = body.idToken || body.firebaseToken;
+      
+      if (!idToken) {
+        return res.status(400).json({ error: 'Missing idToken' });
+      }
+      
+      // Verify the ID token and create session cookie (5 days)
+      const expiresIn = 60 * 60 * 24 * 5 * 1000; // 5 days
+      const sessionCookie = await admin.auth().createSessionCookie(idToken, { expiresIn });
+      
+      // Set cookie
+      res.setHeader('Set-Cookie', cookie.serialize('bb_session', sessionCookie, {
+        maxAge: expiresIn / 1000,
+        httpOnly: true,
+        secure: true,
+        sameSite: 'none',
+        path: '/'
+      }));
+      
+      return res.status(200).json({ success: true });
+    } catch (error) {
+      console.error('Session creation error:', error);
+      return res.status(500).json({ error: 'Failed to create session' });
+    }
   }
 
   // Logout endpoint (POST)
   if ((url === '/api/auth/logout' || url.startsWith('/api/auth/logout?')) && req.method === 'POST') {
-    return res.status(200).json({
-      success: true,
-      message: 'Logout stub'
-    });
+    // Clear session cookie
+    res.setHeader('Set-Cookie', cookie.serialize('bb_session', '', {
+      maxAge: 0,
+      path: '/'
+    }));
+    
+    return res.status(200).json({ success: true });
   }
 
   // Content discover - returns TMDB discover results
