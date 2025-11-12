@@ -1,68 +1,63 @@
-// Vercel Serverless Function Handler
-// This creates the Express app without starting a server
+// Vercel Serverless Function Handler - Minimal Test
 
-import express from "express";
-import cors from "cors";
-import { registerRoutes } from "../server/routes.js";
-import dotenv from 'dotenv';
+export default async function handler(req, res) {
+  // Set CORS headers
+  const origin = req.headers.origin;
+  const allowedOrigins = [
+    'https://bingeboardapp.com',
+    'http://bingeboardapp.com',
+    'https://www.bingeboardapp.com',
+    'http://www.bingeboardapp.com',
+  ];
+  
+  if (origin && (allowedOrigins.includes(origin) || origin.endsWith('.vercel.app') || origin.endsWith('.github.io'))) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  }
+  
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  
+  // Handle preflight
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
 
-// Load environment variables
-dotenv.config();
+  const { url } = req;
 
-// Create Express app
-const app = express();
+  // Health check
+  if (url === '/api/health' || url.startsWith('/api/health?')) {
+    return res.status(200).json({
+      status: 'ok',
+      message: 'Minimal handler is working',
+      timestamp: new Date().toISOString(),
+      env: process.env.NODE_ENV || 'production',
+      url: url
+    });
+  }
 
-// Health check endpoint
-app.get('/api/health', (req, res) => {
-  res.json({ 
-    status: 'ok', 
-    timestamp: new Date().toISOString(),
-    env: process.env.NODE_ENV || 'production'
+  // Auth status stub
+  if (url === '/api/auth/status' || url.startsWith('/api/auth/status?')) {
+    return res.status(200).json({
+      isAuthenticated: false,
+      user: null,
+      message: 'Auth stub - full routes coming next'
+    });
+  }
+
+  // Content discover stub
+  if (url.startsWith('/api/content/discover')) {
+    return res.status(200).json({
+      page: 1,
+      results: [],
+      message: 'Discover stub - will add TMDB integration next'
+    });
+  }
+
+  // 404 for other routes
+  return res.status(404).json({
+    error: 'Not Found',
+    path: url,
+    message: 'Route not implemented yet'
   });
-});
-
-// CORS configuration
-app.use(cors({
-  origin: function (origin, callback) {
-    if (!origin) return callback(null, true);
-
-    const allowedOrigins = [
-      'https://bingeboardapp.com',
-      'http://bingeboardapp.com',
-      'https://www.bingeboardapp.com',
-      'http://www.bingeboardapp.com',
-      'https://www.joinbingeboard.com',
-      'https://joinbingeboard.com',
-      process.env.CORS_ORIGIN,
-    ].filter(Boolean);
-
-    const isAllowed = allowedOrigins.some(allowed => {
-      if (typeof allowed === 'string') {
-        return origin === allowed;
-      } else if (allowed instanceof RegExp) {
-        return allowed.test(origin);
-      }
-      return false;
-    }) || origin.endsWith('.vercel.app') || origin.endsWith('.github.io');
-
-    if (isAllowed) {
-      callback(null, true);
-    } else {
-      console.log(`CORS blocked origin: ${origin}`);
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
-  optionsSuccessStatus: 200
-}));
-
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ extended: false, limit: '50mb' }));
-
-// Register routes (auth, content, etc.)
-registerRoutes(app);
-
-// Export for Vercel serverless
-export default app;
+}
