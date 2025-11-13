@@ -205,7 +205,53 @@ export default async function handler(req, res) {
       const match = url.match(/\/api\/trending\/(\w+)\/(\w+)/);
       if (match) {
         const [, mediaType, timeWindow] = match;
+        const urlObj = new URL(url, `https://${req.headers.host}`);
+        const includeStreaming = urlObj.searchParams.get('includeStreaming') === 'true';
+        
         const data = await fetchTMDB(`/trending/${mediaType}/${timeWindow}`);
+        
+        // If streaming is requested, fetch watch providers for each result
+        if (includeStreaming && data.results) {
+          const resultsWithProviders = await Promise.all(
+            data.results.map(async (item) => {
+              try {
+                const providers = await fetchTMDB(`/${mediaType}/${item.id}/watch/providers`);
+                const usProviders = providers.results?.US;
+                
+                // Transform to streamingPlatforms format expected by frontend
+                let streamingPlatforms = [];
+                if (usProviders) {
+                  // Combine flatrate, rent, and buy providers
+                  const allProviders = [
+                    ...(usProviders.flatrate || []),
+                    ...(usProviders.rent || []),
+                    ...(usProviders.buy || [])
+                  ];
+                  
+                  // Deduplicate by provider_id
+                  const uniqueProviders = Array.from(
+                    new Map(allProviders.map(p => [p.provider_id, p])).values()
+                  );
+                  
+                  streamingPlatforms = uniqueProviders.map(p => ({
+                    provider_id: p.provider_id,
+                    provider_name: p.provider_name,
+                    logo_path: p.logo_path
+                  }));
+                }
+                
+                return {
+                  ...item,
+                  streamingPlatforms
+                };
+              } catch (err) {
+                return item; // Return without providers if fetch fails
+              }
+            })
+          );
+          data.results = resultsWithProviders;
+        }
+        
         return res.status(200).json(data);
       }
     } catch (error) {
