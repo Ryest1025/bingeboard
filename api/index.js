@@ -256,6 +256,45 @@ export default async function handler(req, res) {
     }
   }
 
+  // TMDB discover endpoint - /api/tmdb/discover/{media_type}
+  if (url.startsWith('/api/tmdb/discover/')) {
+    try {
+      const match = url.match(/\/api\/tmdb\/discover\/(\w+)/);
+      if (match) {
+        const [, mediaType] = match;
+        const urlObj = new URL(url, `https://${req.headers.host}`);
+        const sortBy = urlObj.searchParams.get('sort_by') || 'popularity.desc';
+        const page = urlObj.searchParams.get('page') || '1';
+        
+        const data = await fetchTMDB(`/discover/${mediaType}`, { sort_by: sortBy, page });
+        return res.status(200).json(data);
+      }
+    } catch (error) {
+      console.error('TMDB discover error:', error);
+      return res.status(500).json({ error: 'Failed to fetch TMDB content' });
+    }
+  }
+
+  // User watchlist endpoint (stub - returns empty array until DB is connected)
+  if (url.startsWith('/api/user/watchlist')) {
+    return res.status(200).json({ watchlist: [] });
+  }
+
+  // User reminders endpoint (stub - returns empty array until DB is connected)
+  if (url.startsWith('/api/user/reminders')) {
+    return res.status(200).json({ reminders: [] });
+  }
+
+  // Continue watching endpoint (stub - returns empty array until DB is connected)
+  if (url.startsWith('/api/continue-watching')) {
+    return res.status(200).json({ continueWatching: [] });
+  }
+
+  // Notifications history endpoint (stub - returns empty array until DB is connected)
+  if (url.startsWith('/api/notifications/history')) {
+    return res.status(200).json({ notifications: [] });
+  }
+
   // 404 for other routes
   return res.status(404).json({
     error: 'Not Found',
