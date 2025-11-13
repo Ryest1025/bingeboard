@@ -184,14 +184,79 @@ export default async function handler(req, res) {
       const mediaType = urlObj.searchParams.get('media_type') || 'tv';
       const sortBy = urlObj.searchParams.get('sort_by') || 'popularity.desc';
       const page = urlObj.searchParams.get('page') || '1';
+      const limit = urlObj.searchParams.get('limit');
+      const includeStreaming = urlObj.searchParams.get('include_streaming') === 'true';
       
-      const data = await fetchTMDB(`/discover/${mediaType}`, { sort_by: sortBy, page });
+      // Build TMDB params
+      const tmdbParams = { 
+        sort_by: sortBy, 
+        page 
+      };
+      
+      // Pass through additional TMDB filters
+      const filterParams = ['with_genres', 'genres', 'vote_average.gte', 'vote_average_gte', 
+                           'vote_count.gte', 'first_air_date.gte', 'first_air_date.lte'];
+      filterParams.forEach(param => {
+        const value = urlObj.searchParams.get(param);
+        if (value) {
+          // Normalize param names for TMDB
+          const tmdbParam = param.replace('_', '.');
+          tmdbParams[tmdbParam] = value;
+        }
+      });
+      
+      const data = await fetchTMDB(`/discover/${mediaType}`, tmdbParams);
+      
+      let results = data.results || [];
+      
+      // Apply limit if specified
+      if (limit) {
+        results = results.slice(0, parseInt(limit));
+      }
+      
+      // Add streaming data if requested
+      if (includeStreaming && results.length > 0) {
+        results = await Promise.all(
+          results.map(async (item) => {
+            try {
+              const providers = await fetchTMDB(`/${mediaType}/${item.id}/watch/providers`);
+              const usProviders = providers.results?.US;
+              
+              let streamingPlatforms = [];
+              if (usProviders) {
+                const allProviders = [
+                  ...(usProviders.flatrate || []),
+                  ...(usProviders.rent || []),
+                  ...(usProviders.buy || [])
+                ];
+                
+                const uniqueProviders = Array.from(
+                  new Map(allProviders.map(p => [p.provider_id, p])).values()
+                );
+                
+                streamingPlatforms = uniqueProviders.map(p => ({
+                  provider_id: p.provider_id,
+                  provider_name: p.provider_name,
+                  logo_path: p.logo_path
+                }));
+              }
+              
+              return {
+                ...item,
+                streamingPlatforms
+              };
+            } catch (err) {
+              return item;
+            }
+          })
+        );
+      }
       
       return res.status(200).json({
         page: data.page,
         total_pages: data.total_pages,
         total_results: data.total_results,
-        results: data.results || []
+        results
       });
     } catch (error) {
       console.error('Discover error:', error);
@@ -297,6 +362,10 @@ export default async function handler(req, res) {
   // Dashboard content - returns trending + popular content
   if (url.startsWith('/api/content/dashboard')) {
     try {
+      const urlObj = new URL(url, `https://${req.headers.host}`);
+      const includeStreaming = urlObj.searchParams.get('includeStreaming') === 'true';
+      const limit = parseInt(urlObj.searchParams.get('limit') || '20');
+      
       const [trendingTV, trendingMovies, popularTV, popularMovies] = await Promise.all([
         fetchTMDB('/trending/tv/week'),
         fetchTMDB('/trending/movie/week'),
@@ -304,14 +373,61 @@ export default async function handler(req, res) {
         fetchTMDB('/discover/movie', { sort_by: 'popularity.desc' })
       ]);
 
+      // Helper to add streaming data
+      const addStreamingData = async (items, mediaType) => {
+        if (!includeStreaming) return items.slice(0, limit);
+        
+        return Promise.all(
+          items.slice(0, limit).map(async (item) => {
+            try {
+              const providers = await fetchTMDB(`/${mediaType}/${item.id}/watch/providers`);
+              const usProviders = providers.results?.US;
+              
+              let streamingPlatforms = [];
+              if (usProviders) {
+                const allProviders = [
+                  ...(usProviders.flatrate || []),
+                  ...(usProviders.rent || []),
+                  ...(usProviders.buy || [])
+                ];
+                
+                const uniqueProviders = Array.from(
+                  new Map(allProviders.map(p => [p.provider_id, p])).values()
+                );
+                
+                streamingPlatforms = uniqueProviders.map(p => ({
+                  provider_id: p.provider_id,
+                  provider_name: p.provider_name,
+                  logo_path: p.logo_path
+                }));
+              }
+              
+              return {
+                ...item,
+                streamingPlatforms
+              };
+            } catch (err) {
+              return item;
+            }
+          })
+        );
+      };
+
+      const [tvTrending, movieTrending, tvPopular, moviePopular] = await Promise.all([
+        addStreamingData(trendingTV.results || [], 'tv'),
+        addStreamingData(trendingMovies.results || [], 'movie'),
+        addStreamingData(popularTV.results || [], 'tv'),
+        addStreamingData(popularMovies.results || [], 'movie')
+      ]);
+
       return res.status(200).json({
         trending: {
-          tv: trendingTV.results?.slice(0, 20) || [],
-          movie: trendingMovies.results?.slice(0, 20) || []
+          tv: tvTrending,
+          movie: movieTrending
         },
         personalized: {
-          tv: popularTV.results?.slice(0, 20) || [],
-          movie: popularMovies.results?.slice(0, 20) || []
+          tv: tvPopular,
+          movie: moviePopular
         }
       });
     } catch (error) {
