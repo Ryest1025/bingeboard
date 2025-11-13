@@ -109,6 +109,15 @@ export default async function handler(req, res) {
   // Firebase session creation (POST)
   if ((url === '/api/auth/firebase-session' || url.startsWith('/api/auth/firebase-session?')) && req.method === 'POST') {
     try {
+      // Check if Firebase Admin is initialized
+      if (!admin.apps.length) {
+        console.error('Firebase Admin not initialized - missing credentials');
+        return res.status(503).json({ 
+          error: 'Firebase Admin not configured',
+          message: 'Server authentication is not available. Please contact support.'
+        });
+      }
+
       const body = req.body || JSON.parse(await getRawBody(req));
       const idToken = body.idToken || body.firebaseToken;
       
@@ -131,8 +140,11 @@ export default async function handler(req, res) {
       
       return res.status(200).json({ success: true });
     } catch (error) {
-      console.error('Session creation error:', error);
-      return res.status(500).json({ error: 'Failed to create session' });
+      console.error('Session creation error:', error.message || error);
+      return res.status(500).json({ 
+        error: 'Failed to create session',
+        details: error.message 
+      });
     }
   }
 
