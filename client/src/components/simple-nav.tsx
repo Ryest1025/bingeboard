@@ -2,15 +2,6 @@ import { Link, useLocation } from "wouter";
 import { Tv } from "lucide-react";
 
 export default function SimpleNav() {
-  const [location] = useLocation();
-
-  const navItems = [
-    { path: "/", label: "Home" },
-    { path: "/discover", label: "Discover" },
-    { path: "/upcoming", label: "Upcoming" },
-    { path: "/friends", label: "Binge Friends" },
-  ];
-
   return (
     <nav className="sticky top-0 z-50 bg-binge-charcoal/95 backdrop-blur-md border-b border-binge-gray">
       <div className="max-w-6xl mx-auto px-4 py-4">
@@ -28,22 +19,6 @@ export default function SimpleNav() {
               </div>
             </div>
           </Link>
-          
-          <div className="hidden md:flex space-x-6">
-            {navItems.map((item) => (
-              <Link
-                key={item.path}
-                href={item.path}
-                className={`transition-colors ${
-                  location === item.path
-                    ? "text-binge-purple"
-                    : "text-muted-foreground hover:text-binge-purple"
-                }`}
-              >
-                {item.label}
-              </Link>
-            ))}
-          </div>
         </div>
       </div>
     </nav>
