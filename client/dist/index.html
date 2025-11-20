@@ -19,11 +19,13 @@
   <meta http-equiv="X-Content-Type-Options" content="nosniff">
   <meta http-equiv="X-XSS-Protection" content="1; mode=block">
   
-  <!-- NUCLEAR CACHE BUSTING - November 5, 2025 (Phase 1 Friends + API Fix) -->
+  <!-- NUCLEAR CACHE BUSTING - November 20, 2025 (Discover Page Fix) -->
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
-  <meta name="build-time" content="20251105-210000">
+  <meta name="build-time" content="20251120-000000">
+  <meta name="cache-version" content="v14.0-discover-fix">
+  <meta name="force-reload" content="true">
 
   <!-- Preload Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -138,8 +140,8 @@
       color: #9ca3af;
     }
   </style>
-  <script type="module" crossorigin src="/assets/index-CeXfyC8W.js"></script>
-  <link rel="stylesheet" crossorigin href="/assets/index-BJn7S0rq.css">
+  <script type="module" crossorigin src="/assets/index-DFg4Sdch.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/index-CEVK5yHs.css">
 </head>
 
 <body>
@@ -156,7 +158,46 @@
 
   <div id="root"></div>
 
-  <!-- React Entry -->
+  <!-- IMMEDIATE CACHE CHECK - November 20, 2025 - Runs BEFORE any modules load -->
+  <script>
+    (function immediateVersionCheck() {
+      const CURRENT_VERSION = 'v14.0-discover-fix';
+      const storedVersion = localStorage.getItem('app-version');
+      
+      if (storedVersion !== CURRENT_VERSION) {
+        console.log('🔄 Version mismatch detected! Stored:', storedVersion, 'Current:', CURRENT_VERSION);
+        console.log('🧹 Clearing all caches and forcing hard reload...');
+        
+        // Clear localStorage except auth
+        const keysToKeep = ['userEmail', 'rememberLogin'];
+        const allKeys = Object.keys(localStorage);
+        allKeys.forEach(key => {
+          if (!keysToKeep.includes(key)) {
+            localStorage.removeItem(key);
+          }
+        });
+        
+        // Clear sessionStorage
+        sessionStorage.clear();
+        
+        // Set new version
+        localStorage.setItem('app-version', CURRENT_VERSION);
+        
+        // Add cache-busting parameter to URL
+        const url = new URL(window.location.href);
+        if (!url.searchParams.has('_v')) {
+          url.searchParams.set('_v', CURRENT_VERSION);
+          console.log('🚀 Hard reloading with cache bust...');
+          window.location.replace(url.toString());
+          throw new Error('Reloading...'); // Stop execution
+        }
+      }
+      
+      console.log('✅ Version check passed:', CURRENT_VERSION);
+    })();
+  </script>
+
+  <!-- React Entry with cache busting -->
 
   <!-- GitHub Pages SPA redirect handling -->
   <script>
@@ -173,36 +214,51 @@
     })();
   </script>
 
-  <!-- AGGRESSIVE CACHE CLEAR - November 5, 2025 - Phase 1 -->
+  <!-- CACHE CLEAR - November 20, 2025 - Discover Page Fix -->
   <script>
-    // COMPLETELY DISABLE ALL CACHING - Clear everything and force fresh load
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.getRegistrations().then(regs => {
-        regs.forEach(r => {
-          console.log('Unregistering service worker:', r.scope);
-          r.unregister();
+    (async function forceCompleteCacheClear() {
+      const currentVersion = 'v14.0-discover-fix';
+      const storedVersion = localStorage.getItem('app-version');
+      
+      // If version changed, clear everything and force reload
+      if (storedVersion !== currentVersion) {
+        console.log('🧹 Version changed from', storedVersion, 'to', currentVersion, '- clearing all caches...');
+        
+        // Clear service workers
+        if ('serviceWorker' in navigator) {
+          const regs = await navigator.serviceWorker.getRegistrations();
+          await Promise.all(regs.map(r => r.unregister()));
+          console.log('✅ Service workers cleared');
+        }
+        
+        // Clear all caches
+        if ('caches' in window) {
+          const names = await caches.keys();
+          await Promise.all(names.map(name => caches.delete(name)));
+          console.log('✅ Cache storage cleared');
+        }
+        
+        // Clear localStorage except critical data
+        const keysToKeep = ['userEmail', 'rememberLogin'];
+        const allKeys = Object.keys(localStorage);
+        allKeys.forEach(key => {
+          if (!keysToKeep.includes(key)) {
+            localStorage.removeItem(key);
+          }
         });
-      });
-    }
-    
-    if ('caches' in window) {
-      caches.keys().then(names => {
-        names.forEach(name => {
-          caches.delete(name);
-          console.log('🧹 Deleted cache:', name);
-        });
-        console.log('🧹 All caches cleared');
-      });
-    }
-    
-    // Force complete page reload from server
-    const cacheKey = 'force_reload_nov_5_phase1_v2';
-    if (!sessionStorage.getItem(cacheKey)) {
-      sessionStorage.setItem(cacheKey, 'true');
-      console.log('🔄 Forcing complete reload from server...');
-      // Force reload bypassing all caches
-      location.reload(true);
-    }
+        
+        // Clear sessionStorage
+        sessionStorage.clear();
+        
+        // Set new version
+        localStorage.setItem('app-version', currentVersion);
+        console.log('✅ Cache cleared, version updated to:', currentVersion);
+        console.log('🔄 Forcing hard reload...');
+        
+        // Force a hard reload to bypass ALL caches
+        window.location.reload(true);
+      }
+    })();
   </script>
 </body>
 
