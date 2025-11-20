@@ -151,6 +151,16 @@ const initAuth = () => {
     }
   };
   
+  // SAFETY: Set a timeout to prevent infinite loading (5 seconds)
+  const safetyTimeout = setTimeout(() => {
+    if (!sessionHydrated) {
+      console.warn('⚠️ Auth initialization timed out after 5s, proceeding with isLoading=false');
+      sessionHydrated = true;
+      initialAuthComplete = true;
+      updateState({ isLoading: false });
+    }
+  }, 5000);
+  
   // Check OAuth redirect FIRST, then backend session
   checkOAuthRedirect().then(async (hadOAuthRedirect) => {
     if (!hadOAuthRedirect) {
@@ -163,7 +173,14 @@ const initAuth = () => {
     // Mark initial auth as complete to allow onAuthStateChanged to proceed
     initialAuthComplete = true;
     sessionHydrated = true; // NEW: Session check complete
+    clearTimeout(safetyTimeout); // Clear safety timeout
     console.log('✅ Initial auth sequence complete, session hydrated:', globalState.isAuthenticated);
+  }).catch((err) => {
+    console.error('❌ Auth initialization error:', err);
+    sessionHydrated = true;
+    initialAuthComplete = true;
+    clearTimeout(safetyTimeout);
+    updateState({ isLoading: false });
   });
   
   // Listen to Firebase auth state changes (for new logins)

@@ -140,7 +140,7 @@
       color: #9ca3af;
     }
   </style>
-  <script type="module" crossorigin src="/assets/index-CXMo_C6L.js"></script>
+  <script type="module" crossorigin src="/assets/index-muYqwZ_3.js"></script>
   <link rel="stylesheet" crossorigin href="/assets/index-CEVK5yHs.css">
 </head>
 
@@ -213,53 +213,6 @@
       }
     })();
   </script>
-
-  <!-- CACHE CLEAR - November 20, 2025 - Discover Page Fix -->
-  <script>
-    (async function forceCompleteCacheClear() {
-      const currentVersion = 'v14.0-discover-fix';
-      const storedVersion = localStorage.getItem('app-version');
-      
-      // If version changed, clear everything and force reload
-      if (storedVersion !== currentVersion) {
-        console.log('🧹 Version changed from', storedVersion, 'to', currentVersion, '- clearing all caches...');
-        
-        // Clear service workers
-        if ('serviceWorker' in navigator) {
-          const regs = await navigator.serviceWorker.getRegistrations();
-          await Promise.all(regs.map(r => r.unregister()));
-          console.log('✅ Service workers cleared');
-        }
-        
-        // Clear all caches
-        if ('caches' in window) {
-          const names = await caches.keys();
-          await Promise.all(names.map(name => caches.delete(name)));
-          console.log('✅ Cache storage cleared');
-        }
-        
-        // Clear localStorage except critical data
-        const keysToKeep = ['userEmail', 'rememberLogin'];
-        const allKeys = Object.keys(localStorage);
-        allKeys.forEach(key => {
-          if (!keysToKeep.includes(key)) {
-            localStorage.removeItem(key);
-          }
-        });
-        
-        // Clear sessionStorage
-        sessionStorage.clear();
-        
-        // Set new version
-        localStorage.setItem('app-version', currentVersion);
-        console.log('✅ Cache cleared, version updated to:', currentVersion);
-        console.log('🔄 Forcing hard reload...');
-        
-        // Force a hard reload to bypass ALL caches
-        window.location.reload(true);
-      }
-    })();
-  </script>
 </body>
 
-</html><!-- Deployment trigger: Thu Nov 20 18:14:21 UTC 2025 -->
+</html>
