@@ -455,6 +455,75 @@ export default async function handler(req, res) {
     }
   }
 
+  // TMDB top rated endpoint - /api/tmdb/{media_type}/top_rated
+  if (url.match(/^\/api\/tmdb\/(tv|movie)\/top_rated/)) {
+    try {
+      const match = url.match(/\/api\/tmdb\/(\w+)\/top_rated/);
+      if (match) {
+        const [, mediaType] = match;
+        const urlObj = new URL(url, `https://${req.headers.host}`);
+        const page = urlObj.searchParams.get('page') || '1';
+        const limit = urlObj.searchParams.get('limit');
+        const includeStreaming = urlObj.searchParams.get('includeStreaming') === 'true';
+        
+        const data = await fetchTMDB(`/${mediaType}/top_rated`, { page });
+        
+        let results = data.results || [];
+        
+        // Apply limit if specified
+        if (limit) {
+          results = results.slice(0, parseInt(limit));
+        }
+        
+        // Add streaming data if requested
+        if (includeStreaming && results.length > 0) {
+          results = await Promise.all(
+            results.map(async (item) => {
+              try {
+                const providers = await fetchTMDB(`/${mediaType}/${item.id}/watch/providers`);
+                const usProviders = providers.results?.US;
+                
+                let streamingPlatforms = [];
+                if (usProviders) {
+                  const allProviders = [
+                    ...(usProviders.flatrate || []),
+                    ...(usProviders.rent || []),
+                    ...(usProviders.buy || [])
+                  ];
+                  
+                  const uniqueProviders = Array.from(
+                    new Map(allProviders.map(p => [p.provider_id, p])).values()
+                  );
+                  
+                  streamingPlatforms = uniqueProviders.map(p => ({
+                    provider_id: p.provider_id,
+                    provider_name: p.provider_name,
+                    logo_path: p.logo_path
+                  }));
+                }
+                
+                return {
+                  ...item,
+                  streamingPlatforms
+                };
+              } catch (err) {
+                return item;
+              }
+            })
+          );
+        }
+        
+        return res.status(200).json({
+          ...data,
+          results
+        });
+      }
+    } catch (error) {
+      console.error('TMDB top rated error:', error);
+      return res.status(500).json({ error: 'Failed to fetch top rated content' });
+    }
+  }
+
   // User watchlist endpoint (stub - returns empty array until DB is connected)
   if (url.startsWith('/api/user/watchlist')) {
     return res.status(200).json({ watchlist: [] });
