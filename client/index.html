@@ -156,6 +156,45 @@
 
   <div id="root"></div>
 
+  <!-- IMMEDIATE CACHE CHECK - November 20, 2025 - Runs BEFORE any modules load -->
+  <script>
+    (function immediateVersionCheck() {
+      const CURRENT_VERSION = 'v14.0-discover-fix';
+      const storedVersion = localStorage.getItem('app-version');
+      
+      if (storedVersion !== CURRENT_VERSION) {
+        console.log('🔄 Version mismatch detected! Stored:', storedVersion, 'Current:', CURRENT_VERSION);
+        console.log('🧹 Clearing all caches and forcing hard reload...');
+        
+        // Clear localStorage except auth
+        const keysToKeep = ['userEmail', 'rememberLogin'];
+        const allKeys = Object.keys(localStorage);
+        allKeys.forEach(key => {
+          if (!keysToKeep.includes(key)) {
+            localStorage.removeItem(key);
+          }
+        });
+        
+        // Clear sessionStorage
+        sessionStorage.clear();
+        
+        // Set new version
+        localStorage.setItem('app-version', CURRENT_VERSION);
+        
+        // Add cache-busting parameter to URL
+        const url = new URL(window.location.href);
+        if (!url.searchParams.has('_v')) {
+          url.searchParams.set('_v', CURRENT_VERSION);
+          console.log('🚀 Hard reloading with cache bust...');
+          window.location.replace(url.toString());
+          throw new Error('Reloading...'); // Stop execution
+        }
+      }
+      
+      console.log('✅ Version check passed:', CURRENT_VERSION);
+    })();
+  </script>
+
   <!-- React Entry with cache busting -->
   <script type="module" src="/src/main.tsx?v=20251120-000000"></script>
 
