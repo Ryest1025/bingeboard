@@ -26,6 +26,7 @@ let globalState = {
 let initialized = false;
 let authCheckInProgress = false;
 let initialAuthComplete = false;
+let sessionHydrated = false; // NEW: Track if we've checked backend session
 const listeners = new Set<() => void>();
 
 const updateState = (newState: Partial<typeof globalState>) => {
@@ -100,7 +101,7 @@ const initAuth = () => {
     return false; // No OAuth redirect
   };
   
-    // STEP 2: Check existing backend session (only if no OAuth redirect)
+  // STEP 2: Check existing backend session (only if no OAuth redirect)
   const checkBackendSession = async () => {
     if (authCheckInProgress) {
       console.log('⏸️ Auth check already in progress, skipping duplicate check');
@@ -109,24 +110,38 @@ const initAuth = () => {
     
     authCheckInProgress = true;
     try {
-      console.log('🔍 Checking backend session...');
+      console.log('🔍 Checking backend session at /api/auth/status...');
       const response = await apiFetch('/api/auth/status', {
         credentials: 'include', // Send cookies
       });
       
+      console.log('📡 Backend session response:', response.status, response.statusText);
+      
       if (response.ok) {
         const data = await response.json();
+        console.log('📦 Backend session data:', {
+          isAuthenticated: data.isAuthenticated,
+          hasUser: !!data.user,
+          userEmail: data.user?.email
+        });
+        
         if (data.isAuthenticated && data.user) {
-          console.log('✅ Backend session found:', data.user);
+          const user: User = {
+            id: data.user.id || data.user.uid,
+            email: data.user.email,
+            displayName: data.user.displayName || data.user.name || undefined,
+          };
+          
+          console.log('✅ Backend session RESTORED:', user);
           updateState({
-            user: data.user,
+            user,
             isAuthenticated: true,
             isLoading: false
           });
           return true;
         }
       }
-      console.log('ℹ️ No backend session found');
+      console.log('ℹ️ No backend session found (response not ok or no user data)');
       return false;
     } catch (error) {
       console.error('❌ Backend session check failed:', error);
@@ -147,7 +162,8 @@ const initAuth = () => {
     }
     // Mark initial auth as complete to allow onAuthStateChanged to proceed
     initialAuthComplete = true;
-    console.log('✅ Initial auth sequence complete');
+    sessionHydrated = true; // NEW: Session check complete
+    console.log('✅ Initial auth sequence complete, session hydrated:', globalState.isAuthenticated);
   });
   
   // Listen to Firebase auth state changes (for new logins)
@@ -216,12 +232,20 @@ const initAuth = () => {
 };
 
 export function useAuth(): AuthState {
-  const [state, setState] = useState(() => ({ ...globalState }));
+  const [state, setState] = useState(() => ({ 
+    ...globalState,
+    // CRITICAL: Keep isLoading=true until session is hydrated
+    isLoading: !sessionHydrated ? true : globalState.isLoading
+  }));
   
   useEffect(() => { initAuth(); }, []);
   
   useEffect(() => {
-    const update = () => setState({ ...globalState });
+    const update = () => setState({ 
+      ...globalState,
+      // CRITICAL: Keep isLoading=true until session is hydrated
+      isLoading: !sessionHydrated ? true : globalState.isLoading
+    });
     listeners.add(update);
     update(); // Immediately sync with global state
     return () => {

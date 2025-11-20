@@ -94,12 +94,31 @@ function Router() {
 
           {/* Root route - dynamic behavior based on auth */}
           <Route path="/">{(() => {
-              console.log(`🛣️ Root route: isAuthenticated=${isAuthenticated}, isLoading=${isLoading}, user=${user?.email || 'null'}, redirecting to ${isAuthenticated ? 'dashboard' : 'landing'}`);
+              console.log(`🛣️ Root route render:`, {
+                isAuthenticated,
+                isLoading,
+                user: user?.email || null,
+                redirectingTo: isAuthenticated ? 'dashboard' : 'landing'
+              });
+              
+              // CRITICAL: Don't redirect while still loading - wait for session check
+              if (isLoading) {
+                console.log('⏸️ Root route waiting for auth to complete...');
+                return (
+                  <div className="min-h-screen flex items-center justify-center bg-black">
+                    <div className="text-center">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-500 mx-auto"></div>
+                      <p className="text-gray-400 mt-4">🔄 Verifying session...</p>
+                    </div>
+                  </div>
+                );
+              }
               
               if (isAuthenticated) {
-                // Redirect to dashboard using wouter
+                console.log('✅ User authenticated, redirecting to dashboard');
                 return <Redirect to="/dashboard" />;
               } else {
+                console.log('ℹ️ No authentication, showing landing page');
                 return <Landing />;
               }
             })()}
