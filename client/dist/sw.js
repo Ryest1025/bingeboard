@@ -7,8 +7,7 @@ const DYNAMIC_CACHE_NAME = 'bingeboard-dynamic-v4-oct17';
 const STATIC_ASSETS = [
   '/',
   '/manifest.json',
-  '/offline.html',
-  // Add your main JS/CSS assets here when they're built
+  // Removed /offline.html - file doesn't exist
 ];
 
 // API endpoints to cache with network-first strategy
