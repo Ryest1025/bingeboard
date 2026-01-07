@@ -152,6 +152,7 @@ const initAuth = () => {
   };
   
   // SAFETY: Set a timeout to prevent infinite loading (5 seconds)
+  // v15.0 - January 6, 2026: Fixed state update to force React re-render
   const safetyTimeout = setTimeout(() => {
     if (!sessionHydrated) {
       console.warn('⚠️ Auth initialization timed out after 5s, proceeding with isLoading=false');
