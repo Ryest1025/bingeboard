@@ -1,4 +1,8 @@
-// App Version 3.2.0 - Session Persistence Fixed (Nov 11, 2025)
+// App Version 15.0 - Auth Loading Fix (Jan 7, 2026)
+// Build timestamp: 2026-01-07T00:30:00Z
+const BUILD_ID = "v15.0-20260107-003000";
+console.log("🏗️ Build:", BUILD_ID);
+
 import * as React from "react";
 import { createRoot } from "react-dom/client";
 import App from "./App";
