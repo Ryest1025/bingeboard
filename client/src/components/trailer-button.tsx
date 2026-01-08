@@ -53,6 +53,15 @@ export default function TrailerButton({
     return url;
   };
 
+  // Debug logging
+  console.log('TrailerButton render:', {
+    show: show.title,
+    isLoading,
+    hasData: !!trailerData,
+    hasPrimaryTrailer: !!trailerData?.primaryTrailer,
+    error: error?.message
+  });
+
   return (
     <>
       <Button

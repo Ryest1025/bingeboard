@@ -1,6 +1,6 @@
-// App Version 15.3 - Remove Demo Login Button (Jan 8, 2026)
-// Build timestamp: 2026-01-08T02:00:00Z
-const BUILD_ID = "v15.3-20260108-020000";
+// App Version 15.4 - Debug trailer button (Jan 8, 2026)
+// Build timestamp: 2026-01-08T03:00:00Z
+const BUILD_ID = "v15.4-20260108-030000";
 console.log("🏗️ Build:", BUILD_ID);
 
 import * as React from "react";
