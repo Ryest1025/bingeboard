@@ -1,6 +1,6 @@
-// App Version 15.2 - Force Listener Update After sessionHydrated (Jan 7, 2026)
-// Build timestamp: 2026-01-07T01:00:00Z
-const BUILD_ID = "v15.2-20260107-010000";
+// App Version 15.3 - Remove Demo Login Button (Jan 8, 2026)
+// Build timestamp: 2026-01-08T02:00:00Z
+const BUILD_ID = "v15.3-20260108-020000";
 console.log("🏗️ Build:", BUILD_ID);
 
 import * as React from "react";
