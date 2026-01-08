@@ -1,6 +1,6 @@
-// App Version 15.5 - Fix trailer hook to handle both API formats (Jan 8, 2026)
-// Build timestamp: 2026-01-08T03:30:00Z
-const BUILD_ID = "v15.5-20260108-033000";
+// App Version 15.6 - Debug continue watching API (Jan 8, 2026)
+// Build timestamp: 2026-01-08T04:00:00Z
+const BUILD_ID = "v15.6-20260108-040000";
 console.log("🏗️ Build:", BUILD_ID);
 
 import * as React from "react";

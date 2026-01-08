@@ -374,6 +374,14 @@ const ContinueWatching: React.FC<ContinueWatchingProps> = ({ limit = 10, classNa
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
 
+  // Debug logging
+  console.log('ContinueWatching component:', { 
+    itemCount: items?.length, 
+    isLoading, 
+    hasError: !!error,
+    items: items?.map(i => ({ id: i.showId, title: i.title }))
+  });
+
   // Check scroll position
   const checkScrollButtons = () => {
     if (scrollContainerRef.current) {
