@@ -103,105 +103,33 @@ export function useContinueWatching(limit = 10) {
   return useQuery({
     queryKey: ['continue-watching', limit],
     queryFn: async (): Promise<ContinueWatchingItem[]> => {
-      console.log('▶️ Fetching continue watching list...');
+      console.log('▶️ Fetching continue watching list from real API...');
 
       try {
         const response = await apiFetch(`/api/continue-watching?limit=${limit}`);
 
         if (!response.ok) {
-          console.warn('Continue watching endpoint failed, using fallback data');
-          return getFallbackContinueWatching();
+          console.warn('Continue watching endpoint failed:', response.status);
+          return [];
         }
 
         const data = await response.json();
 
         if (!data.success) {
-          console.warn('Continue watching API returned error, using fallback data');
-          return getFallbackContinueWatching();
+          console.warn('Continue watching API returned error');
+          return [];
         }
 
-        console.log(`✅ Fetched ${data.continueWatching.length} shows to continue`);
+        console.log(`✅ Fetched ${data.continueWatching.length} real shows to continue`);
         return data.continueWatching;
       } catch (error) {
-        console.warn('Continue watching request failed, using fallback data:', error);
-        return getFallbackContinueWatching();
+        console.warn('Continue watching request failed:', error);
+        return [];
       }
     },
     staleTime: 2 * 60 * 1000, // 2 minutes
     gcTime: 15 * 60 * 1000, // 15 minutes
   });
-}
-
-// Fallback data for continue watching
-function getFallbackContinueWatching(): ContinueWatchingItem[] {
-  return [
-    {
-      showId: 93405,
-      title: "Squid Game",
-      mediaType: 'tv',
-      lastWatched: "2025-08-04T15:30:00Z",
-      platform: {
-        provider_name: "Netflix",
-        provider_id: 8,
-        logo_path: "/9A1JSVmSxsyaBK4SUFsYVqbAYfW.jpg"
-      } as any,
-      poster_path: "/dDlEmu3EZ0Pgg93K2SVNLCjCSvE.jpg", // Squid Game poster
-      backdrop_path: "/qw3J9cNeLioOLoR68WX7z79aCdK.jpg",
-      currentEpisode: {
-        seasonNumber: 1,
-        episodeNumber: 4,
-        progressPercentage: 65,
-        duration: 54,
-        watchedDuration: 35
-      },
-      totalEpisodes: 9,
-      completedEpisodes: 3
-    },
-    {
-      showId: 119051,
-      title: "Wednesday",
-      mediaType: 'tv',
-      lastWatched: "2025-08-03T20:15:00Z",
-      platform: {
-        provider_name: "Netflix",
-        provider_id: 8,
-        logo_path: "/9A1JSVmSxsyaBK4SUFsYVqbAYfW.jpg"
-      } as any,
-      poster_path: "/9PFonBhy4cQy7Jz20NpMygczOkv.jpg", // Wednesday poster
-      backdrop_path: "/iHSwvRVsRyxpX7FE7GbviaDvgGZ.jpg",
-      currentEpisode: {
-        seasonNumber: 1,
-        episodeNumber: 2,
-        progressPercentage: 25,
-        duration: 48,
-        watchedDuration: 12
-      },
-      totalEpisodes: 8,
-      completedEpisodes: 1
-    },
-    {
-      showId: 1396,
-      title: "Breaking Bad",
-      mediaType: 'tv',
-      lastWatched: "2025-08-02T18:45:00Z",
-      platform: {
-        provider_name: "Netflix",
-        provider_id: 8,
-        logo_path: "/9A1JSVmSxsyaBK4SUFsYVqbAYfW.jpg"
-      } as any,
-      poster_path: "/3xnWaLQjelJDDF7LT1WBo6f4BRe.jpg", // Breaking Bad poster
-      backdrop_path: "/tsRy63Mu5cu8etL1X7ZLyf7UP1M.jpg",
-      currentEpisode: {
-        seasonNumber: 3,
-        episodeNumber: 7,
-        progressPercentage: 90,
-        duration: 47,
-        watchedDuration: 42
-      },
-      totalEpisodes: 62,
-      completedEpisodes: 32
-    }
-  ];
 }
 
 // Custom hook to update viewing progress
@@ -286,7 +214,7 @@ export function useCurrentProgress() {
   return useQuery({
     queryKey: ['current-progress'],
     queryFn: async (): Promise<ContinueWatchingItem[]> => {
-      console.log('⏱️ Fetching current viewing progress...');
+      console.log('⏱️ Fetching current viewing progress from real API...');
 
       try {
         const response = await fetch('/api/progress/current', {
@@ -294,77 +222,27 @@ export function useCurrentProgress() {
         });
 
         if (!response.ok) {
-          console.warn('Current progress endpoint failed, using fallback data');
-          return getFallbackCurrentProgress();
+          console.warn('Current progress endpoint failed:', response.status);
+          return [];
         }
 
         const data = await response.json();
 
         if (!data.success) {
-          console.warn('Current progress API returned error, using fallback data');
-          return getFallbackCurrentProgress();
+          console.warn('Current progress API returned error');
+          return [];
         }
 
         console.log(`✅ Fetched progress for ${data.currentlyWatching.length} shows`);
         return data.currentlyWatching;
       } catch (error) {
-        console.warn('Current progress request failed, using fallback data:', error);
-        return getFallbackCurrentProgress();
+        console.warn('Current progress request failed:', error);
+        return [];
       }
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 30 * 60 * 1000, // 30 minutes
   });
-}
-
-// Fallback data for current progress
-function getFallbackCurrentProgress(): ContinueWatchingItem[] {
-  return [
-    {
-      showId: 90802,
-      title: "The Sandman",
-      mediaType: 'tv',
-      lastWatched: "2025-08-05T14:20:00Z",
-      platform: {
-        provider_name: "Netflix",
-        provider_id: 8,
-        logo_path: "/9A1JSVmSxsyaBK4SUFsYVqbAYfW.jpg"
-      } as any,
-      poster_path: "/q54qEgagGOYCq5D1903eBVMNkbo.jpg", // The Sandman poster
-      backdrop_path: "/2OMB0ynKlyIenMJWI2Dy9IWT4c.jpg",
-      currentEpisode: {
-        seasonNumber: 1,
-        episodeNumber: 6,
-        progressPercentage: 78,
-        duration: 52,
-        watchedDuration: 40
-      },
-      totalEpisodes: 11,
-      completedEpisodes: 5
-    },
-    {
-      showId: 1429,
-      title: "Attack on Titan",
-      mediaType: 'tv',
-      lastWatched: "2025-08-04T21:30:00Z",
-      platform: {
-        provider_name: "Hulu",
-        provider_id: 15,
-        logo_path: "/giwM8XX4V2AQb9vsoN7yti82tKK.jpg"
-      } as any,
-      poster_path: "/hTP1DtLGFamjfu8WqjnuQdP1n4i.jpg", // Attack on Titan poster
-      backdrop_path: "/rqbCbjB19amtOtFQbb3K2lgm2zv.jpg",
-      currentEpisode: {
-        seasonNumber: 4,
-        episodeNumber: 12,
-        progressPercentage: 45,
-        duration: 24,
-        watchedDuration: 11
-      },
-      totalEpisodes: 87,
-      completedEpisodes: 86
-    }
-  ];
 }
 
 // Batch import viewing history hook

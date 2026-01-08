@@ -1,6 +1,6 @@
-// App Version 15.6 - Debug continue watching API (Jan 8, 2026)
-// Build timestamp: 2026-01-08T04:00:00Z
-const BUILD_ID = "v15.6-20260108-040000";
+// App Version 16.0 - Real API calls only, no mock/fallback data (Jan 8, 2026)
+// Build timestamp: 2026-01-08T05:00:00Z
+const BUILD_ID = "v16.0-20260108-050000";
 console.log("🏗️ Build:", BUILD_ID);
 
 import * as React from "react";

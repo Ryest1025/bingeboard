@@ -35,46 +35,19 @@ export const useDashboardFeed = () => {
 
       console.log('🎛️ Dashboard feed query:', params.toString());
 
-      // Try to fetch from API
-      try {
-        const res = await fetch(`/api/dashboard/feed?${params.toString()}`, {
-          credentials: 'include'
-        });
+      // Fetch from real API
+      const res = await fetch(`/api/dashboard/feed?${params.toString()}`, {
+        credentials: 'include'
+      });
 
-        if (res.ok) {
-          const data = await res.json();
-          console.log('✅ Dashboard feed data received:', data);
-          return data;
-        }
-      } catch (error) {
-        console.warn('⚠️ Dashboard feed API failed, using mock data:', error);
+      if (!res.ok) {
+        console.warn('⚠️ Dashboard feed API failed:', res.status);
+        return { items: [], totalResults: 0, appliedFilters: debouncedFilters };
       }
 
-      // Return mock data as fallback
-      return {
-        items: [
-          {
-            id: 1,
-            title: 'Mock Content 1',
-            description: `Filtered by: ${debouncedFilters.friendActivity}, ${debouncedFilters.watchlistStatus}`,
-            type: 'recommendation'
-          },
-          {
-            id: 2,
-            title: 'Mock Content 2',
-            description: `Platforms: ${debouncedFilters.activePlatforms.join(', ') || 'All'}`,
-            type: 'friend_activity'
-          },
-          {
-            id: 3,
-            title: 'Mock Content 3',
-            description: `Genres: ${debouncedFilters.preferredGenres.join(', ') || 'All'}`,
-            type: 'custom_list'
-          }
-        ],
-        totalResults: 3,
-        appliedFilters: debouncedFilters
-      };
+      const data = await res.json();
+      console.log('✅ Dashboard feed data received:', data);
+      return data;
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
     retry: 1

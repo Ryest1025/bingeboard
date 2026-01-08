@@ -29,28 +29,22 @@ export function useWatchStatus(): UseWatchStatusReturn {
   const [error, setError] = useState<Error | null>(null);
   const queryClient = useQueryClient();
 
-  // Mock API function - replace with real API call
+  // Real API function
   const updateWatchStatusAPI = async (data: WatchStatusData) => {
-    // For now, just log and simulate API call
     console.log('📝 Updating watch status:', data);
     
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 500));
+    const response = await fetch('/api/viewing-history/update', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify(data)
+    });
     
-    // TODO: Replace with actual API call
-    // const response = await fetch('/api/viewing-history/update', {
-    //   method: 'POST',
-    //   headers: { 'Content-Type': 'application/json' },
-    //   body: JSON.stringify(data)
-    // });
-    // 
-    // if (!response.ok) {
-    //   throw new Error('Failed to update watch status');
-    // }
-    // 
-    // return response.json();
+    if (!response.ok) {
+      throw new Error('Failed to update watch status');
+    }
     
-    return { success: true, data };
+    return response.json();
   };
 
   const mutation = useMutation({

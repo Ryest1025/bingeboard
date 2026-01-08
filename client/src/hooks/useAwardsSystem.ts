@@ -28,42 +28,11 @@ interface UseAwardsSystemResult {
   recentAwards: Award[];
 }
 
-// Mock awards for development/fallback
-const MOCK_AWARDS: Award[] = [
-  {
-    id: '1',
-    name: 'First Watch',
-    description: 'Watched your first show',
-    icon: '🎬',
-    earnedAt: new Date(Date.now() - 24 * 60 * 60 * 1000), // Yesterday
-    type: 'milestone',
-    rarity: 'common',
-  },
-  {
-    id: '2',
-    name: 'Binge Master',
-    description: 'Watched 10 episodes in a row',
-    icon: '🏆',
-    earnedAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // Week ago
-    type: 'achievement',
-    rarity: 'rare',
-  },
-  {
-    id: '3',
-    name: 'Night Owl',
-    description: 'Watched a show after midnight',
-    icon: '🦉',
-    earnedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000), // 3 days ago
-    type: 'badge',
-    rarity: 'common',
-  },
-];
-
 export function useAwardsSystem(userId?: string): UseAwardsSystemResult {
   const { data: awards, isLoading, error } = useQuery({
     queryKey: ['awards', userId],
     queryFn: async (): Promise<Award[]> => {
-      if (!userId) return MOCK_AWARDS;
+      if (!userId) return [];
       
       try {
         const res = await fetch(`/api/awards?userId=${userId}`, {
@@ -74,13 +43,8 @@ export function useAwardsSystem(userId?: string): UseAwardsSystemResult {
         });
         
         if (!res.ok) {
-          if (res.status === 404) {
-            // User has no awards yet, return empty array
-            return [];
-          }
-          
-          console.warn(`Awards API returned ${res.status}, using mock data`);
-          return MOCK_AWARDS;
+          console.warn(`Awards API returned ${res.status}`);
+          return [];
         }
         
         const data: AwardResponse[] = await res.json();
@@ -92,8 +56,7 @@ export function useAwardsSystem(userId?: string): UseAwardsSystemResult {
         }));
       } catch (error) {
         console.error('Error fetching awards:', error);
-        // Return mock awards instead of empty array for better UX
-        return MOCK_AWARDS;
+        return [];
       }
     },
     enabled: !!userId,
