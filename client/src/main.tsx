@@ -1,6 +1,6 @@
-// App Version 15.0 - Auth Loading Fix (Jan 7, 2026)
-// Build timestamp: 2026-01-07T00:30:00Z
-const BUILD_ID = "v15.0-20260107-003000";
+// App Version 15.2 - Force Listener Update After sessionHydrated (Jan 7, 2026)
+// Build timestamp: 2026-01-07T01:00:00Z
+const BUILD_ID = "v15.2-20260107-010000";
 console.log("🏗️ Build:", BUILD_ID);
 
 import * as React from "react";

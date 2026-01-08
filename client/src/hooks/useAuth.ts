@@ -178,6 +178,8 @@ const initAuth = () => {
     sessionHydrated = true; // NEW: Session check complete
     clearTimeout(safetyTimeout); // Clear safety timeout
     console.log('✅ Initial auth sequence complete, sessionHydrated=true, isAuthenticated:', globalState.isAuthenticated);
+    // CRITICAL: Trigger state update after sessionHydrated is set to force React re-render
+    updateState({ ...globalState });
   }).catch((err) => {
     console.error('❌ Auth initialization error:', err);
     sessionHydrated = true;
