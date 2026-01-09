@@ -1,6 +1,6 @@
-// App Version 16.5 - Add pre-roll ads to trailer popup (Jan 9, 2026)
-// Build timestamp: 2026-01-09T01:45:00Z
-const BUILD_ID = "v16.5-20260109-014500";
+// App Version 16.6 - Full monetization infrastructure (Jan 9, 2026)
+// Build timestamp: 2026-01-09T02:00:00Z
+const BUILD_ID = "v16.6-20260109-020000";
 console.log("🏗️ Build:", BUILD_ID);
 
 import * as React from "react";

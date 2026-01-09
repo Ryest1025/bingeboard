@@ -544,6 +544,172 @@ export default async function handler(req, res) {
     return res.status(200).json({ notifications: [] });
   }
 
+  // ========================================
+  // MONETIZATION / AD ANALYTICS ENDPOINTS
+  // ========================================
+
+  // Track ad view
+  if (url === '/api/analytics/ad-view' && req.method === 'POST') {
+    try {
+      const rawBody = await getRawBody(req);
+      const { adId, userId, context, sessionId, metadata } = JSON.parse(rawBody);
+
+      if (!adId || !userId || !context) {
+        return res.status(400).json({ error: 'Missing required fields: adId, userId, context' });
+      }
+
+      // TODO: Store in database when connected
+      // For now, log and return success
+      console.log('📊 Ad View:', { adId, userId, context, sessionId, timestamp: new Date().toISOString() });
+
+      // Calculate estimated revenue (CPM model)
+      const revenueEstimate = 0.002; // $0.002 per view
+
+      return res.status(200).json({
+        success: true,
+        tracked: 'ad-view',
+        adId,
+        userId,
+        context,
+        timestamp: new Date().toISOString(),
+        estimatedRevenue: revenueEstimate
+      });
+    } catch (error) {
+      console.error('Ad view tracking error:', error);
+      return res.status(500).json({ error: 'Failed to track ad view' });
+    }
+  }
+
+  // Track ad click
+  if (url === '/api/analytics/ad-click' && req.method === 'POST') {
+    try {
+      const rawBody = await getRawBody(req);
+      const { adId, userId, clickUrl, sessionId, metadata } = JSON.parse(rawBody);
+
+      if (!adId || !userId || !clickUrl) {
+        return res.status(400).json({ error: 'Missing required fields: adId, userId, clickUrl' });
+      }
+
+      // TODO: Store in database when connected
+      console.log('🖱️ Ad Click:', { adId, userId, clickUrl, sessionId, timestamp: new Date().toISOString() });
+
+      // Calculate estimated revenue (CPC model)
+      const revenueEstimate = 0.05; // $0.05 per click
+
+      return res.status(200).json({
+        success: true,
+        tracked: 'ad-click',
+        adId,
+        userId,
+        clickUrl,
+        timestamp: new Date().toISOString(),
+        estimatedRevenue: revenueEstimate
+      });
+    } catch (error) {
+      console.error('Ad click tracking error:', error);
+      return res.status(500).json({ error: 'Failed to track ad click' });
+    }
+  }
+
+  // Track ad completion
+  if (url === '/api/analytics/ad-completion' && req.method === 'POST') {
+    try {
+      const rawBody = await getRawBody(req);
+      const { adId, userId, watchTime, sessionId, metadata } = JSON.parse(rawBody);
+
+      if (!adId || !userId || watchTime === undefined) {
+        return res.status(400).json({ error: 'Missing required fields: adId, userId, watchTime' });
+      }
+
+      // Determine if ad was completed (watched more than 80% or full duration)
+      const completed = watchTime >= 8000; // 8+ seconds = completed
+
+      // TODO: Store in database when connected
+      console.log('✅ Ad Completion:', { adId, userId, watchTime, completed, sessionId, timestamp: new Date().toISOString() });
+
+      // Calculate estimated revenue (completion bonus)
+      const baseRevenue = 0.002;
+      const completionMultiplier = completed ? 1.5 : 0.7;
+      const revenueEstimate = baseRevenue * completionMultiplier;
+
+      return res.status(200).json({
+        success: true,
+        tracked: 'ad-completion',
+        adId,
+        userId,
+        watchTime,
+        completed,
+        timestamp: new Date().toISOString(),
+        estimatedRevenue: revenueEstimate
+      });
+    } catch (error) {
+      console.error('Ad completion tracking error:', error);
+      return res.status(500).json({ error: 'Failed to track ad completion' });
+    }
+  }
+
+  // Get revenue analytics summary
+  if (url.startsWith('/api/analytics/revenue-summary')) {
+    try {
+      // TODO: Query database for real data when connected
+      // For now, return sample/estimated data
+      const summary = {
+        totalRevenue: 45.72,
+        todayRevenue: 12.35,
+        adViews: 1234,
+        adClicks: 89,
+        adCompletions: 987,
+        clickThroughRate: 7.2,
+        completionRate: 80.0,
+        topAds: [
+          { adId: 'ad_streaming_001', revenue: 18.50, views: 920 },
+          { adId: 'ad_tech_001', revenue: 15.30, views: 765 },
+          { adId: 'ad_food_001', revenue: 11.92, views: 596 }
+        ],
+        revenueByDay: [
+          { date: '2026-01-03', revenue: 8.45 },
+          { date: '2026-01-04', revenue: 9.12 },
+          { date: '2026-01-05', revenue: 7.89 },
+          { date: '2026-01-06', revenue: 10.56 },
+          { date: '2026-01-07', revenue: 11.23 },
+          { date: '2026-01-08', revenue: 10.82 },
+          { date: '2026-01-09', revenue: 12.35 }
+        ]
+      };
+
+      return res.status(200).json(summary);
+    } catch (error) {
+      console.error('Revenue summary error:', error);
+      return res.status(500).json({ error: 'Failed to fetch revenue summary' });
+    }
+  }
+
+  // Track affiliate clicks (streaming platform referrals)
+  if (url === '/api/analytics/affiliate-click' && req.method === 'POST') {
+    try {
+      const rawBody = await getRawBody(req);
+      const { userId, platformName, showId, showTitle, affiliateUrl, sessionId, metadata } = JSON.parse(rawBody);
+
+      if (!userId || !platformName || !affiliateUrl) {
+        return res.status(400).json({ error: 'Missing required fields: userId, platformName, affiliateUrl' });
+      }
+
+      // TODO: Store in database when connected
+      console.log('🔗 Affiliate Click:', { userId, platformName, showId, showTitle, affiliateUrl, timestamp: new Date().toISOString() });
+
+      return res.status(200).json({
+        success: true,
+        tracked: 'affiliate-click',
+        userId,
+        platformName,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('Affiliate click tracking error:', error);
+      return res.status(500).json({ error: 'Failed to track affiliate click' });
+    }
+  }
+
   // 404 for other routes
   return res.status(404).json({
     error: 'Not Found',

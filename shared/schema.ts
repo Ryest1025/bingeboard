@@ -1865,3 +1865,156 @@ export type FriendRequest = {
   fromUser?: User;
   toUser?: User;
 };
+
+// ========================================
+// MONETIZATION TABLES
+// ========================================
+
+// Ad Views - Track every ad impression
+export const adViews = pgTable('ad_views', {
+  id: serial('id').primaryKey(),
+  adId: varchar('ad_id', { length: 255 }).notNull(),
+  userId: varchar('user_id', { length: 255 }).notNull(),
+  context: varchar('context', { length: 100 }).notNull(), // 'trailer-monetization', 'dashboard-ad', etc.
+  timestamp: timestamp('timestamp').notNull().defaultNow(),
+  sessionId: varchar('session_id', { length: 255 }),
+  ipAddress: varchar('ip_address', { length: 45 }),
+  userAgent: text('user_agent'),
+  metadata: jsonb('metadata').$type<{
+    partnerId?: string;
+    advertiser?: string;
+    duration?: number;
+    category?: string;
+  }>(),
+}, (table) => ({
+  userIdIdx: index('idx_ad_views_user_id').on(table.userId),
+  adIdIdx: index('idx_ad_views_ad_id').on(table.adId),
+  timestampIdx: index('idx_ad_views_timestamp').on(table.timestamp),
+  contextIdx: index('idx_ad_views_context').on(table.context),
+}));
+
+// Ad Clicks - Track when users click on ads
+export const adClicks = pgTable('ad_clicks', {
+  id: serial('id').primaryKey(),
+  adId: varchar('ad_id', { length: 255 }).notNull(),
+  userId: varchar('user_id', { length: 255 }).notNull(),
+  clickUrl: text('click_url').notNull(),
+  timestamp: timestamp('timestamp').notNull().defaultNow(),
+  sessionId: varchar('session_id', { length: 255 }),
+  ipAddress: varchar('ip_address', { length: 45 }),
+  metadata: jsonb('metadata').$type<{
+    partnerId?: string;
+    advertiser?: string;
+    category?: string;
+  }>(),
+}, (table) => ({
+  userIdIdx: index('idx_ad_clicks_user_id').on(table.userId),
+  adIdIdx: index('idx_ad_clicks_ad_id').on(table.adId),
+  timestampIdx: index('idx_ad_clicks_timestamp').on(table.timestamp),
+}));
+
+// Ad Completions - Track when users watch ads to completion
+export const adCompletions = pgTable('ad_completions', {
+  id: serial('id').primaryKey(),
+  adId: varchar('ad_id', { length: 255 }).notNull(),
+  userId: varchar('user_id', { length: 255 }).notNull(),
+  watchTime: integer('watch_time').notNull(), // milliseconds watched
+  completed: boolean('completed').default(false), // true if watched beyond skipAfter threshold
+  timestamp: timestamp('timestamp').notNull().defaultNow(),
+  sessionId: varchar('session_id', { length: 255 }),
+  metadata: jsonb('metadata').$type<{
+    partnerId?: string;
+    advertiser?: string;
+    duration?: number;
+    skipped?: boolean;
+  }>(),
+}, (table) => ({
+  userIdIdx: index('idx_ad_completions_user_id').on(table.userId),
+  adIdIdx: index('idx_ad_completions_ad_id').on(table.adId),
+  timestampIdx: index('idx_ad_completions_timestamp').on(table.timestamp),
+  completedIdx: index('idx_ad_completions_completed').on(table.completed),
+}));
+
+// Revenue Tracking - Calculate and store revenue per ad interaction
+export const adRevenue = pgTable('ad_revenue', {
+  id: serial('id').primaryKey(),
+  adId: varchar('ad_id', { length: 255 }).notNull(),
+  partnerId: varchar('partner_id', { length: 255 }).notNull(),
+  userId: varchar('user_id', { length: 255 }).notNull(),
+  revenueType: varchar('revenue_type', { length: 50 }).notNull(), // 'view', 'click', 'completion'
+  amount: decimal('amount', { precision: 10, scale: 4 }).notNull(), // Revenue in dollars
+  currency: varchar('currency', { length: 3 }).default('USD'),
+  timestamp: timestamp('timestamp').notNull().defaultNow(),
+  metadata: jsonb('metadata').$type<{
+    advertiser?: string;
+    commissionRate?: number;
+    context?: string;
+  }>(),
+}, (table) => ({
+  partnerIdIdx: index('idx_ad_revenue_partner_id').on(table.partnerId),
+  timestampIdx: index('idx_ad_revenue_timestamp').on(table.timestamp),
+  revenueTypeIdx: index('idx_ad_revenue_type').on(table.revenueType),
+}));
+
+// Affiliate Clicks - Track streaming platform affiliate referrals
+export const affiliateClicks = pgTable('affiliate_clicks', {
+  id: serial('id').primaryKey(),
+  userId: varchar('user_id', { length: 255 }).notNull(),
+  platformName: varchar('platform_name', { length: 255 }).notNull(), // Netflix, Hulu, etc.
+  showId: varchar('show_id', { length: 255 }),
+  showTitle: text('show_title'),
+  affiliateUrl: text('affiliate_url').notNull(),
+  timestamp: timestamp('timestamp').notNull().defaultNow(),
+  converted: boolean('converted').default(false), // If we get confirmation of signup
+  conversionTimestamp: timestamp('conversion_timestamp'),
+  sessionId: varchar('session_id', { length: 255 }),
+  metadata: jsonb('metadata').$type<{
+    mediaType?: string;
+    referrerPage?: string;
+  }>(),
+}, (table) => ({
+  userIdIdx: index('idx_affiliate_clicks_user_id').on(table.userId),
+  platformIdx: index('idx_affiliate_clicks_platform').on(table.platformName),
+  timestampIdx: index('idx_affiliate_clicks_timestamp').on(table.timestamp),
+  convertedIdx: index('idx_affiliate_clicks_converted').on(table.converted),
+}));
+
+// Insert schemas for monetization tables
+export const insertAdViewSchema = createInsertSchema(adViews).omit({
+  id: true,
+  timestamp: true,
+});
+
+export const insertAdClickSchema = createInsertSchema(adClicks).omit({
+  id: true,
+  timestamp: true,
+});
+
+export const insertAdCompletionSchema = createInsertSchema(adCompletions).omit({
+  id: true,
+  timestamp: true,
+});
+
+export const insertAdRevenueSchema = createInsertSchema(adRevenue).omit({
+  id: true,
+  timestamp: true,
+});
+
+export const insertAffiliateClickSchema = createInsertSchema(affiliateClicks).omit({
+  id: true,
+  timestamp: true,
+  conversionTimestamp: true,
+});
+
+// Monetization types
+export type AdView = typeof adViews.$inferSelect;
+export type InsertAdView = z.infer<typeof insertAdViewSchema>;
+export type AdClick = typeof adClicks.$inferSelect;
+export type InsertAdClick = z.infer<typeof insertAdClickSchema>;
+export type AdCompletion = typeof adCompletions.$inferSelect;
+export type InsertAdCompletion = z.infer<typeof insertAdCompletionSchema>;
+export type AdRevenue = typeof adRevenue.$inferSelect;
+export type InsertAdRevenue = z.infer<typeof insertAdRevenueSchema>;
+export type AffiliateClick = typeof affiliateClicks.$inferSelect;
+export type InsertAffiliateClick = z.infer<typeof insertAffiliateClickSchema>;
+

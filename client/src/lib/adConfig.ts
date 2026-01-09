@@ -223,10 +223,6 @@ export class AdSelector {
 // Analytics tracking for ads
 export class AdAnalytics {
   static async trackAdView(adId: string, userId: string, context: string): Promise<void> {
-    // Disabled temporarily - endpoint returns 405
-    // TODO: Re-enable when backend endpoint is properly configured
-    return;
-    /*
     try {
       await fetch('/api/analytics/ad-view', {
         method: 'POST',
@@ -244,14 +240,9 @@ export class AdAnalytics {
     } catch (error) {
       console.error('Failed to track ad view:', error);
     }
-    */
   }
 
   static async trackAdClick(adId: string, userId: string, clickUrl: string): Promise<void> {
-    // Disabled temporarily - endpoint returns 405
-    // TODO: Re-enable when backend endpoint is properly configured
-    return;
-    /*
     try {
       await fetch('/api/analytics/ad-click', {
         method: 'POST',
@@ -269,14 +260,9 @@ export class AdAnalytics {
     } catch (error) {
       console.error('Failed to track ad click:', error);
     }
-    */
   }
 
   static async trackAdCompletion(adId: string, userId: string, watchTime: number): Promise<void> {
-    // Disabled temporarily - endpoint returns 405
-    // TODO: Re-enable when backend endpoint is properly configured
-    return;
-    /*
     try {
       await fetch('/api/analytics/ad-completion', {
         method: 'POST',
@@ -294,7 +280,6 @@ export class AdAnalytics {
     } catch (error) {
       console.error('Failed to track ad completion:', error);
     }
-    */
   }
 }
 
