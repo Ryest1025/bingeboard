@@ -323,7 +323,7 @@ const UniversalMediaCard: React.FC<UniversalMediaCardProps> = ({
             {/* Streaming Logos - only show if not in button */}
             {!hideStreamingLogos && showStreamingLogos && !showStreamingLogoInButton && normalizedPlatforms.length > 0 && (
               <div className="mt-4">
-                <StreamingLogos providers={normalizedPlatforms} maxDisplayed={4} size="md" />
+                <StreamingLogos providers={normalizedPlatforms} maxDisplayed={1} size="md" />
               </div>
             )}
           </div>
@@ -389,7 +389,7 @@ const UniversalMediaCard: React.FC<UniversalMediaCardProps> = ({
           <div className="mt-3 pt-3 border-t border-slate-700/50 px-3">
             <StreamingLogos 
               providers={normalizedPlatforms}
-              maxDisplayed={3}
+              maxDisplayed={1}
               size="sm"
             />
           </div>
