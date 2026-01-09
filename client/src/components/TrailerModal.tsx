@@ -1,10 +1,11 @@
 /**
  * Trailer Modal Component
- * Simple modal for displaying trailers
+ * Simple modal for displaying trailers with pre-roll ads
  */
 
 import React, { useEffect, useState } from 'react';
 import { X } from 'lucide-react';
+import AdPlayer from './ad-player';
 
 interface TrailerModalProps {
   isOpen: boolean;
@@ -22,11 +23,15 @@ export const TrailerModal: React.FC<TrailerModalProps> = ({
   thumbnail,
 }) => {
   const [loading, setLoading] = useState(true);
+  const [showAd, setShowAd] = useState(true);
+  const [adCompleted, setAdCompleted] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
       setLoading(true);
+      setShowAd(true);
+      setAdCompleted(false);
     } else {
       document.body.style.overflow = 'unset';
     }
@@ -46,6 +51,16 @@ export const TrailerModal: React.FC<TrailerModalProps> = ({
 
   const handleIframeLoad = () => {
     setLoading(false);
+  };
+
+  const handleAdComplete = () => {
+    setShowAd(false);
+    setAdCompleted(true);
+  };
+
+  const handleSkipAd = () => {
+    setShowAd(false);
+    setAdCompleted(true);
   };
 
   return (
@@ -68,24 +83,51 @@ export const TrailerModal: React.FC<TrailerModalProps> = ({
 
         {/* Video Content */}
         <div className="relative aspect-video bg-black">
-          {loading && (
-            <div className="absolute inset-0 flex items-center justify-center bg-slate-800">
-              <div className="flex flex-col items-center space-y-4">
-                <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-                <p className="text-gray-400">Loading trailer...</p>
+          {showAd ? (
+            /* Show Ad Before Trailer */
+            <div className="w-full h-full flex flex-col items-center justify-center p-6">
+              <div className="text-center mb-4">
+                <p className="text-sm text-gray-400">
+                  Watch a short ad to continue to the trailer
+                </p>
               </div>
+              <AdPlayer
+                onAdComplete={handleAdComplete}
+                onSkip={handleSkipAd}
+                className="w-full max-w-3xl"
+              />
             </div>
+          ) : (
+            /* Show Trailer After Ad */
+            <>
+              {adCompleted && (
+                <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-10">
+                  <div className="bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium shadow-lg">
+                    Ad completed! Enjoy your trailer.
+                  </div>
+                </div>
+              )}
+              
+              {loading && (
+                <div className="absolute inset-0 flex items-center justify-center bg-slate-800">
+                  <div className="flex flex-col items-center space-y-4">
+                    <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                    <p className="text-gray-400">Loading trailer...</p>
+                  </div>
+                </div>
+              )}
+              
+              <iframe
+                src={embedUrl}
+                title={title}
+                className="w-full h-full"
+                frameBorder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                onLoad={handleIframeLoad}
+              />
+            </>
           )}
-          
-          <iframe
-            src={embedUrl}
-            title={title}
-            className="w-full h-full"
-            frameBorder="0"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowFullScreen
-            onLoad={handleIframeLoad}
-          />
         </div>
 
         {/* Footer */}

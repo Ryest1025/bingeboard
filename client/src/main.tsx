@@ -1,6 +1,6 @@
-// App Version 16.3 - Show only one streaming logo everywhere (Jan 9, 2026)
-// Build timestamp: 2026-01-09T01:00:00Z
-const BUILD_ID = "v16.3-20260109-010000";
+// App Version 16.5 - Add pre-roll ads to trailer popup (Jan 9, 2026)
+// Build timestamp: 2026-01-09T01:45:00Z
+const BUILD_ID = "v16.5-20260109-014500";
 console.log("🏗️ Build:", BUILD_ID);
 
 import * as React from "react";
