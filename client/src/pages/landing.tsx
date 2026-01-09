@@ -168,7 +168,7 @@ function ShowCard({ show }: { show: Show }) {
               {/* Streaming Platform Logos - Real TMDB Data */}
               {(show as any).streamingPlatforms && (show as any).streamingPlatforms.length > 0 && (
                 <div className="flex items-center space-x-1">
-                  {(show as any).streamingPlatforms.slice(0, 2).map((platform: any, index: number) => (
+                  {(show as any).streamingPlatforms.slice(0, 1).map((platform: any, index: number) => (
                     <div key={index} className="w-6 h-4 rounded-sm bg-white p-0.5 flex-shrink-0">
                       {getLogoSrc(platform) ? (
                         <img

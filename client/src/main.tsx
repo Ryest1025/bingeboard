@@ -1,6 +1,6 @@
-// App Version 16.2 - Show only one streaming logo per card (Jan 9, 2026)
-// Build timestamp: 2026-01-09T00:30:00Z
-const BUILD_ID = "v16.2-20260109-003000";
+// App Version 16.3 - Show only one streaming logo everywhere (Jan 9, 2026)
+// Build timestamp: 2026-01-09T01:00:00Z
+const BUILD_ID = "v16.3-20260109-010000";
 console.log("🏗️ Build:", BUILD_ID);
 
 import * as React from "react";
