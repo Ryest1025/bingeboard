@@ -77,7 +77,7 @@ export default function LoginSimple() {
   useEffect(() => {
     if (isAuthenticated && user && !authLoading) {
       console.log("✅ User already authenticated, redirecting to dashboard:", user.email);
-      setLocation("/");
+      setLocation("/dashboard");
     }
   }, [isAuthenticated, user, authLoading, setLocation]);
 
@@ -180,10 +180,11 @@ export default function LoginSimple() {
             localStorage.removeItem('userEmail');
           }
 
-          // Don't call refreshSession - let onAuthStateChanged handle it
-          // The session cookie is set, navigation will trigger auth check
-          console.log('🎯 Session created, navigating to dashboard');
-          setLocation("/");
+          // Wait a moment for onAuthStateChanged to process, then navigate directly to dashboard
+          console.log('🎯 Session created, waiting for auth state update...');
+          await new Promise(resolve => setTimeout(resolve, 500));
+          console.log('🎯 Navigating to dashboard');
+          setLocation("/dashboard");
         } else {
           console.error('❌ Failed to create backend session');
           // Force signOut to prevent ghost login state
@@ -224,9 +225,11 @@ export default function LoginSimple() {
         if (response.ok) {
           console.log('✅ Backend session created successfully');
 
-          // Navigate immediately - onAuthStateChanged will handle auth state
-          console.log('🎯 Session created, navigating to dashboard');
-          setLocation("/");
+          // Navigate immediately to dashboard - onAuthStateChanged will handle auth state
+          console.log('🎯 Session created, waiting for auth state update...');
+          await new Promise(resolve => setTimeout(resolve, 500));
+          console.log('🎯 Navigating to dashboard');
+          setLocation("/dashboard");
         } else {
           console.error('❌ Failed to create backend session');
           // Force signOut to prevent ghost login state
@@ -356,9 +359,11 @@ export default function LoginSimple() {
           if (sessionCreated) {
             console.log('✅ Backend session created successfully');
             
-            // Navigate - onAuthStateChanged will handle auth state
-            console.log('🎯 Session created, navigating to dashboard');
-            setLocation("/");
+            // Navigate to dashboard with delay for auth state update
+            console.log('🎯 Session created, waiting for auth state update...');
+            await new Promise(resolve => setTimeout(resolve, 500));
+            console.log('🎯 Navigating to dashboard');
+            setLocation("/dashboard");
           } else {
             console.error('❌ Failed to create backend session');
             // Force signOut to prevent ghost login state (OAuth redirect)
@@ -448,9 +453,11 @@ export default function LoginSimple() {
             localStorage.setItem('userEmail', result.user.email);
           }
 
-          // Navigate - onAuthStateChanged will handle auth state
-          console.log('🎯 Session created, navigating to dashboard');
-          setLocation("/");
+          // Navigate to dashboard with delay for auth state update
+          console.log('🎯 Session created, waiting for auth state update...');
+          await new Promise(resolve => setTimeout(resolve, 500));
+          console.log('🎯 Navigating to dashboard');
+          setLocation("/dashboard");
         } else {
           console.error('❌ Failed to create backend session');
           // Force signOut to prevent ghost login state (Google OAuth)
@@ -531,9 +538,11 @@ export default function LoginSimple() {
             localStorage.setItem('userEmail', result.user.email);
           }
 
-          // Navigate - onAuthStateChanged will handle auth state
-          console.log('🎯 Session created, navigating to dashboard');
-          setLocation("/");
+          // Navigate to dashboard with delay for auth state update
+          console.log('🎯 Session created, waiting for auth state update...');
+          await new Promise(resolve => setTimeout(resolve, 500));
+          console.log('🎯 Navigating to dashboard');
+          setLocation("/dashboard");
         } else {
           console.error('❌ Failed to create backend session');
           // Force signOut to prevent ghost login state (Facebook OAuth)
