@@ -1,6 +1,6 @@
-// App Version 16.6 - Full monetization infrastructure (Jan 9, 2026)
-// Build timestamp: 2026-01-09T02:00:00Z
-const BUILD_ID = "v16.6-20260109-020000";
+// App Version 16.7 - Fix streaming logos across all listings (Jan 9, 2026)
+// Build timestamp: 2026-01-09T02:15:00Z
+const BUILD_ID = "v16.7-20260109-021500";
 console.log("🏗️ Build:", BUILD_ID);
 
 import * as React from "react";
