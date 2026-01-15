@@ -114,7 +114,7 @@ const UniversalMediaCard: React.FC<UniversalMediaCardProps> = ({
     provider_id: platform.provider_id || 0,
     provider_name: platform.provider_name || platform.name || 'Unknown',
     logo_path: platform.logo_path
-  })).filter(platform => platform.provider_id > 0);
+  })).filter(platform => platform.provider_name && platform.provider_name !== 'Unknown');
   
   // Debug streaming platforms for this media item
   if (process.env.NODE_ENV === 'development' && normalizedPlatforms.length > 0) {
@@ -359,6 +359,7 @@ const UniversalMediaCard: React.FC<UniversalMediaCardProps> = ({
           moveButtonsToBottom={shouldMoveButtonsToBottom}
           className="flex-shrink-0 aspect-[2/3] w-full"
           variant={variant}
+          media={media}
         />
         
         <InfoSection

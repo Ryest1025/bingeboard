@@ -3,11 +3,18 @@ import { motion } from 'framer-motion';
 import { Play, PlayCircle, Plus, Clapperboard } from 'lucide-react';
 import { ActionButton } from './ActionButton';
 import { RatingBadge } from './RatingBadge';
+import TrailerButton from '@/components/trailer-button';
 
 interface ActionConfig {
   watchNow?: boolean;
   trailer?: boolean;
   addToList?: boolean;
+}
+
+interface MediaItem {
+  id: number;
+  title?: string;
+  name?: string;
 }
 
 interface PosterSectionProps {
@@ -24,6 +31,7 @@ interface PosterSectionProps {
   moveButtonsToBottom?: boolean;
   className?: string;
   variant?: 'vertical' | 'horizontal' | 'spotlight' | 'compact' | 'spotlight-polished' | 'vertical-polished' | 'spotlight-poster-backdrop';
+  media?: MediaItem;
 }
 
 export const PosterSection: React.FC<PosterSectionProps> = ({
@@ -39,7 +47,8 @@ export const PosterSection: React.FC<PosterSectionProps> = ({
   showStreamingLogoInButton = false,
   moveButtonsToBottom = false,
   className = '',
-  variant = 'vertical'
+  variant = 'vertical',
+  media
 }) => {
   const isSpotlight = variant?.includes('spotlight');
   const imageUrl = isSpotlight ? backdropUrl : posterUrl;
@@ -131,18 +140,18 @@ export const PosterSection: React.FC<PosterSectionProps> = ({
               </ActionButton>
             )}
             
-            {actions.trailer && (
-              <ActionButton
-                variant="floating"
-                size="md"
-                onClick={(e) => {
-                  e?.stopPropagation();
-                  onWatchTrailer?.();
+            {actions.trailer && media && (
+              <TrailerButton
+                show={{
+                  id: media.id,
+                  tmdbId: media.id,
+                  title: media.title || media.name || 'Unknown'
                 }}
-              >
-                <PlayCircle className="w-4 h-4" />
-                <span className="hidden sm:inline">Trailer</span>
-              </ActionButton>
+                variant="secondary"
+                size="sm"
+                showLabel={true}
+                className="bg-red-600 hover:bg-red-700 text-white border-red-500 px-3 py-1.5 text-xs"
+              />
             )}
           </div>
         </motion.div>

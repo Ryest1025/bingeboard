@@ -1,6 +1,6 @@
-// App Version 16.7 - Fix streaming logos across all listings (Jan 9, 2026)
-// Build timestamp: 2026-01-09T02:15:00Z
-const BUILD_ID = "v16.7-20260109-021500";
+// App Version 16.8 - Fix trailer buttons and streaming logos (Jan 15, 2026)
+// Build timestamp: 2026-01-15T02:30:00Z
+const BUILD_ID = "v16.8-20260115-023000";
 console.log("🏗️ Build:", BUILD_ID);
 
 import * as React from "react";
