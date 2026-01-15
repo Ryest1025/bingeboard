@@ -1,6 +1,6 @@
-// App Version 16.8 - Fix trailer buttons and streaming logos (Jan 15, 2026)
-// Build timestamp: 2026-01-15T02:30:00Z
-const BUILD_ID = "v16.8-20260115-023000";
+// App Version 16.9 - Force cache refresh for login, trailer buttons, and streaming logos (Jan 15, 2026)
+// Build timestamp: 2026-01-15T04:00:00Z
+const BUILD_ID = "v16.9-20260115-040000";
 console.log("🏗️ Build:", BUILD_ID);
 
 import * as React from "react";
