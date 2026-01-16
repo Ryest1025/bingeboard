@@ -12,7 +12,7 @@ on:
 
 jobs:
   analyze-unused:
-    name: Run unused exports & dependency analysis (Node 20)
+    name: Run unused exports & dependency analysis (Node 22)
     runs-on: ubuntu-latest
     concurrency:
       group: analyze-unused-${{ github.ref }}
@@ -136,7 +136,7 @@ jobs:
           issue-number: ${{ github.event.pull_request.number }}
           body: |
             ### Unused Code Analysis Report
-            Results for Node.js version: 20.
+            Results for Node.js version: 22.
 
             Overall status: ${{ steps.analyze.outputs.status }}
 
