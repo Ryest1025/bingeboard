@@ -23,7 +23,7 @@ jobs:
           node-version: '22'
           
       - name: Check version synchronization
-        run: node scripts/check-version-sync.js
+        run: node scripts/check-version-sync.cjs
         
       - name: Comment on PR if versions are out of sync
         if: failure() && github.event_name == 'pull_request'
@@ -34,5 +34,5 @@ jobs:
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: '⚠️ **Version Sync Check Failed**\n\nVersion numbers are out of sync across files. Please run:\n```bash\nnode scripts/bump-version.js patch "Your description"\n```\nThis will update all version references automatically.'
+              body: '⚠️ **Version Sync Check Failed**\n\nVersion numbers are out of sync across files. Please run:\n```bash\nnode scripts/bump-version.cjs patch "Your description"\n```\nThis will update all version references automatically.'
             })
