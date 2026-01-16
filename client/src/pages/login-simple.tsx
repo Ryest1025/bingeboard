@@ -180,10 +180,10 @@ export default function LoginSimple() {
             localStorage.removeItem('userEmail');
           }
 
-          // Wait a moment for onAuthStateChanged to process, then navigate directly to dashboard
-          console.log('🎯 Session created, waiting for auth state update...');
-          await new Promise(resolve => setTimeout(resolve, 500));
-          console.log('🎯 Navigating to dashboard');
+          // Refresh session to update auth state BEFORE navigation
+          console.log('🎯 Refreshing session to update auth state...');
+          await refreshSession();
+          console.log('🎯 Session refreshed, navigating to dashboard');
           setLocation("/dashboard");
         } else {
           console.error('❌ Failed to create backend session');
@@ -225,10 +225,10 @@ export default function LoginSimple() {
         if (response.ok) {
           console.log('✅ Backend session created successfully');
 
-          // Navigate immediately to dashboard - onAuthStateChanged will handle auth state
-          console.log('🎯 Session created, waiting for auth state update...');
-          await new Promise(resolve => setTimeout(resolve, 500));
-          console.log('🎯 Navigating to dashboard');
+          // Refresh session to update auth state BEFORE navigation
+          console.log('🎯 Refreshing session to update auth state...');
+          await refreshSession();
+          console.log('🎯 Session refreshed, navigating to dashboard');
           setLocation("/dashboard");
         } else {
           console.error('❌ Failed to create backend session');
@@ -359,10 +359,10 @@ export default function LoginSimple() {
           if (sessionCreated) {
             console.log('✅ Backend session created successfully');
             
-            // Navigate to dashboard with delay for auth state update
-            console.log('🎯 Session created, waiting for auth state update...');
-            await new Promise(resolve => setTimeout(resolve, 500));
-            console.log('🎯 Navigating to dashboard');
+            // Refresh session to update auth state BEFORE navigation
+            console.log('🎯 Refreshing session to update auth state...');
+            await refreshSession();
+            console.log('🎯 Session refreshed, navigating to dashboard');
             setLocation("/dashboard");
           } else {
             console.error('❌ Failed to create backend session');
@@ -453,10 +453,10 @@ export default function LoginSimple() {
             localStorage.setItem('userEmail', result.user.email);
           }
 
-          // Navigate to dashboard with delay for auth state update
-          console.log('🎯 Session created, waiting for auth state update...');
-          await new Promise(resolve => setTimeout(resolve, 500));
-          console.log('🎯 Navigating to dashboard');
+          // Refresh session to update auth state BEFORE navigation
+          console.log('🎯 Refreshing session to update auth state...');
+          await refreshSession();
+          console.log('🎯 Session refreshed, navigating to dashboard');
           setLocation("/dashboard");
         } else {
           console.error('❌ Failed to create backend session');
@@ -538,10 +538,10 @@ export default function LoginSimple() {
             localStorage.setItem('userEmail', result.user.email);
           }
 
-          // Navigate to dashboard with delay for auth state update
-          console.log('🎯 Session created, waiting for auth state update...');
-          await new Promise(resolve => setTimeout(resolve, 500));
-          console.log('🎯 Navigating to dashboard');
+          // Refresh session to update auth state BEFORE navigation
+          console.log('🎯 Refreshing session to update auth state...');
+          await refreshSession();
+          console.log('🎯 Session refreshed, navigating to dashboard');
           setLocation("/dashboard");
         } else {
           console.error('❌ Failed to create backend session');
