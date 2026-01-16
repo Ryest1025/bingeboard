@@ -1,6 +1,6 @@
-// App Version 16.13 - Add SMS password recovery with verification codes (Jan 16, 2026)
-// Build timestamp: 2026-01-16T02:00:00Z
-const BUILD_ID = "v16.13-20260116-020000";
+// App Version 16.14 - Fix login page reload loop with additional state sync delay (Jan 16, 2026)
+// Build timestamp: 2026-01-16T12:50:00Z
+const BUILD_ID = "v16.14-20260116-125000";
 console.log("🏗️ Build:", BUILD_ID);
 
 import * as React from "react";

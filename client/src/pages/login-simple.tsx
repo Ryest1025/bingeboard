@@ -81,6 +81,10 @@ async function createFirebaseSessionAndSync(firebaseToken: string, refreshSessio
   // This prevents the race condition where navigation happens before state updates
   await refreshSessionFn();
   
+  // ADDITIONAL FIX: Give React time to process state updates before navigation
+  // This ensures RouteWrapper sees the updated isAuthenticated state
+  await new Promise(resolve => setTimeout(resolve, 150));
+  
   console.log('✅ Auth state synced successfully');
   return true;
 }
@@ -231,6 +235,13 @@ export default function LoginSimple() {
             localStorage.removeItem('rememberLogin');
             localStorage.removeItem('userEmail');
           }
+
+          // Double-check auth state before navigation
+          console.log('🔍 Pre-navigation auth check:', {
+            isAuthenticated,
+            user: user?.email,
+            authLoading
+          });
 
           console.log('🎯 Navigating to dashboard');
           setLocation("/dashboard");

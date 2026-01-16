@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>BingeBoard Login Debug Tool</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; max-width: 800px; margin: 0 auto; }
+        input { width: 100%; padding: 10px; margin: 5px 0; border: 1px solid #ddd; border-radius: 4px; }
+        button { padding: 12px 24px; background: #0070f3; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; }
+        button:hover { background: #0051cc; }
+        #output { margin-top: 20px; padding: 15px; background: #f5f5f5; border-radius: 4px; white-space: pre-wrap; font-family: monospace; }
+        .success { color: green; }
+        .error { color: red; }
+        h1 { color: #333; }
+        .info { background: #e3f2fd; padding: 15px; border-radius: 4px; margin-bottom: 20px; }
+    </style>
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getAuth, signInWithEmailAndPassword } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyB45zr8b2HjIx1fzXOuQsHxeQK9wl_wC88",
+            authDomain: "bingeboard-73c5f.firebaseapp.com",
+            projectId: "bingeboard-73c5f",
+            storageBucket: "bingeboard-73c5f.firebasestorage.app",
+            messagingSenderId: "145846820194",
+            appId: "1:145846820194:web:047efd7a8e59b36944a03b"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+
+        window.testLogin = async function() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const output = document.getElementById('output');
+            
+            output.innerHTML = '<div>⏳ Step 1/3: Testing Firebase login...</div>';
+            
+            try {
+                // Step 1: Firebase login
+                const userCredential = await signInWithEmailAndPassword(auth, email, password);
+                const user = userCredential.user;
+                output.innerHTML += '<div class="success">✅ Step 1: Firebase login successful!</div>';
+                output.innerHTML += `<div>User: ${user.email}</div>`;
+                output.innerHTML += `<div>UID: ${user.uid}</div>`;
+                
+                // Step 2: Get Firebase token
+                output.innerHTML += '<div>⏳ Step 2/3: Getting Firebase ID token...</div>';
+                const token = await user.getIdToken();
+                output.innerHTML += '<div class="success">✅ Step 2: Token obtained!</div>';
+                output.innerHTML += `<div>Token: ${token.substring(0, 50)}...</div>`;
+                
+                // Step 3: Create backend session
+                output.innerHTML += '<div>⏳ Step 3/3: Creating backend session...</div>';
+                const response = await fetch('https://bingeboard-two.vercel.app/api/auth/firebase-session', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ firebaseToken: token }),
+                    credentials: 'include'
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    output.innerHTML += '<div class="success">✅ Step 3: Backend session created!</div>';
+                    output.innerHTML += `<div>Response: ${JSON.stringify(data, null, 2)}</div>`;
+                    
+                    // Step 4: Verify session
+                    output.innerHTML += '<div>⏳ Step 4/4: Verifying session...</div>';
+                    const checkResponse = await fetch('https://bingeboard-two.vercel.app/api/auth/status', {
+                        credentials: 'include'
+                    });
+                    const checkData = await checkResponse.json();
+                    
+                    if (checkData.isAuthenticated) {
+                        output.innerHTML += '<div class="success">✅ Step 4: Session verified!</div>';
+                        output.innerHTML += `<div>Authenticated as: ${checkData.user.email}</div>`;
+                        output.innerHTML += '<div class="success"><strong>🎉 ALL TESTS PASSED! You can log in to BingeBoard.</strong></div>';
+                    } else {
+                        output.innerHTML += '<div class="error">❌ Step 4: Session not found in backend!</div>';
+                        output.innerHTML += `<div>Status response: ${JSON.stringify(checkData, null, 2)}</div>`;
+                    }
+                } else {
+                    output.innerHTML += '<div class="error">❌ Step 3: Backend session creation failed!</div>';
+                    output.innerHTML += `<div>Status: ${response.status}</div>`;
+                    output.innerHTML += `<div>Response: ${JSON.stringify(data, null, 2)}</div>`;
+                }
+                
+            } catch (error) {
+                output.innerHTML += `<div class="error">❌ Error: ${error.message}</div>`;
+                output.innerHTML += `<div>Full error: ${error.stack}</div>`;
+                
+                if (error.code) {
+                    output.innerHTML += `<div>Firebase error code: ${error.code}</div>`;
+                    
+                    // Common error explanations
+                    if (error.code === 'auth/wrong-password') {
+                        output.innerHTML += '<div class="error">The password is incorrect. Please try again.</div>';
+                    } else if (error.code === 'auth/user-not-found') {
+                        output.innerHTML += '<div class="error">No user found with this email. Have you registered?</div>';
+                    } else if (error.code === 'auth/invalid-email') {
+                        output.innerHTML += '<div class="error">The email format is invalid.</div>';
+                    } else if (error.code === 'auth/too-many-requests') {
+                        output.innerHTML += '<div class="error">Too many failed attempts. Please wait and try again later.</div>';
+                    }
+                }
+            }
+        };
+
+        window.checkDeployment = async function() {
+            const output = document.getElementById('output');
+            output.innerHTML = '<div>⏳ Checking deployment status...</div>';
+            
+            try {
+                // Check frontend
+                const frontendResponse = await fetch('https://bingeboardapp.com');
+                output.innerHTML += `<div>Frontend (bingeboardapp.com): ${frontendResponse.ok ? '✅ Online' : '❌ Offline'}</div>`;
+                
+                // Check backend
+                const backendResponse = await fetch('https://bingeboard-two.vercel.app/api/auth/status');
+                const backendData = await backendResponse.json();
+                output.innerHTML += `<div>Backend (vercel): ${backendResponse.ok ? '✅ Online' : '❌ Offline'}</div>`;
+                output.innerHTML += `<div>Backend response: ${JSON.stringify(backendData, null, 2)}</div>`;
+                
+                // Check if logged in
+                if (backendData.isAuthenticated) {
+                    output.innerHTML += '<div class="success">✅ You are already logged in!</div>';
+                    output.innerHTML += `<div>Logged in as: ${backendData.user.email}</div>`;
+                } else {
+                    output.innerHTML += '<div>ℹ️ Not currently logged in</div>';
+                }
+                
+            } catch (error) {
+                output.innerHTML += `<div class="error">❌ Error checking deployment: ${error.message}</div>`;
+            }
+        };
+
+        // Auto-check on load
+        window.addEventListener('load', () => {
+            window.checkDeployment();
+        });
+    </script>
+</head>
+<body>
+    <h1>🔍 BingeBoard Login Debug Tool</h1>
+    
+    <div class="info">
+        <strong>Purpose:</strong> This tool tests your BingeBoard login end-to-end:
+        <ol>
+            <li>Firebase authentication</li>
+            <li>Firebase token generation</li>
+            <li>Backend session creation</li>
+            <li>Session verification</li>
+        </ol>
+        If all 4 steps pass, your login should work on the main site.
+    </div>
+
+    <div>
+        <label for="email"><strong>Email:</strong></label>
+        <input type="email" id="email" placeholder="your.email@gmail.com" value="rachel.gubin@gmail.com">
+        
+        <label for="password"><strong>Password:</strong></label>
+        <input type="password" id="password" placeholder="Your password">
+        
+        <br><br>
+        
+        <button onclick="testLogin()">🔐 Test Login</button>
+        <button onclick="checkDeployment()" style="background: #666;">🔍 Check Deployment</button>
+    </div>
+
+    <div id="output">Loading deployment status...</div>
+
+    <div style="margin-top: 30px; padding: 15px; background: #fff3cd; border-radius: 4px;">
+        <strong>Common Issues:</strong>
+        <ul>
+            <li><strong>Wrong password:</strong> Try resetting via "Forgot password"</li>
+            <li><strong>User not found:</strong> You may need to register first</li>
+            <li><strong>Backend session fails:</strong> Check Vercel deployment logs</li>
+            <li><strong>Cache issues:</strong> Try hard refresh (Ctrl+Shift+R) on main site</li>
+        </ul>
+    </div>
+
+    <div style="margin-top: 20px; text-align: center;">
+        <a href="/" style="color: #0070f3;">← Back to BingeBoard</a>
+    </div>
+</body>
+</html>
