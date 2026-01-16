@@ -1,6 +1,6 @@
-// App Version 16.10 - Fix login auth state sync (Jan 16, 2026)
-// Build timestamp: 2026-01-16T00:00:00Z
-const BUILD_ID = "v16.10-20260116-000000";
+// App Version 16.11 - Atomic auth state sync to prevent race conditions (Jan 16, 2026)
+// Build timestamp: 2026-01-16T01:00:00Z
+const BUILD_ID = "v16.11-20260116-010000";
 console.log("🏗️ Build:", BUILD_ID);
 
 import * as React from "react";

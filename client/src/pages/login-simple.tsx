@@ -38,8 +38,56 @@ import { signInWithPopup, signInWithRedirect, getRedirectResult, signInWithEmail
 import { auth, googleProvider, facebookProvider } from '@/firebase/config';
 import { apiFetch } from '@/utils/api-config';
 
-// Helper function to create Firebase session
+// ============================================================================
+// CRITICAL: Authentication State Synchronization
+// ============================================================================
+// This helper function GUARANTEES auth state is synced before navigation.
+// 
+// WHY THIS EXISTS:
+// Previous implementations had race conditions where:
+//   1. Backend session was created
+//   2. Navigation happened immediately
+//   3. Auth state hadn't updated yet
+//   4. User got redirected back to login (infinite loop)
+//
+// HOW IT WORKS:
+//   1. Creates backend session (Firebase token → session cookie)
+//   2. Calls refreshSession() to update global auth state
+//   3. Only returns true after BOTH steps complete
+//   4. Navigation only happens if this returns true
+//
+// ⚠️ WARNING: Do NOT modify this without reading AUTH_STATE_SYNC_GUARANTEE.md
+// ⚠️ WARNING: Do NOT bypass this by calling setLocation() without syncing
+// ⚠️ WARNING: Do NOT use setTimeout/sleep instead of refreshSession()
+//
+// Last Updated: January 16, 2026 (v16.11)
+// ============================================================================
+async function createFirebaseSessionAndSync(firebaseToken: string, refreshSessionFn: () => Promise<void>) {
+  console.log('🔐 Creating backend session...');
+  const response = await apiFetch('/api/auth/firebase-session', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ firebaseToken }),
+  });
+  
+  if (!response.ok) {
+    console.error('❌ Backend session creation failed');
+    return false;
+  }
+  
+  console.log('✅ Backend session created, syncing auth state...');
+  
+  // CRITICAL: Always refresh session to update global auth state
+  // This prevents the race condition where navigation happens before state updates
+  await refreshSessionFn();
+  
+  console.log('✅ Auth state synced successfully');
+  return true;
+}
+
+// Legacy helper (deprecated - use createFirebaseSessionAndSync instead)
 async function createFirebaseSession(firebaseToken: string) {
+  console.warn('⚠️ Using deprecated createFirebaseSession - consider using createFirebaseSessionAndSync');
   const response = await apiFetch('/api/auth/firebase-session', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -166,11 +214,9 @@ export default function LoginSimple() {
 
         // Create backend session with Firebase ID token
         const firebaseToken = await firebaseUser.getIdToken();
-        const sessionCreated = await createFirebaseSession(firebaseToken);
+        const sessionCreated = await createFirebaseSessionAndSync(firebaseToken, refreshSession);
 
         if (sessionCreated) {
-          console.log('✅ Backend session created successfully');
-
           // Handle remember me preference
           if (rememberMe) {
             localStorage.setItem('rememberLogin', 'true');
@@ -180,10 +226,7 @@ export default function LoginSimple() {
             localStorage.removeItem('userEmail');
           }
 
-          // Refresh session to update auth state BEFORE navigation
-          console.log('🎯 Refreshing session to update auth state...');
-          await refreshSession();
-          console.log('🎯 Session refreshed, navigating to dashboard');
+          console.log('🎯 Navigating to dashboard');
           setLocation("/dashboard");
         } else {
           console.error('❌ Failed to create backend session');
@@ -223,12 +266,9 @@ export default function LoginSimple() {
         });
 
         if (response.ok) {
-          console.log('✅ Backend session created successfully');
-
-          // Refresh session to update auth state BEFORE navigation
-          console.log('🎯 Refreshing session to update auth state...');
+          console.log('✅ Backend session created, syncing auth state...');
           await refreshSession();
-          console.log('🎯 Session refreshed, navigating to dashboard');
+          console.log('🎯 Navigating to dashboard');
           setLocation("/dashboard");
         } else {
           console.error('❌ Failed to create backend session');
@@ -354,15 +394,10 @@ export default function LoginSimple() {
 
           // Create backend session with Firebase ID token
           const firebaseToken = await result.user.getIdToken();
-          const sessionCreated = await createFirebaseSession(firebaseToken);
+          const sessionCreated = await createFirebaseSessionAndSync(firebaseToken, refreshSession);
 
           if (sessionCreated) {
-            console.log('✅ Backend session created successfully');
-            
-            // Refresh session to update auth state BEFORE navigation
-            console.log('🎯 Refreshing session to update auth state...');
-            await refreshSession();
-            console.log('🎯 Session refreshed, navigating to dashboard');
+            console.log('🎯 Navigating to dashboard');
             setLocation("/dashboard");
           } else {
             console.error('❌ Failed to create backend session');
@@ -442,21 +477,16 @@ export default function LoginSimple() {
 
         // Create backend session using helper
         const firebaseToken = await result.user.getIdToken();
-        const sessionCreated = await createFirebaseSession(firebaseToken);
+        const sessionCreated = await createFirebaseSessionAndSync(firebaseToken, refreshSession);
 
         if (sessionCreated) {
-          console.log('✅ Backend session created successfully');
-
           // Handle remember me for social login
           if (rememberMe && result.user.email) {
             localStorage.setItem('rememberLogin', 'true');
             localStorage.setItem('userEmail', result.user.email);
           }
 
-          // Refresh session to update auth state BEFORE navigation
-          console.log('🎯 Refreshing session to update auth state...');
-          await refreshSession();
-          console.log('🎯 Session refreshed, navigating to dashboard');
+          console.log('🎯 Navigating to dashboard');
           setLocation("/dashboard");
         } else {
           console.error('❌ Failed to create backend session');
@@ -527,21 +557,16 @@ export default function LoginSimple() {
 
         // Create backend session using helper
         const firebaseToken = await result.user.getIdToken();
-        const sessionCreated = await createFirebaseSession(firebaseToken);
+        const sessionCreated = await createFirebaseSessionAndSync(firebaseToken, refreshSession);
 
         if (sessionCreated) {
-          console.log('✅ Backend session created successfully');
-
           // Handle remember me for social login
           if (rememberMe && result.user.email) {
             localStorage.setItem('rememberLogin', 'true');
             localStorage.setItem('userEmail', result.user.email);
           }
 
-          // Refresh session to update auth state BEFORE navigation
-          console.log('🎯 Refreshing session to update auth state...');
-          await refreshSession();
-          console.log('🎯 Session refreshed, navigating to dashboard');
+          console.log('🎯 Navigating to dashboard');
           setLocation("/dashboard");
         } else {
           console.error('❌ Failed to create backend session');
