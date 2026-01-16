@@ -19,12 +19,12 @@
   <meta http-equiv="X-Content-Type-Options" content="nosniff">
   <meta http-equiv="X-XSS-Protection" content="1; mode=block">
   
-  <!-- NUCLEAR CACHE BUSTING - Jan 16, 2026 (v1.0.2 - Fix login loop - verify auth state before navigation) -->
+  <!-- NUCLEAR CACHE BUSTING - Jan 16, 2026 (v1.0.3 - Add cookie debugging to diagnose cross-domain session issue) -->
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
-  <meta name="build-time" content="20260116-191100">
-  <meta name="cache-version" content="v1.0.2-fix-login-loop-verify-auth-state-before-navigation">
+  <meta name="build-time" content="20260116-191800">
+  <meta name="cache-version" content="v1.0.3-add-cookie-debugging-to-diagnose-cross-domain-session-issue">
   <meta name="force-reload" content="true">
 
   <!-- Preload Google Fonts -->
@@ -159,7 +159,7 @@
   <!-- IMMEDIATE CACHE CHECK - Jan 16, 2026 - Runs BEFORE any modules load -->
   <script>
     (function immediateVersionCheck() {
-      const CURRENT_VERSION = 'v1.0.2-fix-login-loop-verify-auth-state-before-navigation';
+      const CURRENT_VERSION = 'v1.0.3-add-cookie-debugging-to-diagnose-cross-domain-session-issue';
       const storedVersion = localStorage.getItem('app-version');
       
       if (storedVersion !== CURRENT_VERSION) {

@@ -75,6 +75,14 @@ async function createFirebaseSessionAndSync(firebaseToken: string, refreshSessio
     return false;
   }
   
+  // Check response body for debugging
+  const sessionData = await response.json();
+  console.log('📦 Session creation response:', sessionData);
+  
+  // Check if cookie was set in response headers
+  const setCookieHeader = response.headers.get('Set-Cookie');
+  console.log('🍪 Set-Cookie header:', setCookieHeader || 'NOT PRESENT');
+  
   console.log('✅ Backend session created, syncing auth state...');
   
   // CRITICAL: Always refresh session to update global auth state

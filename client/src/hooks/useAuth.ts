@@ -299,8 +299,11 @@ export function useAuth(): AuthState {
   const refreshSession = useCallback(async () => {
     try {
       console.log('🔄 Refreshing session...');
+      console.log('🍪 Current cookies:', document.cookie);
       const res = await apiFetch("/api/auth/status", { credentials: 'include' });
+      console.log('📡 Backend session response:', res.status, res.ok ? 'OK' : 'FAIL');
       const data = res.ok ? await res.json() : null;
+      console.log('📦 Backend session data:', data);
       
       if (data?.isAuthenticated && data?.user) {
         updateState({
@@ -315,7 +318,7 @@ export function useAuth(): AuthState {
         console.log('✅ Session refreshed:', data.user.email);
       } else {
         updateState({ user: null, isAuthenticated: false, isLoading: false });
-        console.log('ℹ️ No session found');
+        console.log('ℹ️ No session found (response not ok or no user data)');
       }
     } catch (err) {
       console.error('❌ Session refresh failed:', err);

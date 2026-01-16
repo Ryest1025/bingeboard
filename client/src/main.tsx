@@ -1,6 +1,6 @@
-// App Version v1.0.2 - Fix login loop - verify auth state before navigation (Jan 16, 2026)
-// Build timestamp: 2026-01-16T19:11:16.921Z
-const BUILD_ID = "v1.0.2-20260116-191100";
+// App Version v1.0.3 - Add cookie debugging to diagnose cross-domain session issue (Jan 16, 2026)
+// Build timestamp: 2026-01-16T19:18:01.204Z
+const BUILD_ID = "v1.0.3-20260116-191800";
 console.log("🏗️ Build:", BUILD_ID);
 
 import * as React from "react";
