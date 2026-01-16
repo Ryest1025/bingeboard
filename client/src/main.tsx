@@ -1,6 +1,6 @@
-// App Version 16.11 - Atomic auth state sync to prevent race conditions (Jan 16, 2026)
-// Build timestamp: 2026-01-16T01:00:00Z
-const BUILD_ID = "v16.11-20260116-010000";
+// App Version 16.12 - Add password reset via email support (Jan 16, 2026)
+// Build timestamp: 2026-01-16T01:30:00Z
+const BUILD_ID = "v16.12-20260116-013000";
 console.log("🏗️ Build:", BUILD_ID);
 
 import * as React from "react";

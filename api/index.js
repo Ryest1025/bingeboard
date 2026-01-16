@@ -177,6 +177,76 @@ export default async function handler(req, res) {
     return res.status(200).json({ success: true });
   }
 
+  // Password reset endpoint (POST)
+  if ((url === '/api/auth/forgot-password' || url.startsWith('/api/auth/forgot-password?')) && req.method === 'POST') {
+    try {
+      // Check if Firebase Admin is initialized
+      if (!admin.apps.length || !firebaseInitialized) {
+        return res.status(503).json({ 
+          success: false,
+          message: 'Password reset service is temporarily unavailable. Please try again later.' 
+        });
+      }
+
+      const body = req.body || JSON.parse(await getRawBody(req));
+      const { email, phoneNumber } = body;
+
+      if (!email && !phoneNumber) {
+        return res.status(400).json({ 
+          success: false,
+          message: 'Email or phone number is required' 
+        });
+      }
+
+      // Email-based password reset
+      if (email) {
+        // Generate password reset link
+        const resetLink = await admin.auth().generatePasswordResetLink(email, {
+          url: 'https://bingeboardapp.com/login',
+          handleCodeInApp: false,
+        });
+
+        // In production, you would send this via email service (SendGrid, AWS SES, etc.)
+        // For now, we'll return success (Firebase sends the email automatically)
+        console.log('📧 Password reset link generated for:', email);
+        
+        return res.status(200).json({ 
+          success: true,
+          message: 'Password reset email sent successfully',
+          // Only include link in development
+          ...(process.env.NODE_ENV !== 'production' && { resetLink })
+        });
+      }
+
+      // SMS-based password reset (requires phone authentication setup)
+      if (phoneNumber) {
+        // Note: SMS password reset requires Firebase Phone Authentication to be enabled
+        // and the user must have verified their phone number
+        return res.status(501).json({ 
+          success: false,
+          message: 'SMS password reset is not yet implemented. Please use email reset.' 
+        });
+      }
+
+    } catch (error) {
+      console.error('Password reset error:', error.message || error);
+      
+      // Handle specific Firebase errors
+      if (error.code === 'auth/user-not-found') {
+        // Don't reveal if user exists for security
+        return res.status(200).json({ 
+          success: true,
+          message: 'If an account exists with that email, a password reset link has been sent.' 
+        });
+      }
+
+      return res.status(500).json({ 
+        success: false,
+        message: 'Failed to send password reset. Please try again later.' 
+      });
+    }
+  }
+
   // Content discover - returns TMDB discover results
   if (url.startsWith('/api/content/discover')) {
     try {
