@@ -113,6 +113,12 @@ export default function LoginSimple() {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [recoveryMethod, setRecoveryMethod] = useState<'email' | 'sms'>('email');
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [verificationCode, setVerificationCode] = useState('');
+  const [showVerificationStep, setShowVerificationStep] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmNewPassword, setConfirmNewPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
@@ -336,10 +342,121 @@ export default function LoginSimple() {
   };
 
   const handleForgotPassword = async () => {
-    if (!formData.email) {
+    if (recoveryMethod === 'email') {
+      if (!formData.email) {
+        toast({
+          title: "Email required",
+          description: "Please enter your email address first.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      setIsLoading(true);
+      try {
+        const response = await apiFetch("/api/auth/forgot-password", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ email: formData.email }),
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          toast({
+            title: "Password reset email sent",
+            description: "Check your email for password reset instructions.",
+          });
+          setShowForgotPassword(false);
+        } else {
+          toast({
+            title: "Error",
+            description: data.message || "Failed to send password reset email",
+            variant: "destructive",
+          });
+        }
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: "Network error. Please try again.",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    } else {
+      // SMS recovery
+      if (!phoneNumber) {
+        toast({
+          title: "Phone number required",
+          description: "Please enter your phone number.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      setIsLoading(true);
+      try {
+        const response = await apiFetch("/api/auth/forgot-password", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ phoneNumber }),
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          toast({
+            title: "Verification code sent",
+            description: "Check your phone for the verification code.",
+          });
+          setShowVerificationStep(true);
+        } else {
+          toast({
+            title: "Error",
+            description: data.message || "Failed to send verification code",
+            variant: "destructive",
+          });
+        }
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: "Network error. Please try again.",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    }
+  };
+
+  const handleVerifySmsCode = async () => {
+    if (!verificationCode || !newPassword || !confirmNewPassword) {
       toast({
-        title: "Email required",
-        description: "Please enter your email address first.",
+        title: "All fields required",
+        description: "Please fill in all fields.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (newPassword !== confirmNewPassword) {
+      toast({
+        title: "Passwords don't match",
+        description: "Please make sure both passwords match.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      toast({
+        title: "Password too short",
+        description: "Password must be at least 6 characters.",
         variant: "destructive",
       });
       return;
@@ -347,26 +464,36 @@ export default function LoginSimple() {
 
     setIsLoading(true);
     try {
-      const response = await apiFetch("/api/auth/forgot-password", {
+      const response = await apiFetch("/api/auth/verify-sms-reset", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ email: formData.email }),
+        body: JSON.stringify({
+          phoneNumber,
+          code: verificationCode,
+          newPassword,
+        }),
       });
 
       const data = await response.json();
 
       if (response.ok) {
         toast({
-          title: "Password reset email sent",
-          description: "Check your email for password reset instructions.",
+          title: "Password reset successful",
+          description: "You can now log in with your new password.",
         });
+        // Reset state and return to login
         setShowForgotPassword(false);
+        setShowVerificationStep(false);
+        setVerificationCode('');
+        setPhoneNumber('');
+        setNewPassword('');
+        setConfirmNewPassword('');
       } else {
         toast({
           title: "Error",
-          description: data.message || "Failed to send password reset email",
+          description: data.message || "Invalid verification code",
           variant: "destructive",
         });
       }
@@ -658,32 +785,146 @@ export default function LoginSimple() {
             <div className="space-y-4">
               <div className="text-center mb-4">
                 <p className="text-gray-400 text-sm">Reset your password</p>
-                <p className="text-gray-400 text-xs mt-2">
-                  Enter your email address and we'll send you a password reset link.
-                </p>
+                {!showVerificationStep && (
+                  <p className="text-gray-400 text-xs mt-2">
+                    Choose your recovery method
+                  </p>
+                )}
               </div>
-              <div className="relative">
-                <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                <Input
-                  type="email"
-                  name="email"
-                  placeholder="Email address"
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  className="bg-gray-800/50 border-slate-600/50 text-white pl-10 focus:border-teal-500/50 focus:ring-teal-500/20"
-                  required
-                />
-              </div>
-              <Button
-                onClick={handleForgotPassword}
-                disabled={isLoading}
-                className="w-full bg-gradient-to-r from-teal-600 to-blue-600 hover:from-teal-700 hover:to-blue-700 text-white font-semibold"
-              >
-                {isLoading ? "Sending..." : "Send Reset Link"}
-              </Button>
+
+              {!showVerificationStep ? (
+                <>
+                  {/* Recovery Method Selection */}
+                  <div className="flex gap-2 mb-4">
+                    <Button
+                      type="button"
+                      onClick={() => setRecoveryMethod('email')}
+                      variant={recoveryMethod === 'email' ? 'default' : 'outline'}
+                      className={`flex-1 ${
+                        recoveryMethod === 'email'
+                          ? 'bg-gradient-to-r from-teal-600 to-blue-600'
+                          : 'bg-gray-800/50 border-slate-600/50 text-gray-300'
+                      }`}
+                    >
+                      Email
+                    </Button>
+                    <Button
+                      type="button"
+                      onClick={() => setRecoveryMethod('sms')}
+                      variant={recoveryMethod === 'sms' ? 'default' : 'outline'}
+                      className={`flex-1 ${
+                        recoveryMethod === 'sms'
+                          ? 'bg-gradient-to-r from-teal-600 to-blue-600'
+                          : 'bg-gray-800/50 border-slate-600/50 text-gray-300'
+                      }`}
+                    >
+                      SMS
+                    </Button>
+                  </div>
+
+                  {recoveryMethod === 'email' ? (
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                      <Input
+                        type="email"
+                        name="email"
+                        placeholder="Email address"
+                        value={formData.email}
+                        onChange={handleInputChange}
+                        className="bg-gray-800/50 border-slate-600/50 text-white pl-10 focus:border-teal-500/50 focus:ring-teal-500/20"
+                        required
+                      />
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <Input
+                        type="tel"
+                        placeholder="Phone number (e.g., +1234567890)"
+                        value={phoneNumber}
+                        onChange={(e) => setPhoneNumber(e.target.value)}
+                        className="bg-gray-800/50 border-slate-600/50 text-white focus:border-teal-500/50 focus:ring-teal-500/20"
+                        required
+                      />
+                      <p className="text-xs text-gray-500">
+                        Use international format with country code
+                      </p>
+                    </div>
+                  )}
+
+                  <Button
+                    onClick={handleForgotPassword}
+                    disabled={isLoading}
+                    className="w-full bg-gradient-to-r from-teal-600 to-blue-600 hover:from-teal-700 hover:to-blue-700 text-white font-semibold"
+                  >
+                    {isLoading ? "Sending..." : recoveryMethod === 'email' ? "Send Reset Link" : "Send Code"}
+                  </Button>
+                </>
+              ) : (
+                // Verification Step (SMS only)
+                <>
+                  <div className="space-y-4">
+                    <p className="text-sm text-gray-400 text-center">
+                      Enter the 6-digit code sent to {phoneNumber}
+                    </p>
+                    <Input
+                      type="text"
+                      placeholder="Verification code"
+                      value={verificationCode}
+                      onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                      className="bg-gray-800/50 border-slate-600/50 text-white text-center text-lg tracking-widest focus:border-teal-500/50 focus:ring-teal-500/20"
+                      maxLength={6}
+                      required
+                    />
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                      <Input
+                        type="password"
+                        placeholder="New password"
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        className="bg-gray-800/50 border-slate-600/50 text-white pl-10 focus:border-teal-500/50 focus:ring-teal-500/20"
+                        required
+                      />
+                    </div>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                      <Input
+                        type="password"
+                        placeholder="Confirm new password"
+                        value={confirmNewPassword}
+                        onChange={(e) => setConfirmNewPassword(e.target.value)}
+                        className="bg-gray-800/50 border-slate-600/50 text-white pl-10 focus:border-teal-500/50 focus:ring-teal-500/20"
+                        required
+                      />
+                    </div>
+                    <Button
+                      onClick={handleVerifySmsCode}
+                      disabled={isLoading}
+                      className="w-full bg-gradient-to-r from-teal-600 to-blue-600 hover:from-teal-700 hover:to-blue-700 text-white font-semibold"
+                    >
+                      {isLoading ? "Resetting..." : "Reset Password"}
+                    </Button>
+                    <Button
+                      variant="link"
+                      onClick={() => setShowVerificationStep(false)}
+                      className="w-full text-teal-400 hover:text-teal-300 text-sm"
+                    >
+                      Resend code
+                    </Button>
+                  </div>
+                </>
+              )}
+
               <Button
                 variant="link"
-                onClick={() => setShowForgotPassword(false)}
+                onClick={() => {
+                  setShowForgotPassword(false);
+                  setShowVerificationStep(false);
+                  setVerificationCode('');
+                  setPhoneNumber('');
+                  setNewPassword('');
+                  setConfirmNewPassword('');
+                }}
                 className="w-full text-teal-400 hover:text-teal-300"
               >
                 Back to Login

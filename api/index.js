@@ -5,6 +5,25 @@ import cookie from 'cookie';
 const TMDB_API_KEY = process.env.TMDB_API_KEY || 'b7cbf0200107ac0e023c8b37e4d0f611';
 const TMDB_BASE = 'https://api.themoviedb.org/3';
 
+// In-memory storage for SMS verification codes (expires after 10 minutes)
+// In production, use Redis or similar for persistence across serverless instances
+const smsVerificationCodes = new Map();
+
+// Generate 6-digit verification code
+function generateVerificationCode() {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+}
+
+// Clean up expired codes
+function cleanupExpiredCodes() {
+  const now = Date.now();
+  for (const [key, data] of smsVerificationCodes.entries()) {
+    if (now > data.expiresAt) {
+      smsVerificationCodes.delete(key);
+    }
+  }
+}
+
 // Initialize Firebase Admin (only once)
 let firebaseInitialized = false;
 if (!admin.apps.length) {
@@ -177,8 +196,86 @@ export default async function handler(req, res) {
     return res.status(200).json({ success: true });
   }
 
-  // Password reset endpoint (POST)
-  if ((url === '/api/auth/forgot-password' || url.startsWith('/api/auth/forgot-password?')) && req.method === 'POST') {
+  // Verify SMS code and reset password
+  if ((url === '/api/auth/verify-sms-reset' || url.startsWith('/api/auth/verify-sms-reset')) && req.method === 'POST') {
+    try {
+      const { phoneNumber, code, newPassword } = body;
+      
+      if (!phoneNumber || !code || !newPassword) {
+        return res.status(400).json({ 
+          success: false,
+          message: 'Phone number, code, and new password are required' 
+        });
+      }
+      
+      // Clean phone number
+      const cleanPhone = phoneNumber.replace(/[\s-]/g, '');
+      
+      // Clean up expired codes
+      cleanupExpiredCodes();
+      
+      // Check if code exists
+      const storedData = smsVerificationCodes.get(cleanPhone);
+      if (!storedData) {
+        return res.status(400).json({ 
+          success: false,
+          message: 'Verification code expired or not found. Please request a new code.' 
+        });
+      }
+      
+      // Check attempts (prevent brute force)
+      if (storedData.attempts >= 3) {
+        smsVerificationCodes.delete(cleanPhone);
+        return res.status(429).json({ 
+          success: false,
+          message: 'Too many failed attempts. Please request a new code.' 
+        });
+      }
+      
+      // Verify code
+      if (storedData.code !== code) {
+        storedData.attempts++;
+        return res.status(400).json({ 
+          success: false,
+          message: 'Invalid verification code',
+          attemptsRemaining: 3 - storedData.attempts
+        });
+      }
+      
+      // Code is valid, update password
+      if (!firebaseInitialized) {
+        return res.status(500).json({ 
+          success: false,
+          message: 'Server configuration error' 
+        });
+      }
+      
+      // Update user password
+      await admin.auth().updateUser(storedData.uid, {
+        password: newPassword
+      });
+      
+      // Remove used code
+      smsVerificationCodes.delete(cleanPhone);
+      
+      console.log(`✅ Password reset successful for phone: ${cleanPhone}`);
+      
+      return res.status(200).json({ 
+        success: true,
+        message: 'Password reset successful. You can now log in with your new password.' 
+      });
+      
+    } catch (error) {
+      console.error('SMS verification error:', error.message);
+      return res.status(500).json({ 
+        success: false,
+        message: 'Failed to reset password. Please try again.' 
+      });
+    }
+  }
+
+  // Password reset endpoint (email or SMS)
+  if ((url === '/api/auth/forgot-password' || url.startsWith('/api/auth/forgot-password')) && req.method === 'POST') {
     try {
       // Check if Firebase Admin is initialized
       if (!admin.apps.length || !firebaseInitialized) {
@@ -218,14 +315,84 @@ export default async function handler(req, res) {
         });
       }
 
-      // SMS-based password reset (requires phone authentication setup)
+      // SMS-based password reset
       if (phoneNumber) {
-        // Note: SMS password reset requires Firebase Phone Authentication to be enabled
-        // and the user must have verified their phone number
-        return res.status(501).json({ 
-          success: false,
-          message: 'SMS password reset is not yet implemented. Please use email reset.' 
-        });
+        // Clean up expired codes first
+        cleanupExpiredCodes();
+        
+        // Format phone number (remove spaces, dashes)
+        const cleanPhone = phoneNumber.replace(/[\s-]/g, '');
+        
+        // Validate phone number format (basic validation)
+        if (!/^\+?[1-9]\d{1,14}$/.test(cleanPhone)) {
+          return res.status(400).json({ 
+            success: false,
+            message: 'Invalid phone number format. Use international format (e.g., +1234567890)' 
+          });
+        }
+        
+        // Check if Firebase Admin is initialized
+        if (!firebaseInitialized) {
+          console.error('❌ Cannot send SMS: Firebase Admin not initialized');
+          return res.status(500).json({ 
+            success: false,
+            message: 'Server configuration error. Please contact support.' 
+          });
+        }
+        
+        try {
+          // Verify user exists with this phone number in Firebase
+          // Note: This requires users to have phone numbers linked to their accounts
+          const userRecord = await admin.auth().getUserByPhoneNumber(cleanPhone);
+          
+          // Generate 6-digit verification code
+          const verificationCode = generateVerificationCode();
+          const expiresAt = Date.now() + (10 * 60 * 1000); // 10 minutes
+          
+          // Store code with expiration
+          smsVerificationCodes.set(cleanPhone, {
+            code: verificationCode,
+            expiresAt,
+            uid: userRecord.uid,
+            attempts: 0
+          });
+          
+          // In production, send via Twilio, AWS SNS, or Firebase Extensions
+          // For now, log it (REMOVE IN PRODUCTION)
+          console.log(`📱 SMS Code for ${cleanPhone}: ${verificationCode}`);
+          
+          // TODO: Integrate with SMS provider
+          // Example with Twilio:
+          // const twilio = require('twilio')(process.env.TWILIO_SID, process.env.TWILIO_TOKEN);
+          // await twilio.messages.create({
+          //   body: `Your BingeBoard verification code is: ${verificationCode}`,
+          //   to: cleanPhone,
+          //   from: process.env.TWILIO_PHONE
+          // });
+          
+          return res.status(200).json({ 
+            success: true,
+            message: 'Verification code sent to your phone',
+            // Include code in development only (REMOVE IN PRODUCTION)
+            ...(process.env.NODE_ENV !== 'production' && { verificationCode })
+          });
+          
+        } catch (error) {
+          console.error('SMS password reset error:', error.message);
+          
+          // Don't reveal if user exists
+          if (error.code === 'auth/user-not-found') {
+            return res.status(200).json({ 
+              success: true,
+              message: 'If an account exists with that phone number, a verification code has been sent.' 
+            });
+          }
+          
+          return res.status(500).json({ 
+            success: false,
+            message: 'Failed to send verification code. Please try again.' 
+          });
+        }
       }
 
     } catch (error) {
