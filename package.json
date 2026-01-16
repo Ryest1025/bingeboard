@@ -12,7 +12,6 @@
     "dev:stop": "bash ./stop-servers.sh",
     "dev:restart": "bash ./stop-servers.sh && bash ./start-servers.sh",
     "dev:status": "bash ./status.sh",
-
     "prebuild": "echo Generating commit hash env && export VITE_COMMIT_HASH=$(git rev-parse --short HEAD || echo dev)",
     "build": "cd client && VITE_COMMIT_HASH=$(git rev-parse --short HEAD || echo dev) vite build && cd .. && esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist",
     "build:pages": "cd client && vite build",
@@ -178,7 +177,7 @@
     "jsdom": "^26.1.0",
     "knip": "^5.40.3",
     "msw": "^2.4.2",
-    "next": "^15.4.4",
+    "next": "15.4.10",
     "postcss": "^8.4.47",
     "tailwindcss": "^3.4.17",
     "ts-node": "^10.9.2",
