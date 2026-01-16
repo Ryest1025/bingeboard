@@ -244,29 +244,9 @@ export default function LoginSimple() {
             localStorage.removeItem('userEmail');
           }
 
-          // Double-check auth state before navigation
-          // Force a final refresh to ensure state is current
-          console.log('🔍 Final auth check before navigation...');
-          await refreshSession();
-          
-          console.log('🔍 Pre-navigation auth check:', {
-            isAuthenticated,
-            user: user?.email,
-            authLoading
-          });
-
-          // Only navigate if we're actually authenticated
-          if (isAuthenticated && user) {
-            console.log('🎯 Navigating to dashboard - auth confirmed');
-            setLocation("/dashboard");
-          } else {
-            console.error('❌ Auth state not updated, cannot navigate');
-            toast({
-              title: "Authentication issue",
-              description: "Please try logging in again.",
-              variant: "destructive",
-            });
-          }
+          // Navigate to dashboard - session is already synced
+          console.log('🎯 Navigating to dashboard');
+          setLocation("/dashboard");
         } else {
           console.error('❌ Failed to create backend session');
           // Force signOut to prevent ghost login state

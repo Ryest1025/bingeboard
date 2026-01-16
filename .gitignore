@@ -91,3 +91,4 @@ depcheck-report.json
 
 # Keep: analysis/baseline-unused-exports.txt (DO NOT IGNORE)
 client/src/pages/DiscoverPage.tsx
+FIREBASE_KEY_FOR_VERCEL.txt
