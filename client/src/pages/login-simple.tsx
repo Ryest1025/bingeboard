@@ -81,9 +81,9 @@ async function createFirebaseSessionAndSync(firebaseToken: string, refreshSessio
   // This prevents the race condition where navigation happens before state updates
   await refreshSessionFn();
   
-  // ADDITIONAL FIX: Give React time to process state updates before navigation
-  // This ensures RouteWrapper sees the updated isAuthenticated state
-  await new Promise(resolve => setTimeout(resolve, 150));
+  // ADDITIONAL FIX: Wait longer for React state propagation
+  // 150ms wasn't enough - components need time to re-render with new state
+  await new Promise(resolve => setTimeout(resolve, 500));
   
   console.log('✅ Auth state synced successfully');
   return true;
@@ -237,14 +237,28 @@ export default function LoginSimple() {
           }
 
           // Double-check auth state before navigation
+          // Force a final refresh to ensure state is current
+          console.log('🔍 Final auth check before navigation...');
+          await refreshSession();
+          
           console.log('🔍 Pre-navigation auth check:', {
             isAuthenticated,
             user: user?.email,
             authLoading
           });
 
-          console.log('🎯 Navigating to dashboard');
-          setLocation("/dashboard");
+          // Only navigate if we're actually authenticated
+          if (isAuthenticated && user) {
+            console.log('🎯 Navigating to dashboard - auth confirmed');
+            setLocation("/dashboard");
+          } else {
+            console.error('❌ Auth state not updated, cannot navigate');
+            toast({
+              title: "Authentication issue",
+              description: "Please try logging in again.",
+              variant: "destructive",
+            });
+          }
         } else {
           console.error('❌ Failed to create backend session');
           // Force signOut to prevent ghost login state

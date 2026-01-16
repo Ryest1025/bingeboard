@@ -1,6 +1,6 @@
-// App Version v1.0.1 - Fix version sync and add automated deployment tools (Jan 16, 2026)
-// Build timestamp: 2026-01-16T13:01:32.595Z
-const BUILD_ID = "v1.0.1-20260116-130100";
+// App Version v1.0.2 - Fix login loop - verify auth state before navigation (Jan 16, 2026)
+// Build timestamp: 2026-01-16T19:11:16.921Z
+const BUILD_ID = "v1.0.2-20260116-191100";
 console.log("🏗️ Build:", BUILD_ID);
 
 import * as React from "react";
