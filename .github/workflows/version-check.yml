@@ -1,0 +1,38 @@
+name: Version Sync Check
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+
+jobs:
+  check-version-sync:
+    name: Verify version consistency
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          
+      - name: Check version synchronization
+        run: node scripts/check-version-sync.js
+        
+      - name: Comment on PR if versions are out of sync
+        if: failure() && github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '⚠️ **Version Sync Check Failed**\n\nVersion numbers are out of sync across files. Please run:\n```bash\nnode scripts/bump-version.js patch "Your description"\n```\nThis will update all version references automatically.'
+            })

@@ -19,12 +19,12 @@
   <meta http-equiv="X-Content-Type-Options" content="nosniff">
   <meta http-equiv="X-XSS-Protection" content="1; mode=block">
   
-  <!-- NUCLEAR CACHE BUSTING - January 15, 2026 (v16.9 - Login + Trailer + Logo Fix) -->
+  <!-- NUCLEAR CACHE BUSTING - Jan 16, 2026 (v1.0.1 - Fix version sync and add automated deployment tools) -->
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
-  <meta name="build-time" content="20260115-040000">
-  <meta name="cache-version" content="v16.9-login-trailer-logo-fix">
+  <meta name="build-time" content="20260116-130100">
+  <meta name="cache-version" content="v1.0.1-fix-version-sync-and-add-automated-deployment-tools">
   <meta name="force-reload" content="true">
 
   <!-- Preload Google Fonts -->
@@ -156,10 +156,10 @@
 
   <div id="root"></div>
 
-  <!-- IMMEDIATE CACHE CHECK - November 20, 2025 - Runs BEFORE any modules load -->
+  <!-- IMMEDIATE CACHE CHECK - Jan 16, 2026 - Runs BEFORE any modules load -->
   <script>
     (function immediateVersionCheck() {
-      const CURRENT_VERSION = 'v16.9-login-trailer-logo-fix';
+      const CURRENT_VERSION = 'v1.0.1-fix-version-sync-and-add-automated-deployment-tools';
       const storedVersion = localStorage.getItem('app-version');
       
       if (storedVersion !== CURRENT_VERSION) {

@@ -1,6 +1,6 @@
-// App Version 16.14 - Fix login page reload loop with additional state sync delay (Jan 16, 2026)
-// Build timestamp: 2026-01-16T12:50:00Z
-const BUILD_ID = "v16.14-20260116-125000";
+// App Version v1.0.1 - Fix version sync and add automated deployment tools (Jan 16, 2026)
+// Build timestamp: 2026-01-16T13:01:32.595Z
+const BUILD_ID = "v1.0.1-20260116-130100";
 console.log("🏗️ Build:", BUILD_ID);
 
 import * as React from "react";

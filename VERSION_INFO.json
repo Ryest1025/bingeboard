@@ -1,0 +1,14 @@
+{
+  "version": "1.0.1",
+  "versionString": "v1.0.1",
+  "buildTimestamp": "20260116-130100",
+  "description": "Fix version sync and add automated deployment tools",
+  "date": "2026-01-16T13:01:32.595Z",
+  "readableDate": "Jan 16, 2026",
+  "bumpType": "patch",
+  "files": [
+    "package.json",
+    "client/src/main.tsx",
+    "client/index.html"
+  ]
+}
